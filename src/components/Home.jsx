@@ -178,7 +178,7 @@ export default function Home() {
                         }
                         action={
                             <Box sx={{ display: 'flex', gap: 2 }}>
-                                <Button
+                                {/* <Button
                                     startIcon={<MdAccountCircle />}
                                     onClick={() => navigate('/profile')}
                                     variant="outlined"
@@ -192,7 +192,7 @@ export default function Home() {
                                     }}
                                 >
                                     Profile
-                                </Button>
+                                </Button> */}
                                 <Button
                                     startIcon={<MdLogout />}
                                     onClick={handleLogout}

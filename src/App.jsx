@@ -1,40 +1,125 @@
 // App.jsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-import SignIn from './components/SignIn';
-import SignUp from './components/SignUp';
-import Home from './components/Home';
-import ProtectedRoute from './components/ProtectedRoute';
-import Profile from './components/Profile';
 import { ThemeProvider } from '@mui/material';
 import { theme } from './theme/theme';
+import ProtectedRoute from './components/ProtectedRoute';
+import Navigation from './components/Navigation';
 
-export default function App() {
+// Main components
+import Home from './components/Home';
+import SignIn from './components/SignIn';
+import SignUp from './components/SignUp';
+import Profile from './components/Profile';
+import Workout from './components/Workout';
+import History from './components/History';
+import Progress from './components/Progress';
+
+// Workout sub-components
+import StartWorkout from './components/workout/StartWorkout';
+import ExerciseLibrary from './components/workout/ExerciseLibrary';
+import WorkoutTemplates from './components/workout/WorkoutTemplates';
+import QuickAdd from './components/workout/QuickAdd';
+
+function App() {
   return (
     <Router>
       <ThemeProvider theme={theme}>
         <AuthProvider>
-          <div style={{ backgroundColor: '#121212', minHeight: '100vh' }}>
+          <div style={{
+            backgroundColor: '#121212',
+            minHeight: '100vh',
+            paddingBottom: '56px' // Height of bottom navigation
+          }}>
             <Routes>
+              {/* Auth routes */}
               <Route path="/signin" element={<SignIn />} />
               <Route path="/signup" element={<SignUp />} />
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
+
+              {/* Main routes */}
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <>
                     <Home />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
+                    <Navigation />
+                  </>
+                </ProtectedRoute>
+              } />
+
+              {/* Workout routes */}
+              <Route path="/workout" element={
+                <ProtectedRoute>
+                  <>
+                    <Workout />
+                    <Navigation />
+                  </>
+                </ProtectedRoute>
+              } />
+              <Route path="/workout/start" element={
+                <ProtectedRoute>
+                  <>
+                    <StartWorkout />
+                    <Navigation />
+                  </>
+                </ProtectedRoute>
+              } />
+              <Route path="/workout/library" element={
+                <ProtectedRoute>
+                  <>
+                    <ExerciseLibrary />
+                    <Navigation />
+                  </>
+                </ProtectedRoute>
+              } />
+              <Route path="/workout/templates" element={
+                <ProtectedRoute>
+                  <>
+                    <WorkoutTemplates />
+                    <Navigation />
+                  </>
+                </ProtectedRoute>
+              } />
+              <Route path="/workout/quick-add" element={
+                <ProtectedRoute>
+                  <>
+                    <QuickAdd />
+                    <Navigation />
+                  </>
+                </ProtectedRoute>
+              } />
+
+              {/* History route */}
+              <Route path="/history" element={
+                <ProtectedRoute>
+                  <>
+                    <History />
+                    <Navigation />
+                  </>
+                </ProtectedRoute>
+              } />
+
+              {/* Progress route */}
+              <Route path="/progress" element={
+                <ProtectedRoute>
+                  <>
+                    <Progress />
+                    <Navigation />
+                  </>
+                </ProtectedRoute>
+              } />
+
+              {/* Profile route */}
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <>
                     <Profile />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="*" element={<Navigate to="/" />} />
+                    <Navigation />
+                  </>
+                </ProtectedRoute>
+              } />
+
+              {/* Catch all route */}
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>
         </AuthProvider>
@@ -42,3 +127,5 @@ export default function App() {
     </Router>
   );
 }
+
+export default App;
