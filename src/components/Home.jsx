@@ -127,14 +127,14 @@ export default function Home() {
         setAnchorEl(null);
     };
 
-    const handleLogout = async () => {
-        try {
-            await logout();
-            navigate('/signin');
-        } catch (error) {
-            console.error("Failed to log out:", error);
-        }
-    };
+    // const handleLogout = async () => {
+    //     try {
+    //         await logout();
+    //         navigate('/signin');
+    //     } catch (error) {
+    //         console.error("Failed to log out:", error);
+    //     }
+    // };
 
     const handleProfile = () => {
         navigate('/profile');
@@ -193,14 +193,14 @@ export default function Home() {
                                 >
                                     Profile
                                 </Button> */}
-                                <Button
+                                {/* <Button
                                     startIcon={<MdLogout />}
                                     onClick={handleLogout}
                                     variant="outlined"
                                     color="error"
                                 >
                                     Logout
-                                </Button>
+                                </Button> */}
                             </Box>
                         }
                     />
