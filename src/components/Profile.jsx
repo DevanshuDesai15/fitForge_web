@@ -18,7 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { updateEmail, updatePassword } from 'firebase/auth';
 import { db } from '../firebase/config';
-import { MdArrowBack, MdPerson, MdEmail, MdLock, MdSave } from "react-icons/md";
+import { MdArrowBack, MdPerson, MdEmail, MdLock, MdSave, MdLogout } from "react-icons/md";
 
 const StyledCard = styled(Card)(({ theme }) => ({
     background: 'rgba(30, 30, 30, 0.9)',
@@ -149,18 +149,28 @@ export default function Profile() {
                             </Typography>
                         }
                         action={
-                            <Button
-                                startIcon={<MdArrowBack />}
-                                onClick={() => navigate('/')}
-                                sx={{
-                                    color: '#00ff9f',
-                                    '&:hover': {
-                                        backgroundColor: 'rgba(0, 255, 159, 0.1)',
-                                    },
-                                }}
-                            >
-                                Back to Home
-                            </Button>
+                            <Box sx={{ display: 'flex', gap: 2 }}>
+                                <Button
+                                    startIcon={<MdArrowBack />}
+                                    onClick={() => navigate('/')}
+                                    sx={{
+                                        color: '#00ff9f',
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(0, 255, 159, 0.1)',
+                                        },
+                                    }}
+                                >
+                                    Back to Home
+                                </Button>
+                                <Button
+                                    onClick={logout}
+                                    variant="outlined"
+                                    color="error"
+                                    startIcon={<MdLogout />}
+                                >
+                                    Logout
+                                </Button>
+                            </Box>
                         }
                     />
                     <CardContent>
