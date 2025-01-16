@@ -38,7 +38,7 @@ export default function Workout() {
 
     const workoutOptions = [
         {
-            title: 'Start New Workout',
+            title: 'Start New Workout Session',
             icon: <MdPlayArrow />,
             description: 'Begin a new training session',
             path: '/workout/start'
