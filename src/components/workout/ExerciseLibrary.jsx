@@ -7,17 +7,16 @@ import {
     TextField,
     Button,
     Grid,
+    CircularProgress,
+    Tabs,
+    Tab,
     IconButton,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions
+    Dialog
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
-import { db } from '../../firebase/config';
+import { MdAdd, MdFavorite, MdFavoriteBorder } from 'react-icons/md';
+import { fetchExercises, fetchExercisesByBodyPart } from '../../services/exerciseAPI';
 import { useAuth } from '../../contexts/AuthContext';
-import { MdAdd, MdEdit, MdDelete } from 'react-icons/md';
 
 const StyledCard = styled(Card)(({ theme }) => ({
     background: 'rgba(30, 30, 30, 0.9)',
@@ -46,59 +45,73 @@ const StyledTextField = styled(TextField)({
 
 export default function ExerciseLibrary() {
     const [exercises, setExercises] = useState([]);
-    const [open, setOpen] = useState(false);
-    const [newExercise, setNewExercise] = useState({
-        name: '',
-        category: '',
-        description: '',
-        defaultWeight: '',
-        defaultReps: '',
-        defaultSets: ''
-    });
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [activeTab, setActiveTab] = useState('all');
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const LIMIT = 10;
     const { currentUser } = useAuth();
+
+    const bodyParts = [
+        'all',
+        'back',
+        'cardio',
+        'chest',
+        'lower arms',
+        'lower legs',
+        'neck',
+        'shoulders',
+        'upper arms',
+        'upper legs',
+        'waist'
+    ];
 
     useEffect(() => {
         loadExercises();
-    }, []);
+    }, [activeTab, page]);
 
     const loadExercises = async () => {
+        setLoading(true);
+        setError('');
         try {
-            const q = query(
-                collection(db, 'exerciseLibrary'),
-                where("userId", "==", currentUser.uid)
-            );
-            const querySnapshot = await getDocs(q);
-            const exerciseData = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            setExercises(exerciseData);
-        } catch (error) {
-            console.error("Error loading exercises:", error);
+            let data;
+            if (activeTab === 'all') {
+                data = await fetchExercises(LIMIT, page * LIMIT);
+                console.log('Fetched exercises:', data);
+            } else {
+                data = await fetchExercisesByBodyPart(activeTab, LIMIT, page * LIMIT);
+            }
+
+            if (data.length < LIMIT) {
+                setHasMore(false);
+            }
+
+            if (page === 0) {
+                setExercises(data);
+            } else {
+                setExercises(prev => [...prev, ...data]);
+            }
+        } catch (err) {
+            console.error('API Error:', err);
+            setError('Error loading exercises. Please try again later.');
+        } finally {
+            setLoading(false);
         }
     };
 
-    const handleAddExercise = async () => {
-        try {
-            await addDoc(collection(db, 'exerciseLibrary'), {
-                ...newExercise,
-                userId: currentUser.uid,
-                createdAt: new Date().toISOString()
-            });
-            setOpen(false);
-            setNewExercise({
-                name: '',
-                category: '',
-                description: '',
-                defaultWeight: '',
-                defaultReps: '',
-                defaultSets: ''
-            });
-            loadExercises();
-        } catch (error) {
-            console.error("Error adding exercise:", error);
+    const loadMore = () => {
+        if (!loading && hasMore) {
+            setPage(prev => prev + 1);
         }
     };
+
+    const filteredExercises = Array.isArray(exercises) ? exercises.filter(exercise =>
+        exercise?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        exercise?.target?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        exercise?.equipment?.toLowerCase().includes(searchTerm.toLowerCase())
+    ) : [];
 
     return (
         <Box sx={{
@@ -107,75 +120,107 @@ export default function ExerciseLibrary() {
             padding: '1rem',
         }}>
             <div className="max-w-4xl mx-auto">
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                    <Typography variant="h4" sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
-                        Exercise Library
-                    </Typography>
-                    <Button
-                        variant="contained"
-                        startIcon={<MdAdd />}
-                        onClick={() => setOpen(true)}
+                <Typography variant="h4" sx={{ color: '#00ff9f', fontWeight: 'bold', mb: 3 }}>
+                    Exercise Library
+                </Typography>
+
+                <StyledCard sx={{ mb: 3 }}>
+                    <CardContent>
+                        <TextField
+                            fullWidth
+                            placeholder="Search exercises..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            sx={{
+                                '& .MuiInputBase-input': {
+                                    color: '#fff',
+                                },
+                            }}
+                        />
+                    </CardContent>
+                </StyledCard>
+
+                <StyledCard sx={{ mb: 3 }}>
+                    <Tabs
+                        value={activeTab}
+                        onChange={(e, newValue) => setActiveTab(newValue)}
+                        variant="scrollable"
+                        scrollButtons="auto"
                         sx={{
-                            background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
-                            color: '#000',
-                            fontWeight: 'bold',
+                            '& .MuiTab-root': { color: 'rgba(255, 255, 255, 0.7)' },
+                            '& .Mui-selected': { color: '#00ff9f !important' },
+                            '& .MuiTabs-indicator': { backgroundColor: '#00ff9f' },
                         }}
                     >
-                        Add Exercise
+                        {bodyParts.map((part) => (
+                            <Tab key={part} label={part} value={part} />
+                        ))}
+                    </Tabs>
+                </StyledCard>
+
+                {loading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                        <CircularProgress sx={{ color: '#00ff9f' }} />
+                    </Box>
+                ) : error ? (
+                    <Typography variant="body1" sx={{ color: '#ff4444' }}>
+                        {error}
+                    </Typography>
+                ) : (
+                    <Grid container spacing={3}>
+                        {filteredExercises.map((exercise) => (
+                            <Grid item xs={12} sm={6} md={4} key={exercise.id}>
+                                <StyledCard>
+                                    <CardContent>
+                                        <Box sx={{ position: 'relative' }}>
+                                            <img
+                                                src={exercise.gifUrl}
+                                                alt={exercise.name}
+                                                style={{
+                                                    width: '100%',
+                                                    borderRadius: '8px',
+                                                    marginBottom: '1rem'
+                                                }}
+                                                onError={(e) => {
+                                                    e.target.onerror = null;
+                                                    e.target.src = 'placeholder-image-url';
+                                                }}
+                                            />
+                                        </Box>
+                                        <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                            {exercise.name}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
+                                            Target: {exercise.target}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                            Equipment: {exercise.equipment}
+                                        </Typography>
+                                    </CardContent>
+                                </StyledCard>
+                            </Grid>
+                        ))}
+                    </Grid>
+                )}
+
+                {!loading && hasMore && (
+                    <Button
+                        onClick={loadMore}
+                        fullWidth
+                        sx={{
+                            mt: 3,
+                            color: '#00ff9f',
+                            borderColor: '#00ff9f',
+                            '&:hover': {
+                                borderColor: '#00ff9f',
+                                backgroundColor: 'rgba(0, 255, 159, 0.1)',
+                            },
+                        }}
+                        variant="outlined"
+                    >
+                        Load More
                     </Button>
-                </Box>
-
-                <Grid container spacing={3}>
-                    {exercises.map((exercise) => (
-                        <Grid item xs={12} sm={6} key={exercise.id}>
-                            <StyledCard>
-                                <CardContent>
-                                    <Typography variant="h6" sx={{ color: '#00ff9f' }}>
-                                        {exercise.name}
-                                    </Typography>
-                                    <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
-                                        {exercise.description}
-                                    </Typography>
-                                    <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
-                                        Default: {exercise.defaultWeight}kg × {exercise.defaultReps} reps × {exercise.defaultSets} sets
-                                    </Typography>
-                                </CardContent>
-                            </StyledCard>
-                        </Grid>
-                    ))}
-                </Grid>
-
-                <Dialog
-                    open={open}
-                    onClose={() => setOpen(false)}
-                    PaperProps={{
-                        style: {
-                            backgroundColor: '#1e1e1e',
-                            borderRadius: '16px',
-                        }
-                    }}
-                >
-                    <DialogTitle sx={{ color: '#00ff9f' }}>Add New Exercise</DialogTitle>
-                    <DialogContent>
-                        <StyledTextField
-                            autoFocus
-                            margin="dense"
-                            label="Exercise Name"
-                            fullWidth
-                            value={newExercise.name}
-                            onChange={(e) => setNewExercise({ ...newExercise, name: e.target.value })}
-                        />
-                        {/* Add more fields for exercise details */}
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setOpen(false)} sx={{ color: 'text.secondary' }}>
-                            Cancel
-                        </Button>
-                        <Button onClick={handleAddExercise} sx={{ color: '#00ff9f' }}>
-                            Add
-                        </Button>
-                    </DialogActions>
-                </Dialog>
+                )}
             </div>
         </Box>
     );
