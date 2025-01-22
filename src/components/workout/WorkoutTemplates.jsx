@@ -107,6 +107,11 @@ export default function WorkoutTemplates() {
 
     const loadTemplates = async () => {
         try {
+            if (!currentUser) {
+                setTemplates([]);
+                return;
+            }
+
             const q = query(
                 collection(db, 'workoutTemplates'),
                 where("userId", "==", currentUser.uid)
@@ -120,6 +125,7 @@ export default function WorkoutTemplates() {
         } catch (error) {
             console.error("Error loading templates:", error);
             setError("Failed to load templates");
+            setTemplates([]);
         }
     };
 
@@ -299,50 +305,65 @@ export default function WorkoutTemplates() {
                 </Box>
 
                 <Grid container spacing={3}>
-                    {templates.map((template) => (
-                        <Grid item xs={12} md={6} key={template.id}>
-                            <StyledCard>
-                                <CardContent>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                        <Typography variant="h6" sx={{ color: '#00ff9f' }}>
-                                            {template.name}
-                                        </Typography>
-                                        <Box>
-                                            <IconButton
-                                                onClick={() => handleStartTemplate(template)}
-                                                sx={{ color: '#00ff9f' }}
-                                            >
-                                                <MdPlayArrow />
-                                            </IconButton>
-                                            <IconButton
-                                                onClick={() => handleDeleteTemplate(template.id)}
-                                                sx={{ color: '#ff4444' }}
-                                            >
-                                                <MdDelete />
-                                            </IconButton>
+                    {Array.isArray(templates) && templates.length > 0 ? (
+                        templates.map((template) => (
+                            <Grid item xs={12} md={6} key={template.id}>
+                                <StyledCard>
+                                    <CardContent>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                            <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                                {template.name}
+                                            </Typography>
+                                            <Box>
+                                                <IconButton
+                                                    onClick={() => handleStartTemplate(template)}
+                                                    sx={{ color: '#00ff9f' }}
+                                                >
+                                                    <MdPlayArrow />
+                                                </IconButton>
+                                                <IconButton
+                                                    onClick={() => handleDeleteTemplate(template.id)}
+                                                    sx={{ color: '#ff4444' }}
+                                                >
+                                                    <MdDelete />
+                                                </IconButton>
+                                            </Box>
                                         </Box>
-                                    </Box>
-                                    <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-                                        {template.description}
-                                    </Typography>
-                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                        {template.exercises.map((exercise, index) => (
-                                            <Chip
-                                                key={index}
-                                                label={exercise.name}
-                                                icon={<MdFitnessCenter />}
-                                                sx={{
-                                                    backgroundColor: 'rgba(0, 255, 159, 0.1)',
-                                                    color: '#00ff9f',
-                                                    '& .MuiChip-icon': { color: '#00ff9f' }
-                                                }}
-                                            />
+                                        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+                                            {template.description}
+                                        </Typography>
+                                        {template.workoutDays?.map((day, index) => (
+                                            <Box key={day.id || index} sx={{ mt: 2 }}>
+                                                <Typography variant="subtitle1" sx={{ color: '#00ff9f' }}>
+                                                    {day.name}
+                                                </Typography>
+                                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                                    {day.muscleGroups?.map((mg, mgIndex) => (
+                                                        <Chip
+                                                            key={mg.id || mgIndex}
+                                                            label={mg.name}
+                                                            icon={<MdFitnessCenter />}
+                                                            sx={{
+                                                                backgroundColor: 'rgba(0, 255, 159, 0.1)',
+                                                                color: '#00ff9f',
+                                                                '& .MuiChip-icon': { color: '#00ff9f' }
+                                                            }}
+                                                        />
+                                                    ))}
+                                                </Box>
+                                            </Box>
                                         ))}
-                                    </Box>
-                                </CardContent>
-                            </StyledCard>
+                                    </CardContent>
+                                </StyledCard>
+                            </Grid>
+                        ))
+                    ) : (
+                        <Grid item xs={12}>
+                            <Typography variant="body1" sx={{ color: 'text.secondary', textAlign: 'center' }}>
+                                No workout templates found. Create one to get started!
+                            </Typography>
                         </Grid>
-                    ))}
+                    )}
                 </Grid>
 
                 <Dialog

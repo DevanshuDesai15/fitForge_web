@@ -13,17 +13,18 @@ console.log('API Options:', {
 export const fetchExercises = async (limit = 10, offset = 0) => {
     try {
         const response = await fetch(
-            `https://exercisedb.p.rapidapi.com/exercises?limit=${limit}&offset=${offset}`, 
+            `https://exercisedb.p.rapidapi.com/exercises?limit=${limit}&offset=${offset}`,
             exerciseOptions
         );
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
+
         const data = await response.json();
-        if (!Array.isArray(data)) {
-            throw new Error('Invalid data format received from API');
-        }
+        console.log(`Fetched ${data.length} exercises (limit: ${limit}, offset: ${offset})`);
         return data;
+
     } catch (error) {
         console.error('Error fetching exercises:', error);
         throw error;
@@ -33,7 +34,7 @@ export const fetchExercises = async (limit = 10, offset = 0) => {
 export const fetchExercisesByBodyPart = async (bodyPart, limit = 10, offset = 0) => {
     try {
         const response = await fetch(
-            `https://exercisedb.p.rapidapi.com/exercises/bodyPart/${bodyPart}?limit=${limit}&offset=${offset}`, 
+            `https://exercisedb.p.rapidapi.com/exercises/bodyPart/${bodyPart}`, 
             exerciseOptions
         );
         if (!response.ok) {

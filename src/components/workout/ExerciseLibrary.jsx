@@ -51,7 +51,7 @@ export default function ExerciseLibrary() {
     const [activeTab, setActiveTab] = useState('all');
     const [page, setPage] = useState(0);
     const [hasMore, setHasMore] = useState(true);
-    const LIMIT = 10;
+    const ITEMS_PER_PAGE = 10;
     const { currentUser } = useAuth();
 
     const bodyParts = [
@@ -76,15 +76,10 @@ export default function ExerciseLibrary() {
         setLoading(true);
         setError('');
         try {
-            let data;
-            if (activeTab === 'all') {
-                data = await fetchExercises(LIMIT, page * LIMIT);
-                console.log('Fetched exercises:', data);
-            } else {
-                data = await fetchExercisesByBodyPart(activeTab, LIMIT, page * LIMIT);
-            }
+            const data = await fetchExercises(ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+            console.log('Fetched exercises:', data);
 
-            if (data.length < LIMIT) {
+            if (data.length < ITEMS_PER_PAGE) {
                 setHasMore(false);
             }
 
