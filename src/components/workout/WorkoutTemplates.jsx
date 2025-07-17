@@ -153,7 +153,7 @@ export default function WorkoutTemplates() {
         try {
             const exercises = await fetchExercisesByTarget(muscleGroup.apiName);
             const exerciseArray = Array.isArray(exercises) ? exercises : [];
-            const exerciseList = exercises.slice(0, 20).map(ex => ({
+            const exerciseList = exerciseArray.slice(0, 20).map(ex => ({
                 id: ex.id,
                 name: ex.name,
                 target: ex.target,
