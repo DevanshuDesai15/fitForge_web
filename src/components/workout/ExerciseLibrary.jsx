@@ -89,6 +89,7 @@ export default function ExerciseLibrary() {
                 data = await fetchExercisesByBodyPart(activeTab, ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
             }
             console.log('Fetched exercises:', data);
+            console.log('Sample exercise with gifUrl:', data[0]);
 
             if (data.length < ITEMS_PER_PAGE) {
                 setHasMore(false);
@@ -186,7 +187,7 @@ export default function ExerciseLibrary() {
                                 <StyledCard>
                                     <CardContent>
                                         <Box sx={{ position: 'relative' }}>
-                                            {exercise.gifUrl ? (
+                                            {exercise.gifUrl && (
                                                 <img
                                                     src={exercise.gifUrl}
                                                     alt={exercise.name}
@@ -198,10 +199,29 @@ export default function ExerciseLibrary() {
                                                         marginBottom: '1rem'
                                                     }}
                                                     onError={(e) => {
-                                                        e.target.style.display = 'none';
+                                                        e.target.parentNode.innerHTML = `
+                                                            <div style="
+                                                                width: 100%;
+                                                                height: 200px;
+                                                                background-color: rgba(255, 255, 255, 0.1);
+                                                                border-radius: 8px;
+                                                                margin-bottom: 1rem;
+                                                                display: flex;
+                                                                align-items: center;
+                                                                justify-content: center;
+                                                            ">
+                                                                <svg width="48" height="48" fill="rgba(255, 255, 255, 0.3)" viewBox="0 0 24 24">
+                                                                    <path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29l-1.43-1.43z"/>
+                                                                </svg>
+                                                            </div>
+                                                        `;
+                                                    }}
+                                                    onLoad={(e) => {
+                                                        console.log('Image loaded successfully:', exercise.name);
                                                     }}
                                                 />
-                                            ) : (
+                                            )}
+                                            {!exercise.gifUrl && (
                                                 <Box
                                                     sx={{
                                                         width: '100%',
