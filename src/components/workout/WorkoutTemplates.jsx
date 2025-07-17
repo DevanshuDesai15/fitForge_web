@@ -129,7 +129,12 @@ export default function WorkoutTemplates() {
             const querySnapshot = await getDocs(q);
             const templateData = querySnapshot.docs.map(doc => ({
                 id: doc.id,
-                ...doc.data()
+                ...doc.data(),
+                workoutDays: (doc.data().workoutDays || []).map(day => ({
+                    ...day,
+                    muscleGroups: day.muscleGroups || [],
+                    exercises: day.exercises || []
+                }))
             }));
             setTemplates(templateData);
         } catch (error) {
@@ -232,7 +237,11 @@ export default function WorkoutTemplates() {
             name: template.name,
             description: template.description || ''
         });
-        setWorkoutDays(template.workoutDays || [{ id: 1, name: 'Day 1', muscleGroups: [], exercises: [] }]);
+        setWorkoutDays((template.workoutDays || []).map(day => ({
+            ...day,
+            muscleGroups: day.muscleGroups || [],
+            exercises: day.exercises || []
+        })));
         setOpenDialog(true);
     };
 
