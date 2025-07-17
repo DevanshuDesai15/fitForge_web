@@ -14,7 +14,7 @@ import {
     CardContent
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { MdAdd, MdFavorite, MdFavoriteBorder } from 'react-icons/md';
+import { MdAdd, MdFavorite, MdFavoriteBorder, MdFitnessCenter } from 'react-icons/md';
 import { fetchExercises, fetchExercisesByBodyPart } from '../../services/exerciseAPI';
 import { useAuth } from '../../contexts/AuthContext';
 
