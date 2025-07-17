@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import {
     Box,
-    Card,
-    CardContent,
+    MdFavorite,
+    MdFavoriteBorder,
+    MdFitnessCenter
     Typography,
     TextField,
     Button,
@@ -76,7 +77,12 @@ export default function ExerciseLibrary() {
         setLoading(true);
         setError('');
         try {
-            const data = await fetchExercises(ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+            let data;
+            if (activeTab === 'all') {
+                data = await fetchExercises(ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+            } else {
+                data = await fetchExercisesByBodyPart(activeTab, ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+            }
             console.log('Fetched exercises:', data);
 
             if (data.length < ITEMS_PER_PAGE) {
@@ -168,19 +174,37 @@ export default function ExerciseLibrary() {
                                 <StyledCard>
                                     <CardContent>
                                         <Box sx={{ position: 'relative' }}>
-                                            <img
-                                                src={exercise.gifUrl}
-                                                alt={exercise.name}
-                                                style={{
-                                                    width: '100%',
-                                                    borderRadius: '8px',
-                                                    marginBottom: '1rem'
-                                                }}
-                                                onError={(e) => {
-                                                    e.target.onerror = null;
-                                                    e.target.src = 'placeholder-image-url';
-                                                }}
-                                            />
+                                            {exercise.gifUrl ? (
+                                                <img
+                                                    src={exercise.gifUrl}
+                                                    alt={exercise.name}
+                                                    style={{
+                                                        width: '100%',
+                                                        height: '200px',
+                                                        objectFit: 'cover',
+                                                        borderRadius: '8px',
+                                                        marginBottom: '1rem'
+                                                    }}
+                                                    onError={(e) => {
+                                                        e.target.style.display = 'none';
+                                                    }}
+                                                />
+                                            ) : (
+                                                <Box
+                                                    sx={{
+                                                        width: '100%',
+                                                        height: '200px',
+                                                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                                        borderRadius: '8px',
+                                                        marginBottom: '1rem',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center'
+                                                    }}
+                                                >
+                                                    <MdFitnessCenter size={48} color="rgba(255, 255, 255, 0.3)" />
+                                                </Box>
+                                            )}
                                         </Box>
                                         <Typography variant="h6" sx={{ color: '#00ff9f' }}>
                                             {exercise.name}
@@ -191,6 +215,22 @@ export default function ExerciseLibrary() {
                                         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                                             Equipment: {exercise.equipment}
                                         </Typography>
+                                        <Button
+                                            fullWidth
+                                            variant="outlined"
+                                            startIcon={<MdAdd />}
+                                            sx={{
+                                                mt: 2,
+                                                borderColor: '#00ff9f',
+                                                color: '#00ff9f',
+                                                '&:hover': {
+                                                    borderColor: '#00e676',
+                                                    backgroundColor: 'rgba(0, 255, 159, 0.1)',
+                                                },
+                                            }}
+                                        >
+                                            Add to Library
+                                        </Button>
                                     </CardContent>
                                 </StyledCard>
                             </Grid>
