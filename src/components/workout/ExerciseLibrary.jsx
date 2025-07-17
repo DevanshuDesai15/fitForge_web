@@ -201,51 +201,39 @@ export default function ExerciseLibrary() {
                                                     onError={(e) => {
                                                         e.target.parentNode.innerHTML = `
                                                             <div style="
-                                                                width: 100%;
-                                                                height: 200px;
-                                                                background-color: rgba(255, 255, 255, 0.1);
-                                                                border-radius: 8px;
-                                                                margin-bottom: 1rem;
-                                                                display: flex;
-                                                                align-items: center;
-                                                                justify-content: center;
-                                                            ">
-                                                                <svg width="48" height="48" fill="rgba(255, 255, 255, 0.3)" viewBox="0 0 24 24">
-                                                                    <path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29l-1.43-1.43z"/>
-                                                                </svg>
-                                                            </div>
-                                                        `;
-                                                    }}
-                                                    onLoad={(e) => {
-                                                        console.log('Image loaded successfully:', exercise.name);
-                                                    }}
-                                                />
-                                            )}
-                                            {!exercise.gifUrl && (
-                                                <Box
-                                                    sx={{
-                                                        width: '100%',
-                                                        height: '200px',
-                                                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                                        borderRadius: '8px',
-                                                        marginBottom: '1rem',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center'
-                                                    }}
-                                                >
-                                                    <MdFitnessCenter size={48} color="rgba(255, 255, 255, 0.3)" />
-                                                </Box>
-                                            )}
+                                        <Box
+                                            sx={{
+                                                width: '100%',
+                                                height: '200px',
+                                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                                borderRadius: '8px',
+                                                marginBottom: '1rem',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                flexDirection: 'column',
+                                                gap: 1
+                                            }}
+                                        >
+                                            <MdFitnessCenter size={48} color="rgba(255, 255, 255, 0.3)" />
+                                            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                                                {exercise.category || 'Exercise'}
+                                            </Typography>
                                         </Box>
                                         <Typography variant="h6" sx={{ color: '#00ff9f' }}>
                                             {exercise.name}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
+                                            Category: {exercise.category}
                                         </Typography>
                                         <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
                                             Target: {exercise.target}
                                         </Typography>
                                         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                                             Equipment: {exercise.equipment}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                            Difficulty: {exercise.difficulty}
                                         </Typography>
                                         <Button
                                             fullWidth
