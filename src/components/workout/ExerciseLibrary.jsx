@@ -201,24 +201,45 @@ export default function ExerciseLibrary() {
                                                     onError={(e) => {
                                                         e.target.parentNode.innerHTML = `
                                                             <div style="
-                                        <Box
-                                            sx={{
-                                                width: '100%',
-                                                height: '200px',
-                                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                                borderRadius: '8px',
-                                                marginBottom: '1rem',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                flexDirection: 'column',
-                                                gap: 1
-                                            }}
-                                        >
-                                            <MdFitnessCenter size={48} color="rgba(255, 255, 255, 0.3)" />
-                                            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                                                {exercise.category || 'Exercise'}
-                                            </Typography>
+                                                                width: 100%;
+                                                                height: 200px;
+                                                                background-color: rgba(255, 255, 255, 0.1);
+                                                                border-radius: 8px;
+                                                                margin-bottom: 1rem;
+                                                                display: flex;
+                                                                align-items: center;
+                                                                justify-content: center;
+                                                                flex-direction: column;
+                                                                gap: 8px;
+                                                            ">
+                                                                <div style="font-size: 48px; color: rgba(255, 255, 255, 0.3);">💪</div>
+                                                                <div style="color: rgba(255, 255, 255, 0.5); font-size: 12px;">${exercise.category || 'Exercise'}</div>
+                                                            </div>
+                                                        `;
+                                                    }}
+                                                />
+                                            )}
+                                            {!exercise.gifUrl && (
+                                                <Box
+                                                    sx={{
+                                                        width: '100%',
+                                                        height: '200px',
+                                                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                                        borderRadius: '8px',
+                                                        marginBottom: '1rem',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        flexDirection: 'column',
+                                                        gap: 1
+                                                    }}
+                                                >
+                                                    <MdFitnessCenter size={48} color="rgba(255, 255, 255, 0.3)" />
+                                                    <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                                                        {exercise.category || 'Exercise'}
+                                                    </Typography>
+                                                </Box>
+                                            )}
                                         </Box>
                                         <Typography variant="h6" sx={{ color: '#00ff9f' }}>
                                             {exercise.name}
