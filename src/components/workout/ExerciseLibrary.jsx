@@ -199,23 +199,7 @@ export default function ExerciseLibrary() {
                                                         marginBottom: '1rem'
                                                     }}
                                                     onError={(e) => {
-                                                        e.target.parentNode.innerHTML = `
-                                                            <div style="
-                                                                width: 100%;
-                                                                height: 200px;
-                                                                background-color: rgba(255, 255, 255, 0.1);
-                                                                border-radius: 8px;
-                                                                margin-bottom: 1rem;
-                                                                display: flex;
-                                                                align-items: center;
-                                                                justify-content: center;
-                                                                flex-direction: column;
-                                                                gap: 8px;
-                                                            ">
-                                                                <div style="font-size: 48px; color: rgba(255, 255, 255, 0.3);">💪</div>
-                                                                <div style="color: rgba(255, 255, 255, 0.5); font-size: 12px;">${exercise.category || 'Exercise'}</div>
-                                                            </div>
-                                                        `;
+                                                        e.target.parentNode.innerHTML = `<div style="width: 100%; height: 200px; background-color: rgba(255, 255, 255, 0.1); border-radius: 8px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px;"><div style="font-size: 48px; color: rgba(255, 255, 255, 0.3);">💪</div><div style="color: rgba(255, 255, 255, 0.5); font-size: 12px;">${exercise.category || 'Exercise'}</div></div>`;
                                                     }}
                                                 />
                                             )}
