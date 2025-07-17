@@ -11,7 +11,8 @@ import {
     ListItem,
     ListItemText,
     Divider,
-    Grid
+    Grid,
+    CircularProgress
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -24,6 +25,7 @@ import {
     MdSignalCellular4Bar,
     MdList
 } from 'react-icons/md';
+import { fetchExerciseImage } from '../../services/exerciseAPI';
 
 const StyledCard = styled(Card)(({ theme }) => ({
     background: 'rgba(30, 30, 30, 0.9)',
@@ -38,6 +40,36 @@ export default function ExerciseDetail() {
     const navigate = useNavigate();
     const { id } = useParams();
     const exercise = location.state?.exercise;
+    const [imageUrl, setImageUrl] = useState(null);
+    const [imageLoading, setImageLoading] = useState(true);
+    const [imageError, setImageError] = useState(false);
+
+    useEffect(() => {
+        const loadExerciseImage = async () => {
+            if (exercise?.id) {
+                try {
+                    setImageLoading(true);
+                    setImageError(false);
+                    const url = await fetchExerciseImage(exercise.id, '720');
+                    setImageUrl(url);
+                } catch (error) {
+                    console.error('Failed to load exercise image:', error);
+                    setImageError(true);
+                } finally {
+                    setImageLoading(false);
+                }
+            }
+        };
+
+        loadExerciseImage();
+
+        // Cleanup function to revoke object URL
+        return () => {
+            if (imageUrl) {
+                URL.revokeObjectURL(imageUrl);
+            }
+        };
+    }, [exercise?.id]);
 
     if (!exercise) {
         return (
@@ -113,7 +145,7 @@ export default function ExerciseDetail() {
                         </Box>
 
                         <Grid container spacing={3}>
-                            <Grid item xs={12} md={6}>
+                            <Grid item xs={12} md={8}>
                                 <Box sx={{ mb: 3 }}>
                                     <Typography variant="h6" sx={{ color: '#00ff9f', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                                         <MdGpsFixed /> Exercise Details
@@ -185,7 +217,51 @@ export default function ExerciseDetail() {
                                 </Box>
                             </Grid>
 
-                            <Grid item xs={12} md={6}>
+                            <Grid item xs={12} md={4}>
+                                <Box sx={{ mb: 3 }}>
+                                    <Typography variant="h6" sx={{ color: '#00ff9f', mb: 2 }}>
+                                        Exercise Demonstration
+                                    </Typography>
+                                    <Box sx={{
+                                        width: '100%',
+                                        height: '300px',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                        borderRadius: '12px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                                        overflow: 'hidden'
+                                    }}>
+                                        {imageLoading ? (
+                                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                                                <CircularProgress sx={{ color: '#00ff9f' }} />
+                                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                                    Loading demonstration...
+                                                </Typography>
+                                            </Box>
+                                        ) : imageError ? (
+                                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                                                <MdFitnessCenter size={48} color="rgba(255, 255, 255, 0.3)" />
+                                                <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center' }}>
+                                                    Demonstration not available
+                                                </Typography>
+                                            </Box>
+                                        ) : (
+                                            <img
+                                                src={imageUrl}
+                                                alt={`${exercise.name} demonstration`}
+                                                style={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    objectFit: 'cover',
+                                                    borderRadius: '12px'
+                                                }}
+                                            />
+                                        )}
+                                    </Box>
+                                </Box>
+
                                 {exercise.secondaryMuscles && exercise.secondaryMuscles.length > 0 && (
                                     <Box sx={{ mb: 3 }}>
                                         <Typography variant="h6" sx={{ color: '#00ff9f', mb: 2 }}>

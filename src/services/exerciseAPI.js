@@ -83,3 +83,24 @@ export const fetchExerciseById = async (id) => {
         throw error;
     }
 };
+
+export const fetchExerciseImage = async (exerciseId, resolution = '360') => {
+    try {
+        const response = await fetch(
+            `https://exercisedb.p.rapidapi.com/image?exerciseId=${exerciseId}&resolution=${resolution}`,
+            exerciseOptions
+        );
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // The API returns the image as a blob
+        const imageBlob = await response.blob();
+        const imageUrl = URL.createObjectURL(imageBlob);
+        return imageUrl;
+    } catch (error) {
+        console.error('Error fetching exercise image:', error);
+        throw error;
+    }
+};
