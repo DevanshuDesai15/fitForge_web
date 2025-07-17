@@ -17,7 +17,7 @@ import { styled } from '@mui/material/styles';
 import {
     MdArrowBack,
     MdFitnessCenter,
-    MdOutlineTarget,
+    MdGpsFixed,
     MdBuild,
     MdSignalCellular1Bar,
     MdSignalCellular2Bar,
@@ -116,7 +116,7 @@ export default function ExerciseDetail() {
                             <Grid item xs={12} md={6}>
                                 <Box sx={{ mb: 3 }}>
                                     <Typography variant="h6" sx={{ color: '#00ff9f', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <MdTarget /> Exercise Details
+                                        <MdGpsFixed /> Exercise Details
                                     </Typography>
                                     
                                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -226,7 +226,7 @@ export default function ExerciseDetail() {
                         {exercise.instructions && exercise.instructions.length > 0 && (
                             <Box>
                                 <Typography variant="h6" sx={{ color: '#00ff9f', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <MdOutlineTarget /> Exercise Details
+                                    <MdList /> Instructions
                                 </Typography>
                                 <List>
                                     {exercise.instructions.map((instruction, index) => (
