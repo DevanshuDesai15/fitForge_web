@@ -268,7 +268,8 @@ export default function WorkoutTemplates() {
                 name: day.name,
                 muscleGroups: day.muscleGroups.map(mg => ({
                     id: mg.id,
-                    name: mg.name
+                    name: mg.name,
+                    apiName: mg.apiName
                 })),
                 exercises: day.exercises.map(ex => ({
                     id: ex.id,
@@ -329,7 +330,8 @@ export default function WorkoutTemplates() {
                 name: day.name,
                 muscleGroups: day.muscleGroups.map(mg => ({
                     id: mg.id,
-                    name: mg.name
+                    name: mg.name,
+                    apiName: mg.apiName
                 })),
                 exercises: day.exercises.map(ex => ({
                     id: ex.id,
