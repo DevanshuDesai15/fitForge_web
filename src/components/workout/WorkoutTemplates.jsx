@@ -96,15 +96,15 @@ export default function WorkoutTemplates() {
     const navigate = useNavigate();
 
     const muscleGroups = [
-        { id: 'back', name: 'Back', apiName: 'back' },
-        { id: 'chest', name: 'Chest', apiName: 'chest' },
-        { id: 'shoulders', name: 'Shoulders', apiName: 'shoulders' },
-        { id: 'upper_arms', name: 'Upper Arms', apiName: 'upper arms' },
-        { id: 'lower_arms', name: 'Lower Arms', apiName: 'lower arms' },
-        { id: 'upper_legs', name: 'Upper Legs', apiName: 'upper legs' },
-        { id: 'lower_legs', name: 'Lower Legs', apiName: 'lower legs' },
-        { id: 'waist', name: 'Abs/Core', apiName: 'waist' },
-        { id: 'cardio', name: 'Cardio', apiName: 'cardio' }
+        { id: 'back', name: 'Back', apiName: 'lats' },
+        { id: 'chest', name: 'Chest', apiName: 'pectorals' },
+        { id: 'shoulders', name: 'Shoulders', apiName: 'delts' },
+        { id: 'upper_arms', name: 'Upper Arms', apiName: 'biceps' },
+        { id: 'lower_arms', name: 'Lower Arms', apiName: 'forearms' },
+        { id: 'upper_legs', name: 'Upper Legs', apiName: 'quads' },
+        { id: 'lower_legs', name: 'Lower Legs', apiName: 'calves' },
+        { id: 'waist', name: 'Abs/Core', apiName: 'abs' },
+        { id: 'cardio', name: 'Cardio', apiName: 'cardiovascular system' }
     ];
 
     const [workoutDays, setWorkoutDays] = useState([
