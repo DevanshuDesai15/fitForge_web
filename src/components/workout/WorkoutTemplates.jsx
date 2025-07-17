@@ -391,93 +391,6 @@ export default function WorkoutTemplates() {
                             color: '#000',
                             fontWeight: 'bold',
                         }}
-
-                                {day.muscleGroups.length > 0 && (
-                                    <Box sx={{ mt: 2 }}>
-                                        <Typography variant="subtitle2" sx={{ color: '#00ff9f', mb: 1 }}>
-                                            Select Exercises:
-                                        </Typography>
-                                        {day.muscleGroups.map((muscleGroup) => (
-                                            <Accordion
-                                                key={muscleGroup.id}
-                                                sx={{
-                                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                                    mb: 1,
-                                                    '&:before': { display: 'none' }
-                                                }}
-                                            >
-                                                <AccordionSummary
-                                                    expandIcon={<MdExpandMore style={{ color: '#00ff9f' }} />}
-                                                    onClick={() => loadExercisesForMuscleGroup(muscleGroup)}
-                                                >
-                                                    <Typography sx={{ color: '#00ff9f' }}>
-                                                        {muscleGroup.name} Exercises
-                                                    </Typography>
-                                                </AccordionSummary>
-                                                <AccordionDetails>
-                                                    {loadingExercises ? (
-                                                        <Typography sx={{ color: 'text.secondary' }}>
-                                                            Loading exercises...
-                                                        </Typography>
-                                                    ) : (
-                                                        <Grid container spacing={1}>
-                                                            {(muscleGroupExercises[muscleGroup.id] || []).map((exercise) => (
-                                                                <Grid item xs={12} sm={6} key={exercise.id}>
-                                                                    <FormControlLabel
-                                                                        control={
-                                                                            <Checkbox
-                                                                                checked={day.exercises.some(ex => ex.id === exercise.id)}
-                                                                                onChange={() => handleExerciseToggle(day.id, exercise)}
-                                                                                sx={{
-                                                                                    color: 'rgba(255, 255, 255, 0.7)',
-                                                                                    '&.Mui-checked': {
-                                                                                        color: '#00ff9f',
-                                                                                    },
-                                                                                }}
-                                                                            />
-                                                                        }
-                                                                        label={
-                                                                            <Box>
-                                                                                <Typography variant="body2" sx={{ color: '#fff' }}>
-                                                                                    {exercise.name}
-                                                                                </Typography>
-                                                                                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                                                                    {exercise.target} • {exercise.equipment}
-                                                                                </Typography>
-                                                                            </Box>
-                                                                        }
-                                                                        sx={{ width: '100%', alignItems: 'flex-start' }}
-                                                                    />
-                                                                </Grid>
-                                                            ))}
-                                                        </Grid>
-                                                    )}
-                                                </AccordionDetails>
-                                            </Accordion>
-                                        ))}
-                                        
-                                        {day.exercises.length > 0 && (
-                                            <Box sx={{ mt: 2 }}>
-                                                <Typography variant="subtitle2" sx={{ color: '#00ff9f', mb: 1 }}>
-                                                    Selected Exercises ({day.exercises.length}):
-                                                </Typography>
-                                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                                    {day.exercises.map((exercise) => (
-                                                        <Chip
-                                                            key={exercise.id}
-                                                            label={exercise.name}
-                                                            onDelete={() => handleExerciseToggle(day.id, exercise)}
-                                                            sx={{
-                                                                backgroundColor: 'rgba(0, 255, 159, 0.2)',
-                                                                color: '#00ff9f',
-                                                            }}
-                                                        />
-                                                    ))}
-                                                </Box>
-                                            </Box>
-                                        )}
-                                    </Box>
-                                )}
                     >
                         Create Template
                     </Button>
@@ -565,28 +478,12 @@ export default function WorkoutTemplates() {
                         resetForm();
                     }}
                     PaperProps={{
-                <Button 
-                    onClick={() => {
-                        setOpenDialog(false);
-                        resetForm();
-                    }} 
-                    sx={{ color: 'text.secondary' }}
-                    startIcon={<MdCancel />}
-                >
+                        sx: {
                             backgroundColor: '#1e1e1e',
                             borderRadius: '16px',
                             maxWidth: '800px',
-                    onClick={editingTemplate ? handleUpdateTemplate : handleCreateTemplate}
                         }
-                    sx={{
-                        background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
-                        color: '#000',
-                        fontWeight: 'bold',
-                        '&:hover': {
-                            background: 'linear-gradient(45deg, #00e676 30%, #00ff9f 90%)',
-                        },
                     }}
-                    startIcon={<MdSave />}
                 >
                     <DialogTitle sx={{ color: '#00ff9f' }}>
                         {editingTemplate ? 'Edit Workout Template' : 'Create Workout Template'}
@@ -697,21 +594,123 @@ export default function WorkoutTemplates() {
                                                 </Box>
                                             </Box>
                                         )}
+
+                                        {day.muscleGroups.length > 0 && (
+                                            <Box sx={{ mt: 2 }}>
+                                                <Typography variant="subtitle2" sx={{ color: '#00ff9f', mb: 1 }}>
+                                                    Select Exercises:
+                                                </Typography>
+                                                {day.muscleGroups.map((muscleGroup) => (
+                                                    <Accordion
+                                                        key={muscleGroup.id}
+                                                        sx={{
+                                                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                                            mb: 1,
+                                                            '&:before': { display: 'none' }
+                                                        }}
+                                                    >
+                                                        <AccordionSummary
+                                                            expandIcon={<MdExpandMore style={{ color: '#00ff9f' }} />}
+                                                            onClick={() => loadExercisesForMuscleGroup(muscleGroup)}
+                                                        >
+                                                            <Typography sx={{ color: '#00ff9f' }}>
+                                                                {muscleGroup.name} Exercises
+                                                            </Typography>
+                                                        </AccordionSummary>
+                                                        <AccordionDetails>
+                                                            {loadingExercises ? (
+                                                                <Typography sx={{ color: 'text.secondary' }}>
+                                                                    Loading exercises...
+                                                                </Typography>
+                                                            ) : (
+                                                                <Grid container spacing={1}>
+                                                                    {(muscleGroupExercises[muscleGroup.id] || []).map((exercise) => (
+                                                                        <Grid item xs={12} sm={6} key={exercise.id}>
+                                                                            <FormControlLabel
+                                                                                control={
+                                                                                    <Checkbox
+                                                                                        checked={day.exercises.some(ex => ex.id === exercise.id)}
+                                                                                        onChange={() => handleExerciseToggle(day.id, exercise)}
+                                                                                        sx={{
+                                                                                            color: 'rgba(255, 255, 255, 0.7)',
+                                                                                            '&.Mui-checked': {
+                                                                                                color: '#00ff9f',
+                                                                                            },
+                                                                                        }}
+                                                                                    />
+                                                                                }
+                                                                                label={
+                                                                                    <Box>
+                                                                                        <Typography variant="body2" sx={{ color: '#fff' }}>
+                                                                                            {exercise.name}
+                                                                                        </Typography>
+                                                                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                                                                            {exercise.target} • {exercise.equipment}
+                                                                                        </Typography>
+                                                                                    </Box>
+                                                                                }
+                                                                                sx={{ width: '100%', alignItems: 'flex-start' }}
+                                                                            />
+                                                                        </Grid>
+                                                                    ))}
+                                                                </Grid>
+                                                            )}
+                                                        </AccordionDetails>
+                                                    </Accordion>
+                                                ))}
+                                                
+                                                {day.exercises.length > 0 && (
+                                                    <Box sx={{ mt: 2 }}>
+                                                        <Typography variant="subtitle2" sx={{ color: '#00ff9f', mb: 1 }}>
+                                                            Selected Exercises ({day.exercises.length}):
+                                                        </Typography>
+                                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                                            {day.exercises.map((exercise) => (
+                                                                <Chip
+                                                                    key={exercise.id}
+                                                                    label={exercise.name}
+                                                                    onDelete={() => handleExerciseToggle(day.id, exercise)}
+                                                                    sx={{
+                                                                        backgroundColor: 'rgba(0, 255, 159, 0.2)',
+                                                                        color: '#00ff9f',
+                                                                    }}
+                                                                />
+                                                            ))}
+                                                        </Box>
+                                                    </Box>
+                                                )}
+                                            </Box>
+                                        )}
                                     </CardContent>
                                 </Card>
                             ))}
                         </Box>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={() => setOpenDialog(false)} sx={{ color: 'text.secondary' }}>
+                        <Button 
+                            onClick={() => {
+                                setOpenDialog(false);
+                                resetForm();
+                            }} 
+                            sx={{ color: 'text.secondary' }}
+                            startIcon={<MdCancel />}
+                        >
                             Cancel
                         </Button>
                         <Button
-                            onClick={handleCreateTemplate}
+                            onClick={editingTemplate ? handleUpdateTemplate : handleCreateTemplate}
                             disabled={loading}
-                            sx={{ color: '#00ff9f' }}
+                            sx={{
+                                background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
+                                color: '#000',
+                                fontWeight: 'bold',
+                                '&:hover': {
+                                    background: 'linear-gradient(45deg, #00e676 30%, #00ff9f 90%)',
+                                },
+                            }}
+                            startIcon={<MdSave />}
                         >
-                    {loading ? 'Saving...' : (editingTemplate ? 'Update' : 'Create')}
+                            {loading ? 'Saving...' : (editingTemplate ? 'Update' : 'Create')}
                         </Button>
                     </DialogActions>
                 </Dialog>
