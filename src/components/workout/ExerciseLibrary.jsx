@@ -70,7 +70,13 @@ export default function ExerciseLibrary() {
 
     useEffect(() => {
         loadExercises();
-    }, [activeTab, page]);
+    }, [activeTab]);
+
+    useEffect(() => {
+        if (page > 0) {
+            loadExercises();
+        }
+    }, [page]);
 
     const loadExercises = async () => {
         setLoading(true);
@@ -105,6 +111,13 @@ export default function ExerciseLibrary() {
         if (!loading && hasMore) {
             setPage(prev => prev + 1);
         }
+    };
+
+    const handleTabChange = (e, newValue) => {
+        setActiveTab(newValue);
+        setPage(0);
+        setHasMore(true);
+        setSearchTerm(''); // Clear search when changing tabs
     };
 
     const filteredExercises = Array.isArray(exercises) ? exercises.filter(exercise =>
@@ -143,7 +156,7 @@ export default function ExerciseLibrary() {
                 <StyledCard sx={{ mb: 3 }}>
                     <Tabs
                         value={activeTab}
-                        onChange={(e, newValue) => setActiveTab(newValue)}
+                        onChange={handleTabChange}
                         variant="scrollable"
                         scrollButtons="auto"
                         sx={{
