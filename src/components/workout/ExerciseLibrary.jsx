@@ -4,19 +4,25 @@ import {
     Typography,
     TextField,
     Button,
-    Grid,
     CircularProgress,
     Tabs,
     Tab,
-    IconButton,
-    Dialog,
     Card,
-    CardContent
+    CardContent,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
+    Chip
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { MdAdd, MdFavorite, MdFavoriteBorder, MdFitnessCenter } from 'react-icons/md';
+import { MdFitnessCenter } from 'react-icons/md';
 import { fetchExercises, fetchExercisesByBodyPart } from '../../services/exerciseAPI';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const StyledCard = styled(Card)(({ theme }) => ({
     background: 'rgba(30, 30, 30, 0.9)',
@@ -53,6 +59,7 @@ export default function ExerciseLibrary() {
     const [hasMore, setHasMore] = useState(true);
     const ITEMS_PER_PAGE = 10;
     const { currentUser } = useAuth();
+    const navigate = useNavigate();
 
     const bodyParts = [
         'all',
@@ -119,6 +126,10 @@ export default function ExerciseLibrary() {
         setPage(0);
         setHasMore(true);
         setSearchTerm(''); // Clear search when changing tabs
+    };
+
+    const handleExerciseClick = (exercise) => {
+        navigate(`/workout/exercise/${exercise.id}`, { state: { exercise } });
     };
 
     const filteredExercises = Array.isArray(exercises) ? exercises.filter(exercise =>
@@ -199,68 +210,90 @@ export default function ExerciseLibrary() {
                                                         marginBottom: '1rem'
                                                     }}
                                                     onError={(e) => {
-                                                        e.target.parentNode.innerHTML = `<div style="width: 100%; height: 200px; background-color: rgba(255, 255, 255, 0.1); border-radius: 8px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px;"><div style="font-size: 48px; color: rgba(255, 255, 255, 0.3);">💪</div><div style="color: rgba(255, 255, 255, 0.5); font-size: 12px;">${exercise.category || 'Exercise'}</div></div>`;
-                                                    }}
-                                                />
-                                            )}
-                                            {!exercise.gifUrl && (
-                                                <Box
-                                                    sx={{
-                                                        width: '100%',
-                                                        height: '200px',
-                                                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                                        borderRadius: '8px',
-                                                        marginBottom: '1rem',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        flexDirection: 'column',
-                                                        gap: 1
-                                                    }}
-                                                >
-                                                    <MdFitnessCenter size={48} color="rgba(255, 255, 255, 0.3)" />
-                                                    <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                                                        {exercise.category || 'Exercise'}
-                                                    </Typography>
-                                                </Box>
-                                            )}
-                                        </Box>
-                                        <Typography variant="h6" sx={{ color: '#00ff9f' }}>
-                                            {exercise.name}
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
-                                            Category: {exercise.category}
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
-                                            Target: {exercise.target}
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                            Equipment: {exercise.equipment}
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                            Difficulty: {exercise.difficulty}
-                                        </Typography>
-                                        <Button
-                                            fullWidth
-                                            variant="outlined"
-                                            startIcon={<MdAdd />}
+                    <StyledCard>
+                        <TableContainer component={Paper} sx={{ backgroundColor: 'transparent' }}>
+                            <Table>
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
+                                            Exercise Name
+                                        </TableCell>
+                                        <TableCell sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
+                                            Body Part
+                                        </TableCell>
+                                        <TableCell sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
+                                            Target
+                                        </TableCell>
+                                        <TableCell sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
+                                            Equipment
+                                        </TableCell>
+                                        <TableCell sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
+                                            Difficulty
+                                        </TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {filteredExercises.map((exercise) => (
+                                        <TableRow
+                                            key={exercise.id}
+                                            onClick={() => handleExerciseClick(exercise)}
                                             sx={{
-                                                mt: 2,
-                                                borderColor: '#00ff9f',
-                                                color: '#00ff9f',
+                                                cursor: 'pointer',
                                                 '&:hover': {
-                                                    borderColor: '#00e676',
                                                     backgroundColor: 'rgba(0, 255, 159, 0.1)',
                                                 },
+                                                '& td': {
+                                                    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                                                    color: '#fff',
+                                                }
                                             }}
                                         >
-                                            Add to Library
-                                        </Button>
-                                    </CardContent>
-                                </StyledCard>
-                            </Grid>
-                        ))}
-                    </Grid>
+                                            <TableCell>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    <MdFitnessCenter size={20} color="#00ff9f" />
+                                                    <Typography sx={{ color: '#fff' }}>
+                                                        {exercise.name}
+                                                    </Typography>
+                                                </Box>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Chip
+                                                    label={exercise.bodyPart}
+                                                    size="small"
+                                                    sx={{
+                                                        backgroundColor: 'rgba(0, 255, 159, 0.2)',
+                                                        color: '#00ff9f',
+                                                        textTransform: 'capitalize'
+                                                    }}
+                                                />
+                                            </TableCell>
+                                            <TableCell sx={{ textTransform: 'capitalize' }}>
+                                                {exercise.target}
+                                            </TableCell>
+                                            <TableCell sx={{ textTransform: 'capitalize' }}>
+                                                {exercise.equipment}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Chip
+                                                    label={exercise.difficulty}
+                                                    size="small"
+                                                    sx={{
+                                                        backgroundColor: exercise.difficulty === 'beginner' ? 'rgba(76, 175, 80, 0.2)' :
+                                                                        exercise.difficulty === 'intermediate' ? 'rgba(255, 193, 7, 0.2)' :
+                                                                        'rgba(244, 67, 54, 0.2)',
+                                                        color: exercise.difficulty === 'beginner' ? '#4caf50' :
+                                                               exercise.difficulty === 'intermediate' ? '#ffc107' :
+                                                               '#f44336',
+                                                        textTransform: 'capitalize'
+                                                    }}
+                                                />
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </StyledCard>
                 )}
 
                 {!loading && hasMore && (

@@ -20,6 +20,7 @@ import StartWorkout from './components/workout/StartWorkout';
 import ExerciseLibrary from './components/workout/ExerciseLibrary';
 import WorkoutTemplates from './components/workout/WorkoutTemplates';
 import QuickAdd from './components/workout/QuickAdd';
+import ExerciseDetail from './components/workout/ExerciseDetail';
 
 function App() {
   return (
@@ -67,6 +68,14 @@ function App() {
                 <ProtectedRoute>
                   <>
                     <ExerciseLibrary />
+                    <Navigation />
+                  </>
+                </ProtectedRoute>
+              } />
+              <Route path="/workout/exercise/:id" element={
+                <ProtectedRoute>
+                  <>
+                    <ExerciseDetail />
                     <Navigation />
                   </>
                 </ProtectedRoute>
