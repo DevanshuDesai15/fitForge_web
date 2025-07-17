@@ -193,37 +193,7 @@ export default function ExerciseLibrary() {
                         {error}
                     </Typography>
                 ) : (
-                    <Grid container spacing={3}>
-                        {filteredExercises.map((exercise) => (
-                            <Grid item xs={12} sm={6} md={4} key={exercise.id}>
-                                <StyledCard>
-                                    <CardContent>
-                                        <Box sx={{ position: 'relative' }}>
-                                            {exercise.gifUrl && (
-                                                <img
-                                                    src={exercise.gifUrl}
-                                                    alt={exercise.name}
-                                                    style={{
-                                                        width: '100%',
-                                                        height: '200px',
-                                                        objectFit: 'cover',
-                                                        borderRadius: '8px',
-                                                        marginBottom: '1rem'
-                                                    }}
-                                                    onError={(e) => {
-                                                        e.target.style.display = 'none';
-                                                    }}
-                                                />
-                                            )}
-                                        </Box>
-                                    </CardContent>
-                                </StyledCard>
-                            </Grid>
-                        ))}
-                    </Grid>
-                )}
-
-                {!loading && (
+                    <>
                     <StyledCard>
                         <TableContainer component={Paper} sx={{ backgroundColor: 'transparent' }}>
                             <Table>
@@ -308,6 +278,7 @@ export default function ExerciseLibrary() {
                             </Table>
                         </TableContainer>
                     </StyledCard>
+                    </>
                 )}
 
                 {!loading && hasMore && (

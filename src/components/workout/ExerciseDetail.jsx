@@ -17,7 +17,7 @@ import { styled } from '@mui/material/styles';
 import {
     MdArrowBack,
     MdFitnessCenter,
-    MdTarget,
+    MdOutlineTarget,
     MdBuild,
     MdSignalCellular1Bar,
     MdSignalCellular2Bar,
@@ -226,7 +226,7 @@ export default function ExerciseDetail() {
                         {exercise.instructions && exercise.instructions.length > 0 && (
                             <Box>
                                 <Typography variant="h6" sx={{ color: '#00ff9f', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <MdList /> Instructions
+                                    <MdOutlineTarget /> Exercise Details
                                 </Typography>
                                 <List>
                                     {exercise.instructions.map((instruction, index) => (
