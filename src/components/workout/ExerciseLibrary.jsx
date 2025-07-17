@@ -3,7 +3,7 @@ import {
     Box,
     MdFavorite,
     MdFavoriteBorder,
-    MdFitnessCenter
+    MdFitnessCenter,
     Typography,
     TextField,
     Button,
