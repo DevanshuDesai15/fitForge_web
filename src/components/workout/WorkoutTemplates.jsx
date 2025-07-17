@@ -145,6 +145,11 @@ export default function WorkoutTemplates() {
     };
 
     const loadExercisesForMuscleGroup = async (muscleGroup) => {
+        if (!muscleGroup || !muscleGroup.apiName) {
+            console.error('Invalid muscle group or missing apiName:', muscleGroup);
+            return [];
+        }
+
         if (muscleGroupExercises[muscleGroup.id]) {
             return muscleGroupExercises[muscleGroup.id];
         }
