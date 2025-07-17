@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
     Box,
-    MdFavorite,
-    MdFavoriteBorder,
-    MdFitnessCenter,
     Typography,
     TextField,
     Button,
@@ -12,7 +9,9 @@ import {
     Tabs,
     Tab,
     IconButton,
-    Dialog
+    Dialog,
+    Card,
+    CardContent
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { MdAdd, MdFavorite, MdFavoriteBorder } from 'react-icons/md';
