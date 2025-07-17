@@ -16,7 +16,8 @@ import {
     TableHead,
     TableRow,
     Paper,
-    Chip
+    Chip,
+    Grid
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { MdFitnessCenter } from 'react-icons/md';
@@ -210,6 +211,19 @@ export default function ExerciseLibrary() {
                                                         marginBottom: '1rem'
                                                     }}
                                                     onError={(e) => {
+                                                        e.target.style.display = 'none';
+                                                    }}
+                                                />
+                                            )}
+                                        </Box>
+                                    </CardContent>
+                                </StyledCard>
+                            </Grid>
+                        ))}
+                    </Grid>
+                )}
+
+                {!loading && (
                     <StyledCard>
                         <TableContainer component={Paper} sx={{ backgroundColor: 'transparent' }}>
                             <Table>
