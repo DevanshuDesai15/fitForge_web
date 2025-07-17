@@ -45,7 +45,7 @@ import { collection, addDoc, getDocs, query, where, deleteDoc, doc, updateDoc } 
 import { db } from '../../firebase/config';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { fetchExercisesByBodyPart } from '../../services/exerciseAPI';
+import { fetchExercisesByTarget } from '../../services/exerciseAPI';
 
 const StyledCard = styled(Card)(({ theme }) => ({
     background: 'rgba(30, 30, 30, 0.9)',
@@ -151,7 +151,7 @@ export default function WorkoutTemplates() {
 
         setLoadingExercises(true);
         try {
-            const exercises = await fetchExercisesByBodyPart(muscleGroup.apiName);
+            const exercises = await fetchExercisesByTarget(muscleGroup.apiName);
             const exerciseList = exercises.slice(0, 20).map(ex => ({
                 id: ex.id,
                 name: ex.name,

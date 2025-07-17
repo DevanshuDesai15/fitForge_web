@@ -53,6 +53,27 @@ export const fetchExercisesByBodyPart = async (bodyPart, limit = 10, offset = 0)
 
 export const fetchExercisesByTarget = async (target) => {
     try {
+        const response = await fetch(`${API_BASE_URL}/exercises/target/${target}?limit=20`, {
+            method: 'GET',
+            headers: {
+                'X-RapidAPI-Key': API_KEY,
+                'X-RapidAPI-Host': 'exercisedb.p.rapidapi.com'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching exercises by target:', error);
+        throw error;
+    }
+};
+export const fetchExercisesByTarget = async (target) => {
+    try {
         const response = await fetch(`https://exercisedb.p.rapidapi.com/exercises/target/${target}`, exerciseOptions);
         const data = await response.json();
         return data;
