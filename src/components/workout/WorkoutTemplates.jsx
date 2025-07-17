@@ -430,13 +430,13 @@ export default function WorkoutTemplates() {
                                         <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
                                             {template.description}
                                         </Typography>
-                                        {template.workoutDays?.map((day, index) => (
+                                        {(Array.isArray(template.workoutDays) ? template.workoutDays : []).map((day, index) => (
                                             <Box key={day.id || index} sx={{ mt: 2 }}>
                                                 <Typography variant="subtitle1" sx={{ color: '#00ff9f' }}>
                                                     {day.name}
                                                 </Typography>
                                                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                                    {day.muscleGroups?.map((mg, mgIndex) => (
+                                                    {(Array.isArray(day.muscleGroups) ? day.muscleGroups : []).map((mg, mgIndex) => (
                                                         <Chip
                                                             key={mg.id || mgIndex}
                                                             label={mg.name}
@@ -449,7 +449,7 @@ export default function WorkoutTemplates() {
                                                         />
                                                     ))}
                                                 </Box>
-                                                {day.exercises && day.exercises.length > 0 && (
+                                                {Array.isArray(day.exercises) && day.exercises.length > 0 && (
                                                     <Box sx={{ mt: 1 }}>
                                                         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                                                             {day.exercises.length} exercises selected
