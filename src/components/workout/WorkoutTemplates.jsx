@@ -595,7 +595,7 @@ export default function WorkoutTemplates() {
                                             </Box>
                                         )}
 
-                                        {day.muscleGroups.length > 0 && (
+                                        {day.muscleGroups.length > 0 &&
                                             <Box sx={{ mt: 2 }}>
                                                 <Typography variant="subtitle2" sx={{ color: '#00ff9f', mb: 1 }}>
                                                     Select Exercises:
@@ -680,7 +680,7 @@ export default function WorkoutTemplates() {
                                                     </Box>
                                                 )}
                                             </Box>
-                                        )}
+                                        }
                                     </CardContent>
                                 </Card>
                             ))}
