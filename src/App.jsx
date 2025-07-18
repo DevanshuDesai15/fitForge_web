@@ -14,6 +14,7 @@ import Profile from './components/Profile';
 import Workout from './components/Workout';
 import History from './components/History';
 import Progress from './components/Progress';
+import ExerciseManager from './components/ExerciseManager';
 
 // Workout sub-components
 import StartWorkout from './components/workout/StartWorkout';
@@ -117,6 +118,16 @@ function App() {
                 <ProtectedRoute>
                   <>
                     <Progress />
+                    <Navigation />
+                  </>
+                </ProtectedRoute>
+              } />
+
+              {/* Exercise Manager route */}
+              <Route path="/exercise-manager" element={
+                <ProtectedRoute>
+                  <>
+                    <ExerciseManager />
                     <Navigation />
                   </>
                 </ProtectedRoute>

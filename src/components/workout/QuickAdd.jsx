@@ -9,7 +9,6 @@ import {
     Alert,
     CircularProgress,
     FormControl,
-    InputLabel,
     Select,
     MenuItem,
     ListSubheader,
@@ -17,16 +16,16 @@ import {
     InputAdornment
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { MdAdd, MdSave, MdFavorite, MdSearch } from 'react-icons/md';
+import { MdSave, MdFavorite, MdSearch } from 'react-icons/md';
 import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { fetchExercises } from '../../services/exerciseAPI';
-import { initializeExerciseDatabase, getAllExercises, checkExerciseDatabase } from '../../services/exerciseInitializer';
+import { fetchAllExercises } from '../../services/exerciseAPI';
 import ExerciseListSkeleton from '../common/ExerciseListSkeleton';
+import { validateExerciseName, autoCorrectExerciseName } from '../../utils/exerciseValidator';
 
-const StyledCard = styled(Card)(({ theme }) => ({
+const StyledCard = styled(Card)(() => ({
     background: 'rgba(30, 30, 30, 0.9)',
     backdropFilter: 'blur(10px)',
     borderRadius: '16px',
@@ -70,6 +69,14 @@ export default function QuickAdd() {
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
     const [isInitialLoad, setIsInitialLoad] = useState(true);
+    const [validationWarning, setValidationWarning] = useState('');
+    const [suggestions, setSuggestions] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+
+    // Debug effect to log exercise state changes
+    useEffect(() => {
+        console.log('🎯 Exercise state updated:', exercise);
+    }, [exercise]);
 
     // Add this effect to preload exercises
     useEffect(() => {
@@ -84,7 +91,7 @@ export default function QuickAdd() {
                     const parsed = JSON.parse(cachedExercises);
                     setApiExercises(parsed);
                     setLoadingExercises(false);
-                    console.log('Loaded exercises from cache');
+                    // console.log('Loaded exercises from cache');
                 } else {
                     await loadAllExercises();
                 }
@@ -101,7 +108,7 @@ export default function QuickAdd() {
     const loadAllExercises = async () => {
         setLoadingExercises(true);
         try {
-            const apiData = await fetchExercises(0, 0);
+            const apiData = await fetchAllExercises();
 
             const uniqueApiExercises = [...new Set(apiData.map(ex => ex.name))].map(name => {
                 const exercise = apiData.find(ex => ex.name === name);
@@ -144,17 +151,34 @@ export default function QuickAdd() {
 
     const handleExerciseSelect = (event) => {
         const selectedValue = event.target.value;
+
+        console.log('🔍 Exercise selected:', selectedValue, typeof selectedValue);
+
+        // Skip null/undefined values (from search field or other non-selectable items)
+        if (selectedValue === null || selectedValue === undefined) {
+            console.log('⏭️ Skipping null/undefined value');
+            return;
+        }
+
         setSelectedExercise(selectedValue);
 
-        if (selectedValue) {
+        if (selectedValue && selectedValue !== '') {
             let selected;
+
             if (selectedValue.startsWith('api-')) {
                 selected = apiExercises.find(ex => ex.id === selectedValue);
-            } else {
+                console.log('📋 API exercise found:', selected);
+            } else if (selectedValue.startsWith('saved-')) {
                 selected = savedExercises.find(ex => ex.id === selectedValue);
+                console.log('💾 Saved exercise found:', selected);
             }
 
             if (selected) {
+                console.log('✅ Setting exercise data:', {
+                    name: selected.name,
+                    type: selected.type
+                });
+
                 setExercise(prev => ({
                     ...prev,
                     exerciseName: selected.name,
@@ -165,7 +189,22 @@ export default function QuickAdd() {
                         `Target: ${selected.target}, Equipment: ${selected.equipment}` :
                         selected.notes || ''
                 }));
+            } else {
+                console.error('❌ Exercise not found for ID:', selectedValue);
+                console.log('Available API exercises (first 3):', apiExercises.slice(0, 3));
+                console.log('Available saved exercises (first 3):', savedExercises.slice(0, 3));
             }
+        } else if (selectedValue === '') {
+            // Clear form when "Custom Exercise" is selected
+            console.log('🧹 Clearing form for custom exercise');
+            setExercise(prev => ({
+                ...prev,
+                exerciseName: '',
+                weight: '',
+                reps: '',
+                sets: '',
+                notes: ''
+            }));
         }
     };
 
@@ -176,8 +215,12 @@ export default function QuickAdd() {
         setSuccess('');
 
         try {
+            // Auto-correct exercise name before saving
+            const correctedName = autoCorrectExerciseName(exercise.exerciseName);
+
             await addDoc(collection(db, 'exercises'), {
                 ...exercise,
+                exerciseName: correctedName,
                 userId: currentUser.uid,
                 timestamp: new Date().toISOString(),
             });
@@ -205,15 +248,68 @@ export default function QuickAdd() {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+        console.log('📝 Input changed:', name, '=', value);
+
         setExercise(prev => ({
             ...prev,
             [name]: value
         }));
 
-        // Clear selected exercise if user modifies the exercise name
-        if (name === 'exerciseName') {
+        // Clear selected exercise if user manually modifies the exercise name
+        // Only clear if the user is typing (not if it's being set programmatically)
+        if (name === 'exerciseName' && e.target.type !== 'hidden') {
             setSelectedExercise('');
+            validateExerciseInput(value);
         }
+    };
+
+    // Validate exercise name as user types
+    const validateExerciseInput = async (inputName) => {
+        if (!inputName || inputName.length < 2) {
+            setValidationWarning('');
+            setSuggestions([]);
+            setShowSuggestions(false);
+            return;
+        }
+
+        try {
+            // Get all existing exercises for validation
+            const existingExercises = await getDocs(query(
+                collection(db, 'exercises'),
+                where('userId', '==', currentUser.uid)
+            ));
+            const userExercises = existingExercises.docs.map(doc => ({
+                exerciseName: doc.data().exerciseName
+            }));
+
+            const validation = validateExerciseName(inputName, userExercises, apiExercises);
+
+            if (validation.exactMatch) {
+                setValidationWarning('');
+                setSuggestions([]);
+                setShowSuggestions(false);
+            } else if (validation.suggestions && validation.suggestions.length > 0) {
+                setValidationWarning(validation.warning || 'Similar exercises found');
+                setSuggestions(validation.suggestions);
+                setShowSuggestions(true);
+            } else if (validation.isNew) {
+                setValidationWarning('');
+                setSuggestions([]);
+                setShowSuggestions(false);
+            }
+        } catch (error) {
+            console.error('Error validating exercise name:', error);
+        }
+    };
+
+    const applySuggestion = (suggestion) => {
+        setExercise(prev => ({
+            ...prev,
+            exerciseName: suggestion.original
+        }));
+        setValidationWarning('');
+        setSuggestions([]);
+        setShowSuggestions(false);
     };
 
     // Optimize filtering for larger datasets
@@ -243,8 +339,7 @@ export default function QuickAdd() {
             vertical: 'top',
             horizontal: 'left',
         },
-        getContentAnchorEl: null,
-        // Virtualization for better performance with large lists
+        // Removed deprecated getContentAnchorEl prop for Material-UI v5+ compatibility
         MenuListProps: {
             style: {
                 paddingTop: 0,
@@ -274,6 +369,27 @@ export default function QuickAdd() {
                 >
                     Quick Add Exercise
                 </Typography>
+
+                {/* Debug Info - Remove in production */}
+                {import.meta.env.DEV && (
+                    <Box sx={{ mb: 3, p: 2, backgroundColor: 'rgba(255, 193, 7, 0.1)', borderRadius: 1 }}>
+                        <Typography variant="caption" sx={{ color: '#ffc107', display: 'block' }}>
+                            🔧 Debug Info:
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#fff', display: 'block' }}>
+                            Selected Exercise ID: {selectedExercise || 'None'}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#fff', display: 'block' }}>
+                            Exercise Name: {exercise.exerciseName || 'Empty'}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#fff', display: 'block' }}>
+                            API Exercises Loaded: {apiExercises.length}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#fff', display: 'block' }}>
+                            Saved Exercises: {savedExercises.length}
+                        </Typography>
+                    </Box>
+                )}
 
                 {error && (
                     <Alert
@@ -344,7 +460,7 @@ export default function QuickAdd() {
                                             }}
                                             MenuProps={menuProps}
                                         >
-                                            <MenuItem>
+                                            <MenuItem disabled sx={{ pointerEvents: 'none' }}>
                                                 <TextField
                                                     autoFocus
                                                     fullWidth
@@ -365,6 +481,7 @@ export default function QuickAdd() {
                                                         '& .MuiInput-underline:after': {
                                                             borderBottomColor: '#00ff9f',
                                                         },
+                                                        pointerEvents: 'auto',
                                                     }}
                                                     InputProps={{
                                                         startAdornment: (
@@ -439,7 +556,7 @@ export default function QuickAdd() {
                                                     {filteredExercises.saved.length === 0 &&
                                                         filteredExercises.api.length === 0 && (
                                                             <MenuItem disabled>
-                                                                No exercises found matching "{searchTerm}"
+                                                                No exercises found matching &quot;{searchTerm}&quot;
                                                             </MenuItem>
                                                         )}
                                                 </>
@@ -457,6 +574,65 @@ export default function QuickAdd() {
                                         onChange={handleChange}
                                         required
                                     />
+
+                                    {/* Validation Warning */}
+                                    {validationWarning && (
+                                        <Box sx={{ mt: 1 }}>
+                                            <Alert
+                                                severity="warning"
+                                                sx={{
+                                                    backgroundColor: 'rgba(255, 159, 10, 0.1)',
+                                                    color: '#ff9f0a',
+                                                    '& .MuiAlert-icon': { color: '#ff9f0a' }
+                                                }}
+                                            >
+                                                {validationWarning}
+                                            </Alert>
+                                        </Box>
+                                    )}
+
+                                    {/* Exercise Suggestions */}
+                                    {showSuggestions && suggestions.length > 0 && (
+                                        <Box sx={{
+                                            mt: 1,
+                                            p: 2,
+                                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                            borderRadius: 1,
+                                            border: '1px solid rgba(255, 159, 10, 0.3)'
+                                        }}>
+                                            <Typography variant="body2" sx={{ color: '#ff9f0a', mb: 1 }}>
+                                                Did you mean:
+                                            </Typography>
+                                            {suggestions.slice(0, 3).map((suggestion, index) => (
+                                                <Button
+                                                    key={index}
+                                                    variant="outlined"
+                                                    size="small"
+                                                    onClick={() => applySuggestion(suggestion)}
+                                                    sx={{
+                                                        mr: 1,
+                                                        mb: 1,
+                                                        borderColor: 'rgba(255, 159, 10, 0.5)',
+                                                        color: '#ff9f0a',
+                                                        '&:hover': {
+                                                            borderColor: '#ff9f0a',
+                                                            backgroundColor: 'rgba(255, 159, 10, 0.1)',
+                                                        },
+                                                    }}
+                                                >
+                                                    {suggestion.original} ({(suggestion.similarity * 100).toFixed(0)}% similar)
+                                                </Button>
+                                            ))}
+                                            <Button
+                                                variant="text"
+                                                size="small"
+                                                onClick={() => setShowSuggestions(false)}
+                                                sx={{ color: 'text.secondary', ml: 1 }}
+                                            >
+                                                Continue anyway
+                                            </Button>
+                                        </Box>
+                                    )}
                                 </Grid>
 
                                 <Grid item xs={12} sm={4}>

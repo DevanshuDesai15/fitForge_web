@@ -12,7 +12,14 @@ import {
     ListItemText,
     Chip,
     Divider,
-    CircularProgress
+    CircularProgress,
+    IconButton,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button,
+    Tooltip
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -20,12 +27,30 @@ import {
     MdHistory,
     MdFitnessCenter,
     MdTimer,
-    MdToday
+    MdToday,
+    MdChevronLeft,
+    MdChevronRight,
+    MdTrendingUp,
+    MdBarChart,
+    MdClose
 } from 'react-icons/md';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
-import { format } from 'date-fns';
+import {
+    format,
+    startOfMonth,
+    endOfMonth,
+    eachDayOfInterval,
+    isSameDay,
+    addMonths,
+    subMonths,
+    getDay,
+    isSameMonth,
+    isToday,
+    startOfWeek,
+    endOfWeek
+} from 'date-fns';
 
 const StyledCard = styled(Card)(({ theme }) => ({
     background: 'rgba(30, 30, 30, 0.9)',
@@ -35,12 +60,45 @@ const StyledCard = styled(Card)(({ theme }) => ({
     border: '1px solid rgba(255, 255, 255, 0.1)',
 }));
 
+const CalendarDay = styled(Box, {
+    shouldForwardProp: (prop) => !['isWorkoutDay', 'isToday', 'isCurrentMonth'].includes(prop),
+})(({ isWorkoutDay, isToday, isCurrentMonth }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 40,
+    height: 40,
+    borderRadius: '50%',
+    cursor: isWorkoutDay ? 'pointer' : 'default',
+    transition: 'all 0.2s',
+    backgroundColor: isWorkoutDay ? 'rgba(0, 255, 159, 0.3)' : 'transparent',
+    border: isToday ? '2px solid #00ff9f' : 'none',
+    color: isCurrentMonth ? '#fff' : 'rgba(255, 255, 255, 0.3)',
+    '&:hover': {
+        backgroundColor: isWorkoutDay ? 'rgba(0, 255, 159, 0.5)' : 'rgba(255, 255, 255, 0.1)',
+        transform: isWorkoutDay ? 'scale(1.1)' : 'none',
+    },
+}));
+
+const StatCard = styled(Card)(() => ({
+    background: 'linear-gradient(135deg, rgba(0, 255, 159, 0.1) 0%, rgba(0, 229, 118, 0.1) 100%)',
+    backdropFilter: 'blur(10px)',
+    borderRadius: '12px',
+    border: '1px solid rgba(0, 255, 159, 0.2)',
+    padding: '1rem',
+}));
+
 export default function History() {
     const [activeTab, setActiveTab] = useState(0);
     const [workouts, setWorkouts] = useState([]);
     const [exerciseHistory, setExerciseHistory] = useState([]);
+    const [workoutDates, setWorkoutDates] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [currentDate, setCurrentDate] = useState(new Date());
+    const [selectedDate, setSelectedDate] = useState(null);
+    const [selectedDateWorkouts, setSelectedDateWorkouts] = useState([]);
+    const [dialogOpen, setDialogOpen] = useState(false);
     const { currentUser } = useAuth();
 
     useEffect(() => {
@@ -51,17 +109,20 @@ export default function History() {
         setLoading(true);
         setError('');
         try {
-            if (activeTab === 1) { // Past Workouts
+            if (activeTab === 0) { // Calendar - load workout dates
+                await loadWorkoutDates();
+            } else if (activeTab === 1) { // Past Workouts
                 const workoutsQuery = query(
                     collection(db, 'workouts'),
                     where('userId', '==', currentUser.uid),
                     orderBy('timestamp', 'desc')
                 );
                 const workoutDocs = await getDocs(workoutsQuery);
-                setWorkouts(workoutDocs.docs.map(doc => ({
+                const workoutData = workoutDocs.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
-                })));
+                }));
+                setWorkouts(workoutData);
             } else if (activeTab === 2) { // Exercise History
                 const exercisesQuery = query(
                     collection(db, 'exercises'),
@@ -88,6 +149,29 @@ export default function History() {
         }
     };
 
+    const loadWorkoutDates = async () => {
+        try {
+            const workoutsQuery = query(
+                collection(db, 'workouts'),
+                where('userId', '==', currentUser.uid),
+                orderBy('timestamp', 'desc')
+            );
+            const workoutDocs = await getDocs(workoutsQuery);
+            const workoutData = workoutDocs.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+
+            // Extract unique dates
+            const dates = workoutData.map(workout => new Date(workout.timestamp).toDateString());
+            setWorkoutDates([...new Set(dates)]);
+            setWorkouts(workoutData); // Store workouts for calendar details
+        } catch (err) {
+            console.error('Error loading workout dates:', err);
+            setError('Error loading workout dates: ' + err.message);
+        }
+    };
+
     const formatTime = (seconds) => {
         const hrs = Math.floor(seconds / 3600);
         const mins = Math.floor((seconds % 3600) / 60);
@@ -99,73 +183,354 @@ export default function History() {
         setActiveTab(newValue);
     };
 
-    const renderPastWorkouts = () => (
-        <List>
-            {workouts.map((workout) => (
-                <StyledCard key={workout.id} sx={{ mb: 2 }}>
-                    <CardContent>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                            <Typography variant="h6" sx={{ color: '#00ff9f', display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <MdToday /> {format(new Date(workout.timestamp), 'MMM dd, yyyy')}
+    const handleDateClick = (date) => {
+        const dayWorkouts = workouts.filter(workout =>
+            isSameDay(new Date(workout.timestamp), date)
+        );
+
+        if (dayWorkouts.length > 0) {
+            setSelectedDate(date);
+            setSelectedDateWorkouts(dayWorkouts);
+            setDialogOpen(true);
+        }
+    };
+
+    const isWorkoutDay = (date) => {
+        return workoutDates.some(workoutDate =>
+            isSameDay(new Date(workoutDate), date)
+        );
+    };
+
+    const getWorkoutStats = () => {
+        if (workouts.length === 0) return null;
+
+        const totalWorkouts = workouts.length;
+        const totalDuration = workouts.reduce((sum, workout) => sum + (workout.duration || 0), 0);
+        const avgDuration = totalDuration / totalWorkouts;
+        const totalExercises = workouts.reduce((sum, workout) => sum + (workout.exercises?.length || 0), 0);
+
+        return {
+            totalWorkouts,
+            totalDuration,
+            avgDuration,
+            totalExercises
+        };
+    };
+
+    const getExerciseStats = () => {
+        if (exerciseHistory.length === 0) return null;
+
+        const totalExercises = exerciseHistory.length;
+        const uniqueExercises = [...new Set(exerciseHistory.map(ex => ex.exerciseName))].length;
+        const totalWeight = exerciseHistory.reduce((sum, ex) => sum + (parseFloat(ex.weight) || 0), 0);
+        const totalReps = exerciseHistory.reduce((sum, ex) => sum + (parseInt(ex.reps) || 0), 0);
+
+        return {
+            totalExercises,
+            uniqueExercises,
+            totalWeight,
+            totalReps
+        };
+    };
+
+    const renderCalendar = () => {
+        const monthStart = startOfMonth(currentDate);
+        const monthEnd = endOfMonth(currentDate);
+        const startDate = startOfWeek(monthStart);
+        const endDate = endOfWeek(monthEnd);
+
+        const dateRange = eachDayOfInterval({ start: startDate, end: endDate });
+        const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        return (
+            <Box>
+                {/* Calendar Header */}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                    <IconButton onClick={() => setCurrentDate(subMonths(currentDate, 1))} sx={{ color: '#00ff9f' }}>
+                        <MdChevronLeft />
+                    </IconButton>
+                    <Typography variant="h5" sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
+                        {format(currentDate, 'MMMM yyyy')}
+                    </Typography>
+                    <IconButton onClick={() => setCurrentDate(addMonths(currentDate, 1))} sx={{ color: '#00ff9f' }}>
+                        <MdChevronRight />
+                    </IconButton>
+                </Box>
+
+                {/* Week Days Header */}
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1, mb: 1 }}>
+                    {weekDays.map(day => (
+                        <Box key={day} sx={{ display: 'flex', justifyContent: 'center' }}>
+                            <Typography variant="body2" sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
+                                {day}
                             </Typography>
-                            <Chip
-                                icon={<MdTimer />}
-                                label={formatTime(workout.duration)}
-                                sx={{
-                                    backgroundColor: 'rgba(0, 255, 159, 0.1)',
-                                    color: '#00ff9f',
-                                    '& .MuiChip-icon': { color: '#00ff9f' }
-                                }}
-                            />
                         </Box>
-                        <Divider sx={{ mb: 2, bgcolor: 'rgba(255, 255, 255, 0.1)' }} />
-                        {workout.exercises.map((exercise, index) => (
-                            <Box key={index} sx={{ mb: 1 }}>
-                                <Typography sx={{ color: '#fff' }}>
-                                    {exercise.name}
-                                </Typography>
-                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    ))}
+                </Box>
+
+                {/* Calendar Grid */}
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1 }}>
+                    {dateRange.map(date => (
+                        <Box key={date.toString()} sx={{ display: 'flex', justifyContent: 'center' }}>
+                            <Tooltip
+                                title={isWorkoutDay(date) ? 'Click to view workouts' : ''}
+                                arrow
+                            >
+                                <CalendarDay
+                                    isWorkoutDay={isWorkoutDay(date)}
+                                    isToday={isToday(date)}
+                                    isCurrentMonth={isSameMonth(date, currentDate)}
+                                    onClick={() => handleDateClick(date)}
+                                >
+                                    {format(date, 'd')}
+                                </CalendarDay>
+                            </Tooltip>
+                        </Box>
+                    ))}
+                </Box>
+
+                {/* Calendar Legend */}
+                <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 3 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={{
+                            width: 16,
+                            height: 16,
+                            borderRadius: '50%',
+                            backgroundColor: 'rgba(0, 255, 159, 0.3)'
+                        }} />
+                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                            Workout Day
+                        </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={{
+                            width: 16,
+                            height: 16,
+                            borderRadius: '50%',
+                            border: '2px solid #00ff9f'
+                        }} />
+                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                            Today
+                        </Typography>
+                    </Box>
+                </Box>
+            </Box>
+        );
+    };
+
+    const renderPastWorkouts = () => {
+        const stats = getWorkoutStats();
+
+        return (
+            <Box>
+                {/* Workout Statistics */}
+                {stats && (
+                    <Grid container spacing={2} sx={{ mb: 3 }}>
+                        <Grid item xs={6} sm={3}>
+                            <StatCard>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <MdFitnessCenter style={{ color: '#00ff9f' }} />
+                                    <Box>
+                                        <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                            {stats.totalWorkouts}
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                            Total Workouts
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            </StatCard>
+                        </Grid>
+                        <Grid item xs={6} sm={3}>
+                            <StatCard>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <MdTimer style={{ color: '#00ff9f' }} />
+                                    <Box>
+                                        <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                            {formatTime(Math.round(stats.avgDuration))}
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                            Avg Duration
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            </StatCard>
+                        </Grid>
+                        <Grid item xs={6} sm={3}>
+                            <StatCard>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <MdTrendingUp style={{ color: '#00ff9f' }} />
+                                    <Box>
+                                        <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                            {formatTime(stats.totalDuration)}
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                            Total Time
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            </StatCard>
+                        </Grid>
+                        <Grid item xs={6} sm={3}>
+                            <StatCard>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <MdBarChart style={{ color: '#00ff9f' }} />
+                                    <Box>
+                                        <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                            {stats.totalExercises}
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                            Total Exercises
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            </StatCard>
+                        </Grid>
+                    </Grid>
+                )}
+
+                {/* Workout List */}
+                <List>
+                    {workouts.map((workout) => (
+                        <StyledCard key={workout.id} sx={{ mb: 2 }}>
+                            <CardContent>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                    <Typography variant="h6" sx={{ color: '#00ff9f', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <MdToday /> {format(new Date(workout.timestamp), 'MMM dd, yyyy')}
+                                    </Typography>
+                                    <Chip
+                                        icon={<MdTimer />}
+                                        label={formatTime(workout.duration)}
+                                        sx={{
+                                            backgroundColor: 'rgba(0, 255, 159, 0.1)',
+                                            color: '#00ff9f',
+                                            '& .MuiChip-icon': { color: '#00ff9f' }
+                                        }}
+                                    />
+                                </Box>
+                                <Divider sx={{ mb: 2, bgcolor: 'rgba(255, 255, 255, 0.1)' }} />
+                                {workout.exercises?.map((exercise, index) => (
+                                    <Box key={index} sx={{ mb: 1 }}>
+                                        <Typography sx={{ color: '#fff' }}>
+                                            {exercise.name}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                            {`${exercise.weight}kg × ${exercise.reps} reps × ${exercise.sets} sets`}
+                                        </Typography>
+                                        {exercise.notes && (
+                                            <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                                                Note: {exercise.notes}
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                ))}
+                            </CardContent>
+                        </StyledCard>
+                    ))}
+                </List>
+            </Box>
+        );
+    };
+
+    const renderExerciseHistory = () => {
+        const stats = getExerciseStats();
+
+        return (
+            <Box>
+                {/* Exercise Statistics */}
+                {stats && (
+                    <Grid container spacing={2} sx={{ mb: 3 }}>
+                        <Grid item xs={6} sm={3}>
+                            <StatCard>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <MdFitnessCenter style={{ color: '#00ff9f' }} />
+                                    <Box>
+                                        <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                            {stats.totalExercises}
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                            Total Exercises
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            </StatCard>
+                        </Grid>
+                        <Grid item xs={6} sm={3}>
+                            <StatCard>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <MdBarChart style={{ color: '#00ff9f' }} />
+                                    <Box>
+                                        <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                            {stats.uniqueExercises}
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                            Unique Exercises
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            </StatCard>
+                        </Grid>
+                        <Grid item xs={6} sm={3}>
+                            <StatCard>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <MdTrendingUp style={{ color: '#00ff9f' }} />
+                                    <Box>
+                                        <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                            {stats.totalWeight.toFixed(0)}kg
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                            Total Weight
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            </StatCard>
+                        </Grid>
+                        <Grid item xs={6} sm={3}>
+                            <StatCard>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <MdTimer style={{ color: '#00ff9f' }} />
+                                    <Box>
+                                        <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                            {stats.totalReps}
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                            Total Reps
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            </StatCard>
+                        </Grid>
+                    </Grid>
+                )}
+
+                {/* Exercise List */}
+                <List>
+                    {exerciseHistory.map((exercise) => (
+                        <StyledCard key={exercise.id} sx={{ mb: 2 }}>
+                            <CardContent>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                    <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                        {exercise.exerciseName}
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                        {format(new Date(exercise.timestamp), 'MMM dd, yyyy')}
+                                    </Typography>
+                                </Box>
+                                <Typography variant="body1" sx={{ color: '#fff' }}>
                                     {`${exercise.weight}kg × ${exercise.reps} reps × ${exercise.sets} sets`}
                                 </Typography>
                                 {exercise.notes && (
-                                    <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                                    <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1, fontStyle: 'italic' }}>
                                         Note: {exercise.notes}
                                     </Typography>
                                 )}
-                            </Box>
-                        ))}
-                    </CardContent>
-                </StyledCard>
-            ))}
-        </List>
-    );
-
-    const renderExerciseHistory = () => (
-        <List>
-            {exerciseHistory.map((exercise) => (
-                <StyledCard key={exercise.id} sx={{ mb: 2 }}>
-                    <CardContent>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                            <Typography variant="h6" sx={{ color: '#00ff9f' }}>
-                                {exercise.exerciseName}
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                {format(new Date(exercise.timestamp), 'MMM dd, yyyy')}
-                            </Typography>
-                        </Box>
-                        <Typography variant="body1" sx={{ color: '#fff' }}>
-                            {`${exercise.weight}kg × ${exercise.reps} reps × ${exercise.sets} sets`}
-                        </Typography>
-                        {exercise.notes && (
-                            <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1, fontStyle: 'italic' }}>
-                                Note: {exercise.notes}
-                            </Typography>
-                        )}
-                    </CardContent>
-                </StyledCard>
-            ))}
-        </List>
-    );
+                            </CardContent>
+                        </StyledCard>
+                    ))}
+                </List>
+            </Box>
+        );
+    };
 
     return (
         <Box sx={{
@@ -214,17 +579,72 @@ export default function History() {
                             </Typography>
                         ) : (
                             <>
-                                {activeTab === 0 && (
-                                    <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-                                        Calendar View Coming Soon
-                                    </Typography>
-                                )}
+                                {activeTab === 0 && renderCalendar()}
                                 {activeTab === 1 && renderPastWorkouts()}
                                 {activeTab === 2 && renderExerciseHistory()}
                             </>
                         )}
                     </CardContent>
                 </StyledCard>
+
+                {/* Workout Details Dialog */}
+                <Dialog
+                    open={dialogOpen}
+                    onClose={() => setDialogOpen(false)}
+                    maxWidth="md"
+                    fullWidth
+                    PaperProps={{
+                        sx: {
+                            background: 'rgba(30, 30, 30, 0.95)',
+                            backdropFilter: 'blur(10px)',
+                            border: '1px solid rgba(0, 255, 159, 0.2)',
+                        }
+                    }}
+                >
+                    <DialogTitle sx={{ color: '#00ff9f', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        Workouts on {selectedDate && format(selectedDate, 'MMM dd, yyyy')}
+                        <IconButton onClick={() => setDialogOpen(false)} sx={{ color: '#fff' }}>
+                            <MdClose />
+                        </IconButton>
+                    </DialogTitle>
+                    <DialogContent>
+                        {selectedDateWorkouts.map((workout, index) => (
+                            <Box key={workout.id} sx={{ mb: index < selectedDateWorkouts.length - 1 ? 3 : 0 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                    <Typography variant="h6" sx={{ color: '#fff' }}>
+                                        Workout {index + 1}
+                                    </Typography>
+                                    <Chip
+                                        icon={<MdTimer />}
+                                        label={formatTime(workout.duration)}
+                                        sx={{
+                                            backgroundColor: 'rgba(0, 255, 159, 0.1)',
+                                            color: '#00ff9f',
+                                        }}
+                                    />
+                                </Box>
+                                {workout.exercises?.map((exercise, exIndex) => (
+                                    <Box key={exIndex} sx={{ mb: 1, pl: 2 }}>
+                                        <Typography sx={{ color: '#fff' }}>
+                                            {exercise.name}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                            {`${exercise.weight}kg × ${exercise.reps} reps × ${exercise.sets} sets`}
+                                        </Typography>
+                                        {exercise.notes && (
+                                            <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                                                Note: {exercise.notes}
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                ))}
+                                {index < selectedDateWorkouts.length - 1 && (
+                                    <Divider sx={{ mt: 2, bgcolor: 'rgba(255, 255, 255, 0.1)' }} />
+                                )}
+                            </Box>
+                        ))}
+                    </DialogContent>
+                </Dialog>
             </div>
         </Box>
     );

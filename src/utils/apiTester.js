@@ -2,96 +2,151 @@
 // This file helps debug API connectivity and target muscle names
 
 import {
-  fetchTargetList,
-  fetchExercisesByTarget,
+  fetchExercises,
+  fetchAllExercises,
+  getExerciseCount,
 } from "../services/exerciseAPI";
 
-// Test function to check API connectivity
-export const testAPIConnection = async () => {
-  console.log("🔧 Testing ExerciseDB API Connection...");
+export const testAPI = async () => {
+  console.log("🧪 Starting API Tests...");
 
   try {
-    // First, get the list of available targets
-    console.log("📋 Fetching target list...");
-    const targets = await fetchTargetList();
-    console.log("✅ Available targets:", targets);
+    // Test 1: Basic API connectivity
+    console.log("\n📡 Test 1: Basic API connectivity");
+    const singleExercise = await fetchExercises(1, 0);
+    console.log("✅ API connected successfully");
+    console.log("Sample exercise:", singleExercise[0]?.name);
 
-    // Test a few common targets (updated with exact API names)
-    const testTargets = [
-      "biceps",
-      "pectorals",
-      "lats",
-      "quads",
-      "abs",
-      "delts",
-      "triceps",
-    ];
+    // Test 2: Test with limit=10 (should work on all plans)
+    console.log("\n📊 Test 2: Fetch 10 exercises");
+    const tenExercises = await fetchExercises(10, 0);
+    console.log(`✅ Fetched ${tenExercises.length} exercises with limit=10`);
 
-    for (const target of testTargets) {
-      if (targets.includes(target)) {
-        console.log(`✅ Testing target: ${target}`);
-        try {
-          const exercises = await fetchExercisesByTarget(target);
-          console.log(`   Found ${exercises.length} exercises for ${target}`);
-          if (exercises.length > 0) {
-            console.log(`   Sample exercise:`, exercises[0]);
-          }
-        } catch (error) {
-          console.error(`   ❌ Error fetching exercises for ${target}:`, error);
-        }
-      } else {
-        console.log(`❌ Target '${target}' not available in API`);
-      }
+    // Test 3: Test with limit=0 to detect plan type
+    console.log("\n🔍 Test 3: Detect API plan type");
+    const allExercisesTest = await fetchExercises(0, 0);
+    if (allExercisesTest.length > 10) {
+      console.log(
+        `✅ PAID PLAN DETECTED! Got ${allExercisesTest.length} exercises with limit=0`
+      );
+    } else {
+      console.log(
+        `⚠️ FREE PLAN DETECTED. Got ${allExercisesTest.length} exercises with limit=0`
+      );
     }
 
+    // Test 4: Test the new fetchAllExercises function
+    console.log("\n🚀 Test 4: Testing fetchAllExercises function");
+    const startTime = Date.now();
+    const allExercises = await fetchAllExercises();
+    const endTime = Date.now();
+    const duration = (endTime - startTime) / 1000;
+
+    console.log(`✅ fetchAllExercises completed!`);
+    console.log(`📈 Total exercises: ${allExercises.length}`);
+    console.log(`⏱️ Time taken: ${duration.toFixed(2)} seconds`);
+
+    // Test 5: Get exercise count using utility function
+    console.log("\n📊 Test 5: Exercise count utility");
+    const count = await getExerciseCount();
+    console.log(`📋 Total exercise count: ${count}`);
+
+    // Summary
+    console.log("\n📋 TEST SUMMARY:");
+    console.log(`🔗 API Status: Connected`);
+    console.log(
+      `📊 Plan Type: ${
+        allExercisesTest.length > 10 ? "PAID (Pro/Ultra/Mega)" : "FREE"
+      }`
+    );
+    console.log(`📈 Total Exercises Available: ${allExercises.length}`);
+    console.log(`⏱️ Fetch Duration: ${duration.toFixed(2)}s`);
+    console.log(`🎯 Recommended Function: fetchAllExercises()`);
+
     return {
-      success: true,
-      availableTargets: targets,
-      message: "API connection test completed",
+      connected: true,
+      planType: allExercisesTest.length > 10 ? "paid" : "free",
+      totalExercises: allExercises.length,
+      fetchDuration: duration,
+      exercises: allExercises,
     };
   } catch (error) {
-    console.error("❌ API Connection Test Failed:", error);
+    console.error("❌ API Test Failed:", error);
     return {
-      success: false,
+      connected: false,
       error: error.message,
-      message: "API connection test failed",
     };
   }
 };
 
-// Test a specific muscle group mapping
-export const testMuscleGroup = async (muscleGroup) => {
-  console.log(
-    `🔧 Testing muscle group: ${muscleGroup.name} (${muscleGroup.apiName})`
-  );
+// Quick test to just check plan type
+export const checkPlanType = async () => {
+  try {
+    const result = await fetchExercises(0, 0);
+    const planType = result.length > 10 ? "paid" : "free";
+    console.log(`🔍 Plan Type: ${planType.toUpperCase()}`);
+    console.log(`📊 Exercises with limit=0: ${result.length}`);
+    return { planType, exerciseCount: result.length };
+  } catch (error) {
+    console.error("Error checking plan type:", error);
+    return { planType: "unknown", error: error.message };
+  }
+};
+
+// Test pagination performance (for free plans)
+export const testPagination = async (maxPages = 5) => {
+  console.log(`🔄 Testing pagination (max ${maxPages} pages)...`);
 
   try {
-    const exercises = await fetchExercisesByTarget(muscleGroup.apiName);
-    console.log(
-      `✅ Found ${exercises.length} exercises for ${muscleGroup.name}`
-    );
+    let allExercises = [];
+    let page = 0;
+    const pageSize = 10;
 
-    if (exercises.length > 0) {
-      console.log("Sample exercises:", exercises.slice(0, 3));
-      return {
-        success: true,
-        count: exercises.length,
-        exercises: exercises.slice(0, 5),
-      };
-    } else {
-      console.log(`❌ No exercises found for ${muscleGroup.name}`);
-      return { success: false, count: 0, message: "No exercises found" };
+    while (page < maxPages) {
+      const startTime = Date.now();
+      const exercises = await fetchExercises(pageSize, page * pageSize);
+      const duration = Date.now() - startTime;
+
+      if (exercises.length === 0) {
+        console.log(`📄 Page ${page}: No more exercises (end reached)`);
+        break;
+      }
+
+      allExercises.push(...exercises);
+      console.log(
+        `📄 Page ${page}: ${exercises.length} exercises (${duration}ms)`
+      );
+
+      if (exercises.length < pageSize) {
+        console.log(
+          `📄 Page ${page}: Last page (got ${exercises.length} < ${pageSize})`
+        );
+        break;
+      }
+
+      page++;
+
+      // Small delay to avoid rate limiting
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
+
+    console.log(
+      `✅ Pagination test complete: ${allExercises.length} total exercises in ${
+        page + 1
+      } pages`
+    );
+    return allExercises;
   } catch (error) {
-    console.error(`❌ Error testing ${muscleGroup.name}:`, error);
-    return { success: false, error: error.message };
+    console.error("❌ Pagination test failed:", error);
+    return [];
   }
 };
 
 // Export for global access in browser console
-window.testAPI = testAPIConnection;
-window.testMuscleGroup = testMuscleGroup;
+window.testAPI = testAPI;
+window.checkPlanType = checkPlanType;
+window.testPagination = testPagination;
 
 console.log(
-  "🔧 API Testing utilities loaded. Use testAPI() or testMuscleGroup(muscleGroup) in console."
+  "🔧 API Testing utilities loaded. Use testAPI() or checkPlanType() or testPagination(maxPages) in console."
 );

@@ -18,7 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { updateEmail, updatePassword } from 'firebase/auth';
 import { db } from '../firebase/config';
-import { MdArrowBack, MdPerson, MdEmail, MdLock, MdSave, MdLogout } from "react-icons/md";
+import { MdArrowBack, MdPerson, MdEmail, MdLock, MdSave, MdLogout, MdSettings, MdCleaningServices } from "react-icons/md";
 
 const StyledCard = styled(Card)(({ theme }) => ({
     background: 'rgba(30, 30, 30, 0.9)',
@@ -184,6 +184,40 @@ export default function Profile() {
                                 {success}
                             </Alert>
                         )}
+
+                        {/* Data Management Section */}
+                        <Box sx={{ mb: 4 }}>
+                            <Typography variant="h6" sx={{ color: '#00ff9f', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <MdSettings /> Data Management
+                            </Typography>
+                            <Grid container spacing={2}>
+                                <Grid item xs={12} md={6}>
+                                    <Button
+                                        variant="outlined"
+                                        fullWidth
+                                        startIcon={<MdCleaningServices />}
+                                        onClick={() => navigate('/exercise-manager')}
+                                        sx={{
+                                            borderColor: '#00ff9f',
+                                            color: '#00ff9f',
+                                            '&:hover': {
+                                                borderColor: '#00e676',
+                                                backgroundColor: 'rgba(0, 255, 159, 0.1)',
+                                            },
+                                        }}
+                                    >
+                                        Exercise Data Manager
+                                    </Button>
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
+                                        Find and merge duplicate exercises, fix spelling mistakes, and clean up your exercise data.
+                                    </Typography>
+                                </Grid>
+                            </Grid>
+                        </Box>
+
+                        <Divider sx={{ my: 3, bgcolor: 'rgba(255, 255, 255, 0.1)' }} />
 
                         <form onSubmit={handleUpdateProfile}>
                             <Grid container spacing={3}>
