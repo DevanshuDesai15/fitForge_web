@@ -22,6 +22,11 @@ import WorkoutTemplates from './components/workout/WorkoutTemplates';
 import QuickAdd from './components/workout/QuickAdd';
 import ExerciseDetail from './components/workout/ExerciseDetail';
 
+// Import API testing utilities in development
+if (process.env.NODE_ENV === 'development') {
+  import('./utils/apiTester.js');
+}
+
 function App() {
   return (
     <Router>

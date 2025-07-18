@@ -10,18 +10,9 @@ import {
     DialogContent,
     DialogActions,
     TextField,
-    List,
-    ListItem,
-    ListItemText,
     IconButton,
-    Fab,
     Grid,
     Chip,
-    Divider,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
     Alert,
     Accordion,
     AccordionSummary,
@@ -34,7 +25,6 @@ import {
     MdAdd,
     MdDelete,
     MdEdit,
-    MdContentCopy,
     MdPlayArrow,
     MdFitnessCenter,
     MdExpandMore,
@@ -45,9 +35,9 @@ import { collection, addDoc, getDocs, query, where, deleteDoc, doc, updateDoc } 
 import { db } from '../../firebase/config';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { fetchExercisesByTarget } from '../../services/exerciseAPI';
+import { fetchExercisesByTarget, fetchTargetList } from '../../services/exerciseAPI';
 
-const StyledCard = styled(Card)(({ theme }) => ({
+const StyledCard = styled(Card)(() => ({
     background: 'rgba(30, 30, 30, 0.9)',
     backdropFilter: 'blur(10px)',
     borderRadius: '16px',
@@ -80,7 +70,9 @@ export default function WorkoutTemplates() {
     const [templates, setTemplates] = useState([]);
     const [openDialog, setOpenDialog] = useState(false);
     const [editingTemplate, setEditingTemplate] = useState(null);
+    // eslint-disable-next-line no-unused-vars
     const [selectedExercises, setSelectedExercises] = useState([]);
+    // eslint-disable-next-line no-unused-vars
     const [availableExercises, setAvailableExercises] = useState([]);
     const [muscleGroupExercises, setMuscleGroupExercises] = useState({});
     const [loadingExercises, setLoadingExercises] = useState(false);
@@ -95,15 +87,25 @@ export default function WorkoutTemplates() {
     const { currentUser } = useAuth();
     const navigate = useNavigate();
 
+    // Updated with EXACT ExerciseDB target muscle names from API
     const muscleGroups = [
-        { id: 'back', name: 'Back', apiName: 'lats' },
+        { id: 'abs', name: 'Abs', apiName: 'abs' },
+        { id: 'biceps', name: 'Biceps', apiName: 'biceps' },
+        { id: 'calves', name: 'Calves', apiName: 'calves' },
         { id: 'chest', name: 'Chest', apiName: 'pectorals' },
         { id: 'shoulders', name: 'Shoulders', apiName: 'delts' },
-        { id: 'upper_arms', name: 'Upper Arms', apiName: 'biceps' },
-        { id: 'lower_arms', name: 'Lower Arms', apiName: 'forearms' },
-        { id: 'upper_legs', name: 'Upper Legs', apiName: 'quads' },
-        { id: 'lower_legs', name: 'Lower Legs', apiName: 'calves' },
-        { id: 'waist', name: 'Abs/Core', apiName: 'abs' },
+        { id: 'forearms', name: 'Forearms', apiName: 'forearms' },
+        { id: 'glutes', name: 'Glutes', apiName: 'glutes' },
+        { id: 'hamstrings', name: 'Hamstrings', apiName: 'hamstrings' },
+        { id: 'lats', name: 'Lats (Back)', apiName: 'lats' },
+        { id: 'quads', name: 'Quadriceps', apiName: 'quads' },
+        { id: 'spine', name: 'Lower Back', apiName: 'spine' },
+        { id: 'traps', name: 'Traps', apiName: 'traps' },
+        { id: 'triceps', name: 'Triceps', apiName: 'triceps' },
+        { id: 'upper_back', name: 'Upper Back', apiName: 'upper back' },
+        { id: 'abductors', name: 'Abductors', apiName: 'abductors' },
+        { id: 'adductors', name: 'Adductors', apiName: 'adductors' },
+        { id: 'serratus', name: 'Serratus Anterior', apiName: 'serratus anterior' },
         { id: 'cardio', name: 'Cardio', apiName: 'cardiovascular system' }
     ];
 
@@ -113,7 +115,82 @@ export default function WorkoutTemplates() {
 
     useEffect(() => {
         loadTemplates();
+        // Enable this temporarily to debug target muscle names
+        checkAvailableTargets();
     }, [currentUser]);
+
+    // Debug function to check available target muscle names
+    const checkAvailableTargets = async () => {
+        try {
+            // console.log('🔍 Checking available target muscle names...');
+            const targets = await fetchTargetList();
+            // console.log('📋 Available target muscles from API:', targets);
+
+            // Compare with our muscle group mappings
+            const ourTargets = muscleGroups.map(mg => mg.apiName);
+            // console.log('🎯 Our mapped targets:', ourTargets);
+
+            const missingTargets = ourTargets.filter(target => !targets.includes(target));
+            const availableFromOurs = ourTargets.filter(target => targets.includes(target));
+
+            // console.log('✅ Available targets from our mappings:', availableFromOurs);
+            // console.log('❌ Missing targets from our mappings:', missingTargets);
+            // console.log('💡 All available targets from API:', targets);
+
+            // Test each of our mappings
+            // console.log('🧪 Testing each muscle group mapping...');
+            for (const muscleGroup of muscleGroups.slice(0, 5)) { // Test first 5 to avoid rate limits
+                try {
+                    // console.log(`Testing: ${muscleGroup.name} (${muscleGroup.apiName})`);
+                    const exercises = await fetchExercisesByTarget(muscleGroup.apiName);
+                    // console.log(`  ✅ ${muscleGroup.name}: ${exercises?.length || 0} exercises`);
+                    await new Promise(resolve => setTimeout(resolve, 200)); // Small delay
+                } catch (error) {
+                    // console.log(`  ❌ ${muscleGroup.name}: ${error.message}`);
+                }
+            }
+
+        } catch (error) {
+            console.error('❌ Error checking available targets:', error);
+        }
+    };
+
+    // Test all muscle groups function
+    const testAllMuscleGroups = async () => {
+        // console.log('🧪 Testing ALL muscle group mappings...');
+        const results = [];
+
+        for (const muscleGroup of muscleGroups) {
+            try {
+                const exercises = await fetchExercisesByTarget(muscleGroup.apiName);
+                const result = {
+                    name: muscleGroup.name,
+                    apiName: muscleGroup.apiName,
+                    success: true,
+                    count: exercises?.length || 0
+                };
+                results.push(result);
+                // console.log(`✅ ${muscleGroup.name} (${muscleGroup.apiName}): ${result.count} exercises`);
+            } catch (error) {
+                const result = {
+                    name: muscleGroup.name,
+                    apiName: muscleGroup.apiName,
+                    success: false,
+                    error: error.message
+                };
+                results.push(result);
+                // console.log(`❌ ${muscleGroup.name} (${muscleGroup.apiName}): ${error.message}`);
+            }
+            // Add delay to prevent rate limiting
+            await new Promise(resolve => setTimeout(resolve, 300));
+        }
+
+        // console.log('📊 Final Results:', results);
+        const successCount = results.filter(r => r.success).length;
+        // console.log(`✅ Working: ${successCount}/${muscleGroups.length} muscle groups`);
+
+        return results;
+    };
 
     const loadTemplates = async () => {
         try {
@@ -147,32 +224,80 @@ export default function WorkoutTemplates() {
     const loadExercisesForMuscleGroup = async (muscleGroup) => {
         if (!muscleGroup || !muscleGroup.apiName) {
             console.error('Invalid muscle group or missing apiName:', muscleGroup);
+            setError('Invalid muscle group selected');
             return [];
         }
 
+        // Return cached exercises if available
         if (muscleGroupExercises[muscleGroup.id]) {
+            // console.log(`Using cached exercises for ${muscleGroup.name}`);
             return muscleGroupExercises[muscleGroup.id];
         }
 
+        // console.log(`🏋️ Loading exercises for muscle group: ${muscleGroup.name} (API target: "${muscleGroup.apiName}")`);
         setLoadingExercises(true);
+        setError(''); // Clear any previous errors
+
         try {
+            // Add a small delay to prevent API rate limiting
+            await new Promise(resolve => setTimeout(resolve, 100));
+
             const exercises = await fetchExercisesByTarget(muscleGroup.apiName);
-            const exerciseArray = Array.isArray(exercises) ? exercises : [];
-            const exerciseList = exerciseArray.slice(0, 20).map(ex => ({
-                id: ex.id,
-                name: ex.name,
-                target: ex.target,
-                equipment: ex.equipment
-            }));
-            
+            // console.log(`📊 API Response for "${muscleGroup.apiName}":`, {
+            //     success: true,
+            //     count: exercises?.length || 0,
+            //     isArray: Array.isArray(exercises),
+            //     firstExercise: exercises?.[0]
+            // });
+
+            if (!exercises) {
+                throw new Error(`API returned null/undefined for target: ${muscleGroup.apiName}`);
+            }
+
+            if (!Array.isArray(exercises)) {
+                console.error('❌ API response is not an array:', typeof exercises, exercises);
+                throw new Error(`API returned invalid data type (${typeof exercises}) for target: ${muscleGroup.apiName}`);
+            }
+
+            if (exercises.length === 0) {
+                // console.warn(`⚠️ No exercises found for target: "${muscleGroup.apiName}"`);
+                setError(`No exercises found for ${muscleGroup.name}. Target "${muscleGroup.apiName}" returned empty results.`);
+                return [];
+            }
+
+            const exerciseList = exercises.slice(0, 20).map((ex, index) => {
+                if (!ex) {
+                    // console.warn(`⚠️ Null exercise at index ${index}`);
+                    return null;
+                }
+                return {
+                    id: ex.id || `temp-${Date.now()}-${index}`,
+                    name: ex.name || 'Unknown Exercise',
+                    target: ex.target || muscleGroup.apiName,
+                    equipment: ex.equipment || 'Unknown',
+                    bodyPart: ex.bodyPart || 'Unknown',
+                    gifUrl: ex.gifUrl || null
+                };
+            }).filter(ex => ex !== null);
+
             setMuscleGroupExercises(prev => ({
                 ...prev,
                 [muscleGroup.id]: exerciseList
             }));
-            
+
+            // console.log(`✅ Successfully loaded ${exerciseList.length} exercises for ${muscleGroup.name}`);
+            // if (exerciseList.length > 0) {
+            //     console.log(`   Sample exercises:`, exerciseList.slice(0, 3).map(ex => ex.name));
+            // }
             return exerciseList;
+
         } catch (error) {
-            console.error("Error loading exercises for muscle group:", error);
+            console.error(`❌ Error loading exercises for muscle group ${muscleGroup.name}:`, {
+                error: error.message,
+                target: muscleGroup.apiName,
+                stack: error.stack
+            });
+            setError(`Failed to load exercises for ${muscleGroup.name}: ${error.message}`);
             return [];
         } finally {
             setLoadingExercises(false);
@@ -209,13 +334,20 @@ export default function WorkoutTemplates() {
     };
 
     const handleMuscleGroupSelect = (dayId, muscleGroup) => {
+        // console.log('🎯 Selecting muscle group:', muscleGroup);
+
         setWorkoutDays(prev => prev.map(day => {
             if (day.id === dayId) {
                 const isAlreadySelected = day.muscleGroups.some(mg => mg.id === muscleGroup.id);
+
+                // Ensure we're using the complete muscle group object with apiName
+                const completeMuscleGroup = muscleGroups.find(mg => mg.id === muscleGroup.id) || muscleGroup;
+                // console.log('🔧 Complete muscle group object:', completeMuscleGroup);
+
                 const updatedMuscleGroups = isAlreadySelected
                     ? day.muscleGroups.filter(mg => mg.id !== muscleGroup.id)
-                    : [...day.muscleGroups, muscleGroup];
-                
+                    : [...day.muscleGroups, completeMuscleGroup];
+
                 // If removing muscle group, also remove its exercises
                 const updatedExercises = isAlreadySelected
                     ? day.exercises.filter(ex => {
@@ -223,17 +355,20 @@ export default function WorkoutTemplates() {
                         return !exerciseList.some(mgEx => mgEx.id === ex.id);
                     })
                     : day.exercises;
-                
+
                 return { ...day, muscleGroups: updatedMuscleGroups, exercises: updatedExercises };
             }
             return day;
         }));
-        
+
         // Load exercises for newly selected muscle group
         const day = workoutDays.find(d => d.id === dayId);
         const isAlreadySelected = day.muscleGroups.some(mg => mg.id === muscleGroup.id);
         if (!isAlreadySelected) {
-            loadExercisesForMuscleGroup(muscleGroup);
+            // Ensure we're using the complete muscle group object with apiName
+            const completeMuscleGroup = muscleGroups.find(mg => mg.id === muscleGroup.id) || muscleGroup;
+            // console.log('🚀 Loading exercises for newly selected muscle group:', completeMuscleGroup);
+            loadExercisesForMuscleGroup(completeMuscleGroup);
         }
     };
 
@@ -243,9 +378,20 @@ export default function WorkoutTemplates() {
             name: template.name,
             description: template.description || ''
         });
+
+        // Ensure muscle groups have complete data with apiName
         setWorkoutDays((template.workoutDays || []).map(day => ({
             ...day,
-            muscleGroups: day.muscleGroups || [],
+            muscleGroups: (day.muscleGroups || []).map(mg => {
+                // Find the complete muscle group object from our main array
+                const completeMuscleGroup = muscleGroups.find(mainMg => mainMg.id === mg.id);
+                if (completeMuscleGroup) {
+                    // console.log(`🔧 Restored complete muscle group: ${mg.name} -> ${completeMuscleGroup.apiName}`);
+                    return completeMuscleGroup;
+                }
+                // console.warn(`⚠️ Could not find complete muscle group for: ${mg.name} (${mg.id})`);
+                return mg;
+            }),
             exercises: day.exercises || []
         })));
         setOpenDialog(true);
@@ -394,6 +540,64 @@ export default function WorkoutTemplates() {
                 {success && (
                     <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>
                 )}
+
+                {/* Debug Section - Remove in production */}
+                {/* {process.env.NODE_ENV === 'development' && (
+                    <StyledCard sx={{ mb: 3, border: '2px dashed #ffc107' }}>
+                        <CardContent>
+                            <Typography variant="h6" sx={{ color: '#ffc107', mb: 2 }}>
+                                🔧 Debug Tools (Development Only)
+                            </Typography>
+                            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                                <Button
+                                    size="small"
+                                    variant="outlined"
+                                    onClick={checkAvailableTargets}
+                                    sx={{ color: '#ffc107', borderColor: '#ffc107' }}
+                                >
+                                    Check API Target Names
+                                </Button>
+                                <Button
+                                    size="small"
+                                    variant="outlined"
+                                    onClick={() => loadExercisesForMuscleGroup(muscleGroups[0])}
+                                    sx={{ color: '#ffc107', borderColor: '#ffc107' }}
+                                >
+                                    Test First Muscle Group
+                                </Button>
+                                <Button
+                                    size="small"
+                                    variant="outlined"
+                                    onClick={testAllMuscleGroups}
+                                    sx={{ color: '#ff4444', borderColor: '#ff4444' }}
+                                >
+                                    Test ALL Muscle Groups
+                                </Button>
+                                <Button
+                                    size="small"
+                                    variant="outlined"
+                                    onClick={() => {
+                                        console.log('🔍 Current workout days:', workoutDays);
+                                        workoutDays.forEach(day => {
+                                            console.log(`Day ${day.id}:`, day.muscleGroups.map(mg => ({
+                                                name: mg.name,
+                                                id: mg.id,
+                                                hasApiName: !!mg.apiName,
+                                                apiName: mg.apiName
+                                            })));
+                                        });
+                                    }}
+                                    sx={{ color: '#00e676', borderColor: '#00e676' }}
+                                >
+                                    Check Muscle Group Integrity
+                                </Button>
+                            </Box>
+                            <Typography variant="caption" sx={{ color: '#999', mt: 1, display: 'block' }}>
+                                Open browser console (F12) to see detailed test results
+                            </Typography>
+                        </CardContent>
+                    </StyledCard>
+                )} */}
 
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                     <Typography variant="h4" sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
@@ -617,65 +821,84 @@ export default function WorkoutTemplates() {
                                                 <Typography variant="subtitle2" sx={{ color: '#00ff9f', mb: 1 }}>
                                                     Select Exercises:
                                                 </Typography>
-                                                {day.muscleGroups.map((muscleGroup) => (
-                                                    <Accordion
-                                                        key={muscleGroup.id}
-                                                        sx={{
-                                                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                                            mb: 1,
-                                                            '&:before': { display: 'none' }
-                                                        }}
-                                                    >
-                                                        <AccordionSummary
-                                                            expandIcon={<MdExpandMore style={{ color: '#00ff9f' }} />}
-                                                            onClick={() => loadExercisesForMuscleGroup(muscleGroup)}
+                                                {day.muscleGroups.map((muscleGroup) => {
+                                                    // Validate muscle group has apiName
+                                                    if (!muscleGroup.apiName) {
+                                                        // console.warn('⚠️ Muscle group missing apiName:', muscleGroup);
+                                                        // Try to find the complete muscle group
+                                                        const completeMuscleGroup = muscleGroups.find(mg => mg.id === muscleGroup.id);
+                                                        if (completeMuscleGroup) {
+                                                            muscleGroup = completeMuscleGroup;
+                                                        }
+                                                    }
+                                                    return (
+                                                        <Accordion
+                                                            key={muscleGroup.id}
+                                                            sx={{
+                                                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                                                mb: 1,
+                                                                '&:before': { display: 'none' }
+                                                            }}
                                                         >
-                                                            <Typography sx={{ color: '#00ff9f' }}>
-                                                                {muscleGroup.name} Exercises
-                                                            </Typography>
-                                                        </AccordionSummary>
-                                                        <AccordionDetails>
-                                                            {loadingExercises ? (
-                                                                <Typography sx={{ color: 'text.secondary' }}>
-                                                                    Loading exercises...
+                                                            <AccordionSummary
+                                                                expandIcon={<MdExpandMore style={{ color: '#00ff9f' }} />}
+                                                                onClick={() => {
+                                                                    // Find the complete muscle group object from our main array
+                                                                    const completeMuscleGroup = muscleGroups.find(mg => mg.id === muscleGroup.id) || muscleGroup;
+                                                                    // console.log('🔍 Accordion clicked:', {
+                                                                    //     clicked: muscleGroup,
+                                                                    //     complete: completeMuscleGroup
+                                                                    // });
+                                                                    loadExercisesForMuscleGroup(completeMuscleGroup);
+                                                                }}
+                                                            >
+                                                                <Typography sx={{ color: '#00ff9f' }}>
+                                                                    {muscleGroup.name} Exercises
                                                                 </Typography>
-                                                            ) : (
-                                                                <Grid container spacing={1}>
-                                                                    {(muscleGroupExercises[muscleGroup.id] || []).map((exercise) => (
-                                                                        <Grid item xs={12} sm={6} key={exercise.id}>
-                                                                            <FormControlLabel
-                                                                                control={
-                                                                                    <Checkbox
-                                                                                        checked={day.exercises.some(ex => ex.id === exercise.id)}
-                                                                                        onChange={() => handleExerciseToggle(day.id, exercise)}
-                                                                                        sx={{
-                                                                                            color: 'rgba(255, 255, 255, 0.7)',
-                                                                                            '&.Mui-checked': {
-                                                                                                color: '#00ff9f',
-                                                                                            },
-                                                                                        }}
-                                                                                    />
-                                                                                }
-                                                                                label={
-                                                                                    <Box>
-                                                                                        <Typography variant="body2" sx={{ color: '#fff' }}>
-                                                                                            {exercise.name}
-                                                                                        </Typography>
-                                                                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                                                                            {exercise.target} • {exercise.equipment}
-                                                                                        </Typography>
-                                                                                    </Box>
-                                                                                }
-                                                                                sx={{ width: '100%', alignItems: 'flex-start' }}
-                                                                            />
-                                                                        </Grid>
-                                                                    ))}
-                                                                </Grid>
-                                                            )}
-                                                        </AccordionDetails>
-                                                    </Accordion>
-                                                ))}
-                                                
+                                                            </AccordionSummary>
+                                                            <AccordionDetails>
+                                                                {loadingExercises ? (
+                                                                    <Typography sx={{ color: 'text.secondary' }}>
+                                                                        Loading exercises...
+                                                                    </Typography>
+                                                                ) : (
+                                                                    <Grid container spacing={1}>
+                                                                        {(muscleGroupExercises[muscleGroup.id] || []).map((exercise) => (
+                                                                            <Grid item xs={12} sm={6} key={exercise.id}>
+                                                                                <FormControlLabel
+                                                                                    control={
+                                                                                        <Checkbox
+                                                                                            checked={day.exercises.some(ex => ex.id === exercise.id)}
+                                                                                            onChange={() => handleExerciseToggle(day.id, exercise)}
+                                                                                            sx={{
+                                                                                                color: 'rgba(255, 255, 255, 0.7)',
+                                                                                                '&.Mui-checked': {
+                                                                                                    color: '#00ff9f',
+                                                                                                },
+                                                                                            }}
+                                                                                        />
+                                                                                    }
+                                                                                    label={
+                                                                                        <Box>
+                                                                                            <Typography variant="body2" sx={{ color: '#fff' }}>
+                                                                                                {exercise.name}
+                                                                                            </Typography>
+                                                                                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                                                                                {exercise.target} • {exercise.equipment}
+                                                                                            </Typography>
+                                                                                        </Box>
+                                                                                    }
+                                                                                    sx={{ width: '100%', alignItems: 'flex-start' }}
+                                                                                />
+                                                                            </Grid>
+                                                                        ))}
+                                                                    </Grid>
+                                                                )}
+                                                            </AccordionDetails>
+                                                        </Accordion>
+                                                    );
+                                                })}
+
                                                 {day.exercises.length > 0 && (
                                                     <Box sx={{ mt: 2 }}>
                                                         <Typography variant="subtitle2" sx={{ color: '#00ff9f', mb: 1 }}>
@@ -704,11 +927,11 @@ export default function WorkoutTemplates() {
                         </Box>
                     </DialogContent>
                     <DialogActions>
-                        <Button 
+                        <Button
                             onClick={() => {
                                 setOpenDialog(false);
                                 resetForm();
-                            }} 
+                            }}
                             sx={{ color: 'text.secondary' }}
                             startIcon={<MdCancel />}
                         >
