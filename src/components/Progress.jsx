@@ -113,6 +113,8 @@ export default function Progress() {
         targetSets: '',
         deadline: ''
     });
+    const [availableExercises, setAvailableExercises] = useState([]);
+    const [customExerciseName, setCustomExerciseName] = useState('');
 
     const { currentUser } = useAuth();
 
@@ -136,6 +138,10 @@ export default function Progress() {
                 ...doc.data()
             }));
             setExercises(exerciseData);
+
+            // Extract unique exercise names for goal setting
+            const uniqueExercises = [...new Set(exerciseData.map(ex => ex.exerciseName))].sort();
+            setAvailableExercises(uniqueExercises);
 
             if (activeTab === 0) {
                 processWeightProgress(exerciseData);
@@ -213,14 +219,17 @@ export default function Progress() {
         try {
             const goalsQuery = query(
                 collection(db, 'goals'),
-                where('userId', '==', currentUser.uid),
-                orderBy('createdAt', 'desc')
+                where('userId', '==', currentUser.uid)
             );
             const goalDocs = await getDocs(goalsQuery);
             const goalData = goalDocs.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
+
+            // Sort in JavaScript instead of Firestore query
+            goalData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
             setGoals(goalData);
         } catch (err) {
             console.error('Error loading goals:', err);
@@ -597,7 +606,10 @@ export default function Progress() {
                     <Button
                         variant="contained"
                         startIcon={<MdAdd />}
-                        onClick={() => setGoalDialog(true)}
+                        onClick={() => {
+                            setGoalDialog(true);
+                            setCustomExerciseName('');
+                        }}
                         sx={{
                             background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
                             color: '#000',
@@ -797,6 +809,7 @@ export default function Progress() {
                             targetSets: '',
                             deadline: ''
                         });
+                        setCustomExerciseName('');
                     }}
                     maxWidth="sm"
                     fullWidth
@@ -814,29 +827,79 @@ export default function Progress() {
                     <DialogContent>
                         <Grid container spacing={2} sx={{ mt: 1 }}>
                             <Grid item xs={12}>
-                                <TextField
-                                    fullWidth
-                                    label="Exercise Name"
-                                    value={newGoal.exerciseName}
-                                    onChange={(e) => setNewGoal({ ...newGoal, exerciseName: e.target.value })}
-                                    sx={{
-                                        '& .MuiOutlinedInput-root': {
+                                <FormControl fullWidth>
+                                    <InputLabel sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                                        Exercise Name
+                                    </InputLabel>
+                                    <Select
+                                        value={newGoal.exerciseName}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            setNewGoal({ ...newGoal, exerciseName: value });
+                                            if (value === 'custom') {
+                                                setCustomExerciseName('');
+                                            }
+                                        }}
+                                        sx={{
                                             color: '#fff',
-                                            '& fieldset': {
+                                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                            '& .MuiOutlinedInput-notchedOutline': {
                                                 borderColor: 'rgba(255, 255, 255, 0.1)',
                                             },
-                                            '&:hover fieldset': {
+                                            '&:hover .MuiOutlinedInput-notchedOutline': {
                                                 borderColor: 'rgba(0, 255, 159, 0.5)',
                                             },
-                                            '&.Mui-focused fieldset': {
+                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                                                 borderColor: '#00ff9f',
                                             },
-                                        },
-                                        '& .MuiInputLabel-root': {
-                                            color: 'rgba(255, 255, 255, 0.7)',
-                                        },
-                                    }}
-                                />
+                                        }}
+                                    >
+                                        <MenuItem value="">
+                                            <em>Select an exercise</em>
+                                        </MenuItem>
+                                        {availableExercises.map(exerciseName => (
+                                            <MenuItem key={exerciseName} value={exerciseName}>
+                                                {exerciseName}
+                                            </MenuItem>
+                                        ))}
+                                        <Divider sx={{ bgcolor: 'rgba(255, 255, 255, 0.1)' }} />
+                                        <MenuItem value="custom">
+                                            <em>Custom Exercise Name</em>
+                                        </MenuItem>
+                                    </Select>
+                                </FormControl>
+
+                                {/* Custom Exercise Name Field */}
+                                {newGoal.exerciseName === 'custom' && (
+                                    <TextField
+                                        fullWidth
+                                        label="Custom Exercise Name"
+                                        value={customExerciseName}
+                                        onChange={(e) => {
+                                            setCustomExerciseName(e.target.value);
+                                            setNewGoal({ ...newGoal, exerciseName: e.target.value });
+                                        }}
+                                        sx={{
+                                            mt: 2,
+                                            '& .MuiOutlinedInput-root': {
+                                                color: '#fff',
+                                                '& fieldset': {
+                                                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                                                },
+                                                '&:hover fieldset': {
+                                                    borderColor: 'rgba(0, 255, 159, 0.5)',
+                                                },
+                                                '&.Mui-focused fieldset': {
+                                                    borderColor: '#00ff9f',
+                                                },
+                                            },
+                                            '& .MuiInputLabel-root': {
+                                                color: 'rgba(255, 255, 255, 0.7)',
+                                            },
+                                        }}
+                                        placeholder="Enter new exercise name"
+                                    />
+                                )}
                             </Grid>
                             <Grid item xs={12} sm={4}>
                                 <TextField
@@ -959,6 +1022,7 @@ export default function Progress() {
                                     targetSets: '',
                                     deadline: ''
                                 });
+                                setCustomExerciseName('');
                             }}
                             sx={{ color: 'text.secondary' }}
                         >
