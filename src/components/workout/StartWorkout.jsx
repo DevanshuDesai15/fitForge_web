@@ -38,7 +38,12 @@ import {
     MdExpandMore,
     MdFitnessCenter,
     MdLibraryBooks,
-    MdClose
+    MdClose,
+    MdToday,
+    MdCheckCircle,
+    MdEdit,
+    MdCheck,
+    MdCancel
 } from 'react-icons/md';
 import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../firebase/config';
@@ -92,9 +97,14 @@ export default function StartWorkout() {
     // Template and exercise selection states
     const [templates, setTemplates] = useState([]);
     const [selectedTemplate, setSelectedTemplate] = useState('');
+    const [selectedDay, setSelectedDay] = useState('');
+    const [currentTemplate, setCurrentTemplate] = useState(null);
+    const [templateDays, setTemplateDays] = useState([]);
     const [templateExercises, setTemplateExercises] = useState([]);
     const [previousExercises, setPreviousExercises] = useState([]);
     const [showTemplateSelection, setShowTemplateSelection] = useState(true);
+    const [showDaySelection, setShowDaySelection] = useState(false);
+    const [editingExercise, setEditingExercise] = useState(null);
 
     useEffect(() => {
         let interval;
@@ -158,27 +168,69 @@ export default function StartWorkout() {
         setWorkoutStarted(true);
         setWorkoutTime(0);
         setShowTemplateSelection(false);
+        setShowDaySelection(false);
         setError('');
         setSuccess('');
     };
 
-    const handleStartWithTemplate = () => {
+    const handleSelectTemplate = () => {
         if (!selectedTemplate) return;
 
         const template = templates.find(t => t.id === selectedTemplate);
         if (template && template.workoutDays && template.workoutDays.length > 0) {
-            // Extract all exercises from the template
-            const allTemplateExercises = template.workoutDays.flatMap(day =>
-                day.exercises || []
-            );
-            setTemplateExercises(allTemplateExercises);
+            setCurrentTemplate(template);
+            setTemplateDays(template.workoutDays);
+            setShowTemplateSelection(false);
+            setShowDaySelection(true);
+        }
+    };
+
+    const handleSelectDay = () => {
+        if (!selectedDay) return;
+
+        const day = templateDays.find(d => d.id.toString() === selectedDay);
+        if (day && day.exercises) {
+            setTemplateExercises(day.exercises || []);
         }
 
+        // Start workout immediately after selecting day
         setWorkoutStarted(true);
         setWorkoutTime(0);
-        setShowTemplateSelection(false);
+        setShowDaySelection(false);
         setError('');
         setSuccess('');
+    };
+
+    const handleBackToTemplateSelection = () => {
+        setShowTemplateSelection(true);
+        setShowDaySelection(false);
+        setSelectedTemplate('');
+        setSelectedDay('');
+        setCurrentTemplate(null);
+        setTemplateDays([]);
+        setTemplateExercises([]);
+    };
+
+    const handleBackToDaySelection = () => {
+        setShowDaySelection(true);
+        setShowTemplateSelection(false);
+        setSelectedDay('');
+        setExercises([]);
+        setWorkoutStarted(false);
+        setWorkoutTime(0);
+    };
+
+    const handleEditExercise = (index) => {
+        setEditingExercise(index);
+    };
+
+    const handleSaveExerciseEdit = (index, updatedExercise) => {
+        setExercises(prev => prev.map((ex, i) => i === index ? updatedExercise : ex));
+        setEditingExercise(null);
+    };
+
+    const handleCancelExerciseEdit = () => {
+        setEditingExercise(null);
     };
 
     const handleFinishWorkout = async () => {
@@ -193,17 +245,30 @@ export default function StartWorkout() {
         try {
             const workoutTimestamp = new Date().toISOString();
 
-            // Save the workout as a whole (existing functionality)
-            await addDoc(collection(db, 'workouts'), {
+            // Save the workout as a whole with template information
+            const workoutData = {
                 userId: currentUser.uid,
                 exercises: exercises,
                 duration: workoutTime,
                 timestamp: workoutTimestamp
-            });
+            };
 
-            // NEW: Save each exercise individually for progress tracking
+            // Add template information if this was a template-based workout
+            if (currentTemplate && selectedDay) {
+                const selectedDayData = templateDays.find(d => d.id.toString() === selectedDay);
+                workoutData.templateInfo = {
+                    templateId: currentTemplate.id,
+                    templateName: currentTemplate.name,
+                    dayId: selectedDay,
+                    dayName: selectedDayData?.name || `Day ${selectedDay}`
+                };
+            }
+
+            await addDoc(collection(db, 'workouts'), workoutData);
+
+            // Save each exercise individually for progress tracking
             const exercisePromises = exercises.map(exercise => {
-                return addDoc(collection(db, 'exercises'), {
+                const exerciseData = {
                     userId: currentUser.uid,
                     exerciseName: exercise.name,
                     weight: exercise.weight.toString(),
@@ -211,21 +276,44 @@ export default function StartWorkout() {
                     sets: exercise.sets.toString(),
                     notes: exercise.notes || '',
                     timestamp: workoutTimestamp,
-                    source: 'workout' // Track that this came from a workout session
-                });
+                    source: 'workout'
+                };
+
+                // Add template information for progress tracking
+                if (currentTemplate && selectedDay) {
+                    const selectedDayData = templateDays.find(d => d.id.toString() === selectedDay);
+                    exerciseData.templateInfo = {
+                        templateId: currentTemplate.id,
+                        templateName: currentTemplate.name,
+                        dayId: selectedDay,
+                        dayName: selectedDayData?.name || `Day ${selectedDay}`
+                    };
+                }
+
+                return addDoc(collection(db, 'exercises'), exerciseData);
             });
 
-            // Wait for all individual exercises to be saved
             await Promise.all(exercisePromises);
 
             console.log(`✅ Workout saved with ${exercises.length} exercises saved individually for progress tracking`);
 
-            setSuccess(`Workout saved successfully! ${exercises.length} exercises added to progress tracking.`);
+            const templateInfo = currentTemplate && selectedDay
+                ? ` Template: ${currentTemplate.name} - ${templateDays.find(d => d.id.toString() === selectedDay)?.name}`
+                : '';
+
+            setSuccess(`Workout saved successfully!${templateInfo} ${exercises.length} exercises added to progress tracking.`);
+
+            // Reset states
             setWorkoutStarted(false);
             setExercises([]);
             setWorkoutTime(0);
-            setTemplateExercises([]); // Clear template exercises
-            setShowTemplateSelection(true); // Reset to show template selection next time
+            setTemplateExercises([]);
+            setCurrentTemplate(null);
+            setTemplateDays([]);
+            setSelectedTemplate('');
+            setSelectedDay('');
+            setShowTemplateSelection(true);
+            setShowDaySelection(false);
 
             // Navigate to history page after short delay
             setTimeout(() => {
@@ -266,7 +354,6 @@ export default function StartWorkout() {
         });
 
         setOpenDialog(false);
-        setExerciseSelectionMode('manual');
     };
 
     // Handle exercise selection from the ExerciseSelector
@@ -347,7 +434,14 @@ export default function StartWorkout() {
 
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                     <Typography variant="h4" sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
-                        {workoutStarted ? 'Active Workout' : 'Start Workout'}
+                        {workoutStarted
+                            ? currentTemplate
+                                ? `${currentTemplate.name} - ${templateDays.find(d => d.id.toString() === selectedDay)?.name || 'Active Workout'}`
+                                : 'Active Workout'
+                            : showDaySelection
+                                ? `${currentTemplate?.name} - Select Day`
+                                : 'Start Workout'
+                        }
                     </Typography>
                     {workoutStarted && (
                         <Chip
@@ -403,11 +497,10 @@ export default function StartWorkout() {
                                                         <Typography sx={{ color: '#fff' }}>
                                                             {template.name}
                                                         </Typography>
-                                                        {template.description && (
-                                                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                                                {template.description}
-                                                            </Typography>
-                                                        )}
+                                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                                            {template.workoutDays?.length || 0} days
+                                                            {template.description && ` • ${template.description}`}
+                                                        </Typography>
                                                     </Box>
                                                 </MenuItem>
                                             ))}
@@ -416,8 +509,8 @@ export default function StartWorkout() {
                                     <Button
                                         fullWidth
                                         variant="contained"
-                                        startIcon={<MdPlayArrow />}
-                                        onClick={handleStartWithTemplate}
+                                        startIcon={<MdToday />}
+                                        onClick={handleSelectTemplate}
                                         disabled={!selectedTemplate}
                                         sx={{
                                             background: selectedTemplate ? 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)' : 'rgba(255, 255, 255, 0.1)',
@@ -426,7 +519,7 @@ export default function StartWorkout() {
                                             mb: 2
                                         }}
                                     >
-                                        Start with Template
+                                        Select Template Day
                                     </Button>
                                 </Box>
                             )}
@@ -460,72 +553,286 @@ export default function StartWorkout() {
                     </StyledCard>
                 )}
 
-                <StyledCard sx={{ mb: 3 }}>
-                    <CardContent>
-                        {!workoutStarted ? (
-                            templates.length === 0 && (
-                                <Button
-                                    fullWidth
-                                    variant="contained"
-                                    startIcon={<MdPlayArrow />}
-                                    onClick={handleStartWorkout}
-                                    sx={{
-                                        background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
-                                        color: '#000',
-                                        fontWeight: 'bold',
-                                    }}
-                                >
-                                    Start Workout
-                                </Button>
-                            )
-                        ) : (
+                {!workoutStarted && templates.length === 0 && showTemplateSelection && (
+                    <StyledCard sx={{ mb: 3 }}>
+                        <CardContent>
                             <Button
                                 fullWidth
                                 variant="contained"
-                                startIcon={<MdStop />}
-                                onClick={handleFinishWorkout}
-                                disabled={loading}
+                                startIcon={<MdPlayArrow />}
+                                onClick={handleStartWorkout}
                                 sx={{
-                                    background: 'linear-gradient(45deg, #ff4444 30%, #ff1744 90%)',
-                                    color: '#fff',
+                                    background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
+                                    color: '#000',
                                     fontWeight: 'bold',
                                 }}
                             >
-                                {loading ? 'Saving...' : 'Finish Workout'}
+                                Start Workout
                             </Button>
-                        )}
-                    </CardContent>
-                </StyledCard>
+                        </CardContent>
+                    </StyledCard>
+                )}
+
+                {/* Day Selection (shown after template is selected) */}
+                {!workoutStarted && showDaySelection && currentTemplate && (
+                    <StyledCard sx={{ mb: 3 }}>
+                        <CardContent>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                                <Typography variant="h6" sx={{ color: '#00ff9f', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <MdToday /> Select Workout Day
+                                </Typography>
+                                <Button
+                                    variant="outlined"
+                                    onClick={handleBackToTemplateSelection}
+                                    sx={{
+                                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                                        color: 'rgba(255, 255, 255, 0.7)',
+                                        '&:hover': {
+                                            borderColor: '#00ff9f',
+                                            color: '#00ff9f',
+                                        },
+                                    }}
+                                >
+                                    ← Back to Templates
+                                </Button>
+                            </Box>
+
+                            <Typography variant="body1" sx={{ color: '#fff', mb: 3 }}>
+                                Template: <strong>{currentTemplate.name}</strong>
+                            </Typography>
+
+                            <Grid2 container spacing={2}>
+                                {templateDays.map(day => (
+                                    <Grid2 xs={12} sm={6} key={day.id}>
+                                        <Card
+                                            sx={{
+                                                background: selectedDay === day.id.toString()
+                                                    ? 'rgba(0, 255, 159, 0.1)'
+                                                    : 'rgba(255, 255, 255, 0.05)',
+                                                border: selectedDay === day.id.toString()
+                                                    ? '2px solid #00ff9f'
+                                                    : '1px solid rgba(255, 255, 255, 0.1)',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s ease',
+                                                '&:hover': {
+                                                    transform: 'translateY(-2px)',
+                                                    boxShadow: '0 4px 20px rgba(0, 255, 159, 0.2)',
+                                                }
+                                            }}
+                                            onClick={() => setSelectedDay(day.id.toString())}
+                                        >
+                                            <CardContent>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                                    <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                                        {day.name}
+                                                    </Typography>
+                                                    {selectedDay === day.id.toString() && (
+                                                        <MdCheckCircle style={{ color: '#00ff9f' }} />
+                                                    )}
+                                                </Box>
+
+                                                {/* Muscle Groups */}
+                                                {day.muscleGroups && day.muscleGroups.length > 0 && (
+                                                    <Box sx={{ mb: 2 }}>
+                                                        <Typography variant="caption" sx={{ color: 'text.secondary', mb: 1, display: 'block' }}>
+                                                            Target Muscles:
+                                                        </Typography>
+                                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                                            {day.muscleGroups.map(mg => (
+                                                                <Chip
+                                                                    key={mg.id}
+                                                                    label={mg.name}
+                                                                    size="small"
+                                                                    sx={{
+                                                                        backgroundColor: 'rgba(0, 255, 159, 0.2)',
+                                                                        color: '#00ff9f',
+                                                                        fontSize: '0.75rem'
+                                                                    }}
+                                                                />
+                                                            ))}
+                                                        </Box>
+                                                    </Box>
+                                                )}
+
+                                                {/* Exercise Count */}
+                                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                                    {day.exercises?.length || 0} exercises
+                                                </Typography>
+
+                                                {/* Exercise Preview */}
+                                                {day.exercises && day.exercises.length > 0 && (
+                                                    <Box sx={{ mt: 1 }}>
+                                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                                            {day.exercises.slice(0, 3).map(ex => ex.name).join(', ')}
+                                                            {day.exercises.length > 3 && ` +${day.exercises.length - 3} more`}
+                                                        </Typography>
+                                                    </Box>
+                                                )}
+                                            </CardContent>
+                                        </Card>
+                                    </Grid2>
+                                ))}
+                            </Grid2>
+
+                            <Button
+                                fullWidth
+                                variant="contained"
+                                startIcon={<MdPlayArrow />}
+                                onClick={handleSelectDay}
+                                disabled={!selectedDay}
+                                sx={{
+                                    mt: 3,
+                                    background: selectedDay ? 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)' : 'rgba(255, 255, 255, 0.1)',
+                                    color: selectedDay ? '#000' : 'rgba(255, 255, 255, 0.5)',
+                                    fontWeight: 'bold',
+                                }}
+                            >
+                                Start Workout Day
+                            </Button>
+                        </CardContent>
+                    </StyledCard>
+                )}
+
+                {workoutStarted && (
+                    <StyledCard sx={{ mb: 3 }}>
+                        <CardContent>
+                            <Box sx={{ display: 'flex', gap: 2 }}>
+                                <Button
+                                    fullWidth
+                                    variant="contained"
+                                    startIcon={<MdStop />}
+                                    onClick={handleFinishWorkout}
+                                    disabled={loading}
+                                    sx={{
+                                        background: 'linear-gradient(45deg, #ff4444 30%, #ff1744 90%)',
+                                        color: '#fff',
+                                        fontWeight: 'bold',
+                                    }}
+                                >
+                                    {loading ? 'Saving...' : 'Finish Workout'}
+                                </Button>
+                                {currentTemplate && (
+                                    <Button
+                                        variant="outlined"
+                                        onClick={handleBackToDaySelection}
+                                        sx={{
+                                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                                            color: 'rgba(255, 255, 255, 0.7)',
+                                            minWidth: '140px',
+                                            '&:hover': {
+                                                borderColor: '#00ff9f',
+                                                color: '#00ff9f',
+                                            },
+                                        }}
+                                    >
+                                        ← Change Day
+                                    </Button>
+                                )}
+                            </Box>
+                        </CardContent>
+                    </StyledCard>
+                )}
 
                 {workoutStarted && (
                     <>
                         <List>
                             {exercises.map((exercise, index) => (
                                 <StyledCard key={index} sx={{ mb: 2 }}>
-                                    <ListItem
-                                        secondaryAction={
-                                            <IconButton
-                                                edge="end"
-                                                sx={{ color: '#ff4444' }}
-                                                onClick={() => handleDeleteExercise(index)}
-                                            >
-                                                <MdDelete />
-                                            </IconButton>
-                                        }
-                                    >
-                                        <ListItemText
-                                            primary={
-                                                <Typography sx={{ color: '#00ff9f' }}>
-                                                    {exercise.name}
-                                                </Typography>
+                                    {editingExercise === index ? (
+                                        <CardContent>
+                                            <Typography variant="h6" sx={{ color: '#00ff9f', mb: 2 }}>
+                                                Edit: {exercise.name}
+                                            </Typography>
+                                            <Grid2 container spacing={2}>
+                                                <Grid2 xs={4}>
+                                                    <StyledTextField
+                                                        fullWidth
+                                                        label="Weight (kg)"
+                                                        type="number"
+                                                        size="small"
+                                                        defaultValue={exercise.weight}
+                                                        onChange={(e) => {
+                                                            exercise.weight = parseFloat(e.target.value) || 0;
+                                                        }}
+                                                    />
+                                                </Grid2>
+                                                <Grid2 xs={4}>
+                                                    <StyledTextField
+                                                        fullWidth
+                                                        label="Reps"
+                                                        type="number"
+                                                        size="small"
+                                                        defaultValue={exercise.reps}
+                                                        onChange={(e) => {
+                                                            exercise.reps = parseInt(e.target.value) || 10;
+                                                        }}
+                                                    />
+                                                </Grid2>
+                                                <Grid2 xs={4}>
+                                                    <StyledTextField
+                                                        fullWidth
+                                                        label="Sets"
+                                                        type="number"
+                                                        size="small"
+                                                        defaultValue={exercise.sets}
+                                                        onChange={(e) => {
+                                                            exercise.sets = parseInt(e.target.value) || 3;
+                                                        }}
+                                                    />
+                                                </Grid2>
+                                            </Grid2>
+                                            <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+                                                <Button
+                                                    startIcon={<MdCheck />}
+                                                    onClick={() => handleSaveExerciseEdit(index, exercise)}
+                                                    sx={{ color: '#00ff9f' }}
+                                                >
+                                                    Save
+                                                </Button>
+                                                <Button
+                                                    startIcon={<MdCancel />}
+                                                    onClick={handleCancelExerciseEdit}
+                                                    sx={{ color: '#ff4444' }}
+                                                >
+                                                    Cancel
+                                                </Button>
+                                            </Box>
+                                        </CardContent>
+                                    ) : (
+                                        <ListItem
+                                            secondaryAction={
+                                                <Box>
+                                                    <IconButton
+                                                        edge="end"
+                                                        sx={{ color: '#00ff9f', mr: 1 }}
+                                                        onClick={() => handleEditExercise(index)}
+                                                    >
+                                                        <MdEdit />
+                                                    </IconButton>
+                                                    <IconButton
+                                                        edge="end"
+                                                        sx={{ color: '#ff4444' }}
+                                                        onClick={() => handleDeleteExercise(index)}
+                                                    >
+                                                        <MdDelete />
+                                                    </IconButton>
+                                                </Box>
                                             }
-                                            secondary={
-                                                <Typography sx={{ color: 'text.secondary' }}>
-                                                    {`${exercise.weight}kg × ${exercise.reps} reps × ${exercise.sets} sets`}
-                                                </Typography>
-                                            }
-                                        />
-                                    </ListItem>
+                                        >
+                                            <ListItemText
+                                                primary={
+                                                    <Typography sx={{ color: '#00ff9f' }}>
+                                                        {exercise.name}
+                                                    </Typography>
+                                                }
+                                                secondary={
+                                                    <Typography sx={{ color: 'text.secondary' }}>
+                                                        {`${exercise.weight}kg × ${exercise.reps} reps × ${exercise.sets} sets`}
+                                                    </Typography>
+                                                }
+                                            />
+                                        </ListItem>
+                                    )}
                                 </StyledCard>
                             ))}
                         </List>
@@ -549,7 +856,6 @@ export default function StartWorkout() {
                     open={openDialog}
                     onClose={() => {
                         setOpenDialog(false);
-                        setExerciseSelectionMode('manual');
                     }}
                     maxWidth="md"
                     fullWidth
@@ -567,18 +873,80 @@ export default function StartWorkout() {
                         </IconButton>
                     </DialogTitle>
                     <DialogContent>
+                        {/* Template Exercises Quick Select */}
+                        {templateExercises.length > 0 && (
+                            <Box sx={{ mb: 3 }}>
+                                <Typography variant="h6" sx={{ color: '#00ff9f', mb: 2 }}>
+                                    From Your Template
+                                </Typography>
+                                <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+                                    Quick-select from {templateDays.find(d => d.id.toString() === selectedDay)?.name || 'your routine'}:
+                                </Typography>
+                                <Grid2 container spacing={1}>
+                                    {templateExercises
+                                        .filter(templateEx => !exercises.some(workoutEx => workoutEx.name === templateEx.name))
+                                        .map((exercise, index) => (
+                                            <Grid2 key={exercise.id || index}>
+                                                <Button
+                                                    variant="outlined"
+                                                    onClick={() => handleExerciseSelectFromSelector({
+                                                        name: exercise.name,
+                                                        defaultWeight: exercise.weight || '',
+                                                        defaultReps: exercise.reps || 10,
+                                                        defaultSets: exercise.sets || 3,
+                                                        notes: exercise.notes || '',
+                                                        type: 'template'
+                                                    })}
+                                                    sx={{
+                                                        borderColor: newExercise.name === exercise.name ? '#00ff9f' : 'rgba(255, 255, 255, 0.3)',
+                                                        color: newExercise.name === exercise.name ? '#00ff9f' : '#fff',
+                                                        backgroundColor: newExercise.name === exercise.name ? 'rgba(0, 255, 159, 0.1)' : 'transparent',
+                                                        '&:hover': {
+                                                            borderColor: '#00ff9f',
+                                                            backgroundColor: 'rgba(0, 255, 159, 0.1)',
+                                                        },
+                                                        textTransform: 'none',
+                                                        fontSize: '0.875rem'
+                                                    }}
+                                                >
+                                                    {exercise.name}
+                                                    {exercise.weight > 0 && (
+                                                        <Chip
+                                                            label={`${exercise.weight}kg`}
+                                                            size="small"
+                                                            sx={{
+                                                                ml: 1,
+                                                                height: '20px',
+                                                                backgroundColor: 'rgba(0, 255, 159, 0.2)',
+                                                                color: '#00ff9f',
+                                                                fontSize: '0.75rem'
+                                                            }}
+                                                        />
+                                                    )}
+                                                </Button>
+                                            </Grid2>
+                                        ))}
+                                </Grid2>
+                                {templateExercises.filter(templateEx => !exercises.some(workoutEx => workoutEx.name === templateEx.name)).length === 0 && (
+                                    <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                                        All template exercises have been added to your workout ✓
+                                    </Typography>
+                                )}
+                                <Divider sx={{ bgcolor: 'rgba(255, 255, 255, 0.1)', my: 3 }} />
+                            </Box>
+                        )}
+
                         {/* Exercise Selection */}
                         <Box sx={{ mb: 3 }}>
                             <Typography variant="h6" sx={{ color: '#00ff9f', mb: 2 }}>
-                                Select Exercise
+                                {templateExercises.length > 0 ? 'Search More Exercises' : 'Select Exercise'}
                             </Typography>
                             <ExerciseSelector
                                 onExerciseSelect={handleExerciseSelectFromSelector}
-                                placeholder="Select exercise or add new..."
+                                placeholder={templateExercises.length > 0 ? "Search database or add custom exercise..." : "Select exercise or add new..."}
                                 showCustomEntry={true}
                                 includeHistory={true}
-                                includeTemplates={templateExercises.length > 0}
-                                templateExercises={templateExercises}
+                                includeTemplates={false}
                                 sx={{ mb: 2 }}
                             />
                         </Box>
