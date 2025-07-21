@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     BottomNavigation,
     BottomNavigationAction,
     Paper,
-    useTheme
+    useTheme,
+    Badge,
+    Box
 } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -20,10 +22,48 @@ export default function Navigation() {
     const theme = useTheme();
     const [value, setValue] = useState(location.pathname);
 
+    // Update value when location changes
+    useEffect(() => {
+        setValue(location.pathname);
+    }, [location.pathname]);
+
     const handleChange = (event, newValue) => {
         setValue(newValue);
         navigate(newValue);
+
+        // Add haptic feedback for mobile devices
+        if (navigator.vibrate) {
+            navigator.vibrate(50);
+        }
     };
+
+    const navigationItems = [
+        {
+            label: 'Home',
+            value: '/',
+            icon: MdDashboard,
+        },
+        {
+            label: 'Workout',
+            value: '/workout',
+            icon: MdFitnessCenter,
+        },
+        {
+            label: 'History',
+            value: '/history',
+            icon: MdHistory,
+        },
+        {
+            label: 'Progress',
+            value: '/progress',
+            icon: MdShowChart,
+        },
+        {
+            label: 'Profile',
+            value: '/profile',
+            icon: MdPerson,
+        },
+    ];
 
     return (
         <Paper
@@ -32,52 +72,79 @@ export default function Navigation() {
                 bottom: 0,
                 left: 0,
                 right: 0,
-                background: 'rgba(30, 30, 30, 0.9)',
-                backdropFilter: 'blur(10px)',
-                borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                background: 'linear-gradient(180deg, rgba(18, 18, 18, 0.95) 0%, rgba(30, 30, 30, 0.98) 100%)',
+                backdropFilter: 'blur(20px)',
+                borderTop: `2px solid ${theme.palette.primary.main}20`,
+                zIndex: 1000,
+                // Safe area for devices with home indicator
+                paddingBottom: 'env(safe-area-inset-bottom)',
             }}
-            elevation={3}
+            elevation={0}
         >
             <BottomNavigation
                 value={value}
                 onChange={handleChange}
                 sx={{
                     background: 'transparent',
-                    '& .Mui-selected': {
-                        color: '#00ff9f !important',
+                    height: 'auto',
+                    minHeight: 65,
+                    paddingTop: 1,
+                    paddingBottom: 0.5,
+                    '& .MuiBottomNavigationAction-root': {
+                        minWidth: 'auto',
+                        padding: '8px 12px',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        borderRadius: 2,
+                        margin: '0 2px',
+                        '&:hover': {
+                            background: `${theme.palette.primary.main}10`,
+                        },
+                        '&.Mui-selected': {
+                            background: `${theme.palette.primary.main}15`,
+                            transform: 'translateY(-2px)',
+                            '& .MuiBottomNavigationAction-label': {
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                                color: theme.palette.primary.main,
+                                opacity: 1,
+                            },
+                            '& .navigation-icon': {
+                                color: theme.palette.primary.main,
+                                transform: 'scale(1.1)',
+                            },
+                        },
+                    },
+                    '& .MuiBottomNavigationAction-label': {
+                        fontSize: '0.7rem',
+                        fontWeight: 500,
+                        color: 'rgba(255, 255, 255, 0.6)',
+                        marginTop: 1,
+                        transition: 'all 0.3s ease',
+                        '&.Mui-selected': {
+                            fontSize: '0.75rem',
+                        },
                     },
                 }}
             >
-                <BottomNavigationAction
-                    label="Home"
-                    value="/"
-                    icon={<MdDashboard />}
-                    sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                />
-                <BottomNavigationAction
-                    label="Workout"
-                    value="/workout"
-                    icon={<MdFitnessCenter />}
-                    sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                />
-                <BottomNavigationAction
-                    label="History"
-                    value="/history"
-                    icon={<MdHistory />}
-                    sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                />
-                <BottomNavigationAction
-                    label="Progress"
-                    value="/progress"
-                    icon={<MdShowChart />}
-                    sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                />
-                <BottomNavigationAction
-                    label="Profile"
-                    value="/profile"
-                    icon={<MdPerson />}
-                    sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                />
+                {navigationItems.map((item) => (
+                    <BottomNavigationAction
+                        key={item.value}
+                        label={item.label}
+                        value={item.value}
+                        icon={
+                            <Box className="navigation-icon" sx={{
+                                transition: 'all 0.3s ease',
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                fontSize: '1.4rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}>
+                                <item.icon />
+                            </Box>
+                        }
+                    />
+                ))}
             </BottomNavigation>
         </Paper>
     );
