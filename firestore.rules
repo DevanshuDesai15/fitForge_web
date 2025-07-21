@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if the document belongs to the current user
+    function isOwner() {
+      return request.auth.uid == request.resource.data.userId;
+    }
+
+    // Workouts collection rules
+    match /workouts/{workoutId} {
+      allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      allow create: if isAuthenticated() && isOwner();
+      allow update, delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    // Workout Templates collection rules
+    match /workoutTemplates/{templateId} {
+      allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      allow create: if isAuthenticated() && isOwner();
+      allow update, delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    // Exercises collection rules
+    match /exercises/{exerciseId} {
+      allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      allow create: if isAuthenticated() && isOwner();
+      allow update, delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    // Goals collection rules (NEW - this was missing!)
+    match /goals/{goalId} {
+      allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      allow create: if isAuthenticated() && isOwner();
+      allow update, delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    // Users collection rules
+    match /users/{userId} {
+      allow read, write: if request.auth.uid == userId;
+    }
+
+    // Exercise library rules
+    match /exerciseLibrary/{exerciseId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isOwner();
+      allow update, delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+    
+    // Exercise database rules
+    match /exerciseDatabase/{exerciseId} {
+      allow read: if isAuthenticated();
+      // Only allow writes during initialization (you might want to restrict this further)
+      allow write: if isAuthenticated();
+    }
+  }
+} 
