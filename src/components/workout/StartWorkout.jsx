@@ -50,6 +50,7 @@ import { db } from '../../firebase/config';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import ExerciseSelector from '../common/ExerciseSelector';
+import { getWeightUnit, getWeightLabel } from '../../utils/weightUnit';
 
 const StyledCard = styled(Card)(({ theme }) => ({
     background: 'rgba(30, 30, 30, 0.9)',
@@ -84,6 +85,7 @@ export default function StartWorkout() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
+    const [weightUnit, setWeightUnitState] = useState('kg');
     const { currentUser } = useAuth();
     const navigate = useNavigate();
     const [newExercise, setNewExercise] = useState({
@@ -121,6 +123,18 @@ export default function StartWorkout() {
             loadTemplates();
             loadPreviousExercises();
         }
+        // Load weight unit preference
+        setWeightUnitState(getWeightUnit());
+
+        // Listen for weight unit changes (for multi-tab sync)
+        const handleStorageChange = (e) => {
+            if (e.key === 'weightUnit') {
+                setWeightUnitState(e.newValue || 'kg');
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
     }, [currentUser]);
 
     const loadTemplates = async () => {
@@ -747,7 +761,7 @@ export default function StartWorkout() {
                                                 <Grid2 xs={4}>
                                                     <StyledTextField
                                                         fullWidth
-                                                        label="Weight (kg)"
+                                                        label={getWeightLabel(weightUnit)}
                                                         type="number"
                                                         size="small"
                                                         defaultValue={exercise.weight}
@@ -827,7 +841,7 @@ export default function StartWorkout() {
                                                 }
                                                 secondary={
                                                     <Typography sx={{ color: 'text.secondary' }}>
-                                                        {`${exercise.weight}kg × ${exercise.reps} reps × ${exercise.sets} sets`}
+                                                        {`${exercise.weight}${weightUnit} × ${exercise.reps} reps × ${exercise.sets} sets`}
                                                     </Typography>
                                                 }
                                             />
@@ -912,7 +926,7 @@ export default function StartWorkout() {
                                                     {exercise.name}
                                                     {exercise.weight > 0 && (
                                                         <Chip
-                                                            label={`${exercise.weight}kg`}
+                                                            label={`${exercise.weight}${weightUnit}`}
                                                             size="small"
                                                             sx={{
                                                                 ml: 1,
@@ -967,12 +981,16 @@ export default function StartWorkout() {
                                 <Grid2 xs={12} sm={4}>
                                     <StyledTextField
                                         fullWidth
-                                        label="Weight (kg)"
+                                        label={getWeightLabel(weightUnit)}
                                         name="weight"
                                         type="number"
                                         value={newExercise.weight}
                                         onChange={handleExerciseChange}
                                         required
+                                        helperText={weightUnit === 'kg' ? 'Enter weight in kilograms' : 'Enter weight in pounds'}
+                                        FormHelperTextProps={{
+                                            sx: { color: 'text.secondary' }
+                                        }}
                                     />
                                 </Grid2>
                                 <Grid2 xs={12} sm={4}>

@@ -10,7 +10,9 @@ import {
     Typography,
     Grid,
     CircularProgress,
-    Divider
+    Divider,
+    Switch,
+    FormControlLabel
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,7 +20,7 @@ import { useNavigate } from 'react-router-dom';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { updateEmail, updatePassword } from 'firebase/auth';
 import { db } from '../firebase/config';
-import { MdArrowBack, MdPerson, MdEmail, MdLock, MdSave, MdLogout, MdSettings, MdCleaningServices } from "react-icons/md";
+import { MdArrowBack, MdPerson, MdEmail, MdLock, MdSave, MdLogout, MdSettings, MdCleaningServices, MdFitnessCenter } from "react-icons/md";
 
 const StyledCard = styled(Card)(({ theme }) => ({
     background: 'rgba(30, 30, 30, 0.9)',
@@ -51,6 +53,7 @@ export default function Profile() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [weightUnit, setWeightUnit] = useState('kg'); // 'kg' or 'lb'
     const [userData, setUserData] = useState({
         username: '',
         fullName: '',
@@ -63,13 +66,50 @@ export default function Profile() {
 
     useEffect(() => {
         loadUserData();
+        loadWeightUnit();
     }, [currentUser]);
+
+    const loadWeightUnit = () => {
+        const savedUnit = localStorage.getItem('weightUnit') || 'kg';
+        setWeightUnit(savedUnit);
+    };
+
+    const convertWeight = (weight, fromUnit, toUnit) => {
+        if (!weight || fromUnit === toUnit) return weight;
+
+        if (fromUnit === 'kg' && toUnit === 'lb') {
+            return (parseFloat(weight) * 2.20462).toFixed(1);
+        } else if (fromUnit === 'lb' && toUnit === 'kg') {
+            return (parseFloat(weight) / 2.20462).toFixed(1);
+        }
+        return weight;
+    };
+
+    const handleWeightUnitChange = (newUnit) => {
+        const currentWeight = userData.weight;
+        const convertedWeight = convertWeight(currentWeight, weightUnit, newUnit);
+
+        setWeightUnit(newUnit);
+        setUserData(prev => ({
+            ...prev,
+            weight: convertedWeight
+        }));
+
+        // Save to localStorage immediately
+        localStorage.setItem('weightUnit', newUnit);
+    };
 
     const loadUserData = async () => {
         try {
             const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
             if (userDoc.exists()) {
                 const data = userDoc.data();
+
+                // Load weight unit preference from Firebase if available
+                const savedWeightUnit = data.weightUnit || localStorage.getItem('weightUnit') || 'kg';
+                setWeightUnit(savedWeightUnit);
+                localStorage.setItem('weightUnit', savedWeightUnit);
+
                 setUserData(prev => ({
                     ...prev,
                     username: data.username || '',
@@ -98,12 +138,13 @@ export default function Profile() {
         setSuccess('');
 
         try {
-            // Update user profile data
+            // Update user profile data including weight unit preference
             await setDoc(doc(db, 'users', currentUser.uid), {
                 username: userData.username,
                 fullName: userData.fullName,
                 age: userData.age,
                 weight: userData.weight,
+                weightUnit: weightUnit, // Save weight unit preference
                 updatedAt: new Date().toISOString(),
             }, { merge: true });
 
@@ -227,6 +268,50 @@ export default function Profile() {
                                     </Typography>
                                 </Grid>
 
+                                {/* Weight Unit Preference */}
+                                <Grid item xs={12}>
+                                    <Box sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 2,
+                                        p: 2,
+                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                        borderRadius: '8px',
+                                        border: '1px solid rgba(255, 255, 255, 0.1)'
+                                    }}>
+                                        <MdFitnessCenter style={{ color: '#00ff9f' }} />
+                                        <Typography variant="body1" sx={{ color: '#fff', fontWeight: 'bold' }}>
+                                            Weight Unit Preference:
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                            kg
+                                        </Typography>
+                                        <Switch
+                                            checked={weightUnit === 'lb'}
+                                            onChange={(e) => handleWeightUnitChange(e.target.checked ? 'lb' : 'kg')}
+                                            sx={{
+                                                '& .MuiSwitch-switchBase.Mui-checked': {
+                                                    color: '#00ff9f',
+                                                },
+                                                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                                    backgroundColor: '#00ff9f',
+                                                },
+                                                '& .MuiSwitch-track': {
+                                                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                                                },
+                                            }}
+                                        />
+                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                            lb
+                                        </Typography>
+                                        <Box sx={{ ml: 'auto' }}>
+                                            <Typography variant="caption" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                                                Current weight will be converted automatically
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                </Grid>
+
                                 <Grid item xs={12} md={6}>
                                     <StyledTextField
                                         fullWidth
@@ -259,10 +344,14 @@ export default function Profile() {
                                     <StyledTextField
                                         fullWidth
                                         type="number"
-                                        label="Weight (kg)"
+                                        label={`Weight (${weightUnit})`}
                                         name="weight"
                                         value={userData.weight}
                                         onChange={handleChange}
+                                        helperText={weightUnit === 'kg' ? 'Enter weight in kilograms' : 'Enter weight in pounds'}
+                                        FormHelperTextProps={{
+                                            sx: { color: 'text.secondary' }
+                                        }}
                                     />
                                 </Grid>
 

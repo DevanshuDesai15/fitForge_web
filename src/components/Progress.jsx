@@ -48,6 +48,7 @@ import {
 import { collection, query, where, orderBy, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
+import { getWeightUnit, getWeightLabel } from '../utils/weightUnit';
 import { format, subDays, subWeeks, subMonths, isWithinInterval } from 'date-fns';
 
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -93,6 +94,7 @@ export default function Progress() {
     const [goals, setGoals] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [weightUnit, setWeightUnitState] = useState('kg');
 
     // Weight Progress states
     const [selectedExercise, setSelectedExercise] = useState('');
@@ -121,6 +123,21 @@ export default function Progress() {
     useEffect(() => {
         loadData();
     }, [activeTab, currentUser]);
+
+    useEffect(() => {
+        // Load weight unit preference
+        setWeightUnitState(getWeightUnit());
+
+        // Listen for weight unit changes (for multi-tab sync)
+        const handleStorageChange = (e) => {
+            if (e.key === 'weightUnit') {
+                setWeightUnitState(e.newValue || 'kg');
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
 
     const loadData = async () => {
         setLoading(true);
@@ -411,7 +428,7 @@ export default function Progress() {
                                     {getTrendIcon(filteredData)}
                                     <Box>
                                         <Typography variant="h6" sx={{ color: '#00ff9f' }}>
-                                            {filteredData.length > 0 ? `${filteredData[filteredData.length - 1].weight}kg` : 'N/A'}
+                                            {filteredData.length > 0 ? `${filteredData[filteredData.length - 1].weight}${weightUnit}` : 'N/A'}
                                         </Typography>
                                         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                                             Latest Weight
@@ -426,7 +443,7 @@ export default function Progress() {
                                     <MdShowChart style={{ color: '#00ff9f' }} />
                                     <Box>
                                         <Typography variant="h6" sx={{ color: '#00ff9f' }}>
-                                            {filteredData.length > 0 ? Math.max(...filteredData.map(d => d.weight)) : 0}kg
+                                            {filteredData.length > 0 ? Math.max(...filteredData.map(d => d.weight)) : 0}{weightUnit}
                                         </Typography>
                                         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                                             Period Max
@@ -503,7 +520,7 @@ export default function Progress() {
                                             primary={
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                     <Typography sx={{ color: '#fff' }}>
-                                                        {entry.weight}kg × {entry.reps} reps × {entry.sets} sets
+                                                        {entry.weight}{weightUnit} × {entry.reps} reps × {entry.sets} sets
                                                     </Typography>
                                                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                                                         {format(entry.date, 'MMM dd, yyyy')}
@@ -571,7 +588,7 @@ export default function Progress() {
                                         </Typography>
                                     </Box>
                                     <Typography variant="h4" sx={{ color: '#00ff9f', mb: 1 }}>
-                                        {record.weight}kg
+                                        {record.weight}{weightUnit}
                                     </Typography>
                                     <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
                                         {record.reps} reps × {record.sets} sets
@@ -660,7 +677,7 @@ export default function Progress() {
                                         <Box sx={{ mb: 2 }}>
                                             {goal.targetWeight && (
                                                 <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                                    Target Weight: {goal.targetWeight}kg
+                                                    Target Weight: {goal.targetWeight}{weightUnit}
                                                 </Typography>
                                             )}
                                             {goal.targetReps && (
@@ -904,10 +921,14 @@ export default function Progress() {
                             <Grid item xs={12} sm={4}>
                                 <TextField
                                     fullWidth
-                                    label="Target Weight (kg)"
+                                    label={getWeightLabel(weightUnit).replace('Weight', 'Target Weight')}
                                     type="number"
                                     value={newGoal.targetWeight}
                                     onChange={(e) => setNewGoal({ ...newGoal, targetWeight: e.target.value })}
+                                    helperText={weightUnit === 'kg' ? 'Enter target weight in kilograms' : 'Enter target weight in pounds'}
+                                    FormHelperTextProps={{
+                                        sx: { color: 'text.secondary' }
+                                    }}
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
                                             color: '#fff',

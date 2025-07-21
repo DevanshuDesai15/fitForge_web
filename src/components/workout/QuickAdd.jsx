@@ -27,6 +27,7 @@ import { db } from '../../firebase/config';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import ExerciseSelector from '../common/ExerciseSelector';
+import { getWeightUnit, getWeightLabel } from '../../utils/weightUnit';
 
 const StyledCard = styled(Card)(() => ({
     background: 'rgba(30, 30, 30, 0.9)',
@@ -80,6 +81,7 @@ export default function QuickAdd() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [weightUnit, setWeightUnitState] = useState('kg');
     const [exercise, setExercise] = useState({
         exerciseName: '',
         weight: '',
@@ -89,6 +91,21 @@ export default function QuickAdd() {
     });
     const { currentUser } = useAuth();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        // Load weight unit preference
+        setWeightUnitState(getWeightUnit());
+
+        // Listen for weight unit changes (for multi-tab sync)
+        const handleStorageChange = (e) => {
+            if (e.key === 'weightUnit') {
+                setWeightUnitState(e.newValue || 'kg');
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
 
     // Debug effect to track exercise state changes
     useEffect(() => {
@@ -259,12 +276,16 @@ export default function QuickAdd() {
                                 <Grid2 xs={12} sm={4}>
                                     <StyledTextField
                                         fullWidth
-                                        label="Weight (kg)"
+                                        label={getWeightLabel(weightUnit)}
                                         name="weight"
                                         type="number"
                                         value={exercise.weight}
                                         onChange={handleChange}
                                         required
+                                        helperText={weightUnit === 'kg' ? 'Enter weight in kilograms' : 'Enter weight in pounds'}
+                                        FormHelperTextProps={{
+                                            sx: { color: 'text.secondary' }
+                                        }}
                                         InputProps={{
                                             startAdornment: (
                                                 <InputAdornment position="start">

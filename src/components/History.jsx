@@ -37,6 +37,7 @@ import {
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
+import { getWeightUnit } from '../utils/weightUnit';
 import {
     format,
     startOfMonth,
@@ -95,6 +96,7 @@ export default function History() {
     const [workoutDates, setWorkoutDates] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [weightUnit, setWeightUnitState] = useState('kg');
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedDateWorkouts, setSelectedDateWorkouts] = useState([]);
@@ -104,6 +106,21 @@ export default function History() {
     useEffect(() => {
         loadData();
     }, [activeTab]);
+
+    useEffect(() => {
+        // Load weight unit preference
+        setWeightUnitState(getWeightUnit());
+
+        // Listen for weight unit changes (for multi-tab sync)
+        const handleStorageChange = (e) => {
+            if (e.key === 'weightUnit') {
+                setWeightUnitState(e.newValue || 'kg');
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
 
     const loadData = async () => {
         setLoading(true);
@@ -415,7 +432,7 @@ export default function History() {
                                             {exercise.name}
                                         </Typography>
                                         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                            {`${exercise.weight}kg × ${exercise.reps} reps × ${exercise.sets} sets`}
+                                            {`${exercise.weight}${weightUnit} × ${exercise.reps} reps × ${exercise.sets} sets`}
                                         </Typography>
                                         {exercise.notes && (
                                             <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
@@ -476,7 +493,7 @@ export default function History() {
                                     <MdTrendingUp style={{ color: '#00ff9f' }} />
                                     <Box>
                                         <Typography variant="h6" sx={{ color: '#00ff9f' }}>
-                                            {stats.totalWeight.toFixed(0)}kg
+                                            {stats.totalWeight.toFixed(0)}{weightUnit}
                                         </Typography>
                                         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                                             Total Weight
@@ -517,7 +534,7 @@ export default function History() {
                                     </Typography>
                                 </Box>
                                 <Typography variant="body1" sx={{ color: '#fff' }}>
-                                    {`${exercise.weight}kg × ${exercise.reps} reps × ${exercise.sets} sets`}
+                                    {`${exercise.weight}${weightUnit} × ${exercise.reps} reps × ${exercise.sets} sets`}
                                 </Typography>
                                 {exercise.notes && (
                                     <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1, fontStyle: 'italic' }}>
@@ -629,7 +646,7 @@ export default function History() {
                                             {exercise.name}
                                         </Typography>
                                         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                            {`${exercise.weight}kg × ${exercise.reps} reps × ${exercise.sets} sets`}
+                                            {`${exercise.weight}${weightUnit} × ${exercise.reps} reps × ${exercise.sets} sets`}
                                         </Typography>
                                         {exercise.notes && (
                                             <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
