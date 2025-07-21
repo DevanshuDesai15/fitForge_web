@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
     Box,
     Typography,
     TextField,
-    Button,
     CircularProgress,
     Tabs,
     Tab,
@@ -17,7 +16,8 @@ import {
     TableRow,
     Paper,
     Chip,
-    Grid
+    Grid,
+    Fade
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { MdFitnessCenter } from 'react-icons/md';
@@ -50,60 +50,73 @@ const StyledTextField = styled(TextField)({
     },
 });
 
+// Loading indicator component for infinite scroll
+const InfiniteScrollLoader = styled(Box)(({ theme }) => ({
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: '2rem 0',
+    background: 'rgba(0, 255, 159, 0.05)',
+    borderRadius: '12px',
+    margin: '1rem 0',
+    backdropFilter: 'blur(5px)',
+}));
+
 export default function ExerciseLibrary() {
     const [exercises, setExercises] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState('all');
     const [page, setPage] = useState(0);
     const [hasMore, setHasMore] = useState(true);
-    const ITEMS_PER_PAGE = 10;
+    const ITEMS_PER_PAGE = 20; // Increased for better infinite scroll experience
     const { currentUser } = useAuth();
     const navigate = useNavigate();
 
+    // Ref for the intersection observer target
+    const loadMoreRef = useRef(null);
+    const observerRef = useRef(null);
+
     const bodyParts = [
         'all',
-        'back',
-        'cardio',
-        'chest',
-        'lower arms',
-        'lower legs',
-        'neck',
-        'shoulders',
-        'upper arms',
-        'upper legs',
-        'waist'
+        'Abs',
+        'Arms',
+        'Back',
+        'Calves',
+        'Cardio',
+        'Chest',
+        'Legs',
+        'Shoulders'
     ];
 
-    useEffect(() => {
-        loadExercises();
-    }, [activeTab]);
-
-    useEffect(() => {
-        if (page > 0) {
-            loadExercises();
+    // Memoized load function to prevent infinite loops
+    const loadExercises = useCallback(async (pageNum = page, isInitial = false) => {
+        if (isInitial) {
+            setLoading(true);
+        } else {
+            setLoadingMore(true);
         }
-    }, [page]);
 
-    const loadExercises = async () => {
-        setLoading(true);
         setError('');
+
         try {
             let data;
             if (activeTab === 'all') {
-                data = await fetchExercises(ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+                data = await fetchExercises(ITEMS_PER_PAGE, pageNum * ITEMS_PER_PAGE);
             } else {
-                data = await fetchExercisesByBodyPart(activeTab, ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+                data = await fetchExercisesByBodyPart(activeTab, ITEMS_PER_PAGE, pageNum * ITEMS_PER_PAGE);
             }
-            console.log('Fetched exercises:', data);
-            console.log('Sample exercise with gifUrl:', data[0]);
+
+            console.log(`📦 Loaded ${data.length} exercises for page ${pageNum}`);
 
             if (data.length < ITEMS_PER_PAGE) {
                 setHasMore(false);
+                console.log('🔚 No more exercises to load');
             }
 
-            if (page === 0) {
+            if (pageNum === 0) {
                 setExercises(data);
             } else {
                 setExercises(prev => [...prev, ...data]);
@@ -113,19 +126,57 @@ export default function ExerciseLibrary() {
             setError('Error loading exercises. Please try again later.');
         } finally {
             setLoading(false);
+            setLoadingMore(false);
         }
-    };
+    }, [activeTab, page]);
 
-    const loadMore = () => {
-        if (!loading && hasMore) {
+    // Intersection Observer callback
+    const handleObserver = useCallback((entries) => {
+        const [target] = entries;
+        if (target.isIntersecting && !loading && !loadingMore && hasMore) {
+            console.log('🚀 Loading more exercises via infinite scroll...');
             setPage(prev => prev + 1);
         }
-    };
+    }, [loading, loadingMore, hasMore]);
+
+    // Initialize intersection observer
+    useEffect(() => {
+        const element = loadMoreRef.current;
+        const option = {
+            root: null,
+            rootMargin: '100px', // Start loading when 100px away from bottom
+            threshold: 0
+        };
+
+        observerRef.current = new IntersectionObserver(handleObserver, option);
+
+        if (element) {
+            observerRef.current.observe(element);
+        }
+
+        return () => {
+            if (observerRef.current) {
+                observerRef.current.disconnect();
+            }
+        };
+    }, [handleObserver]);
+
+    // Load initial exercises when tab changes
+    useEffect(() => {
+        setPage(0);
+        setHasMore(true);
+        loadExercises(0, true);
+    }, [activeTab]);
+
+    // Load more exercises when page changes (triggered by intersection)
+    useEffect(() => {
+        if (page > 0) {
+            loadExercises(page, false);
+        }
+    }, [page, loadExercises]);
 
     const handleTabChange = (e, newValue) => {
         setActiveTab(newValue);
-        setPage(0);
-        setHasMore(true);
         setSearchTerm(''); // Clear search when changing tabs
     };
 
@@ -148,6 +199,9 @@ export default function ExerciseLibrary() {
             <div className="max-w-4xl mx-auto">
                 <Typography variant="h4" sx={{ color: '#00ff9f', fontWeight: 'bold', mb: 3 }}>
                     Exercise Library
+                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', ml: 2 }}>
+                        ({filteredExercises.length} exercises)
+                    </Typography>
                 </Typography>
 
                 <StyledCard sx={{ mb: 3 }}>
@@ -187,6 +241,9 @@ export default function ExerciseLibrary() {
                 {loading ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
                         <CircularProgress sx={{ color: '#00ff9f' }} />
+                        <Typography sx={{ color: '#fff', ml: 2 }}>
+                            Loading exercises...
+                        </Typography>
                     </Box>
                 ) : error ? (
                     <Typography variant="body1" sx={{ color: '#ff4444' }}>
@@ -194,110 +251,142 @@ export default function ExerciseLibrary() {
                     </Typography>
                 ) : (
                     <>
-                    <StyledCard>
-                        <TableContainer component={Paper} sx={{ backgroundColor: 'transparent' }}>
-                            <Table>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
-                                            Exercise Name
-                                        </TableCell>
-                                        <TableCell sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
-                                            Body Part
-                                        </TableCell>
-                                        <TableCell sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
-                                            Target
-                                        </TableCell>
-                                        <TableCell sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
-                                            Equipment
-                                        </TableCell>
-                                        <TableCell sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
-                                            Difficulty
-                                        </TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {filteredExercises.map((exercise) => (
-                                        <TableRow
-                                            key={exercise.id}
-                                            onClick={() => handleExerciseClick(exercise)}
-                                            sx={{
-                                                cursor: 'pointer',
-                                                '&:hover': {
-                                                    backgroundColor: 'rgba(0, 255, 159, 0.1)',
-                                                },
-                                                '& td': {
-                                                    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                                                    color: '#fff',
-                                                }
-                                            }}
-                                        >
-                                            <TableCell>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                    <MdFitnessCenter size={20} color="#00ff9f" />
-                                                    <Typography sx={{ color: '#fff' }}>
-                                                        {exercise.name}
-                                                    </Typography>
-                                                </Box>
+                        <StyledCard>
+                            <TableContainer component={Paper} sx={{ backgroundColor: 'transparent' }}>
+                                <Table>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
+                                                Exercise Name
                                             </TableCell>
-                                            <TableCell>
-                                                <Chip
-                                                    label={exercise.bodyPart}
-                                                    size="small"
-                                                    sx={{
-                                                        backgroundColor: 'rgba(0, 255, 159, 0.2)',
-                                                        color: '#00ff9f',
-                                                        textTransform: 'capitalize'
-                                                    }}
-                                                />
+                                            <TableCell sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
+                                                Body Part
                                             </TableCell>
-                                            <TableCell sx={{ textTransform: 'capitalize' }}>
-                                                {exercise.target}
+                                            <TableCell sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
+                                                Target
                                             </TableCell>
-                                            <TableCell sx={{ textTransform: 'capitalize' }}>
-                                                {exercise.equipment}
+                                            <TableCell sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
+                                                Equipment
                                             </TableCell>
-                                            <TableCell>
-                                                <Chip
-                                                    label={exercise.difficulty}
-                                                    size="small"
-                                                    sx={{
-                                                        backgroundColor: exercise.difficulty === 'beginner' ? 'rgba(76, 175, 80, 0.2)' :
-                                                                        exercise.difficulty === 'intermediate' ? 'rgba(255, 193, 7, 0.2)' :
-                                                                        'rgba(244, 67, 54, 0.2)',
-                                                        color: exercise.difficulty === 'beginner' ? '#4caf50' :
-                                                               exercise.difficulty === 'intermediate' ? '#ffc107' :
-                                                               '#f44336',
-                                                        textTransform: 'capitalize'
-                                                    }}
-                                                />
+                                            <TableCell sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
+                                                Difficulty
                                             </TableCell>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    </StyledCard>
-                    </>
-                )}
+                                    </TableHead>
+                                    <TableBody>
+                                        {filteredExercises.map((exercise, index) => (
+                                            <Fade
+                                                key={exercise.id}
+                                                in={true}
+                                                timeout={300}
+                                                style={{ transitionDelay: `${index % 20 * 50}ms` }}
+                                            >
+                                                <TableRow
+                                                    onClick={() => handleExerciseClick(exercise)}
+                                                    sx={{
+                                                        cursor: 'pointer',
+                                                        '&:hover': {
+                                                            backgroundColor: 'rgba(0, 255, 159, 0.1)',
+                                                            transform: 'scale(1.01)',
+                                                            transition: 'all 0.2s ease-in-out',
+                                                        },
+                                                        '& td': {
+                                                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                                                            color: '#fff',
+                                                        }
+                                                    }}
+                                                >
+                                                    <TableCell>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                            <MdFitnessCenter size={20} color="#00ff9f" />
+                                                            <Typography sx={{ color: '#fff' }}>
+                                                                {exercise.name}
+                                                            </Typography>
+                                                        </Box>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Chip
+                                                            label={exercise.bodyPart}
+                                                            size="small"
+                                                            sx={{
+                                                                backgroundColor: 'rgba(0, 255, 159, 0.2)',
+                                                                color: '#00ff9f',
+                                                                textTransform: 'capitalize'
+                                                            }}
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell sx={{ textTransform: 'capitalize' }}>
+                                                        {exercise.target}
+                                                    </TableCell>
+                                                    <TableCell sx={{ textTransform: 'capitalize' }}>
+                                                        {exercise.equipment}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Chip
+                                                            label={exercise.difficulty || 'Standard'}
+                                                            size="small"
+                                                            sx={{
+                                                                backgroundColor: exercise.difficulty === 'beginner' ? 'rgba(76, 175, 80, 0.2)' :
+                                                                    exercise.difficulty === 'intermediate' ? 'rgba(255, 193, 7, 0.2)' :
+                                                                        exercise.difficulty === 'expert' ? 'rgba(244, 67, 54, 0.2)' :
+                                                                            'rgba(158, 158, 158, 0.2)',
+                                                                color: exercise.difficulty === 'beginner' ? '#4caf50' :
+                                                                    exercise.difficulty === 'intermediate' ? '#ffc107' :
+                                                                        exercise.difficulty === 'expert' ? '#f44336' :
+                                                                            '#9e9e9e',
+                                                                textTransform: 'capitalize'
+                                                            }}
+                                                        />
+                                                    </TableCell>
+                                                </TableRow>
+                                            </Fade>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </StyledCard>
 
-                {!loading && hasMore && (
-                    <Button
-                        onClick={loadMore}
-                        fullWidth
-                        sx={{
-                            mt: 3,
-                            color: '#00ff9f',
-                            borderColor: '#00ff9f',
-                            '&:hover': {
-                                borderColor: '#00ff9f',
-                                backgroundColor: 'rgba(0, 255, 159, 0.1)',
-                            },
-                        }}
-                        variant="outlined"
-                    >
-                        Load More
-                    </Button>
+                        {/* Infinite Scroll Loading Indicator */}
+                        {loadingMore && (
+                            <Fade in={loadingMore}>
+                                <InfiniteScrollLoader>
+                                    <CircularProgress size={24} sx={{ color: '#00ff9f', mr: 2 }} />
+                                    <Typography sx={{ color: '#00ff9f', fontWeight: 500 }}>
+                                        Loading more exercises...
+                                    </Typography>
+                                </InfiniteScrollLoader>
+                            </Fade>
+                        )}
+
+                        {/* Intersection Observer Target */}
+                        {hasMore && !loadingMore && (
+                            <div
+                                ref={loadMoreRef}
+                                style={{
+                                    height: '20px',
+                                    margin: '20px 0',
+                                    background: 'transparent'
+                                }}
+                            />
+                        )}
+
+                        {/* End of Results Message */}
+                        {!hasMore && exercises.length > 0 && (
+                            <Fade in={!hasMore}>
+                                <Box sx={{
+                                    textAlign: 'center',
+                                    py: 3,
+                                    background: 'rgba(0, 255, 159, 0.05)',
+                                    borderRadius: 2,
+                                    mt: 2
+                                }}>
+                                    <Typography sx={{ color: '#00ff9f', fontWeight: 500 }}>
+                                        🎉 You've reached the end! {exercises.length} exercises loaded.
+                                    </Typography>
+                                </Box>
+                            </Fade>
+                        )}
+                    </>
                 )}
             </div>
         </Box>

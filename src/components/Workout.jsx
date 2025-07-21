@@ -4,7 +4,7 @@ import {
     Card,
     CardContent,
     Typography,
-    Grid,
+    Grid2,
     Button,
     List,
     ListItem,
@@ -81,9 +81,9 @@ export default function Workout() {
                     Workout
                 </Typography>
 
-                <Grid container spacing={3}>
+                <Grid2 container spacing={3} sx={{ display: 'flex', justifyContent: 'space-between' }}>
                     {workoutOptions.map((option, index) => (
-                        <Grid item xs={12} sm={6} key={index}>
+                        <Grid2 xs={12} sm={6} key={index}>
                             <StyledCard
                                 onClick={() => navigate(option.path)}
                                 sx={{ cursor: 'pointer' }}
@@ -112,9 +112,9 @@ export default function Workout() {
                                     </Typography>
                                 </CardContent>
                             </StyledCard>
-                        </Grid>
+                        </Grid2>
                     ))}
-                </Grid>
+                </Grid2>
             </div>
         </Box>
     );

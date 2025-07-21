@@ -11,7 +11,7 @@ import {
     ListItem,
     ListItemText,
     Divider,
-    Grid,
+    Grid2,
     CircularProgress
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
@@ -144,13 +144,13 @@ export default function ExerciseDetail() {
                             </Typography>
                         </Box>
 
-                        <Grid container spacing={3}>
-                            <Grid item xs={12} md={8}>
+                        <Grid2 container spacing={3}>
+                            <Grid2 xs={12} md={8}>
                                 <Box sx={{ mb: 3 }}>
                                     <Typography variant="h6" sx={{ color: '#00ff9f', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                                         <MdGpsFixed /> Exercise Details
                                     </Typography>
-                                    
+
                                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                             <Typography variant="body1" sx={{ color: '#fff', fontWeight: 'bold', minWidth: '100px' }}>
@@ -215,9 +215,9 @@ export default function ExerciseDetail() {
                                         </Box>
                                     </Box>
                                 </Box>
-                            </Grid>
+                            </Grid2>
 
-                            <Grid item xs={12} md={4}>
+                            <Grid2 xs={12} md={4}>
                                 <Box sx={{ mb: 3 }}>
                                     <Typography variant="h6" sx={{ color: '#00ff9f', mb: 2 }}>
                                         Exercise Demonstration
@@ -283,8 +283,8 @@ export default function ExerciseDetail() {
                                         </Box>
                                     </Box>
                                 )}
-                            </Grid>
-                        </Grid>
+                            </Grid2>
+                        </Grid2>
 
                         <Divider sx={{ my: 3, bgcolor: 'rgba(255, 255, 255, 0.1)' }} />
 

@@ -17,7 +17,16 @@ import {
     Chip,
     TextField,
     Alert,
-    Grid
+    Grid2,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
+    Divider,
+    ListItemButton
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -25,12 +34,17 @@ import {
     MdDelete,
     MdPlayArrow,
     MdStop,
-    MdTimer
+    MdTimer,
+    MdExpandMore,
+    MdFitnessCenter,
+    MdLibraryBooks,
+    MdClose
 } from 'react-icons/md';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import ExerciseSelector from '../common/ExerciseSelector';
 
 const StyledCard = styled(Card)(({ theme }) => ({
     background: 'rgba(30, 30, 30, 0.9)',
@@ -75,6 +89,13 @@ export default function StartWorkout() {
         notes: ''
     });
 
+    // Template and exercise selection states
+    const [templates, setTemplates] = useState([]);
+    const [selectedTemplate, setSelectedTemplate] = useState('');
+    const [templateExercises, setTemplateExercises] = useState([]);
+    const [previousExercises, setPreviousExercises] = useState([]);
+    const [showTemplateSelection, setShowTemplateSelection] = useState(true);
+
     useEffect(() => {
         let interval;
         if (workoutStarted) {
@@ -85,10 +106,77 @@ export default function StartWorkout() {
         return () => clearInterval(interval);
     }, [workoutStarted]);
 
+    useEffect(() => {
+        if (currentUser) {
+            loadTemplates();
+            loadPreviousExercises();
+        }
+    }, [currentUser]);
+
+    const loadTemplates = async () => {
+        try {
+            const templatesQuery = query(
+                collection(db, 'workoutTemplates'),
+                where('userId', '==', currentUser.uid)
+            );
+            const templateDocs = await getDocs(templatesQuery);
+            const templateData = templateDocs.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            setTemplates(templateData);
+        } catch (err) {
+            console.error('Error loading templates:', err);
+        }
+    };
+
+    const loadPreviousExercises = async () => {
+        try {
+            const exercisesQuery = query(
+                collection(db, 'exercises'),
+                where('userId', '==', currentUser.uid)
+            );
+            const exerciseDocs = await getDocs(exercisesQuery);
+            const exerciseData = exerciseDocs.docs.map(doc => doc.data());
+
+            // Get unique exercises with their latest data
+            const uniqueExercises = exerciseData.reduce((acc, exercise) => {
+                const name = exercise.exerciseName;
+                if (!acc[name] || new Date(exercise.timestamp) > new Date(acc[name].timestamp)) {
+                    acc[name] = exercise;
+                }
+                return acc;
+            }, {});
+
+            setPreviousExercises(Object.values(uniqueExercises));
+        } catch (err) {
+            console.error('Error loading previous exercises:', err);
+        }
+    };
+
     const handleStartWorkout = () => {
         setWorkoutStarted(true);
         setWorkoutTime(0);
-        setExercises([]);
+        setShowTemplateSelection(false);
+        setError('');
+        setSuccess('');
+    };
+
+    const handleStartWithTemplate = () => {
+        if (!selectedTemplate) return;
+
+        const template = templates.find(t => t.id === selectedTemplate);
+        if (template && template.workoutDays && template.workoutDays.length > 0) {
+            // Extract all exercises from the template
+            const allTemplateExercises = template.workoutDays.flatMap(day =>
+                day.exercises || []
+            );
+            setTemplateExercises(allTemplateExercises);
+        }
+
+        setWorkoutStarted(true);
+        setWorkoutTime(0);
+        setShowTemplateSelection(false);
         setError('');
         setSuccess('');
     };
@@ -103,17 +191,41 @@ export default function StartWorkout() {
         setError('');
 
         try {
+            const workoutTimestamp = new Date().toISOString();
+
+            // Save the workout as a whole (existing functionality)
             await addDoc(collection(db, 'workouts'), {
                 userId: currentUser.uid,
                 exercises: exercises,
                 duration: workoutTime,
-                timestamp: new Date().toISOString()
+                timestamp: workoutTimestamp
             });
 
-            setSuccess('Workout saved successfully!');
+            // NEW: Save each exercise individually for progress tracking
+            const exercisePromises = exercises.map(exercise => {
+                return addDoc(collection(db, 'exercises'), {
+                    userId: currentUser.uid,
+                    exerciseName: exercise.name,
+                    weight: exercise.weight.toString(),
+                    reps: exercise.reps.toString(),
+                    sets: exercise.sets.toString(),
+                    notes: exercise.notes || '',
+                    timestamp: workoutTimestamp,
+                    source: 'workout' // Track that this came from a workout session
+                });
+            });
+
+            // Wait for all individual exercises to be saved
+            await Promise.all(exercisePromises);
+
+            console.log(`✅ Workout saved with ${exercises.length} exercises saved individually for progress tracking`);
+
+            setSuccess(`Workout saved successfully! ${exercises.length} exercises added to progress tracking.`);
             setWorkoutStarted(false);
             setExercises([]);
             setWorkoutTime(0);
+            setTemplateExercises([]); // Clear template exercises
+            setShowTemplateSelection(true); // Reset to show template selection next time
 
             // Navigate to history page after short delay
             setTimeout(() => {
@@ -121,6 +233,7 @@ export default function StartWorkout() {
             }, 2000);
 
         } catch (error) {
+            console.error('Error saving workout:', error);
             setError('Error saving workout: ' + error.message);
         } finally {
             setLoading(false);
@@ -153,6 +266,33 @@ export default function StartWorkout() {
         });
 
         setOpenDialog(false);
+        setExerciseSelectionMode('manual');
+    };
+
+    // Handle exercise selection from the ExerciseSelector
+    const handleExerciseSelectFromSelector = (exerciseData) => {
+        if (!exerciseData) {
+            // Clear form when no exercise is selected
+            setNewExercise({
+                name: '',
+                weight: '',
+                reps: '',
+                sets: '',
+                notes: ''
+            });
+            return;
+        }
+
+        console.log('🔍 Exercise selected in StartWorkout:', exerciseData);
+
+        // Update exercise form with auto-populated data
+        setNewExercise({
+            name: exerciseData.name,
+            weight: exerciseData.defaultWeight || '',
+            reps: exerciseData.defaultReps || '',
+            sets: exerciseData.defaultSets || '',
+            notes: exerciseData.notes || ''
+        });
     };
 
     const handleExerciseChange = (e) => {
@@ -222,22 +362,122 @@ export default function StartWorkout() {
                     )}
                 </Box>
 
+                {/* Template Selection (shown before workout starts) */}
+                {!workoutStarted && showTemplateSelection && (
+                    <StyledCard sx={{ mb: 3 }}>
+                        <CardContent>
+                            <Typography variant="h6" sx={{ color: '#00ff9f', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <MdLibraryBooks /> Choose How to Start
+                            </Typography>
+
+                            {/* Template Selection */}
+                            {templates.length > 0 && (
+                                <Box sx={{ mb: 3 }}>
+                                    <Typography variant="h6" sx={{ color: '#fff', mb: 2 }}>
+                                        Start from Template
+                                    </Typography>
+                                    <FormControl fullWidth sx={{ mb: 2 }}>
+                                        <InputLabel sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                                            Select Workout Template
+                                        </InputLabel>
+                                        <Select
+                                            value={selectedTemplate}
+                                            onChange={(e) => setSelectedTemplate(e.target.value)}
+                                            sx={{
+                                                color: '#fff',
+                                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                                '& .MuiOutlinedInput-notchedOutline': {
+                                                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                                                },
+                                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                    borderColor: 'rgba(0, 255, 159, 0.5)',
+                                                },
+                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                    borderColor: '#00ff9f',
+                                                },
+                                            }}
+                                        >
+                                            {templates.map(template => (
+                                                <MenuItem key={template.id} value={template.id}>
+                                                    <Box>
+                                                        <Typography sx={{ color: '#fff' }}>
+                                                            {template.name}
+                                                        </Typography>
+                                                        {template.description && (
+                                                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                                                {template.description}
+                                                            </Typography>
+                                                        )}
+                                                    </Box>
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                    <Button
+                                        fullWidth
+                                        variant="contained"
+                                        startIcon={<MdPlayArrow />}
+                                        onClick={handleStartWithTemplate}
+                                        disabled={!selectedTemplate}
+                                        sx={{
+                                            background: selectedTemplate ? 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)' : 'rgba(255, 255, 255, 0.1)',
+                                            color: selectedTemplate ? '#000' : 'rgba(255, 255, 255, 0.5)',
+                                            fontWeight: 'bold',
+                                            mb: 2
+                                        }}
+                                    >
+                                        Start with Template
+                                    </Button>
+                                </Box>
+                            )}
+
+                            <Divider sx={{ bgcolor: 'rgba(255, 255, 255, 0.1)', my: 2 }} />
+
+                            {/* Free Workout Option */}
+                            <Box>
+                                <Typography variant="h6" sx={{ color: '#fff', mb: 2 }}>
+                                    Start Free Workout
+                                </Typography>
+                                <Button
+                                    fullWidth
+                                    variant="outlined"
+                                    startIcon={<MdFitnessCenter />}
+                                    onClick={handleStartWorkout}
+                                    sx={{
+                                        borderColor: '#00ff9f',
+                                        color: '#00ff9f',
+                                        fontWeight: 'bold',
+                                        '&:hover': {
+                                            borderColor: '#00e676',
+                                            backgroundColor: 'rgba(0, 255, 159, 0.1)',
+                                        },
+                                    }}
+                                >
+                                    Start Empty Workout
+                                </Button>
+                            </Box>
+                        </CardContent>
+                    </StyledCard>
+                )}
+
                 <StyledCard sx={{ mb: 3 }}>
                     <CardContent>
                         {!workoutStarted ? (
-                            <Button
-                                fullWidth
-                                variant="contained"
-                                startIcon={<MdPlayArrow />}
-                                onClick={handleStartWorkout}
-                                sx={{
-                                    background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
-                                    color: '#000',
-                                    fontWeight: 'bold',
-                                }}
-                            >
-                                Start Workout
-                            </Button>
+                            templates.length === 0 && (
+                                <Button
+                                    fullWidth
+                                    variant="contained"
+                                    startIcon={<MdPlayArrow />}
+                                    onClick={handleStartWorkout}
+                                    sx={{
+                                        background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
+                                        color: '#000',
+                                        fontWeight: 'bold',
+                                    }}
+                                >
+                                    Start Workout
+                                </Button>
+                            )
                         ) : (
                             <Button
                                 fullWidth
@@ -307,23 +547,47 @@ export default function StartWorkout() {
 
                 <Dialog
                     open={openDialog}
-                    onClose={() => setOpenDialog(false)}
+                    onClose={() => {
+                        setOpenDialog(false);
+                        setExerciseSelectionMode('manual');
+                    }}
+                    maxWidth="md"
+                    fullWidth
                     PaperProps={{
                         style: {
                             backgroundColor: '#1e1e1e',
                             borderRadius: '16px',
-                            maxWidth: '600px',
-                            width: '100%'
                         }
                     }}
                 >
-                    <DialogTitle sx={{ color: '#00ff9f' }}>Add Exercise</DialogTitle>
+                    <DialogTitle sx={{ color: '#00ff9f', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        Add Exercise
+                        <IconButton onClick={() => setOpenDialog(false)} sx={{ color: '#fff' }}>
+                            <MdClose />
+                        </IconButton>
+                    </DialogTitle>
                     <DialogContent>
+                        {/* Exercise Selection */}
+                        <Box sx={{ mb: 3 }}>
+                            <Typography variant="h6" sx={{ color: '#00ff9f', mb: 2 }}>
+                                Select Exercise
+                            </Typography>
+                            <ExerciseSelector
+                                onExerciseSelect={handleExerciseSelectFromSelector}
+                                placeholder="Select exercise or add new..."
+                                showCustomEntry={true}
+                                includeHistory={true}
+                                includeTemplates={templateExercises.length > 0}
+                                templateExercises={templateExercises}
+                                sx={{ mb: 2 }}
+                            />
+                        </Box>
+
+                        {/* Exercise Details Form */}
                         <Box component="form" sx={{ mt: 2 }}>
-                            <Grid container spacing={2}>
-                                <Grid item xs={12}>
+                            <Grid2 container spacing={2}>
+                                <Grid2 xs={12}>
                                     <StyledTextField
-                                        autoFocus
                                         fullWidth
                                         label="Exercise Name"
                                         name="name"
@@ -331,8 +595,8 @@ export default function StartWorkout() {
                                         onChange={handleExerciseChange}
                                         required
                                     />
-                                </Grid>
-                                <Grid item xs={12} sm={4}>
+                                </Grid2>
+                                <Grid2 xs={12} sm={4}>
                                     <StyledTextField
                                         fullWidth
                                         label="Weight (kg)"
@@ -342,8 +606,8 @@ export default function StartWorkout() {
                                         onChange={handleExerciseChange}
                                         required
                                     />
-                                </Grid>
-                                <Grid item xs={12} sm={4}>
+                                </Grid2>
+                                <Grid2 xs={12} sm={4}>
                                     <StyledTextField
                                         fullWidth
                                         label="Reps"
@@ -353,8 +617,8 @@ export default function StartWorkout() {
                                         onChange={handleExerciseChange}
                                         required
                                     />
-                                </Grid>
-                                <Grid item xs={12} sm={4}>
+                                </Grid2>
+                                <Grid2 xs={12} sm={4}>
                                     <StyledTextField
                                         fullWidth
                                         label="Sets"
@@ -364,8 +628,8 @@ export default function StartWorkout() {
                                         onChange={handleExerciseChange}
                                         required
                                     />
-                                </Grid>
-                                <Grid item xs={12}>
+                                </Grid2>
+                                <Grid2 xs={12}>
                                     <StyledTextField
                                         fullWidth
                                         label="Notes (optional)"
@@ -375,25 +639,39 @@ export default function StartWorkout() {
                                         value={newExercise.notes}
                                         onChange={handleExerciseChange}
                                     />
-                                </Grid>
-                            </Grid>
+                                </Grid2>
+                            </Grid2>
                         </Box>
                     </DialogContent>
                     <DialogActions sx={{ p: 2 }}>
                         <Button
-                            onClick={() => setOpenDialog(false)}
+                            onClick={() => {
+                                setOpenDialog(false);
+                                setNewExercise({
+                                    name: '',
+                                    weight: '',
+                                    reps: '',
+                                    sets: '',
+                                    notes: ''
+                                });
+                            }}
                             sx={{ color: 'text.secondary' }}
                         >
                             Cancel
                         </Button>
                         <Button
                             onClick={handleAddExercise}
+                            disabled={!newExercise.name || !newExercise.weight || !newExercise.reps || !newExercise.sets}
                             sx={{
                                 background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
                                 color: '#000',
                                 fontWeight: 'bold',
                                 '&:hover': {
                                     background: 'linear-gradient(45deg, #00e676 30%, #00ff9f 90%)',
+                                },
+                                '&:disabled': {
+                                    background: 'rgba(255, 255, 255, 0.1)',
+                                    color: 'rgba(255, 255, 255, 0.3)',
                                 },
                             }}
                         >

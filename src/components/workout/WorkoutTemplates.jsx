@@ -11,7 +11,7 @@ import {
     DialogActions,
     TextField,
     IconButton,
-    Grid,
+    Grid2,
     Chip,
     Alert,
     Accordion,
@@ -35,7 +35,7 @@ import { collection, addDoc, getDocs, query, where, deleteDoc, doc, updateDoc } 
 import { db } from '../../firebase/config';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { fetchExercisesByTarget, fetchTargetList } from '../../services/exerciseAPI';
+import { fetchExercisesByTarget, fetchTargetList, fetchExercisesByBodyPart, fetchBodyPartList } from '../../services/exerciseAPI';
 
 const StyledCard = styled(Card)(() => ({
     background: 'rgba(30, 30, 30, 0.9)',
@@ -87,26 +87,22 @@ export default function WorkoutTemplates() {
     const { currentUser } = useAuth();
     const navigate = useNavigate();
 
-    // Updated with EXACT ExerciseDB target muscle names from API
+    // Updated muscle groups mapped to wger API target muscles and body parts
     const muscleGroups = [
-        { id: 'abs', name: 'Abs', apiName: 'abs' },
-        { id: 'biceps', name: 'Biceps', apiName: 'biceps' },
-        { id: 'calves', name: 'Calves', apiName: 'calves' },
-        { id: 'chest', name: 'Chest', apiName: 'pectorals' },
-        { id: 'shoulders', name: 'Shoulders', apiName: 'delts' },
-        { id: 'forearms', name: 'Forearms', apiName: 'forearms' },
-        { id: 'glutes', name: 'Glutes', apiName: 'glutes' },
-        { id: 'hamstrings', name: 'Hamstrings', apiName: 'hamstrings' },
-        { id: 'lats', name: 'Lats (Back)', apiName: 'lats' },
-        { id: 'quads', name: 'Quadriceps', apiName: 'quads' },
-        { id: 'spine', name: 'Lower Back', apiName: 'spine' },
-        { id: 'traps', name: 'Traps', apiName: 'traps' },
-        { id: 'triceps', name: 'Triceps', apiName: 'triceps' },
-        { id: 'upper_back', name: 'Upper Back', apiName: 'upper back' },
-        { id: 'abductors', name: 'Abductors', apiName: 'abductors' },
-        { id: 'adductors', name: 'Adductors', apiName: 'adductors' },
-        { id: 'serratus', name: 'Serratus Anterior', apiName: 'serratus anterior' },
-        { id: 'cardio', name: 'Cardio', apiName: 'cardiovascular system' }
+        { id: 'abs', name: 'Abs', type: 'bodyPart', apiName: 'Abs' },
+        { id: 'biceps', name: 'Biceps', type: 'target', apiName: 'Biceps' },
+        { id: 'triceps', name: 'Triceps', type: 'target', apiName: 'Triceps' },
+        { id: 'chest', name: 'Chest', type: 'bodyPart', apiName: 'Chest' },
+        { id: 'shoulders', name: 'Shoulders', type: 'target', apiName: 'Shoulders' },
+        { id: 'back', name: 'Back', type: 'bodyPart', apiName: 'Back' },
+        { id: 'lats', name: 'Lats', type: 'target', apiName: 'Lats' },
+        { id: 'legs', name: 'Legs', type: 'bodyPart', apiName: 'Legs' },
+        { id: 'quads', name: 'Quadriceps', type: 'target', apiName: 'Quads' },
+        { id: 'glutes', name: 'Glutes', type: 'target', apiName: 'Glutes' },
+        { id: 'hamstrings', name: 'Hamstrings', type: 'target', apiName: 'Hamstrings' },
+        { id: 'calves', name: 'Calves', type: 'bodyPart', apiName: 'Calves' },
+        { id: 'arms', name: 'Arms', type: 'bodyPart', apiName: 'Arms' },
+        { id: 'cardio', name: 'Cardio', type: 'bodyPart', apiName: 'Cardio' }
     ];
 
     const [workoutDays, setWorkoutDays] = useState([
@@ -115,79 +111,89 @@ export default function WorkoutTemplates() {
 
     useEffect(() => {
         loadTemplates();
-        // Enable this temporarily to debug target muscle names
+        // Verify wger API muscle groups
         checkAvailableTargets();
     }, [currentUser]);
 
-    // Debug function to check available target muscle names
+    // Debug function to check available target muscle names from wger API
     const checkAvailableTargets = async () => {
         try {
-            // console.log('🔍 Checking available target muscle names...');
-            const targets = await fetchTargetList();
-            // console.log('📋 Available target muscles from API:', targets);
+            console.log('🔍 Checking available wger API targets...');
 
-            // Compare with our muscle group mappings
-            const ourTargets = muscleGroups.map(mg => mg.apiName);
-            // console.log('🎯 Our mapped targets:', ourTargets);
+            // Test both target muscles and body parts
+            const [targets, bodyParts] = await Promise.all([
+                fetchTargetList(),
+                fetchBodyPartList()
+            ]);
 
-            const missingTargets = ourTargets.filter(target => !targets.includes(target));
-            const availableFromOurs = ourTargets.filter(target => targets.includes(target));
+            console.log('🎯 Available target muscles from wger:', targets);
+            console.log('🏋️ Available body parts from wger:', bodyParts);
 
-            // console.log('✅ Available targets from our mappings:', availableFromOurs);
-            // console.log('❌ Missing targets from our mappings:', missingTargets);
-            // console.log('💡 All available targets from API:', targets);
+            // Verify our muscle group mappings
+            const ourTargets = muscleGroups.filter(mg => mg.type === 'target').map(mg => mg.apiName);
+            const ourBodyParts = muscleGroups.filter(mg => mg.type === 'bodyPart').map(mg => mg.apiName);
 
-            // Test each of our mappings
-            // console.log('🧪 Testing each muscle group mapping...');
-            for (const muscleGroup of muscleGroups.slice(0, 5)) { // Test first 5 to avoid rate limits
-                try {
-                    // console.log(`Testing: ${muscleGroup.name} (${muscleGroup.apiName})`);
-                    const exercises = await fetchExercisesByTarget(muscleGroup.apiName);
-                    // console.log(`  ✅ ${muscleGroup.name}: ${exercises?.length || 0} exercises`);
-                    await new Promise(resolve => setTimeout(resolve, 200)); // Small delay
-                } catch (error) {
-                    // console.log(`  ❌ ${muscleGroup.name}: ${error.message}`);
-                }
-            }
+            console.log('✅ Our target mappings:', ourTargets);
+            console.log('✅ Our body part mappings:', ourBodyParts);
+
+            // Check which of our mappings are available
+            const availableTargets = ourTargets.filter(target =>
+                targets.some(t => t.toLowerCase().includes(target.toLowerCase()))
+            );
+            const availableBodyParts = ourBodyParts.filter(bodyPart =>
+                bodyParts.some(bp => bp.toLowerCase() === bodyPart.toLowerCase())
+            );
+
+            console.log('🎯 Working target mappings:', availableTargets);
+            console.log('🏋️ Working body part mappings:', availableBodyParts);
 
         } catch (error) {
-            console.error('❌ Error checking available targets:', error);
+            console.error('❌ Error checking wger API targets:', error);
         }
     };
 
-    // Test all muscle groups function
+    // Test all muscle groups function for wger API
+    // eslint-disable-next-line no-unused-vars
     const testAllMuscleGroups = async () => {
-        // console.log('🧪 Testing ALL muscle group mappings...');
+        console.log('🧪 Testing ALL wger muscle group mappings...');
         const results = [];
 
         for (const muscleGroup of muscleGroups) {
             try {
-                const exercises = await fetchExercisesByTarget(muscleGroup.apiName);
+                let exercises;
+                if (muscleGroup.type === 'target') {
+                    exercises = await fetchExercisesByTarget(muscleGroup.apiName);
+                } else {
+                    exercises = await fetchExercisesByBodyPart(muscleGroup.apiName);
+                }
+
                 const result = {
                     name: muscleGroup.name,
                     apiName: muscleGroup.apiName,
+                    type: muscleGroup.type,
                     success: true,
                     count: exercises?.length || 0
                 };
                 results.push(result);
-                // console.log(`✅ ${muscleGroup.name} (${muscleGroup.apiName}): ${result.count} exercises`);
+                console.log(`✅ ${muscleGroup.name} (${muscleGroup.type}: ${muscleGroup.apiName}): ${result.count} exercises`);
             } catch (error) {
                 const result = {
                     name: muscleGroup.name,
                     apiName: muscleGroup.apiName,
+                    type: muscleGroup.type,
                     success: false,
                     error: error.message
                 };
                 results.push(result);
-                // console.log(`❌ ${muscleGroup.name} (${muscleGroup.apiName}): ${error.message}`);
+                console.log(`❌ ${muscleGroup.name} (${muscleGroup.type}: ${muscleGroup.apiName}): ${error.message}`);
             }
-            // Add delay to prevent rate limiting
-            await new Promise(resolve => setTimeout(resolve, 300));
+            // Add delay to prevent overwhelming the API
+            await new Promise(resolve => setTimeout(resolve, 200));
         }
 
-        // console.log('📊 Final Results:', results);
+        console.log('📊 Final wger API Results:', results);
         const successCount = results.filter(r => r.success).length;
-        // console.log(`✅ Working: ${successCount}/${muscleGroups.length} muscle groups`);
+        console.log(`✅ Working: ${successCount}/${muscleGroups.length} muscle groups`);
 
         return results;
     };
@@ -230,11 +236,11 @@ export default function WorkoutTemplates() {
 
         // Return cached exercises if available
         if (muscleGroupExercises[muscleGroup.id]) {
-            // console.log(`Using cached exercises for ${muscleGroup.name}`);
+            console.log(`Using cached exercises for ${muscleGroup.name}`);
             return muscleGroupExercises[muscleGroup.id];
         }
 
-        // console.log(`🏋️ Loading exercises for muscle group: ${muscleGroup.name} (API target: "${muscleGroup.apiName}")`);
+        console.log(`🏋️ Loading exercises for muscle group: ${muscleGroup.name} (${muscleGroup.type}: "${muscleGroup.apiName}") via wger API`);
         setLoadingExercises(true);
         setError(''); // Clear any previous errors
 
@@ -242,32 +248,39 @@ export default function WorkoutTemplates() {
             // Add a small delay to prevent API rate limiting
             await new Promise(resolve => setTimeout(resolve, 100));
 
-            const exercises = await fetchExercisesByTarget(muscleGroup.apiName);
-            // console.log(`📊 API Response for "${muscleGroup.apiName}":`, {
-            //     success: true,
-            //     count: exercises?.length || 0,
-            //     isArray: Array.isArray(exercises),
-            //     firstExercise: exercises?.[0]
-            // });
+            let exercises;
+            if (muscleGroup.type === 'target') {
+                exercises = await fetchExercisesByTarget(muscleGroup.apiName);
+            } else {
+                exercises = await fetchExercisesByBodyPart(muscleGroup.apiName);
+            }
+
+            console.log(`📊 wger API Response for "${muscleGroup.apiName}":`, {
+                success: true,
+                count: exercises?.length || 0,
+                isArray: Array.isArray(exercises),
+                type: muscleGroup.type,
+                firstExercise: exercises?.[0]
+            });
 
             if (!exercises) {
-                throw new Error(`API returned null/undefined for target: ${muscleGroup.apiName}`);
+                throw new Error(`wger API returned null/undefined for ${muscleGroup.type}: ${muscleGroup.apiName}`);
             }
 
             if (!Array.isArray(exercises)) {
-                console.error('❌ API response is not an array:', typeof exercises, exercises);
-                throw new Error(`API returned invalid data type (${typeof exercises}) for target: ${muscleGroup.apiName}`);
+                console.error('❌ wger API response is not an array:', typeof exercises, exercises);
+                throw new Error(`wger API returned invalid data type (${typeof exercises}) for ${muscleGroup.type}: ${muscleGroup.apiName}`);
             }
 
             if (exercises.length === 0) {
-                // console.warn(`⚠️ No exercises found for target: "${muscleGroup.apiName}"`);
-                setError(`No exercises found for ${muscleGroup.name}. Target "${muscleGroup.apiName}" returned empty results.`);
+                console.warn(`⚠️ No exercises found for ${muscleGroup.type}: "${muscleGroup.apiName}"`);
+                setError(`No exercises found for ${muscleGroup.name}. ${muscleGroup.type} "${muscleGroup.apiName}" returned empty results.`);
                 return [];
             }
 
             const exerciseList = exercises.slice(0, 20).map((ex, index) => {
                 if (!ex) {
-                    // console.warn(`⚠️ Null exercise at index ${index}`);
+                    console.warn(`⚠️ Null exercise at index ${index}`);
                     return null;
                 }
                 return {
@@ -276,7 +289,9 @@ export default function WorkoutTemplates() {
                     target: ex.target || muscleGroup.apiName,
                     equipment: ex.equipment || 'Unknown',
                     bodyPart: ex.bodyPart || 'Unknown',
-                    gifUrl: ex.gifUrl || null
+                    category: ex.category || ex.bodyPart || 'Unknown',
+                    muscles: ex.muscles || [],
+                    description: ex.description || ''
                 };
             }).filter(ex => ex !== null);
 
@@ -285,16 +300,17 @@ export default function WorkoutTemplates() {
                 [muscleGroup.id]: exerciseList
             }));
 
-            // console.log(`✅ Successfully loaded ${exerciseList.length} exercises for ${muscleGroup.name}`);
-            // if (exerciseList.length > 0) {
-            //     console.log(`   Sample exercises:`, exerciseList.slice(0, 3).map(ex => ex.name));
-            // }
+            console.log(`✅ Successfully loaded ${exerciseList.length} exercises for ${muscleGroup.name} from wger API`);
+            if (exerciseList.length > 0) {
+                console.log(`   Sample exercises:`, exerciseList.slice(0, 3).map(ex => ex.name));
+            }
             return exerciseList;
 
         } catch (error) {
             console.error(`❌ Error loading exercises for muscle group ${muscleGroup.name}:`, {
                 error: error.message,
                 target: muscleGroup.apiName,
+                type: muscleGroup.type,
                 stack: error.stack
             });
             setError(`Failed to load exercises for ${muscleGroup.name}: ${error.message}`);
@@ -498,7 +514,7 @@ export default function WorkoutTemplates() {
                 createdAt: new Date().toISOString()
             };
 
-            const docRef = await addDoc(collection(db, 'workoutTemplates'), templateData);
+            await addDoc(collection(db, 'workoutTemplates'), templateData);
 
             setSuccess('Template created successfully!');
             resetForm();
@@ -617,10 +633,10 @@ export default function WorkoutTemplates() {
                     </Button>
                 </Box>
 
-                <Grid container spacing={3}>
+                <Grid2 container spacing={3}>
                     {Array.isArray(templates) && templates.length > 0 ? (
                         templates.map((template) => (
-                            <Grid item xs={12} md={6} key={template.id}>
+                            <Grid2 xs={12} md={6} key={template.id}>
                                 <StyledCard>
                                     <CardContent>
                                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -681,16 +697,16 @@ export default function WorkoutTemplates() {
                                         ))}
                                     </CardContent>
                                 </StyledCard>
-                            </Grid>
+                            </Grid2>
                         ))
                     ) : (
-                        <Grid item xs={12}>
+                        <Grid2 xs={12}>
                             <Typography variant="body1" sx={{ color: 'text.secondary', textAlign: 'center' }}>
                                 No workout templates found. Create one to get started!
                             </Typography>
-                        </Grid>
+                        </Grid2>
                     )}
-                </Grid>
+                </Grid2>
 
                 <Dialog
                     open={openDialog}
@@ -772,9 +788,9 @@ export default function WorkoutTemplates() {
                                             Select Muscle Groups:
                                         </Typography>
 
-                                        <Grid container spacing={1}>
+                                        <Grid2 container spacing={1}>
                                             {muscleGroups.map((muscleGroup) => (
-                                                <Grid item key={muscleGroup.id}>
+                                                <Grid2 key={muscleGroup.id}>
                                                     <Chip
                                                         icon={muscleGroup.icon}
                                                         label={muscleGroup.name}
@@ -791,9 +807,9 @@ export default function WorkoutTemplates() {
                                                             }
                                                         }}
                                                     />
-                                                </Grid>
+                                                </Grid2>
                                             ))}
-                                        </Grid>
+                                        </Grid2>
 
                                         {day.muscleGroups.length > 0 && (
                                             <Box sx={{ mt: 2 }}>
@@ -862,9 +878,9 @@ export default function WorkoutTemplates() {
                                                                         Loading exercises...
                                                                     </Typography>
                                                                 ) : (
-                                                                    <Grid container spacing={1}>
+                                                                    <Grid2 container spacing={1}>
                                                                         {(muscleGroupExercises[muscleGroup.id] || []).map((exercise) => (
-                                                                            <Grid item xs={12} sm={6} key={exercise.id}>
+                                                                            <Grid2 xs={12} sm={6} key={exercise.id}>
                                                                                 <FormControlLabel
                                                                                     control={
                                                                                         <Checkbox
@@ -890,9 +906,9 @@ export default function WorkoutTemplates() {
                                                                                     }
                                                                                     sx={{ width: '100%', alignItems: 'flex-start' }}
                                                                                 />
-                                                                            </Grid>
+                                                                            </Grid2>
                                                                         ))}
-                                                                    </Grid>
+                                                                    </Grid2>
                                                                 )}
                                                             </AccordionDetails>
                                                         </Accordion>
