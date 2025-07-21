@@ -98,15 +98,34 @@ export default function SignUp() {
     return (
         <Box
             sx={{
-                minHeight: '100vh',
+                height: '100vh',
+                width: '100vw',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 background: 'linear-gradient(135deg, #121212 0%, #2d2d2d 100%)',
-                padding: '1rem',
+                padding: { xs: '0.5rem', sm: '1rem' },
+                boxSizing: 'border-box',
+                overflow: 'hidden',
             }}
         >
-            <StyledCard sx={{ width: '100%', maxWidth: '400px' }}>
+            <StyledCard sx={{
+                width: '100%',
+                maxWidth: '400px',
+                maxHeight: '90vh',
+                overflowY: 'auto',
+                '&::-webkit-scrollbar': {
+                    width: '6px',
+                },
+                '&::-webkit-scrollbar-track': {
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    borderRadius: '3px',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                    background: '#00ff9f',
+                    borderRadius: '3px',
+                },
+            }}>
                 <CardHeader
                     title={
                         <Typography variant="h4" sx={{
@@ -140,7 +159,7 @@ export default function SignUp() {
                             {error}
                         </Alert>
                     )}
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
                         <StyledTextField
                             fullWidth
                             label="Email"
@@ -148,7 +167,7 @@ export default function SignUp() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            margin="normal"
+                            margin="dense"
                             variant="outlined"
                         />
                         <StyledTextField
@@ -158,7 +177,7 @@ export default function SignUp() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
-                            margin="normal"
+                            margin="dense"
                             variant="outlined"
                             InputProps={{
                                 endAdornment: (
@@ -183,7 +202,7 @@ export default function SignUp() {
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             required
-                            margin="normal"
+                            margin="dense"
                             variant="outlined"
                             InputProps={{
                                 endAdornment: (
@@ -207,8 +226,8 @@ export default function SignUp() {
                             fullWidth
                             disabled={loading}
                             sx={{
-                                mt: 3,
-                                mb: 2,
+                                mt: 2,
+                                mb: 1,
                                 background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
                                 color: '#000',
                                 fontWeight: 'bold',
@@ -220,7 +239,7 @@ export default function SignUp() {
                         >
                             Sign Up
                         </Button>
-                        <Divider sx={{ my: 2 }}>
+                        <Divider sx={{ my: 1.5 }}>
                             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                                 Or continue with
                             </Typography>
@@ -234,6 +253,7 @@ export default function SignUp() {
                             sx={{
                                 borderColor: 'rgba(255, 255, 255, 0.2)',
                                 color: 'rgba(255, 255, 255, 0.7)',
+                                mb: 1,
                                 '&:hover': {
                                     borderColor: 'rgba(255, 255, 255, 0.3)',
                                     backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -245,7 +265,7 @@ export default function SignUp() {
                         <Typography
                             align="center"
                             sx={{
-                                mt: 2,
+                                mt: 1,
                                 color: 'text.secondary'
                             }}
                         >
@@ -263,7 +283,7 @@ export default function SignUp() {
                                 Sign In
                             </Link>
                         </Typography>
-                    </form>
+                    </Box>
                 </CardContent>
             </StyledCard>
         </Box>
