@@ -11,10 +11,12 @@ import {
     Box,
     Typography,
     IconButton,
-    InputAdornment
+    InputAdornment,
+    Divider
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { MdPersonAddAlt, MdOutlineVisibility, MdOutlineVisibilityOff } from "react-icons/md";
+import { FcGoogle } from "react-icons/fc";
 
 const StyledTextField = styled(TextField)({
     '& .MuiOutlinedInput-root': {
@@ -54,7 +56,7 @@ export default function SignUp() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const navigate = useNavigate();
-    const { signup } = useAuth();
+    const { signup, loginWithGoogle } = useAuth();
 
     const handleClickShowPassword = () => setShowPassword((show) => !show);
     const handleClickShowConfirmPassword = () => setShowConfirmPassword((show) => !show);
@@ -77,6 +79,18 @@ export default function SignUp() {
             navigate('/');
         } catch (error) {
             setError('Failed to create an account: ' + error.message);
+        }
+        setLoading(false);
+    }
+
+    async function handleGoogleSignUp() {
+        try {
+            setError('');
+            setLoading(true);
+            await loginWithGoogle();
+            navigate('/');
+        } catch (error) {
+            setError('Failed to sign up with Google: ' + error.message);
         }
         setLoading(false);
     }
@@ -205,6 +219,28 @@ export default function SignUp() {
                             startIcon={<MdPersonAddAlt />}
                         >
                             Sign Up
+                        </Button>
+                        <Divider sx={{ my: 2 }}>
+                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                Or continue with
+                            </Typography>
+                        </Divider>
+                        <Button
+                            variant="outlined"
+                            fullWidth
+                            startIcon={<FcGoogle />}
+                            onClick={handleGoogleSignUp}
+                            disabled={loading}
+                            sx={{
+                                borderColor: 'rgba(255, 255, 255, 0.2)',
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                '&:hover': {
+                                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                },
+                            }}
+                        >
+                            Sign up with Google
                         </Button>
                         <Typography
                             align="center"

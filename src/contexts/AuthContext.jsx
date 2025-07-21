@@ -3,7 +3,9 @@ import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     signOut,
-    onAuthStateChanged
+    onAuthStateChanged,
+    signInWithPopup,
+    GoogleAuthProvider
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
 
@@ -25,6 +27,20 @@ export function AuthProvider({ children }) {
         return signInWithEmailAndPassword(auth, email, password);
     }
 
+    function loginWithGoogle() {
+        const provider = new GoogleAuthProvider();
+        // Optional: Add additional scopes
+        provider.addScope('profile');
+        provider.addScope('email');
+
+        // Optional: Set custom parameters
+        provider.setCustomParameters({
+            prompt: 'select_account'
+        });
+
+        return signInWithPopup(auth, provider);
+    }
+
     function logout() {
         return signOut(auth);
     }
@@ -42,6 +58,7 @@ export function AuthProvider({ children }) {
         currentUser,
         signup,
         login,
+        loginWithGoogle,
         logout
     };
 

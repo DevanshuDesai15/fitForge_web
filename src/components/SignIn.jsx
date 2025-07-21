@@ -11,10 +11,12 @@ import {
     Box,
     Typography,
     IconButton,
-    InputAdornment
+    InputAdornment,
+    Divider
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { MdOutlineLogin, MdOutlineVisibility, MdOutlineVisibilityOff } from "react-icons/md";
+import { FcGoogle } from "react-icons/fc";
 
 const StyledTextField = styled(TextField)({
     '& .MuiOutlinedInput-root': {
@@ -52,7 +54,7 @@ export default function SignIn() {
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
-    const { login } = useAuth();
+    const { login, loginWithGoogle } = useAuth();
 
     const handleClickShowPassword = () => setShowPassword((show) => !show);
 
@@ -69,6 +71,18 @@ export default function SignIn() {
             navigate('/');
         } catch (error) {
             setError('Failed to sign in: ' + error.message);
+        }
+        setLoading(false);
+    }
+
+    async function handleGoogleSignIn() {
+        try {
+            setError('');
+            setLoading(true);
+            await loginWithGoogle();
+            navigate('/');
+        } catch (error) {
+            setError('Failed to sign in with Google: ' + error.message);
         }
         setLoading(false);
     }
@@ -172,6 +186,24 @@ export default function SignIn() {
                             startIcon={<MdOutlineLogin />}
                         >
                             Sign In
+                        </Button>
+                        <Divider sx={{ my: 2 }}>OR</Divider>
+                        <Button
+                            variant="outlined"
+                            fullWidth
+                            disabled={loading}
+                            startIcon={<FcGoogle />}
+                            onClick={handleGoogleSignIn}
+                            sx={{
+                                borderColor: 'rgba(255, 255, 255, 0.2)',
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                '&:hover': {
+                                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                },
+                            }}
+                        >
+                            Sign In with Google
                         </Button>
                         <Typography
                             align="center"
