@@ -12,7 +12,10 @@ import {
     CircularProgress,
     Divider,
     Switch,
-    FormControlLabel
+    FormControlLabel,
+    IconButton,
+    useMediaQuery,
+    useTheme
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useAuth } from '../contexts/AuthContext';
@@ -50,6 +53,8 @@ const StyledTextField = styled(TextField)({
 export default function Profile() {
     const { currentUser, logout } = useAuth();
     const navigate = useNavigate();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -179,42 +184,69 @@ export default function Profile() {
         <Box sx={{
             minHeight: '100vh',
             background: 'linear-gradient(135deg, #121212 0%, #2d2d2d 100%)',
-            padding: '1rem',
+            padding: { xs: '0.5rem', sm: '1rem' },
+            paddingBottom: { xs: '100px', sm: '1rem' }, // Extra bottom padding for mobile navigation
         }}>
             <div className="max-w-4xl mx-auto">
                 <StyledCard>
-                    <CardHeader
-                        title={
-                            <Typography variant="h4" sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
-                                Profile Settings
-                            </Typography>
-                        }
-                        action={
-                            <Box sx={{ display: 'flex', gap: 2 }}>
-                                <Button
-                                    startIcon={<MdArrowBack />}
-                                    onClick={() => navigate('/')}
-                                    sx={{
-                                        color: '#00ff9f',
-                                        '&:hover': {
-                                            backgroundColor: 'rgba(0, 255, 159, 0.1)',
-                                        },
-                                    }}
-                                >
-                                    Back to Home
-                                </Button>
-                                <Button
-                                    onClick={logout}
-                                    variant="outlined"
-                                    color="error"
-                                    startIcon={<MdLogout />}
-                                >
-                                    Logout
-                                </Button>
-                            </Box>
-                        }
-                    />
-                    <CardContent>
+                    {/* Mobile-optimized header */}
+                    <Box sx={{ p: 2 }}>
+                        {/* Header title */}
+                        <Typography
+                            variant={isMobile ? "h5" : "h4"}
+                            sx={{
+                                color: '#00ff9f',
+                                fontWeight: 'bold',
+                                mb: { xs: 2, sm: 1 },
+                                textAlign: { xs: 'center', sm: 'left' }
+                            }}
+                        >
+                            Profile Settings
+                        </Typography>
+
+                        {/* Action buttons - responsive layout */}
+                        <Box sx={{
+                            display: 'flex',
+                            flexDirection: { xs: 'column', sm: 'row' },
+                            gap: { xs: 1, sm: 2 },
+                            alignItems: { xs: 'stretch', sm: 'center' },
+                            justifyContent: { xs: 'center', sm: 'flex-start' }
+                        }}>
+                            <Button
+                                startIcon={<MdArrowBack />}
+                                onClick={() => navigate('/')}
+                                fullWidth={isMobile}
+                                sx={{
+                                    color: '#00ff9f',
+                                    border: '1px solid rgba(0, 255, 159, 0.3)',
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(0, 255, 159, 0.1)',
+                                        border: '1px solid rgba(0, 255, 159, 0.5)',
+                                    },
+                                    minHeight: '44px', // Better touch target
+                                }}
+                            >
+                                Back to Home
+                            </Button>
+                            <Button
+                                onClick={logout}
+                                variant="outlined"
+                                color="error"
+                                startIcon={<MdLogout />}
+                                fullWidth={isMobile}
+                                sx={{
+                                    minHeight: '44px', // Better touch target
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(255, 68, 68, 0.1)',
+                                    },
+                                }}
+                            >
+                                Logout
+                            </Button>
+                        </Box>
+                    </Box>
+
+                    <CardContent sx={{ pt: 0 }}>
                         {error && (
                             <Alert severity="error" sx={{ mb: 2, backgroundColor: 'rgba(211, 47, 47, 0.1)', color: '#ff4444' }}>
                                 {error}
@@ -241,6 +273,7 @@ export default function Profile() {
                                         sx={{
                                             borderColor: '#00ff9f',
                                             color: '#00ff9f',
+                                            minHeight: '48px', // Better touch target
                                             '&:hover': {
                                                 borderColor: '#00e676',
                                                 backgroundColor: 'rgba(0, 255, 159, 0.1)',
@@ -251,7 +284,11 @@ export default function Profile() {
                                     </Button>
                                 </Grid>
                                 <Grid item xs={12} md={6}>
-                                    <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
+                                    <Typography variant="body2" sx={{
+                                        color: 'text.secondary',
+                                        mt: { xs: 0, md: 1 },
+                                        textAlign: { xs: 'center', md: 'left' }
+                                    }}>
                                         Find and merge duplicate exercises, fix spelling mistakes, and clean up your exercise data.
                                     </Typography>
                                 </Grid>
@@ -268,44 +305,60 @@ export default function Profile() {
                                     </Typography>
                                 </Grid>
 
-                                {/* Weight Unit Preference */}
+                                {/* Weight Unit Preference - Mobile optimized */}
                                 <Grid item xs={12}>
                                     <Box sx={{
                                         display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 2,
+                                        flexDirection: { xs: 'column', sm: 'row' },
+                                        alignItems: { xs: 'flex-start', sm: 'center' },
+                                        gap: { xs: 1, sm: 2 },
                                         p: 2,
                                         backgroundColor: 'rgba(255, 255, 255, 0.05)',
                                         borderRadius: '8px',
                                         border: '1px solid rgba(255, 255, 255, 0.1)'
                                     }}>
-                                        <MdFitnessCenter style={{ color: '#00ff9f' }} />
-                                        <Typography variant="body1" sx={{ color: '#fff', fontWeight: 'bold' }}>
-                                            Weight Unit Preference:
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                            kg
-                                        </Typography>
-                                        <Switch
-                                            checked={weightUnit === 'lb'}
-                                            onChange={(e) => handleWeightUnitChange(e.target.checked ? 'lb' : 'kg')}
-                                            sx={{
-                                                '& .MuiSwitch-switchBase.Mui-checked': {
-                                                    color: '#00ff9f',
-                                                },
-                                                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                                                    backgroundColor: '#00ff9f',
-                                                },
-                                                '& .MuiSwitch-track': {
-                                                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                                                },
-                                            }}
-                                        />
-                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                            lb
-                                        </Typography>
-                                        <Box sx={{ ml: 'auto' }}>
-                                            <Typography variant="caption" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+                                            <MdFitnessCenter style={{ color: '#00ff9f' }} />
+                                            <Typography variant="body1" sx={{ color: '#fff', fontWeight: 'bold' }}>
+                                                Weight Unit:
+                                            </Typography>
+                                        </Box>
+
+                                        <Box sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 1,
+                                            flexShrink: 0
+                                        }}>
+                                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                                kg
+                                            </Typography>
+                                            <Switch
+                                                checked={weightUnit === 'lb'}
+                                                onChange={(e) => handleWeightUnitChange(e.target.checked ? 'lb' : 'kg')}
+                                                sx={{
+                                                    '& .MuiSwitch-switchBase.Mui-checked': {
+                                                        color: '#00ff9f',
+                                                    },
+                                                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                                        backgroundColor: '#00ff9f',
+                                                    },
+                                                    '& .MuiSwitch-track': {
+                                                        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                                                    },
+                                                }}
+                                            />
+                                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                                lb
+                                            </Typography>
+                                        </Box>
+
+                                        <Box sx={{ mt: { xs: 1, sm: 0 } }}>
+                                            <Typography variant="caption" sx={{
+                                                color: 'text.secondary',
+                                                fontStyle: 'italic',
+                                                display: 'block'
+                                            }}>
                                                 Current weight will be converted automatically
                                             </Typography>
                                         </Box>
@@ -406,9 +459,11 @@ export default function Profile() {
                                         type="submit"
                                         variant="contained"
                                         disabled={loading}
+                                        fullWidth={isMobile}
                                         startIcon={loading ? <CircularProgress size={20} /> : <MdSave />}
                                         sx={{
                                             mt: 3,
+                                            minHeight: '48px', // Better touch target
                                             background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
                                             color: '#000',
                                             fontWeight: 'bold',

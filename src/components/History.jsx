@@ -8,8 +8,6 @@ import {
     Tab,
     Tabs,
     List,
-    ListItem,
-    ListItemText,
     Chip,
     Divider,
     CircularProgress,
@@ -17,7 +15,6 @@ import {
     Dialog,
     DialogTitle,
     DialogContent,
-    DialogActions,
     Button,
     Tooltip
 } from '@mui/material';
@@ -32,11 +29,14 @@ import {
     MdChevronRight,
     MdTrendingUp,
     MdBarChart,
-    MdClose
+    MdClose,
+    MdPlayArrow,
+    MdAdd
 } from 'react-icons/md';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { getWeightUnit } from '../utils/weightUnit';
 import {
     format,
@@ -46,14 +46,13 @@ import {
     isSameDay,
     addMonths,
     subMonths,
-    getDay,
     isSameMonth,
     isToday,
     startOfWeek,
     endOfWeek
 } from 'date-fns';
 
-const StyledCard = styled(Card)(({ theme }) => ({
+const StyledCard = styled(Card)(() => ({
     background: 'rgba(30, 30, 30, 0.9)',
     backdropFilter: 'blur(10px)',
     borderRadius: '16px',
@@ -64,29 +63,28 @@ const StyledCard = styled(Card)(({ theme }) => ({
 const CalendarDay = styled(Box, {
     shouldForwardProp: (prop) => !['isWorkoutDay', 'isToday', 'isCurrentMonth'].includes(prop),
 })(({ isWorkoutDay, isToday, isCurrentMonth }) => ({
+    width: 40,
+    height: 40,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: 40,
-    height: 40,
     borderRadius: '50%',
-    cursor: isWorkoutDay ? 'pointer' : 'default',
-    transition: 'all 0.2s',
+    cursor: 'pointer',
+    position: 'relative',
+    color: isCurrentMonth ? '#fff' : 'rgba(255, 255, 255, 0.3)',
     backgroundColor: isWorkoutDay ? 'rgba(0, 255, 159, 0.3)' : 'transparent',
     border: isToday ? '2px solid #00ff9f' : 'none',
-    color: isCurrentMonth ? '#fff' : 'rgba(255, 255, 255, 0.3)',
     '&:hover': {
-        backgroundColor: isWorkoutDay ? 'rgba(0, 255, 159, 0.5)' : 'rgba(255, 255, 255, 0.1)',
-        transform: isWorkoutDay ? 'scale(1.1)' : 'none',
+        backgroundColor: isWorkoutDay
+            ? 'rgba(0, 255, 159, 0.5)'
+            : 'rgba(255, 255, 255, 0.1)',
     },
 }));
 
 const StatCard = styled(Card)(() => ({
-    background: 'linear-gradient(135deg, rgba(0, 255, 159, 0.1) 0%, rgba(0, 229, 118, 0.1) 100%)',
-    backdropFilter: 'blur(10px)',
+    background: 'rgba(0, 255, 159, 0.05)',
     borderRadius: '12px',
-    border: '1px solid rgba(0, 255, 159, 0.2)',
-    padding: '1rem',
+    border: '1px solid rgba(0, 255, 159, 0.1)',
 }));
 
 export default function History() {
@@ -102,6 +100,7 @@ export default function History() {
     const [selectedDateWorkouts, setSelectedDateWorkouts] = useState([]);
     const [dialogOpen, setDialogOpen] = useState(false);
     const { currentUser } = useAuth();
+    const navigate = useNavigate();
 
     useEffect(() => {
         loadData();
@@ -406,45 +405,87 @@ export default function History() {
                     </Grid>
                 )}
 
-                {/* Workout List */}
-                <List>
-                    {workouts.map((workout) => (
-                        <StyledCard key={workout.id} sx={{ mb: 2 }}>
-                            <CardContent>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                    <Typography variant="h6" sx={{ color: '#00ff9f', display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <MdToday /> {format(new Date(workout.timestamp), 'MMM dd, yyyy')}
-                                    </Typography>
-                                    <Chip
-                                        icon={<MdTimer />}
-                                        label={formatTime(workout.duration)}
-                                        sx={{
-                                            backgroundColor: 'rgba(0, 255, 159, 0.1)',
-                                            color: '#00ff9f',
-                                            '& .MuiChip-icon': { color: '#00ff9f' }
-                                        }}
-                                    />
-                                </Box>
-                                <Divider sx={{ mb: 2, bgcolor: 'rgba(255, 255, 255, 0.1)' }} />
-                                {workout.exercises?.map((exercise, index) => (
-                                    <Box key={index} sx={{ mb: 1 }}>
-                                        <Typography sx={{ color: '#fff' }}>
-                                            {exercise.name}
+                {/* Empty State for No Workouts */}
+                {workouts.length === 0 ? (
+                    <Box sx={{
+                        textAlign: 'center',
+                        py: 6,
+                        background: 'rgba(0, 255, 159, 0.03)',
+                        borderRadius: 2,
+                        border: '1px solid rgba(0, 255, 159, 0.1)'
+                    }}>
+                        <MdFitnessCenter
+                            style={{
+                                fontSize: '4rem',
+                                color: 'rgba(0, 255, 159, 0.5)',
+                                marginBottom: '1rem'
+                            }}
+                        />
+                        <Typography variant="h6" sx={{ color: '#fff', mb: 2 }}>
+                            No workouts yet. Start your first workout!
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
+                            Track your fitness journey by logging your first workout session.
+                        </Typography>
+                        <Button
+                            variant="contained"
+                            startIcon={<MdPlayArrow />}
+                            onClick={() => navigate('/workout/start')}
+                            sx={{
+                                background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
+                                color: '#000',
+                                fontWeight: 'bold',
+                                px: 4,
+                                py: 1.5,
+                                '&:hover': {
+                                    background: 'linear-gradient(45deg, #00e676 30%, #00ff9f 90%)',
+                                },
+                            }}
+                        >
+                            Start New Workout Session
+                        </Button>
+                    </Box>
+                ) : (
+                    /* Workout List */
+                    <List>
+                        {workouts.map((workout) => (
+                            <StyledCard key={workout.id} sx={{ mb: 2 }}>
+                                <CardContent>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                        <Typography variant="h6" sx={{ color: '#00ff9f', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <MdToday /> {format(new Date(workout.timestamp), 'MMM dd, yyyy')}
                                         </Typography>
-                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                            {`${exercise.weight}${weightUnit} × ${exercise.reps} reps × ${exercise.sets} sets`}
-                                        </Typography>
-                                        {exercise.notes && (
-                                            <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
-                                                Note: {exercise.notes}
-                                            </Typography>
-                                        )}
+                                        <Chip
+                                            icon={<MdTimer />}
+                                            label={formatTime(workout.duration)}
+                                            sx={{
+                                                backgroundColor: 'rgba(0, 255, 159, 0.1)',
+                                                color: '#00ff9f',
+                                                '& .MuiChip-icon': { color: '#00ff9f' }
+                                            }}
+                                        />
                                     </Box>
-                                ))}
-                            </CardContent>
-                        </StyledCard>
-                    ))}
-                </List>
+                                    <Divider sx={{ mb: 2, bgcolor: 'rgba(255, 255, 255, 0.1)' }} />
+                                    {workout.exercises?.map((exercise, index) => (
+                                        <Box key={index} sx={{ mb: 1 }}>
+                                            <Typography sx={{ color: '#fff' }}>
+                                                {exercise.name}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                                {`${exercise.weight}${weightUnit} × ${exercise.reps} reps × ${exercise.sets} sets`}
+                                            </Typography>
+                                            {exercise.notes && (
+                                                <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                                                    Note: {exercise.notes}
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                    ))}
+                                </CardContent>
+                            </StyledCard>
+                        ))}
+                    </List>
+                )}
             </Box>
         );
     };
@@ -520,31 +561,73 @@ export default function History() {
                     </Grid>
                 )}
 
-                {/* Exercise List */}
-                <List>
-                    {exerciseHistory.map((exercise) => (
-                        <StyledCard key={exercise.id} sx={{ mb: 2 }}>
-                            <CardContent>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                                    <Typography variant="h6" sx={{ color: '#00ff9f' }}>
-                                        {exercise.exerciseName}
+                {/* Empty State for No Exercise History */}
+                {exerciseHistory.length === 0 ? (
+                    <Box sx={{
+                        textAlign: 'center',
+                        py: 6,
+                        background: 'rgba(0, 255, 159, 0.03)',
+                        borderRadius: 2,
+                        border: '1px solid rgba(0, 255, 159, 0.1)'
+                    }}>
+                        <MdAdd
+                            style={{
+                                fontSize: '4rem',
+                                color: 'rgba(0, 255, 159, 0.5)',
+                                marginBottom: '1rem'
+                            }}
+                        />
+                        <Typography variant="h6" sx={{ color: '#fff', mb: 2 }}>
+                            No exercises logged yet. Start tracking your progress!
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
+                            Log your first exercise to begin building your fitness history.
+                        </Typography>
+                        <Button
+                            variant="contained"
+                            startIcon={<MdAdd />}
+                            onClick={() => navigate('/workout/quick-add')}
+                            sx={{
+                                background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
+                                color: '#000',
+                                fontWeight: 'bold',
+                                px: 4,
+                                py: 1.5,
+                                '&:hover': {
+                                    background: 'linear-gradient(45deg, #00e676 30%, #00ff9f 90%)',
+                                },
+                            }}
+                        >
+                            Quick Add Exercise
+                        </Button>
+                    </Box>
+                ) : (
+                    /* Exercise List */
+                    <List>
+                        {exerciseHistory.map((exercise) => (
+                            <StyledCard key={exercise.id} sx={{ mb: 2 }}>
+                                <CardContent>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                        <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                            {exercise.exerciseName}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                            {format(new Date(exercise.timestamp), 'MMM dd, yyyy')}
+                                        </Typography>
+                                    </Box>
+                                    <Typography variant="body1" sx={{ color: '#fff' }}>
+                                        {`${exercise.weight}${weightUnit} × ${exercise.reps} reps × ${exercise.sets} sets`}
                                     </Typography>
-                                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                        {format(new Date(exercise.timestamp), 'MMM dd, yyyy')}
-                                    </Typography>
-                                </Box>
-                                <Typography variant="body1" sx={{ color: '#fff' }}>
-                                    {`${exercise.weight}${weightUnit} × ${exercise.reps} reps × ${exercise.sets} sets`}
-                                </Typography>
-                                {exercise.notes && (
-                                    <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1, fontStyle: 'italic' }}>
-                                        Note: {exercise.notes}
-                                    </Typography>
-                                )}
-                            </CardContent>
-                        </StyledCard>
-                    ))}
-                </List>
+                                    {exercise.notes && (
+                                        <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1, fontStyle: 'italic' }}>
+                                            Note: {exercise.notes}
+                                        </Typography>
+                                    )}
+                                </CardContent>
+                            </StyledCard>
+                        ))}
+                    </List>
+                )}
             </Box>
         );
     };

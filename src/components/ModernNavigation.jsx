@@ -13,10 +13,29 @@ export default function ModernNavigation() {
     const navigate = useNavigate();
     const location = useLocation();
     const theme = useTheme();
-    const [activeTab, setActiveTab] = useState(location.pathname);
+    const [activeTab, setActiveTab] = useState('/');
+
+    // Function to determine which navigation tab should be active based on current path
+    const getActiveTab = (pathname) => {
+        if (pathname === '/') {
+            return '/';
+        } else if (pathname.startsWith('/workout')) {
+            return '/workout';
+        } else if (pathname.startsWith('/history')) {
+            return '/history';
+        } else if (pathname.startsWith('/progress')) {
+            return '/progress';
+        } else if (pathname.startsWith('/profile') || pathname.startsWith('/exercise-manager')) {
+            return '/profile';
+        }
+
+        // Default fallback
+        return '/';
+    };
 
     useEffect(() => {
-        setActiveTab(location.pathname);
+        const activeTabPath = getActiveTab(location.pathname);
+        setActiveTab(activeTabPath);
     }, [location.pathname]);
 
     const handleTabChange = (path) => {

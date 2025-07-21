@@ -20,11 +20,30 @@ export default function Navigation() {
     const navigate = useNavigate();
     const location = useLocation();
     const theme = useTheme();
-    const [value, setValue] = useState(location.pathname);
+    const [value, setValue] = useState('/');
+
+    // Function to determine which navigation tab should be active based on current path
+    const getActiveTab = (pathname) => {
+        if (pathname === '/') {
+            return '/';
+        } else if (pathname.startsWith('/workout')) {
+            return '/workout';
+        } else if (pathname.startsWith('/history')) {
+            return '/history';
+        } else if (pathname.startsWith('/progress')) {
+            return '/progress';
+        } else if (pathname.startsWith('/profile') || pathname.startsWith('/exercise-manager')) {
+            return '/profile';
+        }
+
+        // Default fallback
+        return '/';
+    };
 
     // Update value when location changes
     useEffect(() => {
-        setValue(location.pathname);
+        const activeTab = getActiveTab(location.pathname);
+        setValue(activeTab);
     }, [location.pathname]);
 
     const handleChange = (event, newValue) => {
