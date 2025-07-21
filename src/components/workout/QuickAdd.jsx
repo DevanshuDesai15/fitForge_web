@@ -87,7 +87,6 @@ export default function QuickAdd() {
         sets: '',
         notes: ''
     });
-    const [selectedExercise, setSelectedExercise] = useState('');
     const { currentUser } = useAuth();
     const navigate = useNavigate();
 
@@ -107,7 +106,6 @@ export default function QuickAdd() {
                 sets: '',
                 notes: ''
             });
-            setSelectedExercise('');
             return;
         }
 
@@ -125,9 +123,6 @@ export default function QuickAdd() {
         };
         console.log('🔍 QuickAdd: Setting exercise state to:', newExercise);
         setExercise(newExercise);
-
-        setSelectedExercise(exerciseData.id);
-        console.log('🔍 QuickAdd: Setting selectedExercise to:', exerciseData.id);
     };
 
     const handleSubmit = async (e) => {
@@ -151,7 +146,6 @@ export default function QuickAdd() {
                 sets: '',
                 notes: ''
             });
-            setSelectedExercise('');
 
             // Automatically clear success message after 3 seconds
             setTimeout(() => {
@@ -255,7 +249,6 @@ export default function QuickAdd() {
                                 </Box>
                                 <ExerciseSelector
                                     onExerciseSelect={handleExerciseSelect}
-                                    selectedExercise={selectedExercise}
                                     placeholder="Select or type exercise name..."
                                     includeHistory={true}
                                 />

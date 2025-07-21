@@ -144,8 +144,8 @@ export default function ExerciseSelector({
             priority: 3,
             type: 'template'
         })) : []),
-        // API exercises last
-        ...apiExercises.slice(0, 50).map(ex => ({
+        // API exercises last (full database for searching)
+        ...apiExercises.map(ex => ({
             ...ex,
             label: ex.name,
             group: 'Exercise Database',
@@ -272,6 +272,44 @@ export default function ExerciseSelector({
                 clearOnBlur
                 handleHomeEndKeys
                 loading={loadingExercises}
+                filterOptions={(options, { inputValue }) => {
+                    if (!inputValue) {
+                        // When no input, show limited results for performance
+                        return [
+                            ...options.filter(option => option.group !== 'Exercise Database'),
+                            ...options.filter(option => option.group === 'Exercise Database').slice(0, 50)
+                        ];
+                    }
+
+                    // When user types, search through ALL exercises
+                    const filtered = options.filter(option =>
+                        option.name?.toLowerCase().includes(inputValue.toLowerCase()) ||
+                        option.target?.toLowerCase().includes(inputValue.toLowerCase()) ||
+                        option.bodyPart?.toLowerCase().includes(inputValue.toLowerCase()) ||
+                        option.equipment?.toLowerCase().includes(inputValue.toLowerCase())
+                    );
+
+                    // Sort by relevance: exact matches first, then starts with, then contains
+                    const sorted = filtered.sort((a, b) => {
+                        const aName = a.name?.toLowerCase() || '';
+                        const bName = b.name?.toLowerCase() || '';
+                        const input = inputValue.toLowerCase();
+
+                        // Exact match
+                        if (aName === input) return -1;
+                        if (bName === input) return 1;
+
+                        // Starts with
+                        if (aName.startsWith(input) && !bName.startsWith(input)) return -1;
+                        if (bName.startsWith(input) && !aName.startsWith(input)) return 1;
+
+                        // Priority order (saved > history > template > api)
+                        return a.priority - b.priority;
+                    });
+
+                    // Limit results for performance (but show more when searching)
+                    return sorted.slice(0, 200);
+                }}
                 loadingText={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 2 }}>
                         <CircularProgress size={20} sx={{ color: '#00ff9f' }} />
