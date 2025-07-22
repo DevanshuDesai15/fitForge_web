@@ -238,8 +238,18 @@ export default function History() {
 
         const totalExercises = exerciseHistory.length;
         const uniqueExercises = [...new Set(exerciseHistory.map(ex => ex.exerciseName))].length;
-        const totalWeight = exerciseHistory.reduce((sum, ex) => sum + (parseFloat(ex.weight) || 0), 0);
-        const totalReps = exerciseHistory.reduce((sum, ex) => sum + (parseInt(ex.reps) || 0), 0);
+        const totalWeight = exerciseHistory.reduce((sum, ex) => {
+            if (Array.isArray(ex.sets)) {
+                return sum + ex.sets.reduce((setSum, set) => setSum + ((set.weight || 0) * (set.reps || 0)), 0);
+            }
+            return sum + ((ex.weight || 0) * (ex.reps || 0));
+        }, 0);
+        const totalReps = exerciseHistory.reduce((sum, ex) => {
+            if (Array.isArray(ex.sets)) {
+                return sum + ex.sets.reduce((setSum, set) => setSum + (set.reps || 0), 0);
+            }
+            return sum + (parseInt(ex.reps) || 0);
+        }, 0);
 
         return {
             totalExercises,
@@ -629,7 +639,10 @@ export default function History() {
                                         </Typography>
                                     </Box>
                                     <Typography variant="body1" sx={{ color: theme.palette.text.primary }}>
-                                        {`${exercise.weight}${weightUnit} × ${exercise.reps} reps × ${exercise.sets} sets`}
+                                        {Array.isArray(exercise.sets)
+                                            ? `${exercise.sets.length} sets × ${exercise.sets[0].reps} reps × ${exercise.sets[0].weight}${weightUnit}`
+                                            : `${exercise.weight}${weightUnit} × ${exercise.reps} reps × ${exercise.sets} sets`
+                                        }
                                     </Typography>
                                     {exercise.notes && (
                                         <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mt: 1, fontStyle: 'italic' }}>
@@ -738,7 +751,10 @@ export default function History() {
                                 </Typography>
                                 {workout.exercises?.map((exercise, index) => (
                                     <Typography key={index} variant="body2" sx={{ color: theme.palette.text.secondary, ml: 2 }}>
-                                        • {exercise.name}: {exercise.weight}{weightUnit} × {exercise.reps} reps × {exercise.sets} sets
+                                        • {exercise.name}: {Array.isArray(exercise.sets)
+                                            ? `${exercise.sets.length} sets`
+                                            : `${exercise.weight}${weightUnit} × ${exercise.reps} reps × ${exercise.sets} sets`
+                                        }
                                     </Typography>
                                 ))}
                             </Box>

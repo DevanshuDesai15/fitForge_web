@@ -213,7 +213,7 @@ export default function Progress() {
     const processPersonalRecords = (exerciseData) => {
         const records = exerciseData.reduce((acc, exercise) => {
             const name = exercise.exerciseName;
-            const weight = parseFloat(exercise.weight) || 0;
+            const weight = Math.max(...(Array.isArray(exercise.sets) ? exercise.sets.map(s => parseFloat(s.weight || 0)) : [parseFloat(exercise.weight || 0)]));
 
             if (!acc[name] || weight > acc[name].weight) {
                 acc[name] = {
@@ -353,12 +353,16 @@ export default function Progress() {
             new Date(current.timestamp) > new Date(latest.timestamp) ? current : latest
         );
 
+        const latestWeight = Math.max(...(Array.isArray(latestRecord.sets) ? latestRecord.sets.map(s => parseFloat(s.weight || 0)) : [parseFloat(latestRecord.weight || 0)]));
         const weightProgress = goal.targetWeight ?
-            (parseFloat(latestRecord.weight) / parseFloat(goal.targetWeight)) * 100 : 100;
-        const repsProgress = goal.targetReps ?
+            (latestWeight / parseFloat(goal.targetWeight)) * 100 : 100;
+
+        // Note: Reps and sets progress might need more complex logic for the new data structure
+        const repsProgress = goal.targetReps && latestRecord.reps ?
             (parseFloat(latestRecord.reps) / parseFloat(goal.targetReps)) * 100 : 100;
-        const setsProgress = goal.targetSets ?
-            (parseFloat(latestRecord.sets) / parseFloat(goal.targetSets)) * 100 : 100;
+        const setsProgress = goal.targetSets && latestRecord.sets ?
+            (Array.isArray(latestRecord.sets) ? latestRecord.sets.length : parseFloat(latestRecord.sets) / parseFloat(goal.targetSets)) * 100 : 100;
+
 
         return Math.min((weightProgress + repsProgress + setsProgress) / 3, 100);
     };
@@ -520,7 +524,10 @@ export default function Progress() {
                                             primary={
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                     <Typography sx={{ color: '#fff' }}>
-                                                        {entry.weight}{weightUnit} × {entry.reps} reps × {entry.sets} sets
+                                                        {Array.isArray(entry.sets)
+                                                            ? `${entry.sets.length} sets`
+                                                            : `${entry.weight}${weightUnit} × ${entry.reps} reps × ${entry.sets} sets`
+                                                        }
                                                     </Typography>
                                                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                                                         {format(entry.date, 'MMM dd, yyyy')}
@@ -591,7 +598,10 @@ export default function Progress() {
                                         {record.weight}{weightUnit}
                                     </Typography>
                                     <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-                                        {record.reps} reps × {record.sets} sets
+                                        {Array.isArray(record.sets)
+                                            ? `${record.sets.length} sets`
+                                            : `${record.reps} reps × ${record.sets} sets`
+                                        }
                                     </Typography>
                                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                                         {format(record.date, 'MMM dd, yyyy')}

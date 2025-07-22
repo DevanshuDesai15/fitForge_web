@@ -69,6 +69,7 @@ export default function QuickAdd() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [fillSuccess, setFillSuccess] = useState('');
     const [recentExercises, setRecentExercises] = useState([]);
     const [weightUnit, setWeightUnitState] = useState('kg');
 
@@ -124,11 +125,15 @@ export default function QuickAdd() {
         setSuccess('');
 
         try {
-            const exerciseData = {
-                exerciseName,
-                sets: parseInt(sets),
+            const setsArray = Array.from({ length: parseInt(sets) }, () => ({
                 reps: parseInt(reps),
                 weight: parseFloat(weight),
+                completed: false
+            }));
+
+            const exerciseData = {
+                exerciseName,
+                sets: setsArray,
                 notes: notes.trim(),
                 timestamp: new Date().toISOString(),
                 userId: currentUser.uid,
@@ -162,15 +167,30 @@ export default function QuickAdd() {
     };
 
     const handleExerciseSelect = (exercise) => {
-        setExerciseName(exercise.name);
+        if (exercise && exercise.name) {
+            setExerciseName(exercise.name);
+        } else if (typeof exercise === 'string') {
+            setExerciseName(exercise);
+        }
     };
 
     const fillFromRecent = (exercise) => {
         setExerciseName(exercise.exerciseName);
-        setSets(exercise.sets.toString());
-        setReps(exercise.reps.toString());
-        setWeight(exercise.weight.toString());
+        if (Array.isArray(exercise.sets)) {
+            setSets(exercise.sets.length.toString());
+            setReps(exercise.sets[0].reps.toString());
+            setWeight(exercise.sets[0].weight.toString());
+        } else {
+            setSets(exercise.sets.toString());
+            setReps(exercise.reps.toString());
+            setWeight(exercise.weight.toString());
+        }
         setNotes(exercise.notes || '');
+        setFillSuccess(`Filled form with details for ${exercise.exerciseName}.`);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setTimeout(() => {
+            setFillSuccess('');
+        }, 3000);
     };
 
     return (
@@ -190,6 +210,12 @@ export default function QuickAdd() {
                 {success && (
                     <Alert severity="success" sx={{ mb: 3, backgroundColor: `${theme.palette.status.success}20`, color: theme.palette.status.success }}>
                         {success}
+                    </Alert>
+                )}
+
+                {fillSuccess && (
+                    <Alert severity="info" sx={{ mb: 3, backgroundColor: `${theme.palette.status.info}20`, color: theme.palette.status.info }}>
+                        {fillSuccess}
                     </Alert>
                 )}
 
@@ -381,7 +407,10 @@ export default function QuickAdd() {
                                                 {exercise.exerciseName}
                                             </Typography>
                                             <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                                                {exercise.sets} sets × {exercise.reps} reps × {exercise.weight}{weightUnit}
+                                                {Array.isArray(exercise.sets)
+                                                    ? `${exercise.sets.length} sets × ${exercise.sets[0].reps} reps × ${exercise.sets[0].weight}${weightUnit}`
+                                                    : `${exercise.sets} sets × ${exercise.reps} reps × ${exercise.weight}${weightUnit}`
+                                                }
                                             </Typography>
                                         </Box>
                                         <IconButton

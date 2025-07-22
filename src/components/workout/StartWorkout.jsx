@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
     Box,
     Card,
@@ -81,6 +81,7 @@ export default function StartWorkout() {
     const [workoutStarted, setWorkoutStarted] = useState(false);
     const [workoutTime, setWorkoutTime] = useState(0);
     const [exercises, setExercises] = useState([]);
+    const [completedSets, setCompletedSets] = useState({});
     const [openDialog, setOpenDialog] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -204,7 +205,12 @@ export default function StartWorkout() {
 
         const day = templateDays.find(d => d.id.toString() === selectedDay);
         if (day && day.exercises) {
-            setTemplateExercises(day.exercises || []);
+            const exercisesWithSets = day.exercises.map(ex => ({
+                ...ex,
+                sets: Array.from({ length: ex.sets || 3 }, () => ({ reps: ex.reps || 10, weight: ex.weight || 0, completed: false }))
+            }));
+            setTemplateExercises(exercisesWithSets);
+            setExercises(exercisesWithSets);
         }
 
         // Start workout immediately after selecting day
@@ -243,6 +249,20 @@ export default function StartWorkout() {
         setEditingExercise(null);
     };
 
+    const handleSetChange = (exerciseIndex, setIndex, field, value) => {
+        const updatedExercises = [...exercises];
+        updatedExercises[exerciseIndex].sets[setIndex][field] = value;
+        setExercises(updatedExercises);
+    };
+
+    const toggleSetCompletion = (exerciseIndex, setIndex) => {
+        const updatedExercises = [...exercises];
+        const currentCompleted = updatedExercises[exerciseIndex].sets[setIndex].completed;
+        updatedExercises[exerciseIndex].sets[setIndex].completed = !currentCompleted;
+        setExercises(updatedExercises);
+    };
+
+
     const handleCancelExerciseEdit = () => {
         setEditingExercise(null);
     };
@@ -262,7 +282,10 @@ export default function StartWorkout() {
             // Save the workout as a whole with template information
             const workoutData = {
                 userId: currentUser.uid,
-                exercises: exercises,
+                exercises: exercises.map(ex => ({
+                    ...ex,
+                    sets: ex.sets.map(set => ({ reps: set.reps, weight: set.weight, completed: set.completed }))
+                })),
                 duration: workoutTime,
                 timestamp: workoutTimestamp
             };
@@ -285,9 +308,7 @@ export default function StartWorkout() {
                 const exerciseData = {
                     userId: currentUser.uid,
                     exerciseName: exercise.name,
-                    weight: exercise.weight.toString(),
-                    reps: exercise.reps.toString(),
-                    sets: exercise.sets.toString(),
+                    sets: exercise.sets.map(set => ({ reps: set.reps, weight: set.weight, completed: set.completed })),
                     notes: exercise.notes || '',
                     timestamp: workoutTimestamp,
                     source: 'workout'
@@ -352,11 +373,15 @@ export default function StartWorkout() {
             return;
         }
 
+        const setsArray = Array.from({ length: parseInt(newExercise.sets) }, () => ({
+            reps: parseInt(newExercise.reps),
+            weight: parseFloat(newExercise.weight),
+            completed: false
+        }));
+
         setExercises([...exercises, {
             ...newExercise,
-            weight: parseFloat(newExercise.weight),
-            reps: parseInt(newExercise.reps),
-            sets: parseInt(newExercise.sets)
+            sets: setsArray
         }]);
 
         setNewExercise({
@@ -410,6 +435,11 @@ export default function StartWorkout() {
         const secs = seconds % 60;
         return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
+
+    const allExercises = useMemo(() => {
+        return exercises;
+    }, [exercises]);
+
 
     return (
         <Box sx={{
@@ -750,104 +780,83 @@ export default function StartWorkout() {
                 {workoutStarted && (
                     <>
                         <List>
-                            {exercises.map((exercise, index) => (
-                                <StyledCard key={index} sx={{ mb: 2 }}>
-                                    {editingExercise === index ? (
-                                        <CardContent>
-                                            <Typography variant="h6" sx={{ color: '#00ff9f', mb: 2 }}>
-                                                Edit: {exercise.name}
-                                            </Typography>
-                                            <Grid2 container spacing={2}>
-                                                <Grid2 xs={4}>
+                            {allExercises.map((exercise, exerciseIndex) => (
+                                <Accordion key={exerciseIndex} sx={{
+                                    background: 'rgba(30, 30, 30, 0.9)',
+                                    color: 'white',
+                                    mb: 2,
+                                    borderRadius: '16px',
+                                    '&.Mui-expanded': {
+                                        margin: '16px 0',
+                                    },
+                                    boxShadow: '0 4px 30px rgba(0, 255, 159, 0.1)',
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                }}>
+                                    <AccordionSummary
+                                        expandIcon={<MdExpandMore sx={{ color: '#00ff9f' }} />}
+                                        aria-controls={`panel${exerciseIndex}-content`}
+                                        id={`panel${exerciseIndex}-header`}
+                                    >
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                                            <Typography sx={{ color: '#00ff9f' }}>{exercise.name}</Typography>
+                                            <IconButton
+                                                edge="end"
+                                                sx={{ color: '#ff4444' }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteExercise(exerciseIndex);
+                                                }}
+                                            >
+                                                <MdDelete />
+                                            </IconButton>
+                                        </Box>
+                                    </AccordionSummary>
+                                    <AccordionDetails>
+                                        <Box display="flex" alignItems="center" sx={{ mb: 1, gap: 1, pr: 1, pl: 1 }}>
+                                            <Box sx={{ flex: '0 0 40px', textAlign: 'center' }}><Typography variant="caption" sx={{ fontWeight: 'bold' }}>Set</Typography></Box>
+                                            <Box sx={{ flex: '1 1 0', textAlign: 'center' }}><Typography variant="caption" sx={{ fontWeight: 'bold' }}>{getWeightLabel(weightUnit)}</Typography></Box>
+                                            <Box sx={{ flex: '1 1 0', textAlign: 'center' }}><Typography variant="caption" sx={{ fontWeight: 'bold' }}>Reps</Typography></Box>
+                                            <Box sx={{ flex: '0 0 40px' }}></Box>
+                                        </Box>
+                                        {exercise.sets.map((set, setIndex) => (
+                                            <Box
+                                                key={setIndex}
+                                                display="flex"
+                                                alignItems="center"
+                                                sx={{ mb: 1.5, gap: 1, pr: 1, pl: 1 }}
+                                            >
+                                                <Box sx={{ flex: '0 0 40px', textAlign: 'center' }}>
+                                                    <Typography sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{setIndex + 1}</Typography>
+                                                </Box>
+                                                <Box sx={{ flex: '1 1 0' }}>
                                                     <StyledTextField
-                                                        fullWidth
-                                                        label={getWeightLabel(weightUnit)}
                                                         type="number"
+                                                        defaultValue={set.weight}
+                                                        onChange={(e) => handleSetChange(exerciseIndex, setIndex, 'weight', e.target.value)}
                                                         size="small"
-                                                        defaultValue={exercise.weight}
-                                                        onChange={(e) => {
-                                                            exercise.weight = parseFloat(e.target.value) || 0;
-                                                        }}
+                                                        fullWidth
+                                                        sx={{ '.MuiInputBase-input': { textAlign: 'center', padding: '8px' } }}
                                                     />
-                                                </Grid2>
-                                                <Grid2 xs={4}>
+                                                </Box>
+                                                <Box sx={{ flex: '1 1 0' }}>
                                                     <StyledTextField
-                                                        fullWidth
-                                                        label="Reps"
                                                         type="number"
+                                                        defaultValue={set.reps}
+                                                        onChange={(e) => handleSetChange(exerciseIndex, setIndex, 'reps', e.target.value)}
                                                         size="small"
-                                                        defaultValue={exercise.reps}
-                                                        onChange={(e) => {
-                                                            exercise.reps = parseInt(e.target.value) || 10;
-                                                        }}
-                                                    />
-                                                </Grid2>
-                                                <Grid2 xs={4}>
-                                                    <StyledTextField
                                                         fullWidth
-                                                        label="Sets"
-                                                        type="number"
-                                                        size="small"
-                                                        defaultValue={exercise.sets}
-                                                        onChange={(e) => {
-                                                            exercise.sets = parseInt(e.target.value) || 3;
-                                                        }}
+                                                        sx={{ '.MuiInputBase-input': { textAlign: 'center', padding: '8px' } }}
                                                     />
-                                                </Grid2>
-                                            </Grid2>
-                                            <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-                                                <Button
-                                                    startIcon={<MdCheck />}
-                                                    onClick={() => handleSaveExerciseEdit(index, exercise)}
-                                                    sx={{ color: '#00ff9f' }}
-                                                >
-                                                    Save
-                                                </Button>
-                                                <Button
-                                                    startIcon={<MdCancel />}
-                                                    onClick={handleCancelExerciseEdit}
-                                                    sx={{ color: '#ff4444' }}
-                                                >
-                                                    Cancel
-                                                </Button>
-                                            </Box>
-                                        </CardContent>
-                                    ) : (
-                                        <ListItem
-                                            secondaryAction={
-                                                <Box>
-                                                    <IconButton
-                                                        edge="end"
-                                                        sx={{ color: '#00ff9f', mr: 1 }}
-                                                        onClick={() => handleEditExercise(index)}
-                                                    >
-                                                        <MdEdit />
-                                                    </IconButton>
-                                                    <IconButton
-                                                        edge="end"
-                                                        sx={{ color: '#ff4444' }}
-                                                        onClick={() => handleDeleteExercise(index)}
-                                                    >
-                                                        <MdDelete />
+                                                </Box>
+                                                <Box sx={{ flex: '0 0 40px', textAlign: 'right' }}>
+                                                    <IconButton onClick={() => toggleSetCompletion(exerciseIndex, setIndex)} sx={{ color: set.completed ? '#00ff9f' : 'grey' }}>
+                                                        <MdCheckCircle />
                                                     </IconButton>
                                                 </Box>
-                                            }
-                                        >
-                                            <ListItemText
-                                                primary={
-                                                    <Typography sx={{ color: '#00ff9f' }}>
-                                                        {exercise.name}
-                                                    </Typography>
-                                                }
-                                                secondary={
-                                                    <Typography sx={{ color: 'text.secondary' }}>
-                                                        {`${exercise.weight}${weightUnit} × ${exercise.reps} reps × ${exercise.sets} sets`}
-                                                    </Typography>
-                                                }
-                                            />
-                                        </ListItem>
-                                    )}
-                                </StyledCard>
+                                            </Box>
+                                        ))}
+                                    </AccordionDetails>
+                                </Accordion>
                             ))}
                         </List>
 
@@ -903,14 +912,14 @@ export default function StartWorkout() {
                                             <Grid2 key={exercise.id || index}>
                                                 <Button
                                                     variant="outlined"
-                                                    onClick={() => handleExerciseSelectFromSelector({
-                                                        name: exercise.name,
-                                                        defaultWeight: exercise.weight || '',
-                                                        defaultReps: exercise.reps || 10,
-                                                        defaultSets: exercise.sets || 3,
-                                                        notes: exercise.notes || '',
-                                                        type: 'template'
-                                                    })}
+                                                    onClick={() => {
+                                                        const setsArray = Array.from({ length: parseInt(exercise.sets) || 3 }, () => ({
+                                                            reps: parseInt(exercise.reps) || 10,
+                                                            weight: parseFloat(exercise.weight) || 0,
+                                                            completed: false
+                                                        }));
+                                                        setExercises(prev => [...prev, { ...exercise, sets: setsArray }]);
+                                                    }}
                                                     sx={{
                                                         borderColor: newExercise.name === exercise.name ? '#00ff9f' : 'rgba(255, 255, 255, 0.3)',
                                                         color: newExercise.name === exercise.name ? '#00ff9f' : '#fff',

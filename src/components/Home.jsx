@@ -156,9 +156,12 @@ export default function Home() {
                 isThisWeek(new Date(w.timestamp), { weekStartsOn: 1 })
             ).length;
 
-            const totalWeight = exercises.reduce((sum, ex) =>
-                sum + (parseFloat(ex.weight) * parseInt(ex.sets) || 0), 0
-            );
+            const totalWeight = exercises.reduce((sum, ex) => {
+                if (ex.sets && Array.isArray(ex.sets)) {
+                    return sum + ex.sets.reduce((setSum, set) => setSum + ((set.weight || 0) * (set.reps || 0)), 0);
+                }
+                return sum + ((ex.weight || 0) * (ex.reps || 0) * (ex.sets || 1));
+            }, 0);
 
             // Calculate current streak (consecutive days with workouts)
             let streak = 0;
@@ -232,6 +235,16 @@ export default function Home() {
             onClick: () => navigate('/workout/templates')
         }
     ];
+
+    const formatExerciseSummary = (exercise) => {
+        if (exercise.sets && Array.isArray(exercise.sets)) {
+            const totalSets = exercise.sets.length;
+            const totalReps = exercise.sets.reduce((sum, set) => sum + (parseInt(set.reps) || 0), 0);
+            const avgWeight = exercise.sets.reduce((sum, set) => sum + (parseFloat(set.weight) || 0), 0) / totalSets;
+            return `${avgWeight.toFixed(1)}${getWeightUnit()} × ${totalReps / totalSets} reps × ${totalSets} sets`;
+        }
+        return `${exercise.weight}${getWeightUnit()} × ${exercise.reps} reps × ${exercise.sets} sets`;
+    };
 
     const getGreeting = () => {
         const hour = new Date().getHours();
@@ -481,7 +494,7 @@ export default function Home() {
                                         No exercises logged yet.
                                     </Typography>
                                 ) : (
-                                    recentExercises.map((exercise, index) => (
+                                    recentExercises.map((exercise) => (
                                         <Box key={exercise.id} sx={{ mb: 2, p: 2, backgroundColor: 'rgba(255, 255, 255, 0.02)', borderRadius: '8px' }}>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Box>
@@ -489,7 +502,7 @@ export default function Home() {
                                                         {exercise.exerciseName}
                                                     </Typography>
                                                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                                        {exercise.weight}{weightUnit} × {exercise.reps} reps × {exercise.sets} sets
+                                                        {formatExerciseSummary(exercise)}
                                                     </Typography>
                                                 </Box>
                                                 <Typography variant="caption" sx={{ color: 'text.secondary' }}>
