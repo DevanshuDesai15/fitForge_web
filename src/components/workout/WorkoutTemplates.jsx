@@ -5,270 +5,171 @@ import {
     CardContent,
     Typography,
     Button,
+    IconButton,
     Dialog,
     DialogTitle,
     DialogContent,
     DialogActions,
     TextField,
-    IconButton,
-    Grid2,
     Chip,
+    List,
+    ListItem,
+    CircularProgress,
     Alert
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import { styled, useTheme } from '@mui/material/styles';
 import {
     MdAdd,
-    MdDelete,
     MdEdit,
-    MdPlayArrow,
+    MdDelete,
     MdFitnessCenter,
-    MdSave,
-    MdCancel
+    MdPlayArrow,
+    MdLibraryBooks,
+    MdClose
 } from 'react-icons/md';
-import { collection, addDoc, getDocs, query, where, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, doc, addDoc, updateDoc, deleteDoc, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { fetchExercisesByTarget, fetchTargetList, fetchExercisesByBodyPart, fetchBodyPartList } from '../../services/exerciseAPI';
 import ExerciseSelector from '../common/ExerciseSelector';
 
-const StyledCard = styled(Card)(() => ({
+const StyledCard = styled(Card)(({ theme }) => ({
     background: 'rgba(30, 30, 30, 0.9)',
     backdropFilter: 'blur(10px)',
     borderRadius: '16px',
-    boxShadow: '0 4px 30px rgba(0, 255, 159, 0.1)',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    transition: 'transform 0.2s ease-in-out',
+    border: `1px solid ${theme.palette.border.main}`,
+    transition: 'all 0.3s ease',
+    cursor: 'pointer',
     '&:hover': {
-        transform: 'translateY(-5px)',
+        transform: 'translateY(-4px)',
+        boxShadow: `0 8px 25px ${theme.palette.surface.secondary}`,
+        border: `1px solid ${theme.palette.border.primary}`,
     },
 }));
 
-const StyledTextField = styled(TextField)({
-    '& .MuiOutlinedInput-root': {
-        '& fieldset': {
-            borderColor: 'rgba(255, 255, 255, 0.23)',
-        },
-        '&:hover fieldset': {
-            borderColor: '#00ff9f',
-        },
-        '&.Mui-focused fieldset': {
-            borderColor: '#00ff9f',
-        },
+const TemplateCard = styled(Card, {
+    shouldForwardProp: (prop) => prop !== 'isSelected',
+})(({ theme, isSelected }) => ({
+    background: isSelected
+        ? `linear-gradient(135deg, ${theme.palette.surface.tertiary} 0%, ${theme.palette.surface.secondary} 100%)`
+        : 'rgba(30, 30, 30, 0.9)',
+    backdropFilter: 'blur(10px)',
+    borderRadius: '16px',
+    border: isSelected
+        ? `1px solid ${theme.palette.primary.main}`
+        : `1px solid ${theme.palette.border.main}`,
+    transition: 'all 0.3s ease',
+    cursor: 'pointer',
+    '&:hover': {
+        transform: 'translateY(-2px)',
+        border: `1px solid ${theme.palette.border.primary}`,
     },
-    '& label.Mui-focused': {
-        color: '#00ff9f',
+}));
+
+const ActionButton = styled(Button)(({ theme, variant }) => ({
+    borderRadius: 12,
+    fontWeight: 'bold',
+    padding: '10px 24px',
+    ...(variant === 'primary' && {
+        background: theme.palette.background.gradient.button,
+        color: theme.palette.primary.contrastText,
+        '&:hover': {
+            background: theme.palette.background.gradient.buttonHover,
+        },
+    }),
+}));
+
+const DayCard = styled(Card)(({ theme }) => ({
+    background: `linear-gradient(135deg, ${theme.palette.surface.primary} 0%, ${theme.palette.surface.transparent} 100%)`,
+    border: `1px solid ${theme.palette.border.main}`,
+    borderRadius: '12px',
+    marginBottom: '16px',
+    overflow: 'visible', // Allow dropdown to extend outside card
+}));
+
+const MuscleGroupChip = styled(Chip)(({ theme, selected }) => ({
+    margin: '4px',
+    backgroundColor: selected ? theme.palette.primary.main : theme.palette.surface.transparent,
+    color: selected ? theme.palette.primary.contrastText : theme.palette.text.primary,
+    borderColor: theme.palette.primary.main,
+    '&:hover': {
+        backgroundColor: selected ? theme.palette.primary.light : theme.palette.surface.primary,
     },
-});
+}));
 
 export default function WorkoutTemplates() {
     const [templates, setTemplates] = useState([]);
-    const [openDialog, setOpenDialog] = useState(false);
-    const [editingTemplate, setEditingTemplate] = useState(null);
-    // eslint-disable-next-line no-unused-vars
-    const [selectedExercises, setSelectedExercises] = useState([]);
-    // eslint-disable-next-line no-unused-vars
-    const [availableExercises, setAvailableExercises] = useState([]);
-    const [muscleGroupExercises, setMuscleGroupExercises] = useState({});
-    const [newTemplate, setNewTemplate] = useState({
-        name: '',
-        description: '',
-        workoutDays: []
-    });
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
-    const [loading, setLoading] = useState(false);
-    const { currentUser } = useAuth();
-    const navigate = useNavigate();
-
-    // Updated muscle groups mapped to wger API target muscles and body parts
-    const muscleGroups = [
-        { id: 'abs', name: 'Abs', type: 'bodyPart', apiName: 'Abs' },
-        { id: 'biceps', name: 'Biceps', type: 'target', apiName: 'Biceps' },
-        { id: 'triceps', name: 'Triceps', type: 'target', apiName: 'Triceps' },
-        { id: 'chest', name: 'Chest', type: 'bodyPart', apiName: 'Chest' },
-        { id: 'shoulders', name: 'Shoulders', type: 'target', apiName: 'Shoulders' },
-        { id: 'back', name: 'Back', type: 'bodyPart', apiName: 'Back' },
-        { id: 'lats', name: 'Lats', type: 'target', apiName: 'Lats' },
-        { id: 'legs', name: 'Legs', type: 'bodyPart', apiName: 'Legs' },
-        { id: 'quads', name: 'Quadriceps', type: 'target', apiName: 'Quads' },
-        { id: 'glutes', name: 'Glutes', type: 'target', apiName: 'Glutes' },
-        { id: 'hamstrings', name: 'Hamstrings', type: 'target', apiName: 'Hamstrings' },
-        { id: 'calves', name: 'Calves', type: 'bodyPart', apiName: 'Calves' },
-        { id: 'arms', name: 'Arms', type: 'bodyPart', apiName: 'Arms' },
-        { id: 'cardio', name: 'Cardio', type: 'bodyPart', apiName: 'Cardio' }
-    ];
-
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [editingTemplate, setEditingTemplate] = useState(null);
+    const [templateName, setTemplateName] = useState('');
     const [workoutDays, setWorkoutDays] = useState([
         { id: 1, name: 'Day 1', muscleGroups: [], exercises: [] }
     ]);
 
+
+    const { currentUser } = useAuth();
+    const navigate = useNavigate();
+    const theme = useTheme();
+
+    // Muscle groups with better organization and colors
+    const muscleGroups = [
+        { id: 'chest', name: 'Chest', icon: '💪', color: theme.palette.status.error },
+        { id: 'back', name: 'Back', icon: '🔙', color: theme.palette.status.info },
+        { id: 'shoulders', name: 'Shoulders', icon: '🏔️', color: theme.palette.status.warning },
+        { id: 'biceps', name: 'Biceps', icon: '💪', color: theme.palette.actions.library },
+        { id: 'triceps', name: 'Triceps', icon: '🔱', color: theme.palette.actions.templates },
+        { id: 'legs', name: 'Legs', icon: '🦵', color: theme.palette.actions.quickAdd },
+        { id: 'glutes', name: 'Glutes', icon: '🍑', color: theme.palette.actions.progress },
+        { id: 'abs', name: 'Abs', icon: '🔥', color: theme.palette.primary.main },
+        { id: 'cardio', name: 'Cardio', icon: '❤️', color: theme.palette.status.error },
+    ];
+
     useEffect(() => {
-        loadTemplates();
-        // Verify wger API muscle groups
-        checkAvailableTargets();
+        if (currentUser) {
+            loadTemplates();
+        }
     }, [currentUser]);
-
-    // Debug function to check available target muscle names from wger API
-    const checkAvailableTargets = async () => {
-        try {
-            console.log('🔍 Checking available wger API targets...');
-
-            // Test both target muscles and body parts
-            const [targets, bodyParts] = await Promise.all([
-                fetchTargetList(),
-                fetchBodyPartList()
-            ]);
-
-            console.log('🎯 Available target muscles from wger:', targets);
-            console.log('🏋️ Available body parts from wger:', bodyParts);
-
-            // Verify our muscle group mappings
-            const ourTargets = muscleGroups.filter(mg => mg.type === 'target').map(mg => mg.apiName);
-            const ourBodyParts = muscleGroups.filter(mg => mg.type === 'bodyPart').map(mg => mg.apiName);
-
-            console.log('✅ Our target mappings:', ourTargets);
-            console.log('✅ Our body part mappings:', ourBodyParts);
-
-            // Check which of our mappings are available
-            const availableTargets = ourTargets.filter(target =>
-                targets.some(t => t.toLowerCase().includes(target.toLowerCase()))
-            );
-            const availableBodyParts = ourBodyParts.filter(bodyPart =>
-                bodyParts.some(bp => bp.toLowerCase() === bodyPart.toLowerCase())
-            );
-
-            console.log('🎯 Working target mappings:', availableTargets);
-            console.log('🏋️ Working body part mappings:', availableBodyParts);
-
-        } catch (error) {
-            console.error('❌ Error checking wger API targets:', error);
-        }
-    };
-
-    // Test all muscle groups function for wger API
-    // eslint-disable-next-line no-unused-vars
-    const testAllMuscleGroups = async () => {
-        console.log('🧪 Testing ALL wger muscle group mappings...');
-        const results = [];
-
-        for (const muscleGroup of muscleGroups) {
-            try {
-                let exercises;
-                if (muscleGroup.type === 'target') {
-                    exercises = await fetchExercisesByTarget(muscleGroup.apiName);
-                } else {
-                    exercises = await fetchExercisesByBodyPart(muscleGroup.apiName);
-                }
-
-                const result = {
-                    name: muscleGroup.name,
-                    apiName: muscleGroup.apiName,
-                    type: muscleGroup.type,
-                    success: true,
-                    count: exercises?.length || 0
-                };
-                results.push(result);
-                console.log(`✅ ${muscleGroup.name} (${muscleGroup.type}: ${muscleGroup.apiName}): ${result.count} exercises`);
-            } catch (error) {
-                const result = {
-                    name: muscleGroup.name,
-                    apiName: muscleGroup.apiName,
-                    type: muscleGroup.type,
-                    success: false,
-                    error: error.message
-                };
-                results.push(result);
-                console.log(`❌ ${muscleGroup.name} (${muscleGroup.type}: ${muscleGroup.apiName}): ${error.message}`);
-            }
-            // Add delay to prevent overwhelming the API
-            await new Promise(resolve => setTimeout(resolve, 200));
-        }
-
-        console.log('📊 Final wger API Results:', results);
-        const successCount = results.filter(r => r.success).length;
-        console.log(`✅ Working: ${successCount}/${muscleGroups.length} muscle groups`);
-
-        return results;
-    };
 
     const loadTemplates = async () => {
         try {
-            if (!currentUser) {
-                setTemplates([]);
-                return;
-            }
-
-            const q = query(
+            setLoading(true);
+            const templatesQuery = query(
                 collection(db, 'workoutTemplates'),
-                where("userId", "==", currentUser.uid)
+                where('userId', '==', currentUser.uid)
             );
-            const querySnapshot = await getDocs(q);
-            const templateData = querySnapshot.docs.map(doc => ({
+            const snapshot = await getDocs(templatesQuery);
+            const templatesData = snapshot.docs.map(doc => ({
                 id: doc.id,
-                ...doc.data(),
-                workoutDays: (doc.data().workoutDays || []).map(day => ({
-                    ...day,
-                    muscleGroups: day.muscleGroups || [],
-                    exercises: day.exercises || []
-                }))
+                ...doc.data()
             }));
-            setTemplates(templateData);
+            setTemplates(templatesData);
         } catch (error) {
-            console.error("Error loading templates:", error);
-            setError("Failed to load templates");
-            setTemplates([]);
+            console.error('Error loading templates:', error);
+            setError('Failed to load templates');
+        } finally {
+            setLoading(false);
         }
     };
 
-
-
-    const handleExerciseToggle = (dayId, exercise) => {
-        setWorkoutDays(prev => prev.map(day => {
-            if (day.id === dayId) {
-                const isSelected = day.exercises.some(ex => ex.id === exercise.id);
-                const updatedExercises = isSelected
-                    ? day.exercises.filter(ex => ex.id !== exercise.id)
-                    : [...day.exercises, { ...exercise, sets: 3, reps: 10, weight: 0 }];
-                return { ...day, exercises: updatedExercises };
-            }
-            return day;
-        }));
+    const handleEditTemplate = (template) => {
+        setEditingTemplate(template);
+        setTemplateName(template.name);
+        setWorkoutDays(template.workoutDays || [{ id: 1, name: 'Day 1', muscleGroups: [], exercises: [] }]);
+        setDialogOpen(true);
     };
 
-    const handleExerciseSelect = (dayId, exerciseData) => {
-        if (!exerciseData) return;
-
-        console.log('🏋️ Template: Adding exercise to day', dayId, ':', exerciseData);
-
-        setWorkoutDays(prev => prev.map(day => {
-            if (day.id === dayId) {
-                // Check if exercise already exists
-                const isAlreadySelected = day.exercises.some(ex => ex.id === exerciseData.id || ex.name === exerciseData.name);
-
-                if (isAlreadySelected) {
-                    console.log('⚠️ Exercise already selected for this day');
-                    return day;
-                }
-
-                // Add new exercise with default values
-                const newExercise = {
-                    id: exerciseData.id || `custom-${Date.now()}`,
-                    name: exerciseData.name,
-                    target: exerciseData.target || 'Unknown',
-                    equipment: exerciseData.equipment || 'Unknown',
-                    bodyPart: exerciseData.bodyPart || 'Unknown',
-                    sets: exerciseData.defaultSets || 3,
-                    reps: exerciseData.defaultReps || 10,
-                    weight: exerciseData.defaultWeight || 0,
-                    type: exerciseData.type || 'custom'
-                };
-
-                console.log('✅ Adding exercise to template:', newExercise);
-                return { ...day, exercises: [...day.exercises, newExercise] };
+    const handleDeleteTemplate = async (templateId) => {
+        if (window.confirm('Are you sure you want to delete this template?')) {
+            try {
+                await deleteDoc(doc(db, 'workoutTemplates', templateId));
+                loadTemplates();
+            } catch (error) {
+                console.error('Error deleting template:', error);
+                setError('Failed to delete template');
             }
-            return day;
-        }));
+        }
     };
 
     const handleAddDay = () => {
@@ -284,112 +185,71 @@ export default function WorkoutTemplates() {
     };
 
     const handleRemoveDay = (dayId) => {
-        setWorkoutDays(prev => prev.filter(day => day.id !== dayId));
+        if (workoutDays.length > 1) {
+            setWorkoutDays(prev => prev.filter(day => day.id !== dayId));
+        }
     };
 
-    const handleMuscleGroupSelect = (dayId, muscleGroup) => {
-        // console.log('🎯 Selecting muscle group:', muscleGroup);
-
+    const handleMuscleGroupToggle = (dayId, muscleGroup) => {
         setWorkoutDays(prev => prev.map(day => {
             if (day.id === dayId) {
-                const isAlreadySelected = day.muscleGroups.some(mg => mg.id === muscleGroup.id);
-
-                // Ensure we're using the complete muscle group object with apiName
-                const completeMuscleGroup = muscleGroups.find(mg => mg.id === muscleGroup.id) || muscleGroup;
-                // console.log('🔧 Complete muscle group object:', completeMuscleGroup);
-
-                const updatedMuscleGroups = isAlreadySelected
+                const isSelected = day.muscleGroups.some(mg => mg.id === muscleGroup.id);
+                const updatedMuscleGroups = isSelected
                     ? day.muscleGroups.filter(mg => mg.id !== muscleGroup.id)
-                    : [...day.muscleGroups, completeMuscleGroup];
-
-                // If removing muscle group, also remove its exercises
-                const updatedExercises = isAlreadySelected
-                    ? day.exercises.filter(ex => {
-                        const exerciseList = muscleGroupExercises[muscleGroup.id] || [];
-                        return !exerciseList.some(mgEx => mgEx.id === ex.id);
-                    })
-                    : day.exercises;
-
-                return { ...day, muscleGroups: updatedMuscleGroups, exercises: updatedExercises };
+                    : [...day.muscleGroups, muscleGroup];
+                return { ...day, muscleGroups: updatedMuscleGroups };
             }
             return day;
         }));
-
-
     };
 
-    const handleEditTemplate = (template) => {
-        setEditingTemplate(template);
-        setNewTemplate({
-            name: template.name,
-            description: template.description || ''
-        });
 
-        // Ensure muscle groups have complete data with apiName
-        setWorkoutDays((template.workoutDays || []).map(day => ({
-            ...day,
-            muscleGroups: (day.muscleGroups || []).map(mg => {
-                // Find the complete muscle group object from our main array
-                const completeMuscleGroup = muscleGroups.find(mainMg => mainMg.id === mg.id);
-                if (completeMuscleGroup) {
-                    // console.log(`🔧 Restored complete muscle group: ${mg.name} -> ${completeMuscleGroup.apiName}`);
-                    return completeMuscleGroup;
-                }
-                // console.warn(`⚠️ Could not find complete muscle group for: ${mg.name} (${mg.id})`);
-                return mg;
-            }),
-            exercises: day.exercises || []
-        })));
-        setOpenDialog(true);
+
+    const removeExercise = (dayId, exerciseIndex) => {
+        setWorkoutDays(prev => prev.map(day => {
+            if (day.id === dayId) {
+                return { ...day, exercises: day.exercises.filter((_, index) => index !== exerciseIndex) };
+            }
+            return day;
+        }));
     };
 
-    const handleUpdateTemplate = async () => {
-        setError('');
-        setSuccess('');
-        setLoading(true);
-
-        if (!newTemplate.name.trim()) {
-            setError('Template name is required');
-            setLoading(false);
-            return;
-        }
-
+    const handleSaveTemplate = async () => {
         try {
-            const sanitizedWorkoutDays = workoutDays.map(day => ({
-                id: day.id,
-                name: day.name,
-                muscleGroups: day.muscleGroups.map(mg => ({
-                    id: mg.id,
-                    name: mg.name,
-                    apiName: mg.apiName
-                })),
-                exercises: day.exercises.map(ex => ({
-                    id: ex.id,
-                    name: ex.name,
-                    target: ex.target,
-                    equipment: ex.equipment,
-                    sets: ex.sets,
-                    reps: ex.reps,
-                    weight: ex.weight
-                }))
-            }));
+            setLoading(true);
+
+            if (!templateName.trim()) {
+                setError('Template name is required');
+                setLoading(false);
+                return;
+            }
 
             const templateData = {
-                name: newTemplate.name,
-                description: newTemplate.description || '',
-                workoutDays: sanitizedWorkoutDays,
+                name: templateName,
+                description: '',
+                workoutDays: workoutDays.map(day => ({
+                    id: day.id,
+                    name: day.name,
+                    muscleGroups: day.muscleGroups,
+                    exercises: day.exercises
+                })),
                 updatedAt: new Date().toISOString()
             };
 
-            await updateDoc(doc(db, 'workoutTemplates', editingTemplate.id), templateData);
+            if (editingTemplate) {
+                await updateDoc(doc(db, 'workoutTemplates', editingTemplate.id), templateData);
+            } else {
+                templateData.userId = currentUser.uid;
+                templateData.createdAt = new Date().toISOString();
+                await addDoc(collection(db, 'workoutTemplates'), templateData);
+            }
 
-            setSuccess('Template updated successfully!');
             resetForm();
             loadTemplates();
-            setOpenDialog(false);
+            setDialogOpen(false);
         } catch (error) {
-            console.error('Error updating template:', error);
-            setError(`Failed to update template: ${error.message}`);
+            console.error('Error saving template:', error);
+            setError('Failed to save template');
         } finally {
             setLoading(false);
         }
@@ -397,440 +257,378 @@ export default function WorkoutTemplates() {
 
     const resetForm = () => {
         setEditingTemplate(null);
-        setNewTemplate({
-            name: '',
-            description: ''
-        });
+        setTemplateName('');
         setWorkoutDays([{ id: 1, name: 'Day 1', muscleGroups: [], exercises: [] }]);
-        setMuscleGroupExercises({});
-    };
-
-    const handleCreateTemplate = async () => {
         setError('');
-        setSuccess('');
-        setLoading(true);
-
-        if (!newTemplate.name.trim()) {
-            setError('Template name is required');
-            setLoading(false);
-            return;
-        }
-
-        try {
-            const sanitizedWorkoutDays = workoutDays.map(day => ({
-                id: day.id,
-                name: day.name,
-                muscleGroups: day.muscleGroups.map(mg => ({
-                    id: mg.id,
-                    name: mg.name,
-                    apiName: mg.apiName
-                })),
-                exercises: day.exercises.map(ex => ({
-                    id: ex.id,
-                    name: ex.name,
-                    target: ex.target,
-                    equipment: ex.equipment,
-                    sets: ex.sets,
-                    reps: ex.reps,
-                    weight: ex.weight
-                }))
-            }));
-
-            const templateData = {
-                name: newTemplate.name,
-                description: newTemplate.description || '',
-                workoutDays: sanitizedWorkoutDays,
-                userId: currentUser.uid,
-                createdAt: new Date().toISOString()
-            };
-
-            await addDoc(collection(db, 'workoutTemplates'), templateData);
-
-            setSuccess('Template created successfully!');
-            resetForm();
-            loadTemplates();
-            setOpenDialog(false);
-        } catch (error) {
-            console.error('Error creating template:', error);
-            setError(`Failed to create template: ${error.message}`);
-        } finally {
-            setLoading(false);
-        }
     };
 
-    const handleDeleteTemplate = async (templateId) => {
-        try {
-            await deleteDoc(doc(db, 'workoutTemplates', templateId));
-            setSuccess('Template deleted successfully!');
-            loadTemplates();
-        } catch (error) {
-            console.error("Error deleting template:", error);
-            setError('Failed to delete template');
-        }
-    };
+    const renderTemplateCard = (template) => {
+        const totalExercises = template.workoutDays ?
+            template.workoutDays.reduce((sum, day) => sum + (day.exercises?.length || 0), 0) : 0;
 
-    const handleStartTemplate = (template) => {
-        navigate('/workout/start', { state: { template } });
+        return (
+            <TemplateCard key={template.id} sx={{ mb: 2 }}>
+                <CardContent>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
+                        <Typography variant="h6" sx={{ color: theme.palette.primary.main, fontWeight: 'bold' }}>
+                            {template.name}
+                        </Typography>
+                        <Box>
+                            <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditTemplate(template);
+                                }}
+                                sx={{ color: theme.palette.status.warning, mr: 1 }}
+                            >
+                                <MdEdit />
+                            </IconButton>
+                            <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteTemplate(template.id);
+                                }}
+                                sx={{ color: theme.palette.status.error }}
+                            >
+                                <MdDelete />
+                            </IconButton>
+                        </Box>
+                    </Box>
+
+                    <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 2 }}>
+                        {template.workoutDays?.length || 0} days • {totalExercises} total exercises
+                    </Typography>
+
+                    {/* Display workout days */}
+                    {template.workoutDays?.slice(0, 2).map((day) => (
+                        <Box key={day.id} sx={{ mb: 1 }}>
+                            <Typography variant="body2" sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}>
+                                {day.name}
+                            </Typography>
+                            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
+                                {day.muscleGroups?.slice(0, 4).map((mg) => (
+                                    <Chip
+                                        key={mg.id}
+                                        label={mg.name}
+                                        size="small"
+                                        sx={{
+                                            backgroundColor: `${mg.color}20`,
+                                            color: mg.color,
+                                            fontSize: '0.7rem',
+                                            height: '20px'
+                                        }}
+                                    />
+                                ))}
+                                {day.muscleGroups?.length > 4 && (
+                                    <Chip
+                                        label={`+${day.muscleGroups.length - 4}`}
+                                        size="small"
+                                        sx={{
+                                            backgroundColor: theme.palette.surface.secondary,
+                                            color: theme.palette.text.secondary,
+                                            fontSize: '0.7rem',
+                                            height: '20px'
+                                        }}
+                                    />
+                                )}
+                            </Box>
+                            <Typography variant="caption" sx={{ color: theme.palette.text.muted }}>
+                                {day.exercises?.length || 0} exercises
+                            </Typography>
+                        </Box>
+                    ))}
+
+                    {template.workoutDays?.length > 2 && (
+                        <Typography variant="caption" sx={{ color: theme.palette.text.muted }}>
+                            +{template.workoutDays.length - 2} more days
+                        </Typography>
+                    )}
+
+                    <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
+                        <ActionButton
+                            variant="primary"
+                            size="small"
+                            startIcon={<MdPlayArrow />}
+                            onClick={() => navigate(`/workout/start?template=${template.id}`)}
+                        >
+                            Start Workout
+                        </ActionButton>
+                    </Box>
+                </CardContent>
+            </TemplateCard>
+        );
     };
 
     return (
         <Box sx={{
             minHeight: '100vh',
-            background: 'linear-gradient(135deg, #121212 0%, #2d2d2d 100%)',
+            background: theme.palette.background.gradient.primary,
             padding: '1rem',
+            paddingBottom: '100px',
         }}>
             <div className="max-w-4xl mx-auto">
                 {error && (
-                    <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
+                    <Alert severity="error" sx={{ mb: 3, backgroundColor: `${theme.palette.status.error}20`, color: theme.palette.status.error }}>
+                        {error}
+                    </Alert>
                 )}
-                {success && (
-                    <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>
-                )}
 
-                {/* Debug Section - Remove in production */}
-                {/* {process.env.NODE_ENV === 'development' && (
-                    <StyledCard sx={{ mb: 3, border: '2px dashed #ffc107' }}>
-                        <CardContent>
-                            <Typography variant="h6" sx={{ color: '#ffc107', mb: 2 }}>
-                                🔧 Debug Tools (Development Only)
-                            </Typography>
-                            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                                <Button
-                                    size="small"
-                                    variant="outlined"
-                                    onClick={checkAvailableTargets}
-                                    sx={{ color: '#ffc107', borderColor: '#ffc107' }}
-                                >
-                                    Check API Target Names
-                                </Button>
-
-                                <Button
-                                    size="small"
-                                    variant="outlined"
-                                    onClick={testAllMuscleGroups}
-                                    sx={{ color: '#ff4444', borderColor: '#ff4444' }}
-                                >
-                                    Test ALL Muscle Groups
-                                </Button>
-                                <Button
-                                    size="small"
-                                    variant="outlined"
-                                    onClick={() => {
-                                        console.log('🔍 Current workout days:', workoutDays);
-                                        workoutDays.forEach(day => {
-                                            console.log(`Day ${day.id}:`, day.muscleGroups.map(mg => ({
-                                                name: mg.name,
-                                                id: mg.id,
-                                                hasApiName: !!mg.apiName,
-                                                apiName: mg.apiName
-                                            })));
-                                        });
-                                    }}
-                                    sx={{ color: '#00e676', borderColor: '#00e676' }}
-                                >
-                                    Check Muscle Group Integrity
-                                </Button>
-                            </Box>
-                            <Typography variant="caption" sx={{ color: '#999', mt: 1, display: 'block' }}>
-                                Open browser console (F12) to see detailed test results
-                            </Typography>
-                        </CardContent>
-                    </StyledCard>
-                )} */}
-
+                {/* Header */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                    <Typography variant="h4" sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
+                    <Typography variant="h4" sx={{ color: theme.palette.primary.main, fontWeight: 'bold' }}>
                         Workout Templates
                     </Typography>
-                    <Button
-                        variant="contained"
+                    <ActionButton
+                        variant="primary"
                         startIcon={<MdAdd />}
-                        onClick={() => setOpenDialog(true)}
+                        onClick={() => setDialogOpen(true)}
                         sx={{
-                            background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
-                            color: '#000',
-                            fontWeight: 'bold',
+                            background: theme.palette.background.gradient.button,
+                            color: theme.palette.primary.contrastText,
                         }}
                     >
                         Create Template
-                    </Button>
+                    </ActionButton>
                 </Box>
 
-                <Grid2 container spacing={3}>
-                    {Array.isArray(templates) && templates.length > 0 ? (
-                        templates.map((template) => (
-                            <Grid2 xs={12} md={6} key={template.id}>
-                                <StyledCard>
-                                    <CardContent>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                            <Typography variant="h6" sx={{ color: '#00ff9f' }}>
-                                                {template.name}
-                                            </Typography>
-                                            <Box>
-                                                <IconButton
-                                                    onClick={() => handleStartTemplate(template)}
-                                                    sx={{ color: '#00ff9f' }}
-                                                >
-                                                    <MdPlayArrow />
-                                                </IconButton>
-                                                <IconButton
-                                                    onClick={() => handleEditTemplate(template)}
-                                                    sx={{ color: '#ffc107' }}
-                                                >
-                                                    <MdEdit />
-                                                </IconButton>
-                                                <IconButton
-                                                    onClick={() => handleDeleteTemplate(template.id)}
-                                                    sx={{ color: '#ff4444' }}
-                                                >
-                                                    <MdDelete />
-                                                </IconButton>
-                                            </Box>
-                                        </Box>
-                                        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-                                            {template.description}
-                                        </Typography>
-                                        {(Array.isArray(template.workoutDays) ? template.workoutDays : []).map((day, index) => (
-                                            <Box key={day.id || index} sx={{ mt: 2 }}>
-                                                <Typography variant="subtitle1" sx={{ color: '#00ff9f' }}>
-                                                    {day.name}
-                                                </Typography>
-                                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                                    {(Array.isArray(day.muscleGroups) ? day.muscleGroups : []).map((mg, mgIndex) => (
-                                                        <Chip
-                                                            key={mg.id || mgIndex}
-                                                            label={mg.name}
-                                                            icon={<MdFitnessCenter />}
-                                                            sx={{
-                                                                backgroundColor: 'rgba(0, 255, 159, 0.1)',
-                                                                color: '#00ff9f',
-                                                                '& .MuiChip-icon': { color: '#00ff9f' }
-                                                            }}
-                                                        />
-                                                    ))}
-                                                </Box>
-                                                {Array.isArray(day.exercises) && day.exercises.length > 0 && (
-                                                    <Box sx={{ mt: 1 }}>
-                                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                                            {day.exercises.length} exercises selected
-                                                        </Typography>
-                                                    </Box>
-                                                )}
-                                            </Box>
-                                        ))}
-                                    </CardContent>
-                                </StyledCard>
-                            </Grid2>
-                        ))
-                    ) : (
-                        <Grid2 xs={12}>
-                            <Typography variant="body1" sx={{ color: 'text.secondary', textAlign: 'center' }}>
-                                No workout templates found. Create one to get started!
+                {/* Empty State */}
+                {!loading && templates.length === 0 && (
+                    <StyledCard sx={{ mb: 3, border: `2px dashed ${theme.palette.primary.main}`, opacity: 0.8 }}>
+                        <CardContent sx={{ textAlign: 'center', py: 4 }}>
+                            <Typography variant="h6" sx={{ color: theme.palette.primary.main, mb: 2 }}>
+                                No workout templates yet!
                             </Typography>
-                        </Grid2>
-                    )}
-                </Grid2>
+                            <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 3 }}>
+                                Create your first template with multiple days and muscle groups
+                            </Typography>
+                            <ActionButton
+                                variant="primary"
+                                startIcon={<MdAdd />}
+                                onClick={() => setDialogOpen(true)}
+                                sx={{
+                                    background: theme.palette.background.gradient.button,
+                                    color: theme.palette.primary.contrastText,
+                                    mr: 2
+                                }}
+                            >
+                                Create Template
+                            </ActionButton>
+                            <Button
+                                variant="outlined"
+                                startIcon={<MdFitnessCenter />}
+                                onClick={() => navigate('/workout/start')}
+                                sx={{ mr: 2, color: theme.palette.status.error, borderColor: theme.palette.status.error }}
+                            >
+                                Start Custom Workout
+                            </Button>
+                            <Button
+                                variant="outlined"
+                                startIcon={<MdLibraryBooks />}
+                                onClick={() => navigate('/workout/library')}
+                                sx={{ color: theme.palette.primary.light, borderColor: theme.palette.primary.light }}
+                            >
+                                Browse Exercises
+                            </Button>
+                        </CardContent>
+                    </StyledCard>
+                )}
 
+                {/* Templates List */}
+                {loading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                        <CircularProgress sx={{ color: theme.palette.primary.main }} />
+                    </Box>
+                ) : (
+                    <Box>
+                        {templates.map(renderTemplateCard)}
+                    </Box>
+                )}
+
+                {/* Create/Edit Template Dialog */}
                 <Dialog
-                    open={openDialog}
-                    onClose={() => {
-                        setOpenDialog(false);
-                        resetForm();
-                    }}
+                    open={dialogOpen}
+                    onClose={() => setDialogOpen(false)}
+                    maxWidth="lg"
+                    fullWidth
                     PaperProps={{
                         sx: {
-                            backgroundColor: '#1e1e1e',
+                            backgroundColor: theme.palette.background.paper,
                             borderRadius: '16px',
-                            maxWidth: '800px',
                         }
                     }}
                 >
-                    <DialogTitle sx={{ color: '#00ff9f' }}>
-                        {editingTemplate ? 'Edit Workout Template' : 'Create Workout Template'}
+                    <DialogTitle sx={{
+                        color: theme.palette.primary.main,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                    }}>
+                        {editingTemplate ? 'Edit Template' : 'Create New Template'}
+                        <IconButton onClick={() => setDialogOpen(false)} sx={{ color: theme.palette.primary.main }}>
+                            <MdClose />
+                        </IconButton>
                     </DialogTitle>
-                    <DialogContent>
-                        <StyledTextField
+                    <DialogContent sx={{ overflow: 'visible' }}>
+                        <TextField
                             autoFocus
                             margin="dense"
                             label="Template Name"
                             fullWidth
-                            value={newTemplate.name}
-                            onChange={(e) => setNewTemplate({ ...newTemplate, name: e.target.value })}
-                            sx={{ mb: 2 }}
-                        />
-                        <StyledTextField
-                            margin="dense"
-                            label="Description"
-                            fullWidth
-                            multiline
-                            rows={3}
-                            value={newTemplate.description}
-                            onChange={(e) => setNewTemplate({ ...newTemplate, description: e.target.value })}
-                            sx={{ mb: 3 }}
-                        />
-
-                        <Box sx={{ mb: 3 }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                <Typography variant="subtitle1" sx={{ color: '#00ff9f' }}>
-                                    Workout Split
-                                </Typography>
-                                <Button
-                                    startIcon={<MdAdd />}
-                                    onClick={handleAddDay}
-                                    sx={{ color: '#00ff9f' }}
-                                >
-                                    Add Day
-                                </Button>
-                            </Box>
-
-                            {workoutDays.map((day) => (
-                                <Card
-                                    key={day.id}
-                                    sx={{
-                                        mb: 2,
-                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                        border: '1px solid rgba(255, 255, 255, 0.1)'
-                                    }}
-                                >
-                                    <CardContent>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                            <Typography variant="h6" sx={{ color: '#00ff9f' }}>
-                                                {day.name}
-                                            </Typography>
-                                            {workoutDays.length > 1 && (
-                                                <IconButton
-                                                    onClick={() => handleRemoveDay(day.id)}
-                                                    sx={{ color: '#ff4444' }}
-                                                >
-                                                    <MdDelete />
-                                                </IconButton>
-                                            )}
-                                        </Box>
-
-                                        <Typography variant="subtitle2" sx={{ color: '#fff', mb: 1 }}>
-                                            Select Muscle Groups:
-                                        </Typography>
-
-                                        <Grid2 container spacing={1}>
-                                            {muscleGroups.map((muscleGroup) => (
-                                                <Grid2 key={muscleGroup.id}>
-                                                    <Chip
-                                                        icon={muscleGroup.icon}
-                                                        label={muscleGroup.name}
-                                                        onClick={() => handleMuscleGroupSelect(day.id, muscleGroup)}
-                                                        sx={{
-                                                            backgroundColor: day.muscleGroups.some(mg => mg.id === muscleGroup.id)
-                                                                ? 'rgba(0, 255, 159, 0.2)'
-                                                                : 'rgba(255, 255, 255, 0.1)',
-                                                            color: day.muscleGroups.some(mg => mg.id === muscleGroup.id)
-                                                                ? '#00ff9f'
-                                                                : '#fff',
-                                                            '&:hover': {
-                                                                backgroundColor: 'rgba(0, 255, 159, 0.3)',
-                                                            }
-                                                        }}
-                                                    />
-                                                </Grid2>
-                                            ))}
-                                        </Grid2>
-
-                                        {day.muscleGroups.length > 0 && (
-                                            <Box sx={{ mt: 2 }}>
-                                                <Typography variant="subtitle2" sx={{ color: '#00ff9f', mb: 1 }}>
-                                                    Selected:
-                                                </Typography>
-                                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                                    {day.muscleGroups.map((mg) => (
-                                                        <Chip
-                                                            key={mg.id}
-                                                            label={mg.name}
-                                                            onDelete={() => handleMuscleGroupSelect(day.id, mg)}
-                                                            sx={{
-                                                                backgroundColor: 'rgba(0, 255, 159, 0.2)',
-                                                                color: '#00ff9f',
-                                                            }}
-                                                        />
-                                                    ))}
-                                                </Box>
-                                            </Box>
-                                        )}
-
-                                        {/* Exercise Selection Section */}
-                                        <Box sx={{ mt: 3 }}>
-                                            <Typography variant="subtitle2" sx={{ color: '#00ff9f', mb: 2 }}>
-                                                Add Exercises:
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-                                                Search the entire exercise database or type a custom exercise name.
-                                                {day.muscleGroups.length > 0 && (
-                                                    <> Selected muscle groups: {day.muscleGroups.map(mg => mg.name).join(', ')}</>
-                                                )}
-                                            </Typography>
-
-                                            <ExerciseSelector
-                                                onExerciseSelect={(exerciseData) => handleExerciseSelect(day.id, exerciseData)}
-                                                placeholder="Search all exercises or type custom name..."
-                                                includeHistory={true}
-                                                sx={{ mb: 2 }}
-                                            />
-
-                                            {day.exercises.length > 0 && (
-                                                <Box sx={{ mt: 2 }}>
-                                                    <Typography variant="subtitle2" sx={{ color: '#00ff9f', mb: 1 }}>
-                                                        Selected Exercises ({day.exercises.length}):
-                                                    </Typography>
-                                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                                        {day.exercises.map((exercise) => (
-                                                            <Chip
-                                                                key={exercise.id}
-                                                                label={`${exercise.name} (${exercise.sets}×${exercise.reps})`}
-                                                                onDelete={() => handleExerciseToggle(day.id, exercise)}
-                                                                sx={{
-                                                                    backgroundColor: 'rgba(0, 255, 159, 0.2)',
-                                                                    color: '#00ff9f',
-                                                                    '& .MuiChip-deleteIcon': {
-                                                                        color: '#00ff9f'
-                                                                    }
-                                                                }}
-                                                            />
-                                                        ))}
-                                                    </Box>
-                                                </Box>
-                                            )}
-                                        </Box>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </Box>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button
-                            onClick={() => {
-                                setOpenDialog(false);
-                                resetForm();
+                            variant="outlined"
+                            value={templateName}
+                            onChange={(e) => setTemplateName(e.target.value)}
+                            sx={{
+                                mb: 3,
+                                '& .MuiOutlinedInput-root': {
+                                    color: theme.palette.text.primary,
+                                    '& fieldset': { borderColor: theme.palette.border.main },
+                                    '&:hover fieldset': { borderColor: theme.palette.border.primary },
+                                },
+                                '& .MuiInputLabel-root': { color: theme.palette.text.secondary },
                             }}
-                            sx={{ color: 'text.secondary' }}
-                            startIcon={<MdCancel />}
-                        >
+                        />
+
+                        {/* Workout Days */}
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                            <Typography variant="h6" sx={{ color: theme.palette.primary.main }}>
+                                Workout Split
+                            </Typography>
+                            <ActionButton
+                                size="small"
+                                startIcon={<MdAdd />}
+                                onClick={handleAddDay}
+                                sx={{ color: theme.palette.primary.main, borderColor: theme.palette.primary.main }}
+                                variant="outlined"
+                            >
+                                Add Day
+                            </ActionButton>
+                        </Box>
+
+                        {workoutDays.map((day) => (
+                            <DayCard key={day.id}>
+                                <CardContent>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                        <Typography variant="h6" sx={{ color: theme.palette.primary.main }}>
+                                            {day.name}
+                                        </Typography>
+                                        {workoutDays.length > 1 && (
+                                            <IconButton
+                                                onClick={() => handleRemoveDay(day.id)}
+                                                sx={{ color: theme.palette.status.error }}
+                                            >
+                                                <MdDelete />
+                                            </IconButton>
+                                        )}
+                                    </Box>
+
+                                    <Typography variant="subtitle2" sx={{ color: theme.palette.text.primary, mb: 1 }}>
+                                        Target Muscle Groups:
+                                    </Typography>
+                                    <Box sx={{ mb: 3 }}>
+                                        {muscleGroups.map((muscleGroup) => (
+                                            <MuscleGroupChip
+                                                key={muscleGroup.id}
+                                                label={`${muscleGroup.icon} ${muscleGroup.name}`}
+                                                selected={day.muscleGroups.some(mg => mg.id === muscleGroup.id)}
+                                                onClick={() => handleMuscleGroupToggle(day.id, muscleGroup)}
+                                                variant="outlined"
+                                            />
+                                        ))}
+                                    </Box>
+
+                                    <Typography variant="subtitle2" sx={{ color: theme.palette.text.primary, mb: 2 }}>
+                                        Exercises ({day.exercises.length}):
+                                    </Typography>
+
+                                    {/* Inline Exercise Selector */}
+                                    <Box sx={{ mb: 2 }}>
+                                        <ExerciseSelector
+                                            onExerciseSelect={(exercise) => {
+                                                console.log('🏋️ Exercise selected:', exercise, 'for day:', day.id);
+                                                const newExercise = {
+                                                    id: exercise.id || Date.now(),
+                                                    name: exercise.name,
+                                                    sets: 3,
+                                                    reps: 10,
+                                                    weight: 0,
+                                                    restTime: 60,
+                                                    notes: '',
+                                                    target: exercise.target,
+                                                    equipment: exercise.equipment
+                                                };
+
+                                                setWorkoutDays(prev => prev.map(workoutDay => {
+                                                    if (workoutDay.id === day.id) {
+                                                        console.log(`📅 Adding exercise to ${workoutDay.name}`);
+                                                        return { ...workoutDay, exercises: [...workoutDay.exercises, newExercise] };
+                                                    }
+                                                    return workoutDay;
+                                                }));
+                                            }}
+                                            placeholder={`Search exercises for ${day.name}...`}
+                                            sx={{ width: '100%' }}
+                                        />
+                                    </Box>
+
+                                    {day.exercises.length > 0 && (
+                                        <List>
+                                            {day.exercises.map((exercise, exerciseIndex) => (
+                                                <ListItem
+                                                    key={exerciseIndex}
+                                                    sx={{
+                                                        bgcolor: theme.palette.surface.transparent,
+                                                        borderRadius: 1,
+                                                        mb: 1,
+                                                        border: `1px solid ${theme.palette.border.main}`
+                                                    }}
+                                                >
+                                                    <Box sx={{ flex: 1 }}>
+                                                        <Typography variant="body1" sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}>
+                                                            {exercise.name}
+                                                        </Typography>
+                                                        <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
+                                                            {exercise.sets} sets × {exercise.reps} reps
+                                                            {exercise.weight && ` @ ${exercise.weight}kg`}
+                                                        </Typography>
+                                                    </Box>
+                                                    <IconButton
+                                                        onClick={() => removeExercise(day.id, exerciseIndex)}
+                                                        sx={{ color: theme.palette.status.error }}
+                                                    >
+                                                        <MdDelete />
+                                                    </IconButton>
+                                                </ListItem>
+                                            ))}
+                                        </List>
+                                    )}
+                                </CardContent>
+                            </DayCard>
+                        ))}
+                    </DialogContent>
+                    <DialogActions sx={{ p: 3 }}>
+                        <Button onClick={() => setDialogOpen(false)} sx={{ color: theme.palette.text.secondary, backgroundColor: theme.palette.background.gradient.button, '&:hover': {
+                            background: theme.palette.background.gradient.buttonHover,
+                            color: theme.palette.primary.contrastText,
+                        }, }}>
                             Cancel
                         </Button>
-                        <Button
-                            onClick={editingTemplate ? handleUpdateTemplate : handleCreateTemplate}
-                            disabled={loading}
+                        <ActionButton
+                            variant="primary"
+                            onClick={handleSaveTemplate}
+                            // disabled={!templateName.trim()}
                             sx={{
-                                background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
-                                color: '#000',
-                                fontWeight: 'bold',
-                                '&:hover': {
-                                    background: 'linear-gradient(45deg, #00e676 30%, #00ff9f 90%)',
-                                },
+                                background: theme.palette.background.gradient.button,
+                                color: theme.palette.primary.contrastText,
                             }}
-                            startIcon={<MdSave />}
                         >
-                            {loading ? 'Saving...' : (editingTemplate ? 'Update' : 'Create')}
-                        </Button>
+                            {editingTemplate ? 'Update Template' : 'Create Template'}
+                        </ActionButton>
                     </DialogActions>
                 </Dialog>
+
+
             </div>
         </Box>
     );

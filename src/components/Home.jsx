@@ -203,15 +203,15 @@ export default function Home() {
             title: 'Start Workout',
             subtitle: 'Begin your training session',
             icon: MdPlayArrow,
-            color: '#00ff9f',
-            gradient: 'linear-gradient(135deg, #00ff9f 0%, #00e676 100%)',
+            color: 'primary.main',
+            gradient: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
             onClick: () => navigate('/workout/start')
         },
         {
             title: 'Quick Add Exercise',
             subtitle: 'Log a single exercise',
             icon: MdAdd,
-            color: '#00bcd4',
+            color: 'info.main',
             gradient: 'linear-gradient(135deg, #00bcd4 0%, #00acc1 100%)',
             onClick: () => navigate('/workout/quick-add')
         },
@@ -219,7 +219,7 @@ export default function Home() {
             title: 'View Progress',
             subtitle: 'Track your improvements',
             icon: MdShowChart,
-            color: '#ff9800',
+            color: 'actions.quickAdd',
             gradient: 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)',
             onClick: () => navigate('/progress')
         },
@@ -227,7 +227,7 @@ export default function Home() {
             title: 'Workout Templates',
             subtitle: 'Manage your routines',
             icon: MdCalendarToday,
-            color: '#9c27b0',
+            color: 'actions.templates',
             gradient: 'linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%)',
             onClick: () => navigate('/workout/templates')
         }
@@ -240,23 +240,17 @@ export default function Home() {
         return 'Good Evening';
     };
 
+    const displayName = userData.fullName || userData.username || currentUser?.email?.split('@')[0] || 'Athlete';
+
     return (
         <Box sx={{
             minHeight: '100vh',
-            background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2d2d2d 100%)',
+            background: (theme) => theme.palette.background.gradient.home,
             padding: '1rem',
         }}>
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-6xl mx-auto">
                 {error && (
-                    <Alert
-                        severity="error"
-                        sx={{
-                            mb: 3,
-                            backgroundColor: 'rgba(211, 47, 47, 0.1)',
-                            color: '#ff4444'
-                        }}
-                        onClose={() => setError('')}
-                    >
+                    <Alert severity="error" sx={{ mb: 3, backgroundColor: 'rgba(211, 47, 47, 0.1)', color: (theme) => theme.palette.status.error }}>
                         {error}
                     </Alert>
                 )}
@@ -279,16 +273,16 @@ export default function Home() {
                             </Avatar>
                             <Box>
                                 <Typography variant="h4" sx={{
-                                    color: '#00ff9f',
+                                    color: 'primary.main',
                                     fontWeight: 'bold',
                                     background: 'linear-gradient(135deg, #00ff9f 0%, #00e676 100%)',
                                     backgroundClip: 'text',
                                     WebkitBackgroundClip: 'text',
                                     WebkitTextFillColor: 'transparent'
                                 }}>
-                                    {getGreeting()}, {userData.fullName}!
+                                    {getGreeting()}, {displayName}!
                                 </Typography>
-                                <Typography variant="h6" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+                                <Typography variant="h6" sx={{ color: 'text.muted' }}>
                                     Ready to crush your fitness goals today?
                                 </Typography>
                             </Box>
@@ -296,7 +290,7 @@ export default function Home() {
 
                         {stats.currentStreak > 0 && (
                             <Box sx={{ textAlign: 'center' }}>
-                                <Typography variant="h3" sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
+                                <Typography variant="h3" sx={{ color: 'primary.main', fontWeight: 'bold' }}>
                                     {stats.currentStreak}
                                 </Typography>
                                 <Typography variant="caption" sx={{ color: 'text.secondary' }}>
@@ -308,7 +302,7 @@ export default function Home() {
                 </HeroCard>
 
                 {/* Quick Actions Grid */}
-                <Typography variant="h5" sx={{ color: '#fff', fontWeight: 'bold', mb: 3 }}>
+                <Typography variant="h5" sx={{ color: 'text.primary', fontWeight: 'bold', mb: 3 }}>
                     Quick Actions
                 </Typography>
                 <Grid2 container spacing={3} sx={{ mb: 4, width: '100%' }}>
@@ -331,7 +325,7 @@ export default function Home() {
                                     >
                                         <action.icon size={28} />
                                     </Box>
-                                    <Typography variant="h6" sx={{ color: '#fff', fontWeight: 'bold', mb: 0.5 }}>
+                                    <Typography variant="h6" sx={{ color: 'text.primary', fontWeight: 'bold', mb: 0.5 }}>
                                         {action.title}
                                     </Typography>
                                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -344,16 +338,16 @@ export default function Home() {
                 </Grid2>
 
                 {/* Stats Overview */}
-                <Typography variant="h5" sx={{ color: '#fff', fontWeight: 'bold', mb: 3 }}>
+                <Typography variant="h5" sx={{ color: 'text.primary', fontWeight: 'bold', mb: 3 }}>
                     Your Stats
                 </Typography>
                 <Grid2 container spacing={3} sx={{ mb: 4, width: '100%' }}>
                     <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
                         <StatCard>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <MdFitnessCenter style={{ color: '#00ff9f', fontSize: '2rem' }} />
+                                <MdFitnessCenter style={{ color: 'var(--mui-palette-primary-main)', fontSize: '2rem' }} />
                                 <Box>
-                                    <Typography variant="h4" sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
+                                    <Typography variant="h4" sx={{ color: 'primary.main', fontWeight: 'bold' }}>
                                         {stats.totalWorkouts}
                                     </Typography>
                                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -417,13 +411,13 @@ export default function Home() {
                         <StyledCard>
                             <CardContent>
                                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-                                    <Typography variant="h6" sx={{ color: '#00ff9f', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Typography variant="h6" sx={{ color: 'primary.main', display: 'flex', alignItems: 'center', gap: 1 }}>
                                         <MdHistory /> Recent Workouts
                                     </Typography>
                                     <Button
                                         size="small"
                                         onClick={() => navigate('/history')}
-                                        sx={{ color: '#00ff9f' }}
+                                        sx={{ color: 'primary.main' }}
                                     >
                                         View All
                                     </Button>
@@ -431,7 +425,7 @@ export default function Home() {
 
                                 {loading ? (
                                     <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                                        <CircularProgress sx={{ color: '#00ff9f' }} />
+                                        <CircularProgress sx={{ color: 'primary.main' }} />
                                     </Box>
                                 ) : recentWorkouts.length === 0 ? (
                                     <Typography sx={{ color: 'text.secondary', textAlign: 'center', py: 3 }}>
@@ -442,7 +436,7 @@ export default function Home() {
                                         <Box key={workout.id} sx={{ mb: 2, p: 2, backgroundColor: 'rgba(255, 255, 255, 0.02)', borderRadius: '8px' }}>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Box>
-                                                    <Typography sx={{ color: '#fff', fontWeight: 'bold' }}>
+                                                    <Typography sx={{ color: 'text.primary', fontWeight: 'bold' }}>
                                                         {workout.templateInfo?.templateName || 'Custom Workout'}
                                                     </Typography>
                                                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -466,13 +460,13 @@ export default function Home() {
                         <StyledCard>
                             <CardContent>
                                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-                                    <Typography variant="h6" sx={{ color: '#00ff9f', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Typography variant="h6" sx={{ color: 'primary.main', display: 'flex', alignItems: 'center', gap: 1 }}>
                                         <MdFitnessCenter /> Recent Exercises
                                     </Typography>
                                     <Button
                                         size="small"
                                         onClick={() => navigate('/progress')}
-                                        sx={{ color: '#00ff9f' }}
+                                        sx={{ color: 'primary.main' }}
                                     >
                                         View Progress
                                     </Button>
@@ -480,7 +474,7 @@ export default function Home() {
 
                                 {loading ? (
                                     <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                                        <CircularProgress sx={{ color: '#00ff9f' }} />
+                                        <CircularProgress sx={{ color: 'primary.main' }} />
                                     </Box>
                                 ) : recentExercises.length === 0 ? (
                                     <Typography sx={{ color: 'text.secondary', textAlign: 'center', py: 3 }}>
@@ -491,7 +485,7 @@ export default function Home() {
                                         <Box key={exercise.id} sx={{ mb: 2, p: 2, backgroundColor: 'rgba(255, 255, 255, 0.02)', borderRadius: '8px' }}>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Box>
-                                                    <Typography sx={{ color: '#fff', fontWeight: 'bold' }}>
+                                                    <Typography sx={{ color: 'text.primary', fontWeight: 'bold' }}>
                                                         {exercise.exerciseName}
                                                     </Typography>
                                                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>

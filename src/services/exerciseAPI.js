@@ -410,6 +410,94 @@ export const fetchExercisesByTarget = async (targetMuscle) => {
   }
 };
 
+// Function to fetch exercises by name search
+export const fetchExercisesByName = async (searchTerm, limit = 50) => {
+  try {
+    console.log(`🔍 Searching exercises by name: "${searchTerm}"`);
+
+    // Use exerciseinfo and filter by name - fetch more exercises for better search coverage
+    const response = await fetch(
+      `${WGER_BASE_URL}/exerciseinfo/?limit=500&language=2`,
+      wgerOptions
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Filter exercises by name (case insensitive)
+    const filteredExercises = data.results.filter((exercise) => {
+      const englishTranslation = exercise.translations.find(
+        (t) => t.language === 2
+      );
+      const exerciseName =
+        englishTranslation?.name || `Exercise ${exercise.id}`;
+
+      return exerciseName.toLowerCase().includes(searchTerm.toLowerCase());
+    });
+
+    // Sort by relevance: exact matches first, then starts with, then contains
+    const sortedExercises = filteredExercises.sort((a, b) => {
+      const aTranslation = a.translations.find((t) => t.language === 2);
+      const bTranslation = b.translations.find((t) => t.language === 2);
+      const aName = (aTranslation?.name || `Exercise ${a.id}`).toLowerCase();
+      const bName = (bTranslation?.name || `Exercise ${b.id}`).toLowerCase();
+      const search = searchTerm.toLowerCase();
+
+      // Exact match
+      if (aName === search) return -1;
+      if (bName === search) return 1;
+
+      // Starts with search term
+      if (aName.startsWith(search) && !bName.startsWith(search)) return -1;
+      if (bName.startsWith(search) && !aName.startsWith(search)) return 1;
+
+      // Alphabetical order for same relevance
+      return aName.localeCompare(bName);
+    });
+
+    // Transform and limit results
+    const exercises = sortedExercises.slice(0, limit).map((exercise) => {
+      const englishTranslation = exercise.translations.find(
+        (t) => t.language === 2
+      );
+      const primaryMuscles = exercise.muscles
+        .map((muscle) => muscle.name_en || muscle.name)
+        .filter(Boolean);
+      const secondaryMuscles = exercise.muscles_secondary
+        .map((muscle) => muscle.name_en || muscle.name)
+        .filter(Boolean);
+      const equipmentList = exercise.equipment
+        .map((eq) => eq.name)
+        .filter(Boolean);
+
+      return {
+        id: `wger-${exercise.id}`,
+        name: englishTranslation?.name || `Exercise ${exercise.id}`,
+        description: englishTranslation?.description || "",
+        bodyPart: exercise.category?.name || "Unknown",
+        target: primaryMuscles.length > 0 ? primaryMuscles[0] : "Unknown",
+        equipment: equipmentList.length > 0 ? equipmentList[0] : "bodyweight",
+        muscles: primaryMuscles,
+        muscles_secondary: secondaryMuscles,
+        category: exercise.category?.name || "Unknown",
+        uuid: exercise.uuid,
+        images: exercise.images || [],
+      };
+    });
+
+    console.log(
+      `✅ Found ${exercises.length} exercises matching "${searchTerm}"`
+    );
+    return exercises;
+  } catch (error) {
+    console.error(`Error searching exercises by name "${searchTerm}":`, error);
+    throw error;
+  }
+};
+
 // Function to get available muscle targets
 export const fetchTargetList = async () => {
   try {

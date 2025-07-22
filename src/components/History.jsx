@@ -15,10 +15,9 @@ import {
     Dialog,
     DialogTitle,
     DialogContent,
-    Button,
-    Tooltip
+    Button
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import { styled, useTheme } from '@mui/material/styles';
 import {
     MdCalendarMonth,
     MdHistory,
@@ -42,27 +41,27 @@ import {
     format,
     startOfMonth,
     endOfMonth,
-    eachDayOfInterval,
     isSameDay,
     addMonths,
     subMonths,
     isSameMonth,
     isToday,
     startOfWeek,
-    endOfWeek
+    endOfWeek,
+    addDays
 } from 'date-fns';
 
-const StyledCard = styled(Card)(() => ({
+const StyledCard = styled(Card)(({ theme }) => ({
     background: 'rgba(30, 30, 30, 0.9)',
     backdropFilter: 'blur(10px)',
     borderRadius: '16px',
-    boxShadow: '0 4px 30px rgba(0, 255, 159, 0.1)',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
+    boxShadow: `0 4px 30px ${theme.palette.surface.secondary}`,
+    border: `1px solid ${theme.palette.border.main}`,
 }));
 
 const CalendarDay = styled(Box, {
     shouldForwardProp: (prop) => !['isWorkoutDay', 'isToday', 'isCurrentMonth'].includes(prop),
-})(({ isWorkoutDay, isToday, isCurrentMonth }) => ({
+})(({ theme, isWorkoutDay, isToday, isCurrentMonth }) => ({
     width: 40,
     height: 40,
     display: 'flex',
@@ -71,20 +70,20 @@ const CalendarDay = styled(Box, {
     borderRadius: '50%',
     cursor: 'pointer',
     position: 'relative',
-    color: isCurrentMonth ? '#fff' : 'rgba(255, 255, 255, 0.3)',
-    backgroundColor: isWorkoutDay ? 'rgba(0, 255, 159, 0.3)' : 'transparent',
-    border: isToday ? '2px solid #00ff9f' : 'none',
+    color: isCurrentMonth ? theme.palette.text.primary : theme.palette.text.muted,
+    backgroundColor: isWorkoutDay ? theme.palette.surface.tertiary : 'transparent',
+    border: isToday ? `2px solid ${theme.palette.primary.main}` : 'none',
     '&:hover': {
         backgroundColor: isWorkoutDay
-            ? 'rgba(0, 255, 159, 0.5)'
-            : 'rgba(255, 255, 255, 0.1)',
+            ? theme.palette.surface.hover
+            : theme.palette.surface.primary,
     },
 }));
 
-const StatCard = styled(Card)(() => ({
-    background: 'rgba(0, 255, 159, 0.05)',
+const StatCard = styled(Card)(({ theme }) => ({
+    background: theme.palette.surface.primary,
     borderRadius: '12px',
-    border: '1px solid rgba(0, 255, 159, 0.1)',
+    border: `1px solid ${theme.palette.surface.secondary}`,
 }));
 
 export default function History() {
@@ -101,6 +100,7 @@ export default function History() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const { currentUser } = useAuth();
     const navigate = useNavigate();
+    const theme = useTheme();
 
     useEffect(() => {
         loadData();
@@ -251,70 +251,83 @@ export default function History() {
 
     const renderCalendar = () => {
         const monthStart = startOfMonth(currentDate);
-        const monthEnd = endOfMonth(currentDate);
+        const monthEnd = endOfMonth(monthStart);
         const startDate = startOfWeek(monthStart);
         const endDate = endOfWeek(monthEnd);
 
-        const dateRange = eachDayOfInterval({ start: startDate, end: endDate });
-        const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const dateFormat = "d";
+        const rows = [];
+
+        let days = [];
+        let day = startDate;
+        let formattedDate = "";
+
+        while (day <= endDate) {
+            for (let i = 0; i < 7; i++) {
+                formattedDate = format(day, dateFormat);
+                const cloneDay = day;
+                days.push(
+                    <Grid item xs key={day}>
+                        <CalendarDay
+                            isWorkoutDay={isWorkoutDay(day)}
+                            isToday={isToday(day)}
+                            isCurrentMonth={isSameMonth(day, monthStart)}
+                            onClick={() => handleDateClick(cloneDay)}
+                        >
+                            <span>{formattedDate}</span>
+                        </CalendarDay>
+                    </Grid>
+                );
+                day = addDays(day, 1);
+            }
+            rows.push(
+                <Grid container key={day} spacing={1} sx={{ mb: 1 }}>
+                    {days}
+                </Grid>
+            );
+            days = [];
+        }
 
         return (
             <Box>
                 {/* Calendar Header */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                    <IconButton onClick={() => setCurrentDate(subMonths(currentDate, 1))} sx={{ color: '#00ff9f' }}>
+                    <IconButton onClick={() => setCurrentDate(subMonths(currentDate, 1))} sx={{ color: theme.palette.primary.main }}>
                         <MdChevronLeft />
                     </IconButton>
-                    <Typography variant="h5" sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
+                    <Typography variant="h5" sx={{ color: theme.palette.primary.main, fontWeight: 'bold' }}>
                         {format(currentDate, 'MMMM yyyy')}
                     </Typography>
-                    <IconButton onClick={() => setCurrentDate(addMonths(currentDate, 1))} sx={{ color: '#00ff9f' }}>
+                    <IconButton onClick={() => setCurrentDate(addMonths(currentDate, 1))} sx={{ color: theme.palette.primary.main }}>
                         <MdChevronRight />
                     </IconButton>
                 </Box>
 
-                {/* Week Days Header */}
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1, mb: 1 }}>
-                    {weekDays.map(day => (
-                        <Box key={day} sx={{ display: 'flex', justifyContent: 'center' }}>
-                            <Typography variant="body2" sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
-                                {day}
-                            </Typography>
-                        </Box>
-                    ))}
-                </Box>
-
                 {/* Calendar Grid */}
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1 }}>
-                    {dateRange.map(date => (
-                        <Box key={date.toString()} sx={{ display: 'flex', justifyContent: 'center' }}>
-                            <Tooltip
-                                title={isWorkoutDay(date) ? 'Click to view workouts' : ''}
-                                arrow
-                            >
-                                <CalendarDay
-                                    isWorkoutDay={isWorkoutDay(date)}
-                                    isToday={isToday(date)}
-                                    isCurrentMonth={isSameMonth(date, currentDate)}
-                                    onClick={() => handleDateClick(date)}
-                                >
-                                    {format(date, 'd')}
-                                </CalendarDay>
-                            </Tooltip>
-                        </Box>
-                    ))}
+                <Box sx={{ mb: 3 }}>
+                    {/* Day headers */}
+                    <Grid container spacing={1} sx={{ mb: 2 }}>
+                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                            <Grid item xs key={day}>
+                                <Typography variant="body2" sx={{ color: theme.palette.primary.main, fontWeight: 'bold', textAlign: 'center' }}>
+                                    {day}
+                                </Typography>
+                            </Grid>
+                        ))}
+                    </Grid>
+                    {rows}
                 </Box>
 
-                {/* Calendar Legend */}
+                {/* Legend */}
                 <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Box sx={{
                             width: 16,
                             height: 16,
                             borderRadius: '50%',
-                            backgroundColor: 'rgba(0, 255, 159, 0.3)'
+                            backgroundColor: theme.palette.surface.tertiary
                         }} />
-                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                             Workout Day
                         </Typography>
                     </Box>
@@ -323,9 +336,9 @@ export default function History() {
                             width: 16,
                             height: 16,
                             borderRadius: '50%',
-                            border: '2px solid #00ff9f'
+                            border: `2px solid ${theme.palette.primary.main}`
                         }} />
-                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                             Today
                         </Typography>
                     </Box>
@@ -345,12 +358,12 @@ export default function History() {
                         <Grid item xs={6} sm={3}>
                             <StatCard>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <MdFitnessCenter style={{ color: '#00ff9f' }} />
+                                    <MdFitnessCenter style={{ color: theme.palette.primary.main }} />
                                     <Box>
-                                        <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                        <Typography variant="h6" sx={{ color: theme.palette.primary.main }}>
                                             {stats.totalWorkouts}
                                         </Typography>
-                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                        <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
                                             Total Workouts
                                         </Typography>
                                     </Box>
@@ -360,12 +373,12 @@ export default function History() {
                         <Grid item xs={6} sm={3}>
                             <StatCard>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <MdTimer style={{ color: '#00ff9f' }} />
+                                    <MdTimer style={{ color: theme.palette.primary.main }} />
                                     <Box>
-                                        <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                        <Typography variant="h6" sx={{ color: theme.palette.primary.main }}>
                                             {formatTime(Math.round(stats.avgDuration))}
                                         </Typography>
-                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                        <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
                                             Avg Duration
                                         </Typography>
                                     </Box>
@@ -375,12 +388,12 @@ export default function History() {
                         <Grid item xs={6} sm={3}>
                             <StatCard>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <MdTrendingUp style={{ color: '#00ff9f' }} />
+                                    <MdTrendingUp style={{ color: theme.palette.primary.main }} />
                                     <Box>
-                                        <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                        <Typography variant="h6" sx={{ color: theme.palette.primary.main }}>
                                             {formatTime(stats.totalDuration)}
                                         </Typography>
-                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                        <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
                                             Total Time
                                         </Typography>
                                     </Box>
@@ -390,12 +403,12 @@ export default function History() {
                         <Grid item xs={6} sm={3}>
                             <StatCard>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <MdBarChart style={{ color: '#00ff9f' }} />
+                                    <MdBarChart style={{ color: theme.palette.primary.main }} />
                                     <Box>
-                                        <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                        <Typography variant="h6" sx={{ color: theme.palette.primary.main }}>
                                             {stats.totalExercises}
                                         </Typography>
-                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                        <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
                                             Total Exercises
                                         </Typography>
                                     </Box>
@@ -410,21 +423,21 @@ export default function History() {
                     <Box sx={{
                         textAlign: 'center',
                         py: 6,
-                        background: 'rgba(0, 255, 159, 0.03)',
+                        background: theme.palette.surface.transparent,
                         borderRadius: 2,
-                        border: '1px solid rgba(0, 255, 159, 0.1)'
+                        border: `1px solid ${theme.palette.surface.secondary}`
                     }}>
                         <MdFitnessCenter
                             style={{
                                 fontSize: '4rem',
-                                color: 'rgba(0, 255, 159, 0.5)',
+                                color: theme.palette.surface.hover,
                                 marginBottom: '1rem'
                             }}
                         />
-                        <Typography variant="h6" sx={{ color: '#fff', mb: 2 }}>
+                        <Typography variant="h6" sx={{ color: theme.palette.text.primary, mb: 2 }}>
                             No workouts yet. Start your first workout!
                         </Typography>
-                        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
+                        <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 3 }}>
                             Track your fitness journey by logging your first workout session.
                         </Typography>
                         <Button
@@ -432,13 +445,13 @@ export default function History() {
                             startIcon={<MdPlayArrow />}
                             onClick={() => navigate('/workout/start')}
                             sx={{
-                                background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
-                                color: '#000',
+                                background: theme.palette.background.gradient.button,
+                                color: theme.palette.primary.contrastText,
                                 fontWeight: 'bold',
                                 px: 4,
                                 py: 1.5,
                                 '&:hover': {
-                                    background: 'linear-gradient(45deg, #00e676 30%, #00ff9f 90%)',
+                                    background: theme.palette.background.gradient.buttonHover,
                                 },
                             }}
                         >
@@ -452,30 +465,30 @@ export default function History() {
                             <StyledCard key={workout.id} sx={{ mb: 2 }}>
                                 <CardContent>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                        <Typography variant="h6" sx={{ color: '#00ff9f', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <Typography variant="h6" sx={{ color: theme.palette.primary.main, display: 'flex', alignItems: 'center', gap: 1 }}>
                                             <MdToday /> {format(new Date(workout.timestamp), 'MMM dd, yyyy')}
                                         </Typography>
                                         <Chip
                                             icon={<MdTimer />}
                                             label={formatTime(workout.duration)}
                                             sx={{
-                                                backgroundColor: 'rgba(0, 255, 159, 0.1)',
-                                                color: '#00ff9f',
-                                                '& .MuiChip-icon': { color: '#00ff9f' }
+                                                backgroundColor: theme.palette.surface.secondary,
+                                                color: theme.palette.primary.main,
+                                                '& .MuiChip-icon': { color: theme.palette.primary.main }
                                             }}
                                         />
                                     </Box>
-                                    <Divider sx={{ mb: 2, bgcolor: 'rgba(255, 255, 255, 0.1)' }} />
+                                    <Divider sx={{ mb: 2, bgcolor: theme.palette.border.main }} />
                                     {workout.exercises?.map((exercise, index) => (
                                         <Box key={index} sx={{ mb: 1 }}>
-                                            <Typography sx={{ color: '#fff' }}>
+                                            <Typography sx={{ color: theme.palette.text.primary }}>
                                                 {exercise.name}
                                             </Typography>
-                                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                            <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                                                 {`${exercise.weight}${weightUnit} × ${exercise.reps} reps × ${exercise.sets} sets`}
                                             </Typography>
                                             {exercise.notes && (
-                                                <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                                                <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontStyle: 'italic' }}>
                                                     Note: {exercise.notes}
                                                 </Typography>
                                             )}
@@ -501,12 +514,12 @@ export default function History() {
                         <Grid item xs={6} sm={3}>
                             <StatCard>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <MdFitnessCenter style={{ color: '#00ff9f' }} />
+                                    <MdFitnessCenter style={{ color: theme.palette.primary.main }} />
                                     <Box>
-                                        <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                        <Typography variant="h6" sx={{ color: theme.palette.primary.main }}>
                                             {stats.totalExercises}
                                         </Typography>
-                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                        <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
                                             Total Exercises
                                         </Typography>
                                     </Box>
@@ -516,12 +529,12 @@ export default function History() {
                         <Grid item xs={6} sm={3}>
                             <StatCard>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <MdBarChart style={{ color: '#00ff9f' }} />
+                                    <MdBarChart style={{ color: theme.palette.primary.main }} />
                                     <Box>
-                                        <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                        <Typography variant="h6" sx={{ color: theme.palette.primary.main }}>
                                             {stats.uniqueExercises}
                                         </Typography>
-                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                        <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
                                             Unique Exercises
                                         </Typography>
                                     </Box>
@@ -531,12 +544,12 @@ export default function History() {
                         <Grid item xs={6} sm={3}>
                             <StatCard>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <MdTrendingUp style={{ color: '#00ff9f' }} />
+                                    <MdTrendingUp style={{ color: theme.palette.primary.main }} />
                                     <Box>
-                                        <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                        <Typography variant="h6" sx={{ color: theme.palette.primary.main }}>
                                             {stats.totalWeight.toFixed(0)}{weightUnit}
                                         </Typography>
-                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                        <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
                                             Total Weight
                                         </Typography>
                                     </Box>
@@ -546,12 +559,12 @@ export default function History() {
                         <Grid item xs={6} sm={3}>
                             <StatCard>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <MdTimer style={{ color: '#00ff9f' }} />
+                                    <MdTimer style={{ color: theme.palette.primary.main }} />
                                     <Box>
-                                        <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                        <Typography variant="h6" sx={{ color: theme.palette.primary.main }}>
                                             {stats.totalReps}
                                         </Typography>
-                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                        <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
                                             Total Reps
                                         </Typography>
                                     </Box>
@@ -566,21 +579,21 @@ export default function History() {
                     <Box sx={{
                         textAlign: 'center',
                         py: 6,
-                        background: 'rgba(0, 255, 159, 0.03)',
+                        background: theme.palette.surface.transparent,
                         borderRadius: 2,
-                        border: '1px solid rgba(0, 255, 159, 0.1)'
+                        border: `1px solid ${theme.palette.surface.secondary}`
                     }}>
                         <MdAdd
                             style={{
                                 fontSize: '4rem',
-                                color: 'rgba(0, 255, 159, 0.5)',
+                                color: theme.palette.surface.hover,
                                 marginBottom: '1rem'
                             }}
                         />
-                        <Typography variant="h6" sx={{ color: '#fff', mb: 2 }}>
+                        <Typography variant="h6" sx={{ color: theme.palette.text.primary, mb: 2 }}>
                             No exercises logged yet. Start tracking your progress!
                         </Typography>
-                        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
+                        <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 3 }}>
                             Log your first exercise to begin building your fitness history.
                         </Typography>
                         <Button
@@ -588,13 +601,13 @@ export default function History() {
                             startIcon={<MdAdd />}
                             onClick={() => navigate('/workout/quick-add')}
                             sx={{
-                                background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
-                                color: '#000',
+                                background: theme.palette.background.gradient.button,
+                                color: theme.palette.primary.contrastText,
                                 fontWeight: 'bold',
                                 px: 4,
                                 py: 1.5,
                                 '&:hover': {
-                                    background: 'linear-gradient(45deg, #00e676 30%, #00ff9f 90%)',
+                                    background: theme.palette.background.gradient.buttonHover,
                                 },
                             }}
                         >
@@ -608,18 +621,18 @@ export default function History() {
                             <StyledCard key={exercise.id} sx={{ mb: 2 }}>
                                 <CardContent>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                                        <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                        <Typography variant="h6" sx={{ color: theme.palette.primary.main }}>
                                             {exercise.exerciseName}
                                         </Typography>
-                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                        <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                                             {format(new Date(exercise.timestamp), 'MMM dd, yyyy')}
                                         </Typography>
                                     </Box>
-                                    <Typography variant="body1" sx={{ color: '#fff' }}>
+                                    <Typography variant="body1" sx={{ color: theme.palette.text.primary }}>
                                         {`${exercise.weight}${weightUnit} × ${exercise.reps} reps × ${exercise.sets} sets`}
                                     </Typography>
                                     {exercise.notes && (
-                                        <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1, fontStyle: 'italic' }}>
+                                        <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mt: 1, fontStyle: 'italic' }}>
                                             Note: {exercise.notes}
                                         </Typography>
                                     )}
@@ -635,14 +648,14 @@ export default function History() {
     return (
         <Box sx={{
             minHeight: '100vh',
-            background: 'linear-gradient(135deg, #121212 0%, #2d2d2d 100%)',
+            background: theme.palette.background.gradient.primary,
             padding: '1rem',
         }}>
             <div className="max-w-4xl mx-auto">
                 <Typography
                     variant="h4"
                     sx={{
-                        color: '#00ff9f',
+                        color: theme.palette.primary.main,
                         fontWeight: 'bold',
                         mb: 3
                     }}
@@ -656,9 +669,9 @@ export default function History() {
                         onChange={handleTabChange}
                         variant="fullWidth"
                         sx={{
-                            '& .MuiTab-root': { color: 'rgba(255, 255, 255, 0.7)' },
-                            '& .Mui-selected': { color: '#00ff9f !important' },
-                            '& .MuiTabs-indicator': { backgroundColor: '#00ff9f' },
+                            '& .MuiTab-root': { color: theme.palette.text.muted },
+                            '& .Mui-selected': { color: `${theme.palette.primary.main} !important` },
+                            '& .MuiTabs-indicator': { backgroundColor: theme.palette.primary.main },
                         }}
                     >
                         <Tab icon={<MdCalendarMonth />} label="Calendar" />
@@ -671,10 +684,10 @@ export default function History() {
                     <CardContent>
                         {loading ? (
                             <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                                <CircularProgress sx={{ color: '#00ff9f' }} />
+                                <CircularProgress sx={{ color: theme.palette.primary.main }} />
                             </Box>
                         ) : error ? (
-                            <Typography variant="body1" sx={{ color: '#ff4444' }}>
+                            <Typography variant="body1" sx={{ color: theme.palette.status.error }}>
                                 {error}
                             </Typography>
                         ) : (
@@ -697,50 +710,37 @@ export default function History() {
                         sx: {
                             background: 'rgba(30, 30, 30, 0.95)',
                             backdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(0, 255, 159, 0.2)',
+                            border: `1px solid ${theme.palette.surface.secondary}`,
                         }
                     }}
                 >
-                    <DialogTitle sx={{ color: '#00ff9f', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        Workouts on {selectedDate && format(selectedDate, 'MMM dd, yyyy')}
-                        <IconButton onClick={() => setDialogOpen(false)} sx={{ color: '#fff' }}>
+                    <DialogTitle sx={{ color: theme.palette.primary.main, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="h6">
+                            Workouts for {selectedDate && format(selectedDate, 'MMM dd, yyyy')}
+                        </Typography>
+                        <IconButton
+                            onClick={() => setDialogOpen(false)}
+                            sx={{
+                                color: theme.palette.primary.main,
+                            }}
+                        >
                             <MdClose />
                         </IconButton>
                     </DialogTitle>
                     <DialogContent>
-                        {selectedDateWorkouts.map((workout, index) => (
-                            <Box key={workout.id} sx={{ mb: index < selectedDateWorkouts.length - 1 ? 3 : 0 }}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                    <Typography variant="h6" sx={{ color: '#fff' }}>
-                                        Workout {index + 1}
+                        {selectedDateWorkouts.map((workout) => (
+                            <Box key={workout.id} sx={{ mb: 3, p: 2, backgroundColor: theme.palette.surface.transparent, borderRadius: 2 }}>
+                                <Typography variant="h6" sx={{ color: theme.palette.text.primary, mb: 1 }}>
+                                    {workout.templateInfo?.templateName || 'Custom Workout'}
+                                </Typography>
+                                <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 2 }}>
+                                    Duration: {formatTime(workout.duration || 0)}
+                                </Typography>
+                                {workout.exercises?.map((exercise, index) => (
+                                    <Typography key={index} variant="body2" sx={{ color: theme.palette.text.secondary, ml: 2 }}>
+                                        • {exercise.name}: {exercise.weight}{weightUnit} × {exercise.reps} reps × {exercise.sets} sets
                                     </Typography>
-                                    <Chip
-                                        icon={<MdTimer />}
-                                        label={formatTime(workout.duration)}
-                                        sx={{
-                                            backgroundColor: 'rgba(0, 255, 159, 0.1)',
-                                            color: '#00ff9f',
-                                        }}
-                                    />
-                                </Box>
-                                {workout.exercises?.map((exercise, exIndex) => (
-                                    <Box key={exIndex} sx={{ mb: 1, pl: 2 }}>
-                                        <Typography sx={{ color: '#fff' }}>
-                                            {exercise.name}
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                            {`${exercise.weight}${weightUnit} × ${exercise.reps} reps × ${exercise.sets} sets`}
-                                        </Typography>
-                                        {exercise.notes && (
-                                            <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
-                                                Note: {exercise.notes}
-                                            </Typography>
-                                        )}
-                                    </Box>
                                 ))}
-                                {index < selectedDateWorkouts.length - 1 && (
-                                    <Divider sx={{ mt: 2, bgcolor: 'rgba(255, 255, 255, 0.1)' }} />
-                                )}
                             </Box>
                         ))}
                     </DialogContent>

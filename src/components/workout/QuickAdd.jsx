@@ -4,99 +4,82 @@ import {
     Card,
     CardContent,
     Typography,
+    TextField,
     Button,
-    Grid2,
-    Alert,
     CircularProgress,
-    Paper,
-    InputAdornment,
-    TextField
+    Alert,
+    IconButton,
+    Divider,
+    Grid
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import { styled, useTheme } from '@mui/material/styles';
 import {
-    MdSave,
     MdFitnessCenter,
-    MdFunctions,
-    MdRepeat,
-    MdViewColumn,
-    MdNotes,
-    MdTrendingUp
+    MdSave,
+    MdCancel,
+    MdHistory,
+    MdAdd
 } from 'react-icons/md';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { getWeightUnit } from '../../utils/weightUnit';
 import ExerciseSelector from '../common/ExerciseSelector';
-import { getWeightUnit, getWeightLabel } from '../../utils/weightUnit';
 
-const StyledCard = styled(Card)(() => ({
+const StyledCard = styled(Card)(({ theme }) => ({
     background: 'rgba(30, 30, 30, 0.9)',
     backdropFilter: 'blur(10px)',
-    borderRadius: '20px',
-    boxShadow: '0 8px 40px rgba(0, 255, 159, 0.15)',
-    border: '1px solid rgba(0, 255, 159, 0.2)',
-    overflow: 'visible',
+    borderRadius: '16px',
+    border: `1px solid ${theme.palette.border.main}`,
+    transition: 'all 0.3s ease',
+    '&:hover': {
+        transform: 'translateY(-2px)',
+        boxShadow: `0 8px 25px ${theme.palette.surface.secondary}`,
+    },
 }));
 
-const StyledTextField = styled(TextField)({
-    '& .MuiOutlinedInput-root': {
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-        borderRadius: '12px',
-        '& fieldset': {
-            borderColor: 'rgba(255, 255, 255, 0.1)',
-            borderWidth: '1px',
-        },
-        '&:hover fieldset': {
-            borderColor: 'rgba(0, 255, 159, 0.5)',
-        },
-        '&.Mui-focused fieldset': {
-            borderColor: '#00ff9f',
-            borderWidth: '2px',
-        },
-        '& input': {
-            color: '#fff',
-            fontSize: '16px',
-        },
-    },
-    '& .MuiInputLabel-root': {
-        color: 'rgba(255, 255, 255, 0.7)',
-        '&.Mui-focused': {
-            color: '#00ff9f',
-        },
-    },
-    '& .MuiInputAdornment-root': {
-        color: '#00ff9f',
-    },
-});
+const FormCard = styled(Card)(({ theme }) => ({
+    background: `linear-gradient(135deg, ${theme.palette.surface.primary} 0%, ${theme.palette.surface.transparent} 100%)`,
+    backdropFilter: 'blur(20px)',
+    borderRadius: '20px',
+    border: `1px solid ${theme.palette.border.primary}`,
+    boxShadow: `0 10px 40px ${theme.palette.surface.secondary}`,
+}));
 
-const FormSection = styled(Paper)({
-    background: 'rgba(255, 255, 255, 0.02)',
-    borderRadius: '16px',
-    padding: '24px',
-    border: '1px solid rgba(255, 255, 255, 0.05)',
-    marginBottom: '24px',
-});
+const ActionButton = styled(Button)(({ theme, variant }) => ({
+    borderRadius: 12,
+    fontWeight: 'bold',
+    padding: '12px 32px',
+    ...(variant === 'primary' && {
+        background: theme.palette.background.gradient.button,
+        color: theme.palette.primary.contrastText,
+        '&:hover': {
+            background: theme.palette.background.gradient.buttonHover,
+        },
+    }),
+}));
 
 export default function QuickAdd() {
+    const [exerciseName, setExerciseName] = useState('');
+    const [sets, setSets] = useState('');
+    const [reps, setReps] = useState('');
+    const [weight, setWeight] = useState('');
+    const [notes, setNotes] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [recentExercises, setRecentExercises] = useState([]);
     const [weightUnit, setWeightUnitState] = useState('kg');
-    const [exercise, setExercise] = useState({
-        exerciseName: '',
-        weight: '',
-        reps: '',
-        sets: '',
-        notes: ''
-    });
+
     const { currentUser } = useAuth();
     const navigate = useNavigate();
+    const theme = useTheme();
 
     useEffect(() => {
-        // Load weight unit preference
         setWeightUnitState(getWeightUnit());
+        loadRecentExercises();
 
-        // Listen for weight unit changes (for multi-tab sync)
         const handleStorageChange = (e) => {
             if (e.key === 'weightUnit') {
                 setWeightUnitState(e.newValue || 'kg');
@@ -107,314 +90,320 @@ export default function QuickAdd() {
         return () => window.removeEventListener('storage', handleStorageChange);
     }, []);
 
-    // Debug effect to track exercise state changes
-    useEffect(() => {
-        console.log('🎯 QuickAdd: Exercise state updated:', exercise);
-    }, [exercise]);
+    const loadRecentExercises = async () => {
+        if (!currentUser) return;
 
-    // Handle exercise selection from the ExerciseSelector
-    const handleExerciseSelect = (exerciseData) => {
-        if (!exerciseData) {
-            // Clear form when no exercise is selected
-            setExercise({
-                exerciseName: '',
-                weight: '',
-                reps: '',
-                sets: '',
-                notes: ''
-            });
-            return;
+        try {
+            const exercisesQuery = query(
+                collection(db, 'exercises'),
+                where('userId', '==', currentUser.uid),
+                orderBy('timestamp', 'desc'),
+                limit(5)
+            );
+            const snapshot = await getDocs(exercisesQuery);
+            const exercisesData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            setRecentExercises(exercisesData);
+        } catch (error) {
+            console.error('Error loading recent exercises:', error);
         }
-
-        console.log('🔍 QuickAdd: Exercise selected:', exerciseData);
-        console.log('🔍 QuickAdd: Exercise name:', exerciseData.name);
-        console.log('🔍 QuickAdd: Exercise ID:', exerciseData.id);
-
-        // Update exercise form with auto-populated data
-        const newExercise = {
-            exerciseName: exerciseData.name,
-            weight: exerciseData.defaultWeight || '',
-            reps: exerciseData.defaultReps || '',
-            sets: exerciseData.defaultSets || '',
-            notes: exerciseData.notes || ''
-        };
-        console.log('🔍 QuickAdd: Setting exercise state to:', newExercise);
-        setExercise(newExercise);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!exerciseName.trim() || !sets || !reps || !weight) {
+            setError('Please fill in all required fields');
+            return;
+        }
+
         setLoading(true);
         setError('');
         setSuccess('');
 
         try {
-            await addDoc(collection(db, 'exercises'), {
-                ...exercise,
-                userId: currentUser.uid,
+            const exerciseData = {
+                exerciseName,
+                sets: parseInt(sets),
+                reps: parseInt(reps),
+                weight: parseFloat(weight),
+                notes: notes.trim(),
                 timestamp: new Date().toISOString(),
-            });
+                userId: currentUser.uid,
+                type: 'quickAdd'
+            };
 
-            setSuccess('Exercise added successfully!');
-            setExercise({
-                exerciseName: '',
-                weight: '',
-                reps: '',
-                sets: '',
-                notes: ''
-            });
+            await addDoc(collection(db, 'exercises'), exerciseData);
 
-            // Automatically clear success message after 3 seconds
-            setTimeout(() => {
-                setSuccess('');
-            }, 3000);
+            setSuccess('Exercise logged successfully!');
+
+            // Reset form
+            setExerciseName('');
+            setSets('');
+            setReps('');
+            setWeight('');
+            setNotes('');
+
+            // Reload recent exercises
+            loadRecentExercises();
 
         } catch (error) {
-            setError('Failed to add exercise: ' + error.message);
+            console.error('Error saving exercise:', error);
+            setError('Failed to save exercise. Please try again.');
         } finally {
             setLoading(false);
         }
     };
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setExercise(prev => ({
-            ...prev,
-            [name]: value
-        }));
+    const handleCancel = () => {
+        navigate('/workout');
+    };
+
+    const handleExerciseSelect = (exercise) => {
+        setExerciseName(exercise.name);
+    };
+
+    const fillFromRecent = (exercise) => {
+        setExerciseName(exercise.exerciseName);
+        setSets(exercise.sets.toString());
+        setReps(exercise.reps.toString());
+        setWeight(exercise.weight.toString());
+        setNotes(exercise.notes || '');
     };
 
     return (
         <Box sx={{
             minHeight: '100vh',
-            background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2d2d2d 100%)',
-            padding: '2rem 1rem',
+            background: theme.palette.background.gradient.primary,
+            padding: '1rem',
+            paddingBottom: '100px',
         }}>
-            <div className="max-w-5xl mx-auto">
-                {/* Header Section */}
-                <Box sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 2,
-                    mb: 4,
-                    textAlign: 'center',
-                    justifyContent: 'center'
-                }}>
-                    <Box sx={{
-                        background: 'linear-gradient(135deg, #00ff9f 0%, #00e676 100%)',
-                        borderRadius: '16px',
-                        p: 1.5,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}>
-                        <MdTrendingUp size={32} color="#000" />
-                    </Box>
-                    <Typography
-                        variant="h3"
-                        sx={{
-                            background: 'linear-gradient(135deg, #00ff9f 0%, #00e676 100%)',
-                            backgroundClip: 'text',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            fontWeight: 'bold',
-                            letterSpacing: '-0.02em'
-                        }}
-                    >
-                        Quick Add Exercise
-                    </Typography>
-                </Box>
-
+            <div className="max-w-2xl mx-auto">
                 {error && (
-                    <Alert
-                        severity="error"
-                        sx={{
-                            mb: 3,
-                            backgroundColor: 'rgba(211, 47, 47, 0.1)',
-                            color: '#ff4444'
-                        }}
-                        onClose={() => setError('')}
-                    >
+                    <Alert severity="error" sx={{ mb: 3, backgroundColor: `${theme.palette.status.error}20`, color: theme.palette.status.error }}>
                         {error}
                     </Alert>
                 )}
 
                 {success && (
-                    <Alert
-                        severity="success"
-                        sx={{
-                            mb: 3,
-                            backgroundColor: 'rgba(0, 255, 159, 0.1)',
-                            color: '#00ff9f'
-                        }}
-                        onClose={() => setSuccess('')}
-                    >
+                    <Alert severity="success" sx={{ mb: 3, backgroundColor: `${theme.palette.status.success}20`, color: theme.palette.status.success }}>
                         {success}
                     </Alert>
                 )}
 
-                <StyledCard>
+                {/* Header */}
+                <Box sx={{ textAlign: 'center', mb: 4 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, mb: 2 }}>
+                        <MdFitnessCenter size={24} color={theme.palette.primary.main} />
+                        <Typography variant="h6" sx={{ color: theme.palette.primary.main, fontWeight: '600' }}>
+                            Quick Add Exercise
+                        </Typography>
+                    </Box>
+                    <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+                        Log a single exercise quickly and easily
+                    </Typography>
+                </Box>
+
+                {/* Main Form */}
+                <FormCard sx={{ mb: 4 }}>
                     <CardContent sx={{ p: 4 }}>
                         <form onSubmit={handleSubmit}>
-                            {/* Exercise Selection Section */}
-                            <FormSection>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                                    <MdFitnessCenter size={24} color="#00ff9f" />
-                                    <Typography variant="h6" sx={{ color: '#00ff9f', fontWeight: '600' }}>
-                                        Select or Type Exercise Name
+                            <Grid container spacing={3}>
+                                {/* Exercise Selection */}
+                                <Grid item xs={12}>
+                                    <Typography variant="subtitle1" sx={{ color: theme.palette.text.primary, mb: 2, fontWeight: 'bold' }}>
+                                        Exercise
                                     </Typography>
-                                </Box>
-                                <ExerciseSelector
-                                    onExerciseSelect={handleExerciseSelect}
-                                    placeholder="Select or type exercise name..."
-                                    includeHistory={true}
-                                />
-                            </FormSection>
-
-                            <Grid2 container spacing={3}>
-                                {/* Weight, Reps, Sets Row */}
-                                <Grid2 xs={12} sm={4}>
-                                    <StyledTextField
-                                        fullWidth
-                                        label={getWeightLabel(weightUnit)}
-                                        name="weight"
-                                        type="number"
-                                        value={exercise.weight}
-                                        onChange={handleChange}
-                                        required
-                                        helperText={weightUnit === 'kg' ? 'Enter weight in kilograms' : 'Enter weight in pounds'}
-                                        FormHelperTextProps={{
-                                            sx: { color: 'text.secondary' }
-                                        }}
-                                        InputProps={{
-                                            startAdornment: (
-                                                <InputAdornment position="start">
-                                                    <MdFunctions />
-                                                </InputAdornment>
-                                            ),
+                                    <ExerciseSelector
+                                        onExerciseSelect={handleExerciseSelect}
+                                        placeholder="Search or type exercise name..."
+                                        includeHistory={true}
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                color: theme.palette.text.primary,
+                                                backgroundColor: theme.palette.surface.transparent,
+                                                '& fieldset': { borderColor: theme.palette.border.main },
+                                                '&:hover fieldset': { borderColor: theme.palette.border.primary },
+                                                '&.Mui-focused fieldset': { borderColor: theme.palette.primary.main },
+                                            },
                                         }}
                                     />
-                                </Grid2>
+                                </Grid>
 
-                                <Grid2 xs={12} sm={4}>
-                                    <StyledTextField
-                                        fullWidth
-                                        label="Reps"
-                                        name="reps"
-                                        type="number"
-                                        value={exercise.reps}
-                                        onChange={handleChange}
-                                        required
-                                        InputProps={{
-                                            startAdornment: (
-                                                <InputAdornment position="start">
-                                                    <MdRepeat />
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                    />
-                                </Grid2>
-
-                                <Grid2 xs={12} sm={4}>
-                                    <StyledTextField
-                                        fullWidth
+                                {/* Exercise Details */}
+                                <Grid item xs={12} sm={4}>
+                                    <TextField
                                         label="Sets"
-                                        name="sets"
                                         type="number"
-                                        value={exercise.sets}
-                                        onChange={handleChange}
+                                        value={sets}
+                                        onChange={(e) => setSets(e.target.value)}
+                                        fullWidth
                                         required
-                                        InputProps={{
-                                            startAdornment: (
-                                                <InputAdornment position="start">
-                                                    <MdViewColumn />
-                                                </InputAdornment>
-                                            ),
+                                        inputProps={{ min: 1 }}
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                color: theme.palette.text.primary,
+                                                '& fieldset': { borderColor: theme.palette.border.main },
+                                                '&:hover fieldset': { borderColor: theme.palette.border.primary },
+                                                '&.Mui-focused fieldset': { borderColor: theme.palette.primary.main },
+                                            },
+                                            '& .MuiInputLabel-root': { color: theme.palette.text.secondary },
+                                            '&.Mui-focused .MuiInputLabel-root': { color: theme.palette.primary.main },
                                         }}
                                     />
-                                </Grid2>
+                                </Grid>
+
+                                <Grid item xs={12} sm={4}>
+                                    <TextField
+                                        label="Reps"
+                                        type="number"
+                                        value={reps}
+                                        onChange={(e) => setReps(e.target.value)}
+                                        fullWidth
+                                        required
+                                        inputProps={{ min: 1 }}
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                color: theme.palette.text.primary,
+                                                '& fieldset': { borderColor: theme.palette.border.main },
+                                                '&:hover fieldset': { borderColor: theme.palette.border.primary },
+                                                '&.Mui-focused fieldset': { borderColor: theme.palette.primary.main },
+                                            },
+                                            '& .MuiInputLabel-root': { color: theme.palette.text.secondary },
+                                            '&.Mui-focused .MuiInputLabel-root': { color: theme.palette.primary.main },
+                                        }}
+                                    />
+                                </Grid>
+
+                                <Grid item xs={12} sm={4}>
+                                    <TextField
+                                        label={`Weight (${weightUnit})`}
+                                        type="number"
+                                        value={weight}
+                                        onChange={(e) => setWeight(e.target.value)}
+                                        fullWidth
+                                        required
+                                        inputProps={{ min: 0, step: 0.5 }}
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                color: theme.palette.text.primary,
+                                                '& fieldset': { borderColor: theme.palette.border.main },
+                                                '&:hover fieldset': { borderColor: theme.palette.border.primary },
+                                                '&.Mui-focused fieldset': { borderColor: theme.palette.primary.main },
+                                            },
+                                            '& .MuiInputLabel-root': { color: theme.palette.text.secondary },
+                                            '&.Mui-focused .MuiInputLabel-root': { color: theme.palette.primary.main },
+                                        }}
+                                    />
+                                </Grid>
 
                                 {/* Notes */}
-                                <Grid2 xs={12}>
-                                    <StyledTextField
-                                        fullWidth
+                                <Grid item xs={12}>
+                                    <TextField
                                         label="Notes (optional)"
-                                        name="notes"
+                                        value={notes}
+                                        onChange={(e) => setNotes(e.target.value)}
+                                        fullWidth
                                         multiline
                                         rows={3}
-                                        value={exercise.notes}
-                                        onChange={handleChange}
-                                        InputProps={{
-                                            startAdornment: (
-                                                <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1 }}>
-                                                    <MdNotes />
-                                                </InputAdornment>
-                                            ),
+                                        placeholder="Add any notes about your exercise..."
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                color: theme.palette.text.primary,
+                                                '& fieldset': { borderColor: theme.palette.border.main },
+                                                '&:hover fieldset': { borderColor: theme.palette.border.primary },
+                                                '&.Mui-focused fieldset': { borderColor: theme.palette.primary.main },
+                                            },
+                                            '& .MuiInputLabel-root': { color: theme.palette.text.secondary },
+                                            '&.Mui-focused .MuiInputLabel-root': { color: theme.palette.primary.main },
                                         }}
                                     />
-                                </Grid2>
+                                </Grid>
 
-                                {/* Submit Button */}
-                                <Grid2 xs={12}>
-                                    <Button
-                                        type="submit"
-                                        variant="contained"
-                                        fullWidth
-                                        disabled={loading}
-                                        startIcon={loading ? <CircularProgress size={20} /> : <MdSave />}
-                                        sx={{
-                                            mt: 3,
-                                            py: 1.5,
-                                            borderRadius: '12px',
-                                            background: 'linear-gradient(135deg, #00ff9f 0%, #00e676 100%)',
-                                            color: '#000',
-                                            fontWeight: 'bold',
-                                            fontSize: '16px',
-                                            textTransform: 'none',
-                                            boxShadow: '0 4px 20px rgba(0, 255, 159, 0.3)',
-                                            '&:hover': {
-                                                background: 'linear-gradient(135deg, #00e676 0%, #00ff9f 100%)',
-                                                boxShadow: '0 6px 30px rgba(0, 255, 159, 0.4)',
-                                                transform: 'translateY(-2px)',
-                                            },
-                                            '&:disabled': {
-                                                background: 'rgba(255, 255, 255, 0.1)',
-                                                color: 'rgba(255, 255, 255, 0.5)',
-                                            },
-                                            transition: 'all 0.3s ease',
-                                        }}
-                                    >
-                                        {loading ? 'Saving Exercise...' : 'Save Exercise'}
-                                    </Button>
-                                </Grid2>
-                            </Grid2>
+                                {/* Action Buttons */}
+                                <Grid item xs={12}>
+                                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mt: 2 }}>
+                                        <ActionButton
+                                            variant="outlined"
+                                            onClick={handleCancel}
+                                            startIcon={<MdCancel />}
+                                            sx={{
+                                                borderColor: theme.palette.border.primary,
+                                                color: theme.palette.text.secondary,
+                                                '&:hover': {
+                                                    borderColor: theme.palette.primary.main,
+                                                    backgroundColor: theme.palette.surface.primary,
+                                                },
+                                            }}
+                                        >
+                                            Cancel
+                                        </ActionButton>
+                                        <ActionButton
+                                            variant="primary"
+                                            type="submit"
+                                            disabled={loading}
+                                            startIcon={loading ? <CircularProgress size={20} /> : <MdSave />}
+                                        >
+                                            {loading ? 'Saving...' : 'Save Exercise'}
+                                        </ActionButton>
+                                    </Box>
+                                </Grid>
+                            </Grid>
                         </form>
                     </CardContent>
-                </StyledCard>
+                </FormCard>
 
-                <Box sx={{ textAlign: 'center', mt: 4 }}>
-                    <Button
-                        onClick={() => navigate('/workout')}
-                        variant="outlined"
-                        sx={{
-                            borderColor: 'rgba(255, 255, 255, 0.2)',
-                            color: 'rgba(255, 255, 255, 0.7)',
-                            borderRadius: '12px',
-                            px: 3,
-                            py: 1,
-                            textTransform: 'none',
-                            fontWeight: '500',
-                            '&:hover': {
-                                borderColor: '#00ff9f',
-                                color: '#00ff9f',
-                                backgroundColor: 'rgba(0, 255, 159, 0.05)',
-                            },
-                            transition: 'all 0.3s ease',
-                        }}
-                    >
-                        ← Back to Workout
-                    </Button>
-                </Box>
+                {/* Recent Exercises */}
+                {recentExercises.length > 0 && (
+                    <StyledCard>
+                        <CardContent>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+                                <MdHistory style={{ color: theme.palette.primary.main }} />
+                                <Typography variant="h6" sx={{ color: theme.palette.primary.main, fontWeight: 'bold' }}>
+                                    Recent Exercises
+                                </Typography>
+                            </Box>
+
+                            {recentExercises.map((exercise, index) => (
+                                <Box key={exercise.id}>
+                                    <Box
+                                        sx={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            py: 2
+                                        }}
+                                    >
+                                        <Box>
+                                            <Typography sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}>
+                                                {exercise.exerciseName}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+                                                {exercise.sets} sets × {exercise.reps} reps × {exercise.weight}{weightUnit}
+                                            </Typography>
+                                        </Box>
+                                        <IconButton
+                                            onClick={() => fillFromRecent(exercise)}
+                                            sx={{
+                                                color: theme.palette.primary.main,
+                                                '&:hover': {
+                                                    backgroundColor: theme.palette.surface.primary,
+                                                }
+                                            }}
+                                        >
+                                            <MdAdd />
+                                        </IconButton>
+                                    </Box>
+                                    {index < recentExercises.length - 1 && (
+                                        <Divider sx={{ bgcolor: theme.palette.border.main }} />
+                                    )}
+                                </Box>
+                            ))}
+                        </CardContent>
+                    </StyledCard>
+                )}
             </div>
         </Box>
     );
