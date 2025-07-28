@@ -1,0 +1,20 @@
+User-agent: *
+Allow: /
+Allow: /signin
+Allow: /signup
+
+# Disallow authenticated pages from being indexed
+Disallow: /workout*
+Disallow: /history*
+Disallow: /progress*
+Disallow: /exercise-manager*
+Disallow: /profile*
+
+# Allow specific workout library pages that might be publicly accessible
+Allow: /workout/library
+
+# Sitemap location
+Sitemap: https://fitforge-web.web.app/sitemap.xml
+
+# Crawl delay (optional - helps prevent overwhelming your server)
+Crawl-delay: 1 
