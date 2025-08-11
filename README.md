@@ -16,7 +16,8 @@
 
 ### 🏃‍♂️ **Workout Tracking**
 
-- **Start Workout**: Real-time workout tracking with timer
+- **Start Workout**: Real-time workout tracking with background timer
+- **Background Timer**: Timer continues running even when app is closed or phone is locked
 - **Exercise Library**: Access to 800+ exercises via wger API
 - **Quick Add**: Rapidly log exercises and sets
 - **Workout Templates**: Save and reuse favorite workout routines
@@ -40,6 +41,9 @@
 - **Mobile-First Design**: Optimized for all devices
 - **Dark Theme**: Easy on the eyes with modern aesthetics
 - **Bottom Navigation**: Intuitive mobile navigation
+- **Background Timer**: Web Worker-based timer that survives app switching
+- **Wake Lock**: Keeps screen awake during workouts (when supported)
+- **Push Notifications**: Workout reminders and completion alerts
 - **Real-time Updates**: Live sync across devices
 - **Offline Support**: Continue tracking without internet
 
@@ -322,7 +326,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [Firebase](https://firebase.google.com/) for backend infrastructure
 - [Material-UI](https://mui.com/) for beautiful React components
 - The open-source community for inspiration and tools
-
 
 ---
 

@@ -37,6 +37,7 @@ import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { getWeightUnit } from '../utils/weightUnit';
+import { getCurrentDate, resetToCurrentMonth, debugDate, getCorrectCurrentDate } from '../utils/dateUtils';
 import {
     format,
     startOfMonth,
@@ -64,19 +65,29 @@ const CalendarDay = styled(Box, {
 })(({ theme, isWorkoutDay, isToday, isCurrentMonth }) => ({
     width: 40,
     height: 40,
+    minWidth: 40,
+    minHeight: 40,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: '50%',
     cursor: 'pointer',
     position: 'relative',
-    color: isCurrentMonth ? theme.palette.text.primary : theme.palette.text.muted,
-    backgroundColor: isWorkoutDay ? theme.palette.surface.tertiary : 'transparent',
+    fontSize: '0.875rem',
+    fontWeight: isToday ? 'bold' : 'normal',
+    color: isCurrentMonth
+        ? (isToday ? theme.palette.primary.main : theme.palette.text.primary)
+        : theme.palette.text.disabled,
+    backgroundColor: isWorkoutDay
+        ? (isToday ? theme.palette.primary.main + '20' : theme.palette.surface.tertiary)
+        : 'transparent',
     border: isToday ? `2px solid ${theme.palette.primary.main}` : 'none',
+    transition: 'all 0.2s ease-in-out',
     '&:hover': {
         backgroundColor: isWorkoutDay
             ? theme.palette.surface.hover
             : theme.palette.surface.primary,
+        transform: 'scale(1.1)',
     },
 }));
 
@@ -94,7 +105,12 @@ export default function History() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [weightUnit, setWeightUnitState] = useState('kg');
-    const [currentDate, setCurrentDate] = useState(new Date());
+    const [currentDate, setCurrentDate] = useState(() => {
+        // Use corrected date function to handle system date issues
+        const now = getCorrectCurrentDate();
+        debugDate(now, 'Calendar initialized');
+        return now;
+    });
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedDateWorkouts, setSelectedDateWorkouts] = useState([]);
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -277,23 +293,27 @@ export default function History() {
                 formattedDate = format(day, dateFormat);
                 const cloneDay = day;
                 days.push(
-                    <Grid item xs key={day}>
-                        <CalendarDay
-                            isWorkoutDay={isWorkoutDay(day)}
-                            isToday={isToday(day)}
-                            isCurrentMonth={isSameMonth(day, monthStart)}
-                            onClick={() => handleDateClick(cloneDay)}
-                        >
-                            <span>{formattedDate}</span>
-                        </CalendarDay>
-                    </Grid>
+                    <CalendarDay
+                        key={day.toISOString()}
+                        isWorkoutDay={isWorkoutDay(day)}
+                        isToday={isToday(day)}
+                        isCurrentMonth={isSameMonth(day, monthStart)}
+                        onClick={() => handleDateClick(cloneDay)}
+                    >
+                        <span>{formattedDate}</span>
+                    </CalendarDay>
                 );
                 day = addDays(day, 1);
             }
             rows.push(
-                <Grid container key={day} spacing={1} sx={{ mb: 1 }}>
+                <Box key={`week-${rows.length}`} sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    mb: 1,
+                    gap: 1
+                }}>
                     {days}
-                </Grid>
+                </Box>
             );
             days = [];
         }
@@ -302,13 +322,45 @@ export default function History() {
             <Box>
                 {/* Calendar Header */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                    <IconButton onClick={() => setCurrentDate(subMonths(currentDate, 1))} sx={{ color: theme.palette.primary.main }}>
+                    <IconButton
+                        onClick={() => {
+                            const newDate = subMonths(currentDate, 1);
+                            console.log('Previous month:', newDate.toISOString());
+                            setCurrentDate(newDate);
+                        }}
+                        sx={{ color: theme.palette.primary.main }}
+                    >
                         <MdChevronLeft />
                     </IconButton>
-                    <Typography variant="h5" sx={{ color: theme.palette.primary.main, fontWeight: 'bold' }}>
-                        {format(currentDate, 'MMMM yyyy')}
-                    </Typography>
-                    <IconButton onClick={() => setCurrentDate(addMonths(currentDate, 1))} sx={{ color: theme.palette.primary.main }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <Typography variant="h5" sx={{ color: theme.palette.primary.main, fontWeight: 'bold' }}>
+                            {format(currentDate, 'MMMM yyyy')}
+                        </Typography>
+                        <Button
+                            size="small"
+                            onClick={() => {
+                                const today = getCorrectCurrentDate();
+                                debugDate(today, 'Reset to today');
+                                setCurrentDate(today);
+                            }}
+                            sx={{
+                                color: theme.palette.text.secondary,
+                                fontSize: '0.75rem',
+                                minHeight: 'auto',
+                                p: 0.5
+                            }}
+                        >
+                            Today
+                        </Button>
+                    </Box>
+                    <IconButton
+                        onClick={() => {
+                            const newDate = addMonths(currentDate, 1);
+                            console.log('Next month:', newDate.toISOString());
+                            setCurrentDate(newDate);
+                        }}
+                        sx={{ color: theme.palette.primary.main }}
+                    >
                         <MdChevronRight />
                     </IconButton>
                 </Box>
@@ -316,15 +368,26 @@ export default function History() {
                 {/* Calendar Grid */}
                 <Box sx={{ mb: 3 }}>
                     {/* Day headers */}
-                    <Grid container spacing={1} sx={{ mb: 2 }}>
+                    <Box sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        mb: 2,
+                        gap: 1
+                    }}>
                         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                            <Grid item xs key={day}>
-                                <Typography variant="body2" sx={{ color: theme.palette.primary.main, fontWeight: 'bold', textAlign: 'center' }}>
+                            <Box key={day} sx={{
+                                width: 40,
+                                textAlign: 'center'
+                            }}>
+                                <Typography variant="body2" sx={{
+                                    color: theme.palette.primary.main,
+                                    fontWeight: 'bold'
+                                }}>
                                     {day}
                                 </Typography>
-                            </Grid>
+                            </Box>
                         ))}
-                    </Grid>
+                    </Box>
                     {rows}
                 </Box>
 

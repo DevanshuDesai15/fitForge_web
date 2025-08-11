@@ -43,14 +43,20 @@ import {
     MdCheckCircle,
     MdEdit,
     MdCheck,
-    MdCancel
+    MdCancel,
+    MdPause,
+    MdPlayCircle
 } from 'react-icons/md';
 import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import ExerciseSelector from '../common/ExerciseSelector';
+import BackgroundTimerInfo from '../common/BackgroundTimerInfo';
 import { getWeightUnit, getWeightLabel } from '../../utils/weightUnit';
+import { useWorkoutTimer } from '../../hooks/useWorkoutTimer';
+import { useWakeLock } from '../../utils/wakeLock';
+import { useNotifications } from '../../utils/notifications';
 
 const StyledCard = styled(Card)(({ theme }) => ({
     background: 'rgba(30, 30, 30, 0.9)',
@@ -79,7 +85,6 @@ const StyledTextField = styled(TextField)({
 
 export default function StartWorkout() {
     const [workoutStarted, setWorkoutStarted] = useState(false);
-    const [workoutTime, setWorkoutTime] = useState(0);
     const [exercises, setExercises] = useState([]);
     const [completedSets, setCompletedSets] = useState({});
     const [openDialog, setOpenDialog] = useState(false);
@@ -97,6 +102,26 @@ export default function StartWorkout() {
         notes: ''
     });
 
+    // Use the enhanced timer hook
+    const {
+        workoutTime,
+        isRunning: timerRunning,
+        startTimer,
+        stopTimer,
+        pauseTimer,
+        resumeTimer,
+        formatTime
+    } = useWorkoutTimer();
+
+    // Wake lock and notifications
+    const { requestWakeLock, releaseWakeLock, isSupported: wakeLockSupported } = useWakeLock();
+    const {
+        requestPermission: requestNotificationPermission,
+        showWorkoutReminder,
+        showWorkoutComplete,
+        isSupported: notificationSupported
+    } = useNotifications();
+
     // Template and exercise selection states
     const [templates, setTemplates] = useState([]);
     const [selectedTemplate, setSelectedTemplate] = useState('');
@@ -108,16 +133,9 @@ export default function StartWorkout() {
     const [showTemplateSelection, setShowTemplateSelection] = useState(true);
     const [showDaySelection, setShowDaySelection] = useState(false);
     const [editingExercise, setEditingExercise] = useState(null);
+    const [showTimerInfo, setShowTimerInfo] = useState(false);
 
-    useEffect(() => {
-        let interval;
-        if (workoutStarted) {
-            interval = setInterval(() => {
-                setWorkoutTime(prev => prev + 1);
-            }, 1000);
-        }
-        return () => clearInterval(interval);
-    }, [workoutStarted]);
+    // Old timer logic removed - now using Web Worker timer
 
     useEffect(() => {
         if (currentUser) {
@@ -179,13 +197,35 @@ export default function StartWorkout() {
         }
     };
 
-    const handleStartWorkout = () => {
+    const handleStartWorkout = async () => {
         setWorkoutStarted(true);
-        setWorkoutTime(0);
         setShowTemplateSelection(false);
         setShowDaySelection(false);
         setError('');
         setSuccess('');
+
+        // Start the timer
+        startTimer();
+
+        // Request wake lock to keep screen awake
+        if (wakeLockSupported) {
+            const wakeLockAcquired = await requestWakeLock();
+            if (wakeLockAcquired) {
+                setSuccess('Screen will stay awake during workout');
+            }
+        }
+
+        // Request notification permission
+        if (notificationSupported) {
+            await requestNotificationPermission();
+        }
+
+        // Show timer info for first-time users
+        const hasSeenTimerInfo = localStorage.getItem('hasSeenTimerInfo');
+        if (!hasSeenTimerInfo) {
+            setShowTimerInfo(true);
+            localStorage.setItem('hasSeenTimerInfo', 'true');
+        }
     };
 
     const handleSelectTemplate = () => {
@@ -200,7 +240,7 @@ export default function StartWorkout() {
         }
     };
 
-    const handleSelectDay = () => {
+    const handleSelectDay = async () => {
         if (!selectedDay) return;
 
         const day = templateDays.find(d => d.id.toString() === selectedDay);
@@ -215,10 +255,25 @@ export default function StartWorkout() {
 
         // Start workout immediately after selecting day
         setWorkoutStarted(true);
-        setWorkoutTime(0);
         setShowDaySelection(false);
         setError('');
         setSuccess('');
+
+        // Start the timer
+        startTimer();
+
+        // Request wake lock to keep screen awake
+        if (wakeLockSupported) {
+            const wakeLockAcquired = await requestWakeLock();
+            if (wakeLockAcquired) {
+                setSuccess('Screen will stay awake during workout');
+            }
+        }
+
+        // Request notification permission
+        if (notificationSupported) {
+            await requestNotificationPermission();
+        }
     };
 
     const handleBackToTemplateSelection = () => {
@@ -237,7 +292,6 @@ export default function StartWorkout() {
         setSelectedDay('');
         setExercises([]);
         setWorkoutStarted(false);
-        setWorkoutTime(0);
     };
 
     const handleEditExercise = (index) => {
@@ -338,10 +392,20 @@ export default function StartWorkout() {
 
             setSuccess(`Workout saved successfully!${templateInfo} ${exercises.length} exercises added to progress tracking.`);
 
+            // Stop timer and release wake lock
+            stopTimer();
+            if (wakeLockSupported) {
+                await releaseWakeLock();
+            }
+
+            // Show completion notification
+            if (notificationSupported) {
+                showWorkoutComplete(workoutTime, exercises.length);
+            }
+
             // Reset states
             setWorkoutStarted(false);
             setExercises([]);
-            setWorkoutTime(0);
             setTemplateExercises([]);
             setCurrentTemplate(null);
             setTemplateDays([]);
@@ -429,12 +493,7 @@ export default function StartWorkout() {
         }));
     };
 
-    const formatTime = (seconds) => {
-        const hrs = Math.floor(seconds / 3600);
-        const mins = Math.floor((seconds % 3600) / 60);
-        const secs = seconds % 60;
-        return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    };
+    // formatTime function is provided by useWorkoutTimer hook
 
     const allExercises = useMemo(() => {
         return exercises;
@@ -488,15 +547,28 @@ export default function StartWorkout() {
                         }
                     </Typography>
                     {workoutStarted && (
-                        <Chip
-                            icon={<MdTimer />}
-                            label={formatTime(workoutTime)}
-                            sx={{
-                                backgroundColor: 'rgba(0, 255, 159, 0.1)',
-                                color: '#00ff9f',
-                                '& .MuiChip-icon': { color: '#00ff9f' }
-                            }}
-                        />
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Chip
+                                icon={<MdTimer />}
+                                label={formatTime(workoutTime)}
+                                sx={{
+                                    backgroundColor: 'rgba(0, 255, 159, 0.1)',
+                                    color: '#00ff9f',
+                                    '& .MuiChip-icon': { color: '#00ff9f' }
+                                }}
+                            />
+                            <IconButton
+                                onClick={timerRunning ? pauseTimer : resumeTimer}
+                                sx={{
+                                    color: '#00ff9f',
+                                    backgroundColor: 'rgba(0, 255, 159, 0.1)',
+                                    '&:hover': { backgroundColor: 'rgba(0, 255, 159, 0.2)' }
+                                }}
+                                size="small"
+                            >
+                                {timerRunning ? <MdPause /> : <MdPlayCircle />}
+                            </IconButton>
+                        </Box>
                     )}
                 </Box>
 
@@ -738,140 +810,146 @@ export default function StartWorkout() {
                 )}
 
                 {workoutStarted && (
-                    <StyledCard sx={{ mb: 3 }}>
-                        <CardContent>
-                            <Box sx={{ display: 'flex', gap: 2 }}>
-                                <Button
-                                    fullWidth
-                                    variant="contained"
-                                    startIcon={<MdStop />}
-                                    onClick={handleFinishWorkout}
-                                    disabled={loading}
-                                    sx={{
-                                        background: 'linear-gradient(45deg, #ff4444 30%, #ff1744 90%)',
-                                        color: '#fff',
-                                        fontWeight: 'bold',
-                                    }}
-                                >
-                                    {loading ? 'Saving...' : 'Finish Workout'}
-                                </Button>
-                                {currentTemplate && (
+                    <>
+                        <BackgroundTimerInfo
+                            show={showTimerInfo}
+                            onDismiss={() => setShowTimerInfo(false)}
+                        />
+                        <StyledCard sx={{ mb: 3 }}>
+                            <CardContent>
+                                <Box sx={{ display: 'flex', gap: 2 }}>
                                     <Button
-                                        variant="outlined"
-                                        onClick={handleBackToDaySelection}
+                                        fullWidth
+                                        variant="contained"
+                                        startIcon={<MdStop />}
+                                        onClick={handleFinishWorkout}
+                                        disabled={loading}
                                         sx={{
-                                            borderColor: 'rgba(255, 255, 255, 0.3)',
-                                            color: 'rgba(255, 255, 255, 0.7)',
-                                            minWidth: '140px',
-                                            '&:hover': {
-                                                borderColor: '#00ff9f',
-                                                color: '#00ff9f',
-                                            },
+                                            background: 'linear-gradient(45deg, #ff4444 30%, #ff1744 90%)',
+                                            color: '#fff',
+                                            fontWeight: 'bold',
                                         }}
                                     >
-                                        ← Change Day
+                                        {loading ? 'Saving...' : 'Finish Workout'}
                                     </Button>
-                                )}
-                            </Box>
-                        </CardContent>
-                    </StyledCard>
-                )}
+                                    {currentTemplate && (
+                                        <Button
+                                            variant="outlined"
+                                            onClick={handleBackToDaySelection}
+                                            sx={{
+                                                borderColor: 'rgba(255, 255, 255, 0.3)',
+                                                color: 'rgba(255, 255, 255, 0.7)',
+                                                minWidth: '140px',
+                                                '&:hover': {
+                                                    borderColor: '#00ff9f',
+                                                    color: '#00ff9f',
+                                                },
+                                            }}
+                                        >
+                                            ← Change Day
+                                        </Button>
+                                    )}
+                                </Box>
+                            </CardContent>
+                        </StyledCard>
 
-                {workoutStarted && (
-                    <>
-                        <List>
-                            {allExercises.map((exercise, exerciseIndex) => (
-                                <Accordion key={exerciseIndex} sx={{
-                                    background: 'rgba(30, 30, 30, 0.9)',
-                                    color: 'white',
-                                    mb: 2,
-                                    borderRadius: '16px',
-                                    '&.Mui-expanded': {
-                                        margin: '16px 0',
-                                    },
-                                    boxShadow: '0 4px 30px rgba(0, 255, 159, 0.1)',
-                                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                                }}>
-                                    <AccordionSummary
-                                        expandIcon={<MdExpandMore sx={{ color: '#00ff9f' }} />}
-                                        aria-controls={`panel${exerciseIndex}-content`}
-                                        id={`panel${exerciseIndex}-header`}
-                                    >
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                                            <Typography sx={{ color: '#00ff9f' }}>{exercise.name}</Typography>
-                                            <IconButton
-                                                edge="end"
-                                                sx={{ color: '#ff4444' }}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDeleteExercise(exerciseIndex);
-                                                }}
+                        {workoutStarted && (
+                            <>
+                                <List>
+                                    {allExercises.map((exercise, exerciseIndex) => (
+                                        <Accordion key={exerciseIndex} sx={{
+                                            background: 'rgba(30, 30, 30, 0.9)',
+                                            color: 'white',
+                                            mb: 2,
+                                            borderRadius: '16px',
+                                            '&.Mui-expanded': {
+                                                margin: '16px 0',
+                                            },
+                                            boxShadow: '0 4px 30px rgba(0, 255, 159, 0.1)',
+                                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                                        }}>
+                                            <AccordionSummary
+                                                expandIcon={<MdExpandMore sx={{ color: '#00ff9f' }} />}
+                                                aria-controls={`panel${exerciseIndex}-content`}
+                                                id={`panel${exerciseIndex}-header`}
                                             >
-                                                <MdDelete />
-                                            </IconButton>
-                                        </Box>
-                                    </AccordionSummary>
-                                    <AccordionDetails>
-                                        <Box display="flex" alignItems="center" sx={{ mb: 1, gap: 1, pr: 1, pl: 1 }}>
-                                            <Box sx={{ flex: '0 0 40px', textAlign: 'center' }}><Typography variant="caption" sx={{ fontWeight: 'bold' }}>Set</Typography></Box>
-                                            <Box sx={{ flex: '1 1 0', textAlign: 'center' }}><Typography variant="caption" sx={{ fontWeight: 'bold' }}>{getWeightLabel(weightUnit)}</Typography></Box>
-                                            <Box sx={{ flex: '1 1 0', textAlign: 'center' }}><Typography variant="caption" sx={{ fontWeight: 'bold' }}>Reps</Typography></Box>
-                                            <Box sx={{ flex: '0 0 40px' }}></Box>
-                                        </Box>
-                                        {exercise.sets.map((set, setIndex) => (
-                                            <Box
-                                                key={setIndex}
-                                                display="flex"
-                                                alignItems="center"
-                                                sx={{ mb: 1.5, gap: 1, pr: 1, pl: 1 }}
-                                            >
-                                                <Box sx={{ flex: '0 0 40px', textAlign: 'center' }}>
-                                                    <Typography sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{setIndex + 1}</Typography>
-                                                </Box>
-                                                <Box sx={{ flex: '1 1 0' }}>
-                                                    <StyledTextField
-                                                        type="number"
-                                                        defaultValue={set.weight}
-                                                        onChange={(e) => handleSetChange(exerciseIndex, setIndex, 'weight', e.target.value)}
-                                                        size="small"
-                                                        fullWidth
-                                                        sx={{ '.MuiInputBase-input': { textAlign: 'center', padding: '8px' } }}
-                                                    />
-                                                </Box>
-                                                <Box sx={{ flex: '1 1 0' }}>
-                                                    <StyledTextField
-                                                        type="number"
-                                                        defaultValue={set.reps}
-                                                        onChange={(e) => handleSetChange(exerciseIndex, setIndex, 'reps', e.target.value)}
-                                                        size="small"
-                                                        fullWidth
-                                                        sx={{ '.MuiInputBase-input': { textAlign: 'center', padding: '8px' } }}
-                                                    />
-                                                </Box>
-                                                <Box sx={{ flex: '0 0 40px', textAlign: 'right' }}>
-                                                    <IconButton onClick={() => toggleSetCompletion(exerciseIndex, setIndex)} sx={{ color: set.completed ? '#00ff9f' : 'grey' }}>
-                                                        <MdCheckCircle />
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                                                    <Typography sx={{ color: '#00ff9f' }}>{exercise.name}</Typography>
+                                                    <IconButton
+                                                        edge="end"
+                                                        sx={{ color: '#ff4444' }}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleDeleteExercise(exerciseIndex);
+                                                        }}
+                                                    >
+                                                        <MdDelete />
                                                     </IconButton>
                                                 </Box>
-                                            </Box>
-                                        ))}
-                                    </AccordionDetails>
-                                </Accordion>
-                            ))}
-                        </List>
+                                            </AccordionSummary>
+                                            <AccordionDetails>
+                                                <Box display="flex" alignItems="center" sx={{ mb: 1, gap: 1, pr: 1, pl: 1 }}>
+                                                    <Box sx={{ flex: '0 0 40px', textAlign: 'center' }}><Typography variant="caption" sx={{ fontWeight: 'bold' }}>Set</Typography></Box>
+                                                    <Box sx={{ flex: '1 1 0', textAlign: 'center' }}><Typography variant="caption" sx={{ fontWeight: 'bold' }}>{getWeightLabel(weightUnit)}</Typography></Box>
+                                                    <Box sx={{ flex: '1 1 0', textAlign: 'center' }}><Typography variant="caption" sx={{ fontWeight: 'bold' }}>Reps</Typography></Box>
+                                                    <Box sx={{ flex: '0 0 40px' }}></Box>
+                                                </Box>
+                                                {exercise.sets.map((set, setIndex) => (
+                                                    <Box
+                                                        key={setIndex}
+                                                        display="flex"
+                                                        alignItems="center"
+                                                        sx={{ mb: 1.5, gap: 1, pr: 1, pl: 1 }}
+                                                    >
+                                                        <Box sx={{ flex: '0 0 40px', textAlign: 'center' }}>
+                                                            <Typography sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{setIndex + 1}</Typography>
+                                                        </Box>
+                                                        <Box sx={{ flex: '1 1 0' }}>
+                                                            <StyledTextField
+                                                                type="number"
+                                                                defaultValue={set.weight}
+                                                                onChange={(e) => handleSetChange(exerciseIndex, setIndex, 'weight', e.target.value)}
+                                                                size="small"
+                                                                fullWidth
+                                                                sx={{ '.MuiInputBase-input': { textAlign: 'center', padding: '8px' } }}
+                                                            />
+                                                        </Box>
+                                                        <Box sx={{ flex: '1 1 0' }}>
+                                                            <StyledTextField
+                                                                type="number"
+                                                                defaultValue={set.reps}
+                                                                onChange={(e) => handleSetChange(exerciseIndex, setIndex, 'reps', e.target.value)}
+                                                                size="small"
+                                                                fullWidth
+                                                                sx={{ '.MuiInputBase-input': { textAlign: 'center', padding: '8px' } }}
+                                                            />
+                                                        </Box>
+                                                        <Box sx={{ flex: '0 0 40px', textAlign: 'right' }}>
+                                                            <IconButton onClick={() => toggleSetCompletion(exerciseIndex, setIndex)} sx={{ color: set.completed ? '#00ff9f' : 'grey' }}>
+                                                                <MdCheckCircle />
+                                                            </IconButton>
+                                                        </Box>
+                                                    </Box>
+                                                ))}
+                                            </AccordionDetails>
+                                        </Accordion>
+                                    ))}
+                                </List>
 
-                        <Fab
-                            color="primary"
-                            sx={{
-                                position: 'fixed',
-                                bottom: 72,
-                                right: 16,
-                                background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
-                            }}
-                            onClick={() => setOpenDialog(true)}
-                        >
-                            <MdAdd />
-                        </Fab>
+                                <Fab
+                                    color="primary"
+                                    sx={{
+                                        position: 'fixed',
+                                        bottom: 72,
+                                        right: 16,
+                                        background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
+                                    }}
+                                    onClick={() => setOpenDialog(true)}
+                                >
+                                    <MdAdd />
+                                </Fab>
+                            </>
+                        )}
                     </>
                 )}
 
