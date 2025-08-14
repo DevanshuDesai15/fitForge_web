@@ -1,12 +1,15 @@
 // Notification utility for workout alerts
 class NotificationManager {
   constructor() {
-    this.permission = Notification.permission;
-    this.isSupported = "Notification" in window;
+    this.isSupported =
+      typeof window !== "undefined" &&
+      "Notification" in window &&
+      typeof Notification !== "undefined";
+    this.permission = this.isSupported ? Notification.permission : "denied";
   }
 
   async requestPermission() {
-    if (!this.isSupported) {
+    if (!this.isSupported || typeof Notification === "undefined") {
       console.warn("Notifications are not supported in this browser");
       return false;
     }
@@ -26,7 +29,11 @@ class NotificationManager {
   }
 
   showNotification(title, options = {}) {
-    if (!this.isSupported || this.permission !== "granted") {
+    if (
+      !this.isSupported ||
+      this.permission !== "granted" ||
+      typeof Notification === "undefined"
+    ) {
       return null;
     }
 
