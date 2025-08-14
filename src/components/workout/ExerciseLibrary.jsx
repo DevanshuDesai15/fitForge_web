@@ -181,7 +181,15 @@ export default function ExerciseLibrary() {
     };
 
     const handleExerciseClick = (exercise) => {
-        navigate(`/workout/exercise/${exercise.id}`, { state: { exercise } });
+        // Ensure images are unique and ordered: main first, then others
+        const normalized = { ...exercise };
+        if (Array.isArray(normalized.images)) {
+            const ordered = normalized.images
+                .slice()
+                .sort((a, b) => (b.is_main === true) - (a.is_main === true));
+            normalized.images = ordered;
+        }
+        navigate(`/workout/exercise/${exercise.id}`, { state: { exercise: normalized } });
     };
 
     const filteredExercises = Array.isArray(exercises) ? exercises.filter(exercise =>

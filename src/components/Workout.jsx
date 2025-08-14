@@ -19,7 +19,8 @@ import {
     MdTimer,
     MdFlashOn,
     MdStar,
-    MdHistory
+    MdHistory,
+    MdArrowForward
 } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -293,18 +294,18 @@ export default function Workout() {
                                     height: 56,
                                     color: theme.palette.primary.contrastText
                                 }}>
-                                    <MdPlayArrow style={{ fontSize: '2rem' }} />
+                                    <MdFitnessCenter style={{ fontSize: '2rem' }} />
                                 </Avatar>
                                 <Box>
                                     <Typography variant="h5" sx={{ fontWeight: 'bold', color: theme.palette.primary.contrastText }}>
                                         Start New Workout
                                     </Typography>
-                                    <Typography variant="body1" sx={{ color: 'rgba(0, 0, 0, 0.7)' }}>
-                                        Begin your training session now
+                                    <Typography variant="body1" sx={{ color: 'rgba(0, 0, 0, 0.72)' }}>
+                                        Tap to begin an empty session or pick a template
                                     </Typography>
                                 </Box>
                             </Box>
-                            <MdPlayArrow style={{ fontSize: '2rem', color: 'rgba(0, 0, 0, 0.6)' }} />
+                            <MdArrowForward style={{ fontSize: '2rem', color: 'rgba(0, 0, 0, 0.6)' }} />
                         </Box>
                     </CardContent>
                 </FeaturedCard>

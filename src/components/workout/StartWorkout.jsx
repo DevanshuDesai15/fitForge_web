@@ -6,8 +6,6 @@ import {
     Typography,
     Button,
     List,
-    ListItem,
-    ListItemText,
     IconButton,
     Dialog,
     DialogTitle,
@@ -26,7 +24,8 @@ import {
     AccordionSummary,
     AccordionDetails,
     Divider,
-    ListItemButton
+
+    Grid
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -41,24 +40,20 @@ import {
     MdClose,
     MdToday,
     MdCheckCircle,
-    MdEdit,
-    MdCheck,
-    MdCancel,
-    MdPause,
-    MdPlayCircle
+    MdCancel
 } from 'react-icons/md';
 import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import ExerciseSelector from '../common/ExerciseSelector';
-import BackgroundTimerInfo from '../common/BackgroundTimerInfo';
+
 import { getWeightUnit, getWeightLabel } from '../../utils/weightUnit';
-import { useWorkoutTimer } from '../../hooks/useWorkoutTimer';
+
 import { useWakeLock } from '../../utils/wakeLock';
 import { useNotifications } from '../../utils/notifications';
 
-const StyledCard = styled(Card)(({ theme }) => ({
+const StyledCard = styled(Card)(() => ({
     background: 'rgba(30, 30, 30, 0.9)',
     backdropFilter: 'blur(10px)',
     borderRadius: '16px',
@@ -86,7 +81,7 @@ const StyledTextField = styled(TextField)({
 export default function StartWorkout() {
     const [workoutStarted, setWorkoutStarted] = useState(false);
     const [exercises, setExercises] = useState([]);
-    const [completedSets, setCompletedSets] = useState({});
+
     const [openDialog, setOpenDialog] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -102,22 +97,15 @@ export default function StartWorkout() {
         notes: ''
     });
 
-    // Use the enhanced timer hook
-    const {
-        workoutTime,
-        isRunning: timerRunning,
-        startTimer,
-        stopTimer,
-        pauseTimer,
-        resumeTimer,
-        formatTime
-    } = useWorkoutTimer();
+    // Simple timestamp-based workout tracking
+    const [workoutStartTime, setWorkoutStartTime] = useState(null);
+
 
     // Wake lock and notifications
     const { requestWakeLock, releaseWakeLock, isSupported: wakeLockSupported } = useWakeLock();
     const {
         requestPermission: requestNotificationPermission,
-        showWorkoutReminder,
+
         showWorkoutComplete,
         isSupported: notificationSupported
     } = useNotifications();
@@ -129,18 +117,109 @@ export default function StartWorkout() {
     const [currentTemplate, setCurrentTemplate] = useState(null);
     const [templateDays, setTemplateDays] = useState([]);
     const [templateExercises, setTemplateExercises] = useState([]);
-    const [previousExercises, setPreviousExercises] = useState([]);
+
     const [showTemplateSelection, setShowTemplateSelection] = useState(true);
     const [showDaySelection, setShowDaySelection] = useState(false);
-    const [editingExercise, setEditingExercise] = useState(null);
-    const [showTimerInfo, setShowTimerInfo] = useState(false);
 
-    // Old timer logic removed - now using Web Worker timer
+
+    const [showStartModal, setShowStartModal] = useState(false);
+    const [showCancelModal, setShowCancelModal] = useState(false);
+
+    // Simple timestamp-based workout tracking - no complex timer needed
+
+    // Persist workout state to localStorage
+    const saveWorkoutState = () => {
+        if (workoutStarted && currentUser) {
+            const workoutState = {
+                workoutStarted,
+                exercises,
+                workoutStartTime: workoutStartTime?.toISOString(),
+                currentTemplate: currentTemplate ? {
+                    id: currentTemplate.id,
+                    name: currentTemplate.name
+                } : null,
+                selectedDay,
+                templateDays,
+                templateExercises,
+                showTemplateSelection,
+                showDaySelection,
+                lastActivity: new Date().toISOString(),
+                userId: currentUser.uid
+            };
+            localStorage.setItem('activeWorkoutState', JSON.stringify(workoutState));
+        }
+    };
+
+    // Restore workout state from localStorage
+    const restoreWorkoutState = () => {
+        try {
+            const savedState = localStorage.getItem('activeWorkoutState');
+            if (savedState && currentUser) {
+                const state = JSON.parse(savedState);
+
+                // Check if state belongs to current user
+                if (state.userId !== currentUser.uid) {
+                    localStorage.removeItem('activeWorkoutState');
+                    return;
+                }
+
+                // Check if workout is older than 2 hours (7200000 ms)
+                const lastActivity = new Date(state.lastActivity);
+                const now = new Date();
+                const timeDiff = now - lastActivity;
+                const twoHours = 2 * 60 * 60 * 1000;
+
+                if (timeDiff > twoHours) {
+                    localStorage.removeItem('activeWorkoutState');
+                    return;
+                }
+
+                // Restore state
+                setWorkoutStarted(state.workoutStarted);
+                setExercises(state.exercises || []);
+                setWorkoutStartTime(state.workoutStartTime ? new Date(state.workoutStartTime) : null);
+                setCurrentTemplate(state.currentTemplate);
+                setSelectedDay(state.selectedDay || '');
+                setTemplateDays(state.templateDays || []);
+                setTemplateExercises(state.templateExercises || []);
+                setShowTemplateSelection(state.showTemplateSelection ?? true);
+                setShowDaySelection(state.showDaySelection ?? false);
+
+                console.log('✅ Workout state restored from localStorage');
+                setSuccess('Workout progress restored! Your previous session was recovered.');
+            }
+        } catch (error) {
+            console.error('Error restoring workout state:', error);
+            localStorage.removeItem('activeWorkoutState');
+        }
+    };
+
+    // Clear workout state from localStorage
+    const clearWorkoutState = () => {
+        localStorage.removeItem('activeWorkoutState');
+    };
+
+    // Track user activity to update lastActivity timestamp
+    const updateActivity = () => {
+        if (workoutStarted) {
+            const savedState = localStorage.getItem('activeWorkoutState');
+            if (savedState) {
+                try {
+                    const state = JSON.parse(savedState);
+                    state.lastActivity = new Date().toISOString();
+                    localStorage.setItem('activeWorkoutState', JSON.stringify(state));
+                } catch (error) {
+                    console.error('Error updating activity:', error);
+                }
+            }
+        }
+    };
 
     useEffect(() => {
         if (currentUser) {
             loadTemplates();
-            loadPreviousExercises();
+            // Restore workout state after user is loaded
+            restoreWorkoutState();
         }
         // Load weight unit preference
         setWeightUnitState(getWeightUnit());
@@ -155,6 +234,38 @@ export default function StartWorkout() {
         window.addEventListener('storage', handleStorageChange);
         return () => window.removeEventListener('storage', handleStorageChange);
     }, [currentUser]);
+
+    // Save workout state whenever it changes
+    useEffect(() => {
+        if (currentUser) {
+            saveWorkoutState();
+        }
+    }, [workoutStarted, exercises, workoutStartTime, currentTemplate, selectedDay, templateDays, templateExercises, showTemplateSelection, showDaySelection, currentUser]);
+
+    // Track user activity
+    useEffect(() => {
+        if (!workoutStarted) return;
+
+        const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+
+        const handleActivity = () => {
+            updateActivity();
+        };
+
+        // Update activity every 30 seconds while workout is active
+        const activityInterval = setInterval(updateActivity, 30000);
+
+        activityEvents.forEach(event => {
+            document.addEventListener(event, handleActivity, true);
+        });
+
+        return () => {
+            clearInterval(activityInterval);
+            activityEvents.forEach(event => {
+                document.removeEventListener(event, handleActivity, true);
+            });
+        };
+    }, [workoutStarted]);
 
     const loadTemplates = async () => {
         try {
@@ -173,29 +284,7 @@ export default function StartWorkout() {
         }
     };
 
-    const loadPreviousExercises = async () => {
-        try {
-            const exercisesQuery = query(
-                collection(db, 'exercises'),
-                where('userId', '==', currentUser.uid)
-            );
-            const exerciseDocs = await getDocs(exercisesQuery);
-            const exerciseData = exerciseDocs.docs.map(doc => doc.data());
 
-            // Get unique exercises with their latest data
-            const uniqueExercises = exerciseData.reduce((acc, exercise) => {
-                const name = exercise.exerciseName;
-                if (!acc[name] || new Date(exercise.timestamp) > new Date(acc[name].timestamp)) {
-                    acc[name] = exercise;
-                }
-                return acc;
-            }, {});
-
-            setPreviousExercises(Object.values(uniqueExercises));
-        } catch (err) {
-            console.error('Error loading previous exercises:', err);
-        }
-    };
 
     const handleStartWorkout = async () => {
         setWorkoutStarted(true);
@@ -204,8 +293,8 @@ export default function StartWorkout() {
         setError('');
         setSuccess('');
 
-        // Start the timer
-        startTimer();
+        // Record workout start time
+        setWorkoutStartTime(new Date());
 
         // Request wake lock to keep screen awake
         if (wakeLockSupported) {
@@ -220,12 +309,7 @@ export default function StartWorkout() {
             await requestNotificationPermission();
         }
 
-        // Show timer info for first-time users
-        const hasSeenTimerInfo = localStorage.getItem('hasSeenTimerInfo');
-        if (!hasSeenTimerInfo) {
-            setShowTimerInfo(true);
-            localStorage.setItem('hasSeenTimerInfo', 'true');
-        }
+
     };
 
     const handleSelectTemplate = () => {
@@ -247,7 +331,17 @@ export default function StartWorkout() {
         if (day && day.exercises) {
             const exercisesWithSets = day.exercises.map(ex => ({
                 ...ex,
-                sets: Array.from({ length: ex.sets || 3 }, () => ({ reps: ex.reps || 10, weight: ex.weight || 0, completed: false }))
+                columns: ex.columns || [
+                    { type: 'reps', label: 'Reps' },
+                    { type: 'weight', label: 'Weight' }
+                ],
+                sets: [{
+                    reps: 10,
+                    weight: 0,
+                    completed: false,
+                    weightType: 'weight',
+                    weightUnit: 'kg'
+                }]
             }));
             setTemplateExercises(exercisesWithSets);
             setExercises(exercisesWithSets);
@@ -259,8 +353,8 @@ export default function StartWorkout() {
         setError('');
         setSuccess('');
 
-        // Start the timer
-        startTimer();
+        // Record workout start time
+        setWorkoutStartTime(new Date());
 
         // Request wake lock to keep screen awake
         if (wakeLockSupported) {
@@ -286,6 +380,24 @@ export default function StartWorkout() {
         setTemplateExercises([]);
     };
 
+    const handleCancelWorkout = () => {
+        if (window.confirm('Are you sure you want to cancel this workout? All progress will be lost.')) {
+            clearWorkoutState();
+            setWorkoutStarted(false);
+            setExercises([]);
+            setTemplateExercises([]);
+            setCurrentTemplate(null);
+            setTemplateDays([]);
+            setSelectedTemplate('');
+            setSelectedDay('');
+            setShowTemplateSelection(true);
+            setShowDaySelection(false);
+            setWorkoutStartTime(null);
+        }
+    };
+
+
+
     const handleBackToDaySelection = () => {
         setShowDaySelection(true);
         setShowTemplateSelection(false);
@@ -294,14 +406,7 @@ export default function StartWorkout() {
         setWorkoutStarted(false);
     };
 
-    const handleEditExercise = (index) => {
-        setEditingExercise(index);
-    };
 
-    const handleSaveExerciseEdit = (index, updatedExercise) => {
-        setExercises(prev => prev.map((ex, i) => i === index ? updatedExercise : ex));
-        setEditingExercise(null);
-    };
 
     const handleSetChange = (exerciseIndex, setIndex, field, value) => {
         const updatedExercises = [...exercises];
@@ -317,9 +422,7 @@ export default function StartWorkout() {
     };
 
 
-    const handleCancelExerciseEdit = () => {
-        setEditingExercise(null);
-    };
+
 
     const handleFinishWorkout = async () => {
         if (exercises.length === 0) {
@@ -331,7 +434,12 @@ export default function StartWorkout() {
         setError('');
 
         try {
-            const workoutTimestamp = new Date().toISOString();
+            const endTime = new Date();
+
+            // Calculate workout duration in seconds
+            const durationInSeconds = workoutStartTime ? Math.floor((endTime - workoutStartTime) / 1000) : 0;
+
+            const workoutTimestamp = endTime.toISOString();
 
             // Save the workout as a whole with template information
             const workoutData = {
@@ -340,7 +448,9 @@ export default function StartWorkout() {
                     ...ex,
                     sets: ex.sets.map(set => ({ reps: set.reps, weight: set.weight, completed: set.completed }))
                 })),
-                duration: workoutTime,
+                startTime: workoutStartTime ? workoutStartTime.toISOString() : workoutTimestamp,
+                endTime: workoutTimestamp,
+                duration: durationInSeconds,
                 timestamp: workoutTimestamp
             };
 
@@ -392,16 +502,18 @@ export default function StartWorkout() {
 
             setSuccess(`Workout saved successfully!${templateInfo} ${exercises.length} exercises added to progress tracking.`);
 
-            // Stop timer and release wake lock
-            stopTimer();
+            // Release wake lock
             if (wakeLockSupported) {
                 await releaseWakeLock();
             }
 
             // Show completion notification
             if (notificationSupported) {
-                showWorkoutComplete(workoutTime, exercises.length);
+                showWorkoutComplete(durationInSeconds, exercises.length);
             }
+
+            // Clear saved workout state
+            clearWorkoutState();
 
             // Reset states
             setWorkoutStarted(false);
@@ -413,6 +525,7 @@ export default function StartWorkout() {
             setSelectedDay('');
             setShowTemplateSelection(true);
             setShowDaySelection(false);
+            setWorkoutStartTime(null);
 
             // Navigate to history page after short delay
             setTimeout(() => {
@@ -440,11 +553,17 @@ export default function StartWorkout() {
         const setsArray = Array.from({ length: parseInt(newExercise.sets) }, () => ({
             reps: parseInt(newExercise.reps),
             weight: parseFloat(newExercise.weight),
-            completed: false
+            completed: false,
+            weightType: 'weight',
+            weightUnit: 'kg'
         }));
 
         setExercises([...exercises, {
             ...newExercise,
+            columns: [
+                { type: 'reps', label: 'Reps' },
+                { type: 'weight', label: 'Weight' }
+            ],
             sets: setsArray
         }]);
 
@@ -493,7 +612,11 @@ export default function StartWorkout() {
         }));
     };
 
-    // formatTime function is provided by useWorkoutTimer hook
+    // Format time helper function
+    const formatTime = (date) => {
+        if (!date) return '--:--';
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    };
 
     const allExercises = useMemo(() => {
         return exercises;
@@ -546,28 +669,17 @@ export default function StartWorkout() {
                                 : 'Start Workout'
                         }
                     </Typography>
-                    {workoutStarted && (
+                    {workoutStarted && workoutStartTime && (
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <Chip
                                 icon={<MdTimer />}
-                                label={formatTime(workoutTime)}
+                                label={`Started: ${formatTime(workoutStartTime)}`}
                                 sx={{
                                     backgroundColor: 'rgba(0, 255, 159, 0.1)',
                                     color: '#00ff9f',
                                     '& .MuiChip-icon': { color: '#00ff9f' }
                                 }}
                             />
-                            <IconButton
-                                onClick={timerRunning ? pauseTimer : resumeTimer}
-                                sx={{
-                                    color: '#00ff9f',
-                                    backgroundColor: 'rgba(0, 255, 159, 0.1)',
-                                    '&:hover': { backgroundColor: 'rgba(0, 255, 159, 0.2)' }
-                                }}
-                                size="small"
-                            >
-                                {timerRunning ? <MdPause /> : <MdPlayCircle />}
-                            </IconButton>
                         </Box>
                     )}
                 </Box>
@@ -735,7 +847,10 @@ export default function StartWorkout() {
                                                     boxShadow: '0 4px 20px rgba(0, 255, 159, 0.2)',
                                                 }
                                             }}
-                                            onClick={() => setSelectedDay(day.id.toString())}
+                                            onClick={() => {
+                                                setSelectedDay(day.id.toString());
+                                                setShowStartModal(true);
+                                            }}
                                         >
                                             <CardContent>
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -790,34 +905,218 @@ export default function StartWorkout() {
                                 ))}
                             </Grid2>
 
-                            <Button
-                                fullWidth
-                                variant="contained"
-                                startIcon={<MdPlayArrow />}
-                                onClick={handleSelectDay}
-                                disabled={!selectedDay}
-                                sx={{
-                                    mt: 3,
-                                    background: selectedDay ? 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)' : 'rgba(255, 255, 255, 0.1)',
-                                    color: selectedDay ? '#000' : 'rgba(255, 255, 255, 0.5)',
-                                    fontWeight: 'bold',
-                                }}
-                            >
-                                Start Workout Day
-                            </Button>
+
                         </CardContent>
                     </StyledCard>
                 )}
 
+                {/* Start Workout Modal */}
+                <Dialog
+                    open={showStartModal}
+                    onClose={() => setShowStartModal(false)}
+                    maxWidth="sm"
+                    fullWidth
+                    PaperProps={{
+                        sx: {
+                            background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
+                            border: '1px solid rgba(0, 255, 159, 0.3)',
+                            borderRadius: 2,
+                        }
+                    }}
+                >
+                    <DialogTitle sx={{
+                        color: '#00ff9f',
+                        textAlign: 'center',
+                        borderBottom: '1px solid rgba(0, 255, 159, 0.2)',
+                        pb: 2
+                    }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                            <MdPlayArrow />
+                            Ready to Start Workout?
+                        </Box>
+                    </DialogTitle>
+                    <DialogContent sx={{ pt: 3 }}>
+                        {selectedDay && templateDays.find(d => d.id.toString() === selectedDay) && (
+                            <Box sx={{ textAlign: 'center' }}>
+                                <Typography variant="h6" sx={{ color: '#fff', mb: 2 }}>
+                                    {templateDays.find(d => d.id.toString() === selectedDay)?.name}
+                                </Typography>
+                                <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 2 }}>
+                                    Template: <strong style={{ color: '#00ff9f' }}>{currentTemplate?.name}</strong>
+                                </Typography>
+
+                                {/* Show exercise count and muscle groups */}
+                                {(() => {
+                                    const selectedDayData = templateDays.find(d => d.id.toString() === selectedDay);
+                                    return (
+                                        <Box>
+                                            <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)', mb: 2 }}>
+                                                {selectedDayData?.exercises?.length || 0} exercises
+                                            </Typography>
+
+                                            {selectedDayData?.muscleGroups && selectedDayData.muscleGroups.length > 0 && (
+                                                <Box sx={{ mb: 2 }}>
+                                                    <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', mb: 1, display: 'block' }}>
+                                                        Target Muscles:
+                                                    </Typography>
+                                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, justifyContent: 'center' }}>
+                                                        {selectedDayData.muscleGroups.map(mg => (
+                                                            <Chip
+                                                                key={mg.id}
+                                                                label={mg.name}
+                                                                size="small"
+                                                                sx={{
+                                                                    backgroundColor: 'rgba(0, 255, 159, 0.2)',
+                                                                    color: '#00ff9f',
+                                                                    fontSize: '0.75rem'
+                                                                }}
+                                                            />
+                                                        ))}
+                                                    </Box>
+                                                </Box>
+                                            )}
+                                        </Box>
+                                    );
+                                })()}
+                            </Box>
+                        )}
+                    </DialogContent>
+                    <DialogActions sx={{ p: 3, pt: 1 }}>
+                        <Button
+                            onClick={() => setShowStartModal(false)}
+                            sx={{
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                borderColor: 'rgba(255, 255, 255, 0.3)',
+                                '&:hover': {
+                                    borderColor: 'rgba(255, 255, 255, 0.5)',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                }
+                            }}
+                            variant="outlined"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setShowStartModal(false);
+                                handleSelectDay();
+                            }}
+                            variant="contained"
+                            startIcon={<MdPlayArrow />}
+                            sx={{
+                                background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
+                                color: '#000',
+                                fontWeight: 'bold',
+                                px: 3,
+                                '&:hover': {
+                                    background: 'linear-gradient(45deg, #00e676 30%, #00ff9f 90%)',
+                                }
+                            }}
+                        >
+                            Start Workout
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                {/* Cancel Workout Confirmation Modal */}
+                <Dialog
+                    open={showCancelModal}
+                    onClose={() => setShowCancelModal(false)}
+                    maxWidth="sm"
+                    fullWidth
+                    PaperProps={{
+                        sx: {
+                            background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
+                            border: '1px solid rgba(255, 68, 68, 0.3)',
+                            borderRadius: 2,
+                        }
+                    }}
+                >
+                    <DialogTitle sx={{
+                        color: '#ff4444',
+                        textAlign: 'center',
+                        borderBottom: '1px solid rgba(255, 68, 68, 0.2)',
+                        pb: 2
+                    }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                            <MdCancel />
+                            Cancel Workout?
+                        </Box>
+                    </DialogTitle>
+                    <DialogContent sx={{ pt: 3 }}>
+                        <Box sx={{ textAlign: 'center' }}>
+                            <Typography variant="h6" sx={{ color: '#fff', mb: 2 }}>
+                                Are you sure you want to cancel this workout?
+                            </Typography>
+                            <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 2 }}>
+                                All your progress will be lost and will not be saved.
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: 'rgba(255, 68, 68, 0.8)' }}>
+                                This action cannot be undone.
+                            </Typography>
+                        </Box>
+                    </DialogContent>
+                    <DialogActions sx={{ p: 3, pt: 1 }}>
+                        <Button
+                            onClick={() => setShowCancelModal(false)}
+                            sx={{
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                borderColor: 'rgba(255, 255, 255, 0.3)',
+                                '&:hover': {
+                                    borderColor: 'rgba(255, 255, 255, 0.5)',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                }
+                            }}
+                            variant="outlined"
+                        >
+                            Keep Workout
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setShowCancelModal(false);
+                                handleCancelWorkout();
+                            }}
+                            variant="contained"
+                            startIcon={<MdCancel />}
+                            sx={{
+                                background: 'linear-gradient(45deg, #ff4444 30%, #ff1744 90%)',
+                                color: '#fff',
+                                fontWeight: 'bold',
+                                px: 3,
+                                '&:hover': {
+                                    background: 'linear-gradient(45deg, #ff1744 30%, #ff4444 90%)',
+                                }
+                            }}
+                        >
+                            Yes, Cancel Workout
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
                 {workoutStarted && (
                     <>
-                        <BackgroundTimerInfo
-                            show={showTimerInfo}
-                            onDismiss={() => setShowTimerInfo(false)}
-                        />
                         <StyledCard sx={{ mb: 3 }}>
                             <CardContent>
                                 <Box sx={{ display: 'flex', gap: 2 }}>
+                                    <Button
+                                        fullWidth
+                                        variant="outlined"
+                                        startIcon={<MdCancel />}
+                                        onClick={() => setShowCancelModal(true)}
+                                        disabled={loading}
+                                        sx={{
+                                            borderColor: '#ff4444',
+                                            color: '#ff4444',
+                                            fontWeight: 'bold',
+                                            '&:hover': {
+                                                borderColor: '#ff1744',
+                                                backgroundColor: 'rgba(255, 68, 68, 0.1)',
+                                                color: '#ff1744'
+                                            }
+                                        }}
+                                    >
+                                        Cancel Workout
+                                    </Button>
                                     <Button
                                         fullWidth
                                         variant="contained"
@@ -825,9 +1124,12 @@ export default function StartWorkout() {
                                         onClick={handleFinishWorkout}
                                         disabled={loading}
                                         sx={{
-                                            background: 'linear-gradient(45deg, #ff4444 30%, #ff1744 90%)',
-                                            color: '#fff',
+                                            background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
+                                            color: '#000',
                                             fontWeight: 'bold',
+                                            '&:hover': {
+                                                background: 'linear-gradient(45deg, #00e676 30%, #00ff9f 90%)',
+                                            }
                                         }}
                                     >
                                         {loading ? 'Saving...' : 'Finish Workout'}
@@ -888,49 +1190,256 @@ export default function StartWorkout() {
                                                 </Box>
                                             </AccordionSummary>
                                             <AccordionDetails>
-                                                <Box display="flex" alignItems="center" sx={{ mb: 1, gap: 1, pr: 1, pl: 1 }}>
-                                                    <Box sx={{ flex: '0 0 40px', textAlign: 'center' }}><Typography variant="caption" sx={{ fontWeight: 'bold' }}>Set</Typography></Box>
-                                                    <Box sx={{ flex: '1 1 0', textAlign: 'center' }}><Typography variant="caption" sx={{ fontWeight: 'bold' }}>{getWeightLabel(weightUnit)}</Typography></Box>
-                                                    <Box sx={{ flex: '1 1 0', textAlign: 'center' }}><Typography variant="caption" sx={{ fontWeight: 'bold' }}>Reps</Typography></Box>
-                                                    <Box sx={{ flex: '0 0 40px' }}></Box>
-                                                </Box>
+                                                {/* Individual Set Cards */}
                                                 {exercise.sets.map((set, setIndex) => (
-                                                    <Box
+                                                    <Card
                                                         key={setIndex}
-                                                        display="flex"
-                                                        alignItems="center"
-                                                        sx={{ mb: 1.5, gap: 1, pr: 1, pl: 1 }}
+                                                        sx={{
+                                                            mb: 2,
+                                                            bgcolor: 'rgba(40, 50, 70, 0.3)',
+                                                            border: `1px solid ${set.completed ? '#00ff9f' : 'rgba(255, 255, 255, 0.1)'}`,
+                                                            borderRadius: 2,
+                                                            backdropFilter: 'blur(10px)'
+                                                        }}
                                                     >
-                                                        <Box sx={{ flex: '0 0 40px', textAlign: 'center' }}>
-                                                            <Typography sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{setIndex + 1}</Typography>
-                                                        </Box>
-                                                        <Box sx={{ flex: '1 1 0' }}>
-                                                            <StyledTextField
-                                                                type="number"
-                                                                defaultValue={set.weight}
-                                                                onChange={(e) => handleSetChange(exerciseIndex, setIndex, 'weight', e.target.value)}
-                                                                size="small"
+                                                        <CardContent sx={{ p: 2 }}>
+                                                            {/* Set Header */}
+                                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                                                <Chip
+                                                                    label={`SET ${setIndex + 1}`}
+                                                                    sx={{
+                                                                        bgcolor: '#4a90e2',
+                                                                        color: '#fff',
+                                                                        fontWeight: 'bold'
+                                                                    }}
+                                                                />
+                                                                <IconButton
+                                                                    size="small"
+                                                                    onClick={() => {
+                                                                        setExercises(prev => prev.map((ex, idx) => {
+                                                                            if (idx === exerciseIndex) {
+                                                                                return {
+                                                                                    ...ex,
+                                                                                    sets: ex.sets.filter((_, sIdx) => sIdx !== setIndex)
+                                                                                };
+                                                                            }
+                                                                            return ex;
+                                                                        }));
+                                                                    }}
+                                                                    sx={{ color: '#ff4444' }}
+                                                                >
+                                                                    <MdDelete />
+                                                                </IconButton>
+                                                            </Box>
+
+                                                            {/* Set Fields */}
+                                                            <Grid container spacing={2}>
+                                                                {/* Reps Field */}
+                                                                <Grid item xs={12} sm={6}>
+                                                                    <Box>
+                                                                        <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 1, display: 'block' }}>
+                                                                            Reps
+                                                                        </Typography>
+                                                                        <StyledTextField
+                                                                            type="number"
+                                                                            placeholder="0"
+                                                                            defaultValue={set.reps}
+                                                                            onChange={(e) => handleSetChange(exerciseIndex, setIndex, 'reps', e.target.value)}
+                                                                            size="small"
+                                                                            fullWidth
+                                                                            sx={{
+                                                                                '.MuiInputBase-input': {
+                                                                                    textAlign: 'center',
+                                                                                    padding: '12px',
+                                                                                    fontSize: '1rem'
+                                                                                }
+                                                                            }}
+                                                                        />
+                                                                    </Box>
+                                                                </Grid>
+
+                                                                {/* Weight Field */}
+                                                                <Grid item xs={12} sm={6}>
+                                                                    <Box>
+                                                                        <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 1, display: 'block' }}>
+                                                                            Weight
+                                                                        </Typography>
+
+                                                                        {/* Weight Type Dropdown */}
+                                                                        <Select
+                                                                            value={set.weightType || 'weight'}
+                                                                            onChange={(e) => {
+                                                                                setExercises(prev => prev.map((ex, idx) => {
+                                                                                    if (idx === exerciseIndex) {
+                                                                                        const newSets = [...ex.sets];
+                                                                                        newSets[setIndex] = { ...newSets[setIndex], weightType: e.target.value };
+                                                                                        return { ...ex, sets: newSets };
+                                                                                    }
+                                                                                    return ex;
+                                                                                }));
+                                                                            }}
+                                                                            size="small"
+                                                                            fullWidth
+                                                                            sx={{
+                                                                                mb: 1,
+                                                                                bgcolor: 'rgba(50, 60, 80, 0.8)',
+                                                                                color: '#fff',
+                                                                                '& .MuiOutlinedInput-notchedOutline': {
+                                                                                    borderColor: 'rgba(255, 255, 255, 0.3)'
+                                                                                },
+                                                                                '& .MuiSvgIcon-root': {
+                                                                                    color: '#fff'
+                                                                                }
+                                                                            }}
+                                                                        >
+                                                                            <MenuItem value="bodyweight">Bodyweight</MenuItem>
+                                                                            <MenuItem value="weight">Weight</MenuItem>
+                                                                        </Select>
+
+                                                                        {/* Weight Input */}
+                                                                        {set.weightType === 'bodyweight' ? (
+                                                                            <Box
+                                                                                sx={{
+                                                                                    display: 'flex',
+                                                                                    alignItems: 'center',
+                                                                                    justifyContent: 'center',
+                                                                                    height: '48px',
+                                                                                    bgcolor: 'rgba(0, 255, 159, 0.1)',
+                                                                                    border: '1px solid rgba(0, 255, 159, 0.3)',
+                                                                                    borderRadius: 1,
+                                                                                    color: '#00ff9f',
+                                                                                    fontWeight: 'bold',
+                                                                                    fontSize: '1.1rem'
+                                                                                }}
+                                                                            >
+                                                                                Bodyweight
+                                                                            </Box>
+                                                                        ) : (
+                                                                            <Box sx={{ display: 'flex', gap: 1 }}>
+                                                                                <StyledTextField
+                                                                                    type="number"
+                                                                                    placeholder="0"
+                                                                                    defaultValue={set.weight}
+                                                                                    onChange={(e) => handleSetChange(exerciseIndex, setIndex, 'weight', e.target.value)}
+                                                                                    size="small"
+                                                                                    sx={{
+                                                                                        flex: 1,
+                                                                                        '.MuiInputBase-input': {
+                                                                                            textAlign: 'center',
+                                                                                            padding: '12px',
+                                                                                            fontSize: '1rem'
+                                                                                        }
+                                                                                    }}
+                                                                                />
+                                                                                <Select
+                                                                                    value={set.weightUnit || weightUnit}
+                                                                                    onChange={(e) => {
+                                                                                        setExercises(prev => prev.map((ex, idx) => {
+                                                                                            if (idx === exerciseIndex) {
+                                                                                                const newSets = [...ex.sets];
+                                                                                                newSets[setIndex] = { ...newSets[setIndex], weightUnit: e.target.value };
+                                                                                                return { ...ex, sets: newSets };
+                                                                                            }
+                                                                                            return ex;
+                                                                                        }));
+                                                                                    }}
+                                                                                    size="small"
+                                                                                    sx={{
+                                                                                        minWidth: 70,
+                                                                                        bgcolor: 'rgba(50, 60, 80, 0.8)',
+                                                                                        color: '#fff',
+                                                                                        '& .MuiOutlinedInput-notchedOutline': {
+                                                                                            borderColor: 'rgba(255, 255, 255, 0.3)'
+                                                                                        }
+                                                                                    }}
+                                                                                >
+                                                                                    <MenuItem value="kg">kg</MenuItem>
+                                                                                    <MenuItem value="lbs">lbs</MenuItem>
+                                                                                </Select>
+                                                                            </Box>
+                                                                        )}
+                                                                    </Box>
+                                                                </Grid>
+                                                            </Grid>
+
+                                                            {/* Finish Set Button */}
+                                                            <Button
                                                                 fullWidth
-                                                                sx={{ '.MuiInputBase-input': { textAlign: 'center', padding: '8px' } }}
-                                                            />
-                                                        </Box>
-                                                        <Box sx={{ flex: '1 1 0' }}>
-                                                            <StyledTextField
-                                                                type="number"
-                                                                defaultValue={set.reps}
-                                                                onChange={(e) => handleSetChange(exerciseIndex, setIndex, 'reps', e.target.value)}
-                                                                size="small"
-                                                                fullWidth
-                                                                sx={{ '.MuiInputBase-input': { textAlign: 'center', padding: '8px' } }}
-                                                            />
-                                                        </Box>
-                                                        <Box sx={{ flex: '0 0 40px', textAlign: 'right' }}>
-                                                            <IconButton onClick={() => toggleSetCompletion(exerciseIndex, setIndex)} sx={{ color: set.completed ? '#00ff9f' : 'grey' }}>
-                                                                <MdCheckCircle />
-                                                            </IconButton>
-                                                        </Box>
-                                                    </Box>
+                                                                variant="contained"
+                                                                onClick={() => toggleSetCompletion(exerciseIndex, setIndex)}
+                                                                sx={{
+                                                                    mt: 2,
+                                                                    bgcolor: set.completed ? '#00ff9f' : '#4a90e2',
+                                                                    color: set.completed ? '#000' : '#fff',
+                                                                    fontWeight: 'bold',
+                                                                    '&:hover': {
+                                                                        bgcolor: set.completed ? '#00e676' : '#357abd'
+                                                                    }
+                                                                }}
+                                                            >
+                                                                {set.completed ? '✓ Set Completed' : 'Finish Set'}
+                                                            </Button>
+                                                        </CardContent>
+                                                    </Card>
                                                 ))}
+
+                                                {/* Add Set and Next Exercise Buttons */}
+                                                <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+                                                    <Button
+                                                        fullWidth
+                                                        variant="contained"
+                                                        startIcon={<MdAdd />}
+                                                        onClick={() => {
+                                                            setExercises(prev => prev.map((ex, idx) => {
+                                                                if (idx === exerciseIndex) {
+                                                                    return {
+                                                                        ...ex,
+                                                                        sets: [...ex.sets, { reps: 10, weight: 0, completed: false, weightType: 'weight', weightUnit: 'kg' }]
+                                                                    };
+                                                                }
+                                                                return ex;
+                                                            }));
+                                                        }}
+                                                        sx={{
+                                                            bgcolor: '#28a745',
+                                                            color: '#fff',
+                                                            fontWeight: 'bold',
+                                                            '&:hover': {
+                                                                bgcolor: '#218838'
+                                                            }
+                                                        }}
+                                                    >
+                                                        Add Set
+                                                    </Button>
+                                                    <Button
+                                                        fullWidth
+                                                        variant="contained"
+                                                        startIcon={<MdPlayArrow />}
+                                                        onClick={() => {
+                                                            // Scroll to next exercise or show completion
+                                                            if (exerciseIndex < exercises.length - 1) {
+                                                                const nextAccordion = document.querySelector(`#panel${exerciseIndex + 1}-header`);
+                                                                if (nextAccordion) {
+                                                                    nextAccordion.click();
+                                                                    nextAccordion.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                                }
+                                                            } else {
+                                                                // Last exercise - could show completion message
+                                                                setSuccess('Great job! You have completed all exercises. Ready to finish your workout?');
+                                                            }
+                                                        }}
+                                                        sx={{
+                                                            bgcolor: '#4a90e2',
+                                                            color: '#fff',
+                                                            fontWeight: 'bold',
+                                                            '&:hover': {
+                                                                bgcolor: '#357abd'
+                                                            }
+                                                        }}
+                                                    >
+                                                        Next Exercise
+                                                    </Button>
+                                                </Box>
                                             </AccordionDetails>
                                         </Accordion>
                                     ))}
@@ -991,12 +1500,22 @@ export default function StartWorkout() {
                                                 <Button
                                                     variant="outlined"
                                                     onClick={() => {
-                                                        const setsArray = Array.from({ length: parseInt(exercise.sets) || 3 }, () => ({
-                                                            reps: parseInt(exercise.reps) || 10,
-                                                            weight: parseFloat(exercise.weight) || 0,
-                                                            completed: false
-                                                        }));
-                                                        setExercises(prev => [...prev, { ...exercise, sets: setsArray }]);
+                                                        const setsArray = [{
+                                                            reps: 10,
+                                                            weight: 0,
+                                                            completed: false,
+                                                            weightType: 'weight',
+                                                            weightUnit: 'kg'
+                                                        }];
+                                                        const exerciseWithColumns = {
+                                                            ...exercise,
+                                                            columns: exercise.columns || [
+                                                                { type: 'reps', label: 'Reps' },
+                                                                { type: 'weight', label: 'Weight' }
+                                                            ],
+                                                            sets: setsArray
+                                                        };
+                                                        setExercises(prev => [...prev, exerciseWithColumns]);
                                                     }}
                                                     sx={{
                                                         borderColor: newExercise.name === exercise.name ? '#00ff9f' : 'rgba(255, 255, 255, 0.3)',
@@ -1011,19 +1530,6 @@ export default function StartWorkout() {
                                                     }}
                                                 >
                                                     {exercise.name}
-                                                    {exercise.weight > 0 && (
-                                                        <Chip
-                                                            label={`${exercise.weight}${weightUnit}`}
-                                                            size="small"
-                                                            sx={{
-                                                                ml: 1,
-                                                                height: '20px',
-                                                                backgroundColor: 'rgba(0, 255, 159, 0.2)',
-                                                                color: '#00ff9f',
-                                                                fontSize: '0.75rem'
-                                                            }}
-                                                        />
-                                                    )}
                                                 </Button>
                                             </Grid2>
                                         ))}

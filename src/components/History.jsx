@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     Box,
     Card,
@@ -11,11 +11,11 @@ import {
     Chip,
     Divider,
     CircularProgress,
+    Button,
     IconButton,
     Dialog,
     DialogTitle,
     DialogContent,
-    Button
 } from '@mui/material';
 import { styled, useTheme } from '@mui/material/styles';
 import {
@@ -23,33 +23,22 @@ import {
     MdHistory,
     MdFitnessCenter,
     MdTimer,
-    MdToday,
-    MdChevronLeft,
-    MdChevronRight,
     MdTrendingUp,
     MdBarChart,
+    MdToday,
+    MdAdd,
     MdClose,
-    MdPlayArrow,
-    MdAdd
 } from 'react-icons/md';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { getWeightUnit } from '../utils/weightUnit';
-import { getCurrentDate, resetToCurrentMonth, debugDate, getCorrectCurrentDate } from '../utils/dateUtils';
+// Date utils no longer needed for new calendar
+import WorkoutCalendar from './WorkoutCalendar';
 import {
     format,
-    startOfMonth,
-    endOfMonth,
-    isSameDay,
-    addMonths,
-    subMonths,
-    isSameMonth,
-    isToday,
-    startOfWeek,
-    endOfWeek,
-    addDays
+    isSameDay
 } from 'date-fns';
 
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -60,36 +49,7 @@ const StyledCard = styled(Card)(({ theme }) => ({
     border: `1px solid ${theme.palette.border.main}`,
 }));
 
-const CalendarDay = styled(Box, {
-    shouldForwardProp: (prop) => !['isWorkoutDay', 'isToday', 'isCurrentMonth'].includes(prop),
-})(({ theme, isWorkoutDay, isToday, isCurrentMonth }) => ({
-    width: 40,
-    height: 40,
-    minWidth: 40,
-    minHeight: 40,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: '50%',
-    cursor: 'pointer',
-    position: 'relative',
-    fontSize: '0.875rem',
-    fontWeight: isToday ? 'bold' : 'normal',
-    color: isCurrentMonth
-        ? (isToday ? theme.palette.primary.main : theme.palette.text.primary)
-        : theme.palette.text.disabled,
-    backgroundColor: isWorkoutDay
-        ? (isToday ? theme.palette.primary.main + '20' : theme.palette.surface.tertiary)
-        : 'transparent',
-    border: isToday ? `2px solid ${theme.palette.primary.main}` : 'none',
-    transition: 'all 0.2s ease-in-out',
-    '&:hover': {
-        backgroundColor: isWorkoutDay
-            ? theme.palette.surface.hover
-            : theme.palette.surface.primary,
-        transform: 'scale(1.1)',
-    },
-}));
+// Old CalendarDay styled component removed - now using WorkoutCalendar component
 
 const StatCard = styled(Card)(({ theme }) => ({
     background: theme.palette.surface.primary,
@@ -105,39 +65,50 @@ export default function History() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [weightUnit, setWeightUnitState] = useState('kg');
-    const [currentDate, setCurrentDate] = useState(() => {
-        // Use corrected date function to handle system date issues
-        const now = getCorrectCurrentDate();
-        debugDate(now, 'Calendar initialized');
-        return now;
-    });
+    const [dialogOpen, setDialogOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedDateWorkouts, setSelectedDateWorkouts] = useState([]);
-    const [dialogOpen, setDialogOpen] = useState(false);
+    // Old calendar state variables removed - now using WorkoutCalendar component
     const { currentUser } = useAuth();
     const navigate = useNavigate();
     const theme = useTheme();
 
-    useEffect(() => {
-        loadData();
-    }, [activeTab]);
+    // Define functions first
+    const loadWorkoutDates = useCallback(async () => {
+        if (!currentUser) {
+            console.warn('No current user found');
+            return;
+        }
 
-    useEffect(() => {
-        // Load weight unit preference
-        setWeightUnitState(getWeightUnit());
+        try {
+            const workoutsQuery = query(
+                collection(db, 'workouts'),
+                where('userId', '==', currentUser.uid),
+                orderBy('timestamp', 'desc')
+            );
+            const workoutDocs = await getDocs(workoutsQuery);
+            const workoutData = workoutDocs.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
 
-        // Listen for weight unit changes (for multi-tab sync)
-        const handleStorageChange = (e) => {
-            if (e.key === 'weightUnit') {
-                setWeightUnitState(e.newValue || 'kg');
-            }
-        };
+            // Extract unique dates
+            const dates = workoutData.map(workout => new Date(workout.timestamp).toDateString());
+            setWorkoutDates([...new Set(dates)]);
+            setWorkouts(workoutData); // Store workouts for calendar details
+        } catch (err) {
+            console.error('Error loading workout dates:', err);
+            setError('Error loading workout dates: ' + err.message);
+        }
+    }, [currentUser]);
 
-        window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
-    }, []);
+    const loadData = useCallback(async () => {
+        if (!currentUser) {
+            console.warn('No current user found in loadData');
+            setLoading(false);
+            return;
+        }
 
-    const loadData = async () => {
         setLoading(true);
         setError('');
         try {
@@ -179,30 +150,31 @@ export default function History() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentUser, activeTab, loadWorkoutDates]);
 
-    const loadWorkoutDates = async () => {
-        try {
-            const workoutsQuery = query(
-                collection(db, 'workouts'),
-                where('userId', '==', currentUser.uid),
-                orderBy('timestamp', 'desc')
-            );
-            const workoutDocs = await getDocs(workoutsQuery);
-            const workoutData = workoutDocs.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-
-            // Extract unique dates
-            const dates = workoutData.map(workout => new Date(workout.timestamp).toDateString());
-            setWorkoutDates([...new Set(dates)]);
-            setWorkouts(workoutData); // Store workouts for calendar details
-        } catch (err) {
-            console.error('Error loading workout dates:', err);
-            setError('Error loading workout dates: ' + err.message);
+    // useEffects after function definitions
+    useEffect(() => {
+        if (currentUser) {
+            loadData();
         }
-    };
+    }, [currentUser, loadData]);
+
+    useEffect(() => {
+        // Load weight unit preference
+        setWeightUnitState(getWeightUnit());
+
+        // Listen for weight unit changes (for multi-tab sync)
+        const handleStorageChange = (e) => {
+            if (e.key === 'weightUnit') {
+                setWeightUnitState(e.newValue || 'kg');
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
+
+    // Duplicate loadWorkoutDates function removed
 
     const formatTime = (seconds) => {
         const hrs = Math.floor(seconds / 3600);
@@ -215,23 +187,7 @@ export default function History() {
         setActiveTab(newValue);
     };
 
-    const handleDateClick = (date) => {
-        const dayWorkouts = workouts.filter(workout =>
-            isSameDay(new Date(workout.timestamp), date)
-        );
-
-        if (dayWorkouts.length > 0) {
-            setSelectedDate(date);
-            setSelectedDateWorkouts(dayWorkouts);
-            setDialogOpen(true);
-        }
-    };
-
-    const isWorkoutDay = (date) => {
-        return workoutDates.some(workoutDate =>
-            isSameDay(new Date(workoutDate), date)
-        );
-    };
+    // Old calendar functions removed - now using WorkoutCalendar component
 
     const getWorkoutStats = () => {
         if (workouts.length === 0) return null;
@@ -256,13 +212,17 @@ export default function History() {
         const uniqueExercises = [...new Set(exerciseHistory.map(ex => ex.exerciseName))].length;
         const totalWeight = exerciseHistory.reduce((sum, ex) => {
             if (Array.isArray(ex.sets)) {
-                return sum + ex.sets.reduce((setSum, set) => setSum + ((set.weight || 0) * (set.reps || 0)), 0);
+                return sum + ex.sets.reduce((setSum, set) => {
+                    const weight = set.weightType === 'bodyweight' ? 0 : (parseFloat(set.weight) || 0);
+                    const reps = parseInt(set.reps) || 0;
+                    return setSum + (weight * reps);
+                }, 0);
             }
-            return sum + ((ex.weight || 0) * (ex.reps || 0));
+            return sum + ((parseFloat(ex.weight) || 0) * (parseInt(ex.reps) || 0));
         }, 0);
         const totalReps = exerciseHistory.reduce((sum, ex) => {
             if (Array.isArray(ex.sets)) {
-                return sum + ex.sets.reduce((setSum, set) => setSum + (set.reps || 0), 0);
+                return sum + ex.sets.reduce((setSum, set) => setSum + (parseInt(set.reps) || 0), 0);
             }
             return sum + (parseInt(ex.reps) || 0);
         }, 0);
@@ -275,150 +235,7 @@ export default function History() {
         };
     };
 
-    const renderCalendar = () => {
-        const monthStart = startOfMonth(currentDate);
-        const monthEnd = endOfMonth(monthStart);
-        const startDate = startOfWeek(monthStart);
-        const endDate = endOfWeek(monthEnd);
-
-        const dateFormat = "d";
-        const rows = [];
-
-        let days = [];
-        let day = startDate;
-        let formattedDate = "";
-
-        while (day <= endDate) {
-            for (let i = 0; i < 7; i++) {
-                formattedDate = format(day, dateFormat);
-                const cloneDay = day;
-                days.push(
-                    <CalendarDay
-                        key={day.toISOString()}
-                        isWorkoutDay={isWorkoutDay(day)}
-                        isToday={isToday(day)}
-                        isCurrentMonth={isSameMonth(day, monthStart)}
-                        onClick={() => handleDateClick(cloneDay)}
-                    >
-                        <span>{formattedDate}</span>
-                    </CalendarDay>
-                );
-                day = addDays(day, 1);
-            }
-            rows.push(
-                <Box key={`week-${rows.length}`} sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    mb: 1,
-                    gap: 1
-                }}>
-                    {days}
-                </Box>
-            );
-            days = [];
-        }
-
-        return (
-            <Box>
-                {/* Calendar Header */}
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                    <IconButton
-                        onClick={() => {
-                            const newDate = subMonths(currentDate, 1);
-                            console.log('Previous month:', newDate.toISOString());
-                            setCurrentDate(newDate);
-                        }}
-                        sx={{ color: theme.palette.primary.main }}
-                    >
-                        <MdChevronLeft />
-                    </IconButton>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Typography variant="h5" sx={{ color: theme.palette.primary.main, fontWeight: 'bold' }}>
-                            {format(currentDate, 'MMMM yyyy')}
-                        </Typography>
-                        <Button
-                            size="small"
-                            onClick={() => {
-                                const today = getCorrectCurrentDate();
-                                debugDate(today, 'Reset to today');
-                                setCurrentDate(today);
-                            }}
-                            sx={{
-                                color: theme.palette.text.secondary,
-                                fontSize: '0.75rem',
-                                minHeight: 'auto',
-                                p: 0.5
-                            }}
-                        >
-                            Today
-                        </Button>
-                    </Box>
-                    <IconButton
-                        onClick={() => {
-                            const newDate = addMonths(currentDate, 1);
-                            console.log('Next month:', newDate.toISOString());
-                            setCurrentDate(newDate);
-                        }}
-                        sx={{ color: theme.palette.primary.main }}
-                    >
-                        <MdChevronRight />
-                    </IconButton>
-                </Box>
-
-                {/* Calendar Grid */}
-                <Box sx={{ mb: 3 }}>
-                    {/* Day headers */}
-                    <Box sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        mb: 2,
-                        gap: 1
-                    }}>
-                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                            <Box key={day} sx={{
-                                width: 40,
-                                textAlign: 'center'
-                            }}>
-                                <Typography variant="body2" sx={{
-                                    color: theme.palette.primary.main,
-                                    fontWeight: 'bold'
-                                }}>
-                                    {day}
-                                </Typography>
-                            </Box>
-                        ))}
-                    </Box>
-                    {rows}
-                </Box>
-
-                {/* Legend */}
-                <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 3 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box sx={{
-                            width: 16,
-                            height: 16,
-                            borderRadius: '50%',
-                            backgroundColor: theme.palette.surface.tertiary
-                        }} />
-                        <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                            Workout Day
-                        </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box sx={{
-                            width: 16,
-                            height: 16,
-                            borderRadius: '50%',
-                            border: `2px solid ${theme.palette.primary.main}`
-                        }} />
-                        <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                            Today
-                        </Typography>
-                    </Box>
-                </Box>
-            </Box>
-        );
-    };
+    // Old calendar function removed - now using GitHub-style WorkoutCalendar component
 
     const renderPastWorkouts = () => {
         const stats = getWorkoutStats();
@@ -558,8 +375,25 @@ export default function History() {
                                                 {exercise.name}
                                             </Typography>
                                             <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                                                {`${exercise.weight}${weightUnit} × ${exercise.reps} reps × ${exercise.sets} sets`}
+                                                {Array.isArray(exercise.sets)
+                                                    ? `${exercise.sets.length} sets completed`
+                                                    : `${exercise.weight || 0}${weightUnit} × ${exercise.reps || 0} reps × ${exercise.sets || 0} sets`
+                                                }
                                             </Typography>
+                                            {/* Show individual sets if available */}
+                                            {Array.isArray(exercise.sets) && exercise.sets.length > 0 && (
+                                                <Box sx={{ ml: 2, mt: 0.5 }}>
+                                                    {exercise.sets.map((set, setIndex) => (
+                                                        <Typography key={setIndex} variant="caption" sx={{ color: theme.palette.text.muted, display: 'block' }}>
+                                                            Set {setIndex + 1}: {set.reps || 0} reps
+                                                            {set.weightType === 'bodyweight'
+                                                                ? ' (Bodyweight)'
+                                                                : ` @ ${set.weight || 0}${set.weightUnit || weightUnit}`
+                                                            }
+                                                        </Typography>
+                                                    ))}
+                                                </Box>
+                                            )}
                                             {exercise.notes && (
                                                 <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontStyle: 'italic' }}>
                                                     Note: {exercise.notes}
@@ -768,7 +602,7 @@ export default function History() {
                             </Typography>
                         ) : (
                             <>
-                                {activeTab === 0 && renderCalendar()}
+                                {activeTab === 0 && <WorkoutCalendar workouts={workouts} />}
                                 {activeTab === 1 && renderPastWorkouts()}
                                 {activeTab === 2 && renderExerciseHistory()}
                             </>
@@ -813,12 +647,28 @@ export default function History() {
                                     Duration: {formatTime(workout.duration || 0)}
                                 </Typography>
                                 {workout.exercises?.map((exercise, index) => (
-                                    <Typography key={index} variant="body2" sx={{ color: theme.palette.text.secondary, ml: 2 }}>
-                                        • {exercise.name}: {Array.isArray(exercise.sets)
-                                            ? `${exercise.sets.length} sets`
-                                            : `${exercise.weight}${weightUnit} × ${exercise.reps} reps × ${exercise.sets} sets`
-                                        }
-                                    </Typography>
+                                    <Box key={index} sx={{ ml: 2, mb: 1 }}>
+                                        <Typography variant="body2" sx={{ color: theme.palette.text.primary }}>
+                                            • {exercise.name}
+                                        </Typography>
+                                        {Array.isArray(exercise.sets) ? (
+                                            <Box sx={{ ml: 2 }}>
+                                                {exercise.sets.map((set, setIndex) => (
+                                                    <Typography key={setIndex} variant="caption" sx={{ color: theme.palette.text.secondary, display: 'block' }}>
+                                                        Set {setIndex + 1}: {set.reps || 0} reps
+                                                        {set.weightType === 'bodyweight'
+                                                            ? ' (Bodyweight)'
+                                                            : ` @ ${set.weight || 0}${set.weightUnit || weightUnit}`
+                                                        }
+                                                    </Typography>
+                                                ))}
+                                            </Box>
+                                        ) : (
+                                            <Typography variant="caption" sx={{ color: theme.palette.text.secondary, ml: 2 }}>
+                                                {exercise.weight || 0}{weightUnit} × {exercise.reps || 0} reps × {exercise.sets || 0} sets
+                                            </Typography>
+                                        )}
+                                    </Box>
                                 ))}
                             </Box>
                         ))}

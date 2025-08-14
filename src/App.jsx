@@ -27,6 +27,7 @@ import CalendarTest from './components/test/CalendarTest';
 import LandingPage from './components/LandingPage';
 import PublicRoute from './components/PublicRoute';
 import DefaultRoute from './components/DefaultRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Wrapper component to handle conditional styling
 function AppWrapper({ children }) {
@@ -36,7 +37,7 @@ function AppWrapper({ children }) {
     <div style={{
       backgroundColor: '#121212',
       minHeight: '100vh',
-      paddingBottom: currentUser ? '56px' : '0', // Only add padding for authenticated users with navigation
+      paddingBottom: currentUser ? '70px' : '0', // Only add padding for authenticated users with navigation
     }}>
       {children}
     </div>
@@ -128,7 +129,9 @@ function App() {
               <Route path="/history" element={
                 <ProtectedRoute>
                   <>
-                    <History />
+                    <ErrorBoundary>
+                      <History />
+                    </ErrorBoundary>
                     <Navigation />
                   </>
                 </ProtectedRoute>

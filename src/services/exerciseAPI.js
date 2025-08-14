@@ -102,6 +102,17 @@ export const fetchExercises = async (limit = 20, offset = 0) => {
         .map((eq) => eq.name)
         .filter(Boolean);
 
+      // Normalize images (ensure structure: { image, is_main, uuid })
+      const images = Array.isArray(exercise.images)
+        ? exercise.images
+            .filter((img) => !!img.image)
+            .map((img) => ({
+              image: img.image,
+              is_main: !!img.is_main,
+              uuid: img.uuid,
+            }))
+        : [];
+
       return {
         id: `wger-${exercise.id}`,
         name: englishTranslation?.name || `Exercise ${exercise.id}`,
@@ -113,7 +124,7 @@ export const fetchExercises = async (limit = 20, offset = 0) => {
         muscles_secondary: secondaryMuscles,
         category: exercise.category?.name || "Unknown",
         uuid: exercise.uuid,
-        images: exercise.images || [],
+        images,
       };
     });
 
@@ -214,6 +225,17 @@ export const fetchAllExercises = async () => {
           .map((eq) => eq.name)
           .filter(Boolean);
 
+        // Normalize images
+        const images = Array.isArray(exercise.images)
+          ? exercise.images
+              .filter((img) => !!img.image)
+              .map((img) => ({
+                image: img.image,
+                is_main: !!img.is_main,
+                uuid: img.uuid,
+              }))
+          : [];
+
         return {
           id: `wger-${exercise.id}`,
           name: englishTranslation?.name || `Exercise ${exercise.id}`,
@@ -225,7 +247,7 @@ export const fetchAllExercises = async () => {
           muscles_secondary: secondaryMuscles,
           category: exercise.category?.name || "Unknown",
           uuid: exercise.uuid,
-          images: exercise.images || [],
+          images,
         };
       });
 
@@ -332,6 +354,16 @@ export const fetchExercisesByBodyPart = async (
         .map((eq) => eq.name)
         .filter(Boolean);
 
+      const images = Array.isArray(exercise.images)
+        ? exercise.images
+            .filter((img) => !!img.image)
+            .map((img) => ({
+              image: img.image,
+              is_main: !!img.is_main,
+              uuid: img.uuid,
+            }))
+        : [];
+
       return {
         id: `wger-${exercise.id}`,
         name: englishTranslation?.name || `Exercise ${exercise.id}`,
@@ -341,6 +373,7 @@ export const fetchExercisesByBodyPart = async (
         equipment: equipmentList.length > 0 ? equipmentList[0] : "bodyweight",
         muscles: primaryMuscles,
         category: bodyPart,
+        images,
       };
     });
 
@@ -389,6 +422,16 @@ export const fetchExercisesByTarget = async (targetMuscle) => {
         .map((eq) => eq.name)
         .filter(Boolean);
 
+      const images = Array.isArray(exercise.images)
+        ? exercise.images
+            .filter((img) => !!img.image)
+            .map((img) => ({
+              image: img.image,
+              is_main: !!img.is_main,
+              uuid: img.uuid,
+            }))
+        : [];
+
       return {
         id: `wger-${exercise.id}`,
         name: englishTranslation?.name || `Exercise ${exercise.id}`,
@@ -397,6 +440,7 @@ export const fetchExercisesByTarget = async (targetMuscle) => {
         equipment: equipmentList.length > 0 ? equipmentList[0] : "bodyweight",
         muscles: primaryMuscles,
         bodyPart: exercise.category?.name || "Unknown",
+        images,
       };
     });
 
@@ -473,6 +517,16 @@ export const fetchExercisesByName = async (searchTerm, limit = 50) => {
         .map((eq) => eq.name)
         .filter(Boolean);
 
+      const images = Array.isArray(exercise.images)
+        ? exercise.images
+            .filter((img) => !!img.image)
+            .map((img) => ({
+              image: img.image,
+              is_main: !!img.is_main,
+              uuid: img.uuid,
+            }))
+        : [];
+
       return {
         id: `wger-${exercise.id}`,
         name: englishTranslation?.name || `Exercise ${exercise.id}`,
@@ -484,7 +538,7 @@ export const fetchExercisesByName = async (searchTerm, limit = 50) => {
         muscles_secondary: secondaryMuscles,
         category: exercise.category?.name || "Unknown",
         uuid: exercise.uuid,
-        images: exercise.images || [],
+        images,
       };
     });
 
@@ -520,7 +574,7 @@ export const fetchBodyPartList = async () => {
   }
 };
 
-// Function to fetch exercise images from wger API
+// Function to fetch exercise images from wger API (static images only)
 export const fetchExerciseImage = async (exerciseId) => {
   try {
     // Extract the numeric ID from wger-xxx format

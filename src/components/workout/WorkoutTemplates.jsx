@@ -130,6 +130,7 @@ export default function WorkoutTemplates() {
         if (currentUser) {
             loadTemplates();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentUser]);
 
     const loadTemplates = async () => {
@@ -213,6 +214,8 @@ export default function WorkoutTemplates() {
             return day;
         }));
     };
+
+
 
     const handleSaveTemplate = async () => {
         try {
@@ -550,13 +553,9 @@ export default function WorkoutTemplates() {
                                                 const newExercise = {
                                                     id: exercise.id || Date.now(),
                                                     name: exercise.name,
-                                                    sets: 3,
-                                                    reps: 10,
-                                                    weight: 0,
-                                                    restTime: 60,
-                                                    notes: '',
                                                     target: exercise.target,
-                                                    equipment: exercise.equipment
+                                                    equipment: exercise.equipment,
+                                                    notes: ''
                                                 };
 
                                                 setWorkoutDays(prev => prev.map(workoutDay => {
@@ -589,8 +588,8 @@ export default function WorkoutTemplates() {
                                                             {exercise.name}
                                                         </Typography>
                                                         <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
-                                                            {exercise.sets} sets × {exercise.reps} reps
-                                                            {exercise.weight && ` @ ${exercise.weight}kg`}
+                                                            {exercise.target && `Target: ${exercise.target}`}
+                                                            {exercise.equipment && ` • Equipment: ${exercise.equipment}`}
                                                         </Typography>
                                                     </Box>
                                                     <IconButton
@@ -608,10 +607,12 @@ export default function WorkoutTemplates() {
                         ))}
                     </DialogContent>
                     <DialogActions sx={{ p: 3 }}>
-                        <Button onClick={() => setDialogOpen(false)} sx={{ color: theme.palette.text.secondary, backgroundColor: theme.palette.background.gradient.button, '&:hover': {
-                            background: theme.palette.background.gradient.buttonHover,
-                            color: theme.palette.primary.contrastText,
-                        }, }}>
+                        <Button onClick={() => setDialogOpen(false)} sx={{
+                            color: theme.palette.text.secondary, backgroundColor: theme.palette.background.gradient.button, '&:hover': {
+                                background: theme.palette.background.gradient.buttonHover,
+                                color: theme.palette.primary.contrastText,
+                            },
+                        }}>
                             Cancel
                         </Button>
                         <ActionButton

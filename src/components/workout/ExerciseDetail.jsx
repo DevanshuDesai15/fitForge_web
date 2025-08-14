@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
     Box,
@@ -25,7 +25,7 @@ import {
     MdSignalCellular4Bar,
     MdList
 } from 'react-icons/md';
-import { fetchExerciseImage } from '../../services/exerciseAPI';
+import { fetchExerciseImages } from '../../services/exerciseAPI';
 
 const StyledCard = styled(Card)(({ theme }) => ({
     background: 'rgba(30, 30, 30, 0.9)',
@@ -41,35 +41,97 @@ export default function ExerciseDetail() {
     const { id } = useParams();
     const exercise = location.state?.exercise;
     const [imageUrl, setImageUrl] = useState(null);
+    const [imageUrls, setImageUrls] = useState([]);
+    const intervalRef = useRef(null);
+    const [currentFrame, setCurrentFrame] = useState(0);
     const [imageLoading, setImageLoading] = useState(true);
     const [imageError, setImageError] = useState(false);
 
+    // 1) Load images for the current exercise once when the id changes
     useEffect(() => {
+        let cancelled = false;
+
         const loadExerciseImage = async () => {
-            if (exercise?.id) {
-                try {
-                    setImageLoading(true);
-                    setImageError(false);
-                    const url = await fetchExerciseImage(exercise.id, '720');
-                    setImageUrl(url);
-                } catch (error) {
+            // Reset media state on exercise change to avoid showing stale frames
+            setImageUrls([]);
+            setImageUrl(null);
+            setCurrentFrame(0);
+
+            if (!exercise?.id) {
+                setImageLoading(false);
+                return;
+            }
+
+            try {
+                setImageLoading(true);
+                setImageError(false);
+
+                // Prefer images embedded in the exercise payload (wger exerciseinfo provides this)
+                const inlineImages = Array.isArray(exercise.images) ? exercise.images : [];
+                if (inlineImages.length > 0) {
+                    const sorted = inlineImages
+                        .slice()
+                        .sort((a, b) => (b.is_main === true) - (a.is_main === true))
+                        .map((img) => img.image)
+                        .filter(Boolean);
+                    if (!cancelled && sorted.length > 0) {
+                        setImageUrls(sorted);
+                        setImageUrl(sorted[0]);
+                        setImageLoading(false);
+                        return;
+                    }
+                }
+
+                // Fallback (wger only): query exerciseimage endpoint by base id
+                if (typeof exercise.id === 'string' && exercise.id.startsWith('wger-')) {
+                    const results = await fetchExerciseImages(exercise.id);
+                    const fetched = results.map((r) => r.url).filter(Boolean);
+                    if (!cancelled) {
+                        if (fetched.length > 0) {
+                            setImageUrls(fetched);
+                            const apiImage = results.find((img) => img.isMain)?.url || fetched[0] || null;
+                            setImageUrl(apiImage);
+                        } else {
+                            setImageUrl(null);
+                            setImageUrls([]);
+                        }
+                    }
+                } else if (!cancelled) {
+                    setImageUrl(null);
+                    setImageUrls([]);
+                }
+            } catch (error) {
+                if (!cancelled) {
                     console.error('Failed to load exercise image:', error);
                     setImageError(true);
-                } finally {
-                    setImageLoading(false);
                 }
+            } finally {
+                if (!cancelled) setImageLoading(false);
             }
         };
 
         loadExerciseImage();
 
-        // Cleanup function to revoke object URL
         return () => {
-            if (imageUrl) {
-                URL.revokeObjectURL(imageUrl);
-            }
+            cancelled = true;
         };
     }, [exercise?.id]);
+
+    // 2) Manage frame animation when images array changes
+    useEffect(() => {
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
+        if (imageUrls && imageUrls.length > 1) {
+            intervalRef.current = setInterval(() => {
+                setCurrentFrame((prev) => (prev + 1) % imageUrls.length);
+            }, 900);
+        }
+        return () => {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+        };
+    }, [imageUrls]);
 
     if (!exercise) {
         return (
@@ -240,7 +302,7 @@ export default function ExerciseDetail() {
                                                     Loading demonstration...
                                                 </Typography>
                                             </Box>
-                                        ) : imageError ? (
+                                        ) : imageError || (!imageUrl && imageUrls.length === 0) ? (
                                             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
                                                 <MdFitnessCenter size={48} color="rgba(255, 255, 255, 0.3)" />
                                                 <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center' }}>
@@ -249,13 +311,14 @@ export default function ExerciseDetail() {
                                             </Box>
                                         ) : (
                                             <img
-                                                src={imageUrl}
+                                                src={imageUrls.length > 1 ? imageUrls[currentFrame] : imageUrl}
                                                 alt={`${exercise.name} demonstration`}
                                                 style={{
                                                     width: '100%',
                                                     height: '100%',
                                                     objectFit: 'cover',
-                                                    borderRadius: '12px'
+                                                    borderRadius: '12px',
+                                                    transition: 'opacity 0.3s ease'
                                                 }}
                                             />
                                         )}

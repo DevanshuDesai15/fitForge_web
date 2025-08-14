@@ -103,44 +103,63 @@ export default function Navigation() {
             <BottomNavigation
                 value={value}
                 onChange={handleChange}
+                showLabels={true}
                 sx={{
                     background: 'transparent',
                     height: 'auto',
-                    minHeight: 65,
+                    minHeight: 70,
                     paddingTop: 1,
-                    paddingBottom: 0.5,
+                    paddingBottom: 1,
                     '& .MuiBottomNavigationAction-root': {
                         minWidth: 'auto',
-                        padding: '8px 12px',
+                        padding: '6px 8px',
                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                         borderRadius: 2,
-                        margin: '0 2px',
+                        margin: '0 1px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                         '&:hover': {
                             background: `${theme.palette.primary.main}10`,
+                            '& .MuiBottomNavigationAction-label': {
+                                color: theme.palette.primary.light,
+                            },
+                            '& .navigation-icon': {
+                                color: theme.palette.primary.light,
+                                transform: 'scale(1.05)',
+                            },
                         },
                         '&.Mui-selected': {
                             background: `${theme.palette.primary.main}15`,
                             transform: 'translateY(-2px)',
                             '& .MuiBottomNavigationAction-label': {
                                 fontSize: '0.75rem',
-                                fontWeight: 600,
+                                fontWeight: 700,
                                 color: theme.palette.primary.main,
                                 opacity: 1,
+                                textShadow: `0 0 8px ${theme.palette.primary.main}50`,
                             },
                             '& .navigation-icon': {
                                 color: theme.palette.primary.main,
-                                transform: 'scale(1.1)',
+                                transform: 'scale(1.15)',
+                                filter: `drop-shadow(0 0 6px ${theme.palette.primary.main}60)`,
                             },
                         },
                     },
                     '& .MuiBottomNavigationAction-label': {
                         fontSize: '0.7rem',
-                        fontWeight: 500,
-                        color: 'rgba(255, 255, 255, 0.6)',
-                        marginTop: 1,
+                        fontWeight: 600,
+                        color: 'rgba(255, 255, 255, 0.8)',
+                        marginTop: '2px',
                         transition: 'all 0.3s ease',
+                        opacity: 1, // Always show labels
+                        textAlign: 'center',
+                        lineHeight: 1.2,
+                        letterSpacing: '0.02em',
                         '&.Mui-selected': {
                             fontSize: '0.75rem',
+                            fontWeight: 700,
                         },
                     },
                 }}
@@ -154,10 +173,11 @@ export default function Navigation() {
                             <Box className="navigation-icon" sx={{
                                 transition: 'all 0.3s ease',
                                 color: 'rgba(255, 255, 255, 0.7)',
-                                fontSize: '1.4rem',
+                                fontSize: '1.3rem',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
+                                mb: 0.5,
                             }}>
                                 <item.icon />
                             </Box>
