@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import {
     Box,
     Typography,
@@ -9,7 +8,6 @@ import {
     CardContent,
     Avatar,
     Chip,
-    IconButton,
     useTheme,
     useMediaQuery,
     CircularProgress
@@ -17,19 +15,16 @@ import {
 import { styled } from '@mui/material/styles';
 import {
     MdFitnessCenter,
-    MdTimer,
     MdShowChart,
     MdHistory,
-    MdLibraryBooks,
-    MdPlayArrow,
-    MdStar,
     MdTrendingUp,
     MdPhoneAndroid,
     MdCloud,
     MdSecurity,
     MdSpeed,
     MdArrowForward,
-    MdCheckCircle
+    MdCheckCircle,
+    MdEmojiEvents
 } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -193,50 +188,50 @@ export default function LandingPage() {
 
     const features = [
         {
-            icon: MdTimer,
-            title: 'Background Timer',
-            description: 'Timer continues running even when you close the app or lock your phone',
+            icon: MdTrendingUp,
+            title: 'Progressive Overload Tracking',
+            description: 'Automatically track weight increases and get suggestions for when to progress',
             color: theme.palette.primary.main
+        },
+        {
+            icon: MdEmojiEvents,
+            title: 'Auto PR Detection',
+            description: 'Celebrate personal records automatically - never miss a strength milestone',
+            color: '#ffc107'
+        },
+        {
+            icon: MdShowChart,
+            title: 'Smart Analytics',
+            description: 'Visual progress charts and insights that show your strength gains over time',
+            color: '#9c27b0'
         },
         {
             icon: MdFitnessCenter,
             title: '800+ Exercises',
-            description: 'Comprehensive exercise library with detailed instructions and muscle targeting',
+            description: 'Comprehensive exercise library with detailed instructions for proper form',
             color: '#ff9800'
         },
         {
-            icon: MdShowChart,
-            title: 'Progress Tracking',
-            description: 'Visual charts and analytics to monitor your fitness journey and improvements',
-            color: '#9c27b0'
-        },
-        {
             icon: MdHistory,
-            title: 'Workout History',
-            description: 'Complete log of all your workouts with detailed exercise breakdowns',
+            title: 'Intelligent History',
+            description: 'Complete workout logs with progression insights and performance comparisons',
             color: '#00bcd4'
         },
         {
-            icon: MdLibraryBooks,
-            title: 'Custom Templates',
-            description: 'Create and save workout routines for quick access and consistency',
-            color: '#4caf50'
-        },
-        {
             icon: MdPhoneAndroid,
-            title: 'Mobile Optimized',
-            description: 'Perfect for gym use with touch-friendly interface and offline support',
-            color: '#f44336'
+            title: 'Better Than Notes',
+            description: 'Purpose-built for gym use - no more messy notes or forgotten weights',
+            color: '#4caf50'
         }
     ];
 
     const benefits = [
-        'Never lose track of workout time again',
-        'Access 800+ professional exercises',
-        'Track progress with detailed analytics',
-        'Works offline in the gym',
-        'Sync across all your devices',
-        'Free and open source'
+        'Get stronger faster with progressive overload tracking',
+        'Never forget your previous weights again',
+        'Automatic personal record detection and celebration',
+        'Smart suggestions for when to increase weights',
+        'Visual progress charts that motivate you',
+        'Purpose-built for serious lifters'
     ];
 
     const handleGetStarted = () => {
@@ -338,13 +333,13 @@ export default function LandingPage() {
                                     backdropFilter: 'blur(10px)',
                                     boxShadow: '0 8px 32px rgba(0, 255, 159, 0.2)'
                                 }}>
-                                    <Typography sx={{ fontSize: '1.2rem' }}>🚀</Typography>
+                                    <Typography sx={{ fontSize: '1.2rem' }}>💪</Typography>
                                     <Typography sx={{
                                         color: theme.palette.primary.main,
                                         fontWeight: 'bold',
                                         fontSize: '0.95rem'
                                     }}>
-                                        Revolutionary Background Timer Technology
+                                        Smart Progressive Overload Tracking
                                     </Typography>
                                 </Box>
 
@@ -367,7 +362,7 @@ export default function LandingPage() {
                                         }
                                     }}
                                 >
-                                    Never Lose Your Workout Timer Again! 💪
+                                    Track Your Strength Progress Like Never Before! 🏋️‍♂️
                                 </Typography>
 
                                 <Typography
@@ -381,11 +376,11 @@ export default function LandingPage() {
                                         textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)'
                                     }}
                                 >
-                                    The first fitness app with a <span style={{
+                                    Ditch the Notes app! Track your <span style={{
                                         color: theme.palette.primary.main,
                                         fontWeight: 'bold',
                                         textShadow: `0 0 10px ${theme.palette.primary.main}50`
-                                    }}>background timer that NEVER stops</span> — even when you lock your phone, take calls, or switch apps. Focus on your workout, not your timer.
+                                    }}>progressive overload intelligently</span> — get personalized suggestions for when to increase weights, celebrate PRs automatically, and build muscle more effectively than ever.
                                 </Typography>
 
                                 <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 4 }}>
@@ -404,10 +399,10 @@ export default function LandingPage() {
                                 {/* Key Benefits */}
                                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                                     {[
-                                        { icon: '⏱️', text: 'Never‑Stop Timer' },
-                                        { icon: '💪', text: '800+ Exercises' },
-                                        { icon: '📊', text: 'Smart Analytics' },
-                                        { icon: '📱', text: 'Mobile First' }
+                                        { icon: '📈', text: 'Progressive Overload' },
+                                        { icon: '🏆', text: 'Auto PR Detection' },
+                                        { icon: '💡', text: 'Smart Suggestions' },
+                                        { icon: '📱', text: 'Better Than Notes' }
                                     ].map((item, index) => (
                                         <Box key={index} sx={{
                                             display: 'flex',
@@ -433,54 +428,6 @@ export default function LandingPage() {
                                     ))}
                                 </Box>
                             </Box>
-                        </Grid2>
-
-                        {/* Right: Phone Mock */}
-                        <Grid2 xs={12} md={5} sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-end' } }}>
-                            <PhoneMock>
-                                <PhoneScreen>
-                                    {/* Status pill */}
-                                    <Box sx={{ position: 'absolute', top: 20, left: 20, display: 'flex', gap: 1 }}>
-                                        <Chip label="REST" size="small" sx={{ background: `${theme.palette.primary.main}20`, color: theme.palette.primary.main, fontWeight: 700 }} />
-                                        <Chip label="WORKOUT" size="small" sx={{ background: `${theme.palette.secondary.main}25`, color: theme.palette.secondary.light, fontWeight: 700 }} />
-                                    </Box>
-
-                                    {/* Timer visualization */}
-                                    <Box sx={{ position: 'relative', width: 220, height: 220, mb: 2 }}>
-                                        <CircularProgress variant="determinate" value={75} thickness={3} size={220} sx={{ color: theme.palette.primary.main, opacity: 0.7 }} />
-                                        <CircularProgress variant="determinate" value={100} thickness={3} size={220} sx={{ color: 'rgba(255,255,255,0.06)', position: 'absolute', left: 0, top: 0 }} />
-                                        <Box sx={{
-                                            position: 'absolute',
-                                            inset: 0,
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
-                                        }}>
-                                            <Typography variant="h2" sx={{ fontWeight: 800, color: theme.palette.text.primary, lineHeight: 1 }}>
-                                                00:45
-                                            </Typography>
-                                            <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>Rest Time</Typography>
-                                        </Box>
-                                    </Box>
-
-                                    {/* Action buttons */}
-                                    <Box sx={{ display: 'flex', gap: 2, width: '100%', justifyContent: 'center', mt: 1 }}>
-                                        <Button variant="contained" sx={{ flex: 1, py: 1.2 }}>Resume</Button>
-                                        <Button variant="outlined" sx={{ flex: 1, py: 1.2, borderColor: theme.palette.primary.main, color: theme.palette.primary.main }}>Skip</Button>
-                                    </Box>
-
-                                    {/* Footer stats */}
-                                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 1.5, mt: 3, width: '100%' }}>
-                                        {[{ t: 'Sets', v: '3 / 5' }, { t: 'Next', v: 'Bench' }, { t: 'Weight', v: '60kg' }].map((x, i) => (
-                                            <Card key={i} sx={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${theme.palette.border.light}`, p: 1.2, textAlign: 'center' }}>
-                                                <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>{x.t}</Typography>
-                                                <Typography variant="body2" sx={{ color: theme.palette.text.primary, fontWeight: 700 }}>{x.v}</Typography>
-                                            </Card>
-                                        ))}
-                                    </Box>
-                                </PhoneScreen>
-                            </PhoneMock>
                         </Grid2>
                     </Grid2>
 
@@ -512,7 +459,7 @@ export default function LandingPage() {
                             position: 'relative',
                             zIndex: 1
                         }}>
-                            Tired of Losing Track of Your Workouts? 😤
+                            Tired of Using Notes App for Gym Progress? 😤
                         </Typography>
 
                         <Typography variant="h6" sx={{
@@ -523,7 +470,7 @@ export default function LandingPage() {
                             position: 'relative',
                             zIndex: 1
                         }}>
-                            Phone locks, you switch apps, take a call — and BOOM! Timers stop in most apps. Not in FitForge.
+                            Scribbling weights in Notes, forgetting last session&apos;s numbers, no progress insights — there&apos;s a better way!
                         </Typography>
 
                         <Box sx={{
@@ -535,10 +482,10 @@ export default function LandingPage() {
                             zIndex: 1
                         }}>
                             {[
-                                '📱 Phone locks = Timer stops',
-                                '☎️ Call comes = Progress lost',
-                                '🔄 Switch apps = Start over',
-                                '😵 Confusion = Bad workout'
+                                '📝 Notes app = Messy tracking',
+                                '🤔 Forgot last weight = Guessing',
+                                '📊 No insights = Slow progress',
+                                '😵 Manual calculations = Wasted time'
                             ].map((problem, index) => (
                                 <Box key={index} sx={{
                                     background: 'rgba(255, 0, 102, 0.2)',
@@ -568,7 +515,7 @@ export default function LandingPage() {
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent'
                     }}>
-                        Why FitForge is Different 🔥
+                        Built for Progressive Overload 💪
                     </Typography>
                     <Typography variant="h6" sx={{
                         color: theme.palette.text.primary,
@@ -576,7 +523,7 @@ export default function LandingPage() {
                         mx: 'auto',
                         fontWeight: 500
                     }}>
-                        We solved the problems that make other fitness apps frustrating to use in the gym
+                        Everything you need to track strength gains and build muscle more effectively than Notes app
                     </Typography>
                 </Box>
 
@@ -717,7 +664,7 @@ export default function LandingPage() {
                         fontWeight: 'bold',
                         mb: 2
                     }}>
-                        Ready to Transform Your Fitness?
+                        Ready to Get Stronger?
                     </Typography>
 
                     <Typography variant="h6" sx={{
@@ -726,8 +673,8 @@ export default function LandingPage() {
                         maxWidth: '600px',
                         mx: 'auto'
                     }}>
-                        Join thousands of users who never lose track of their workouts.
-                        Start your fitness journey with FitForge today.
+                        Join serious lifters who track their progressive overload intelligently.
+                        Build muscle faster with FitForge&apos;s smart tracking system.
                     </Typography>
 
                     <GlowingButton
