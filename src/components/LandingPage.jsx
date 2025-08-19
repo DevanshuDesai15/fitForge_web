@@ -31,7 +31,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const HeroSection = styled(Box)(({ theme }) => ({
     minHeight: '100vh',
-    background: theme.palette.background.gradient.primary,
+    background: '#121212',
     position: 'relative',
     overflow: 'hidden',
     display: 'flex',
@@ -44,12 +44,7 @@ const HeroSection = styled(Box)(({ theme }) => ({
         left: 0,
         right: 0,
         bottom: 0,
-        background: `
-            radial-gradient(circle at 20% 30%, ${theme.palette.primary.main}25 0%, transparent 40%),
-            radial-gradient(circle at 80% 70%, ${theme.palette.secondary.main}20 0%, transparent 40%),
-            radial-gradient(circle at 40% 80%, ${theme.palette.info.main}20 0%, transparent 40%),
-            linear-gradient(45deg, transparent 30%, ${theme.palette.primary.main}08 50%, transparent 70%)
-        `,
+        background: 'transparent',
         pointerEvents: 'none',
     },
     '&::after': {
@@ -128,7 +123,7 @@ const FeatureCard = styled(Card)(({ theme }) => ({
         left: 0,
         right: 0,
         height: '2px',
-        background: 'linear-gradient(90deg, transparent, rgba(0, 255, 159, 0.5), transparent)',
+        background: 'linear-gradient(90deg, transparent, rgba(221, 237, 0, 0.5), transparent)',
         opacity: 0,
         transition: 'opacity 0.3s ease',
     },
@@ -325,13 +320,13 @@ export default function LandingPage() {
                                     display: 'inline-flex',
                                     alignItems: 'center',
                                     gap: 1,
-                                    background: 'linear-gradient(135deg, rgba(0, 255, 159, 0.2) 0%, rgba(0, 229, 118, 0.1) 100%)',
+                                    background: 'linear-gradient(135deg, rgba(221, 237, 0, 0.2) 0%, rgba(227, 239, 63, 0.1) 100%)',
                                     padding: '8px 20px',
                                     borderRadius: '25px',
-                                    border: '1px solid rgba(0, 255, 159, 0.4)',
+                                    border: '1px solid rgba(221, 237, 0, 0.4)',
                                     mb: 3,
                                     backdropFilter: 'blur(10px)',
-                                    boxShadow: '0 8px 32px rgba(0, 255, 159, 0.2)'
+                                    boxShadow: '0 8px 32px rgba(221, 237, 0, 0.2)'
                                 }}>
                                     <Typography sx={{ fontSize: '1.2rem' }}>💪</Typography>
                                     <Typography sx={{

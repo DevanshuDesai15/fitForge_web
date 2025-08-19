@@ -20,7 +20,7 @@ import {
 } from 'date-fns';
 
 const CalendarContainer = styled(Paper)(() => ({
-    background: 'rgba(30, 30, 30, 0.9)',
+    background: '#282828',
     backdropFilter: 'blur(10px)',
     borderRadius: '16px',
     border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -43,9 +43,9 @@ const DaySquare = styled(Box, {
 })(({ theme, intensity, isToday, size }) => {
     const getColor = () => {
         if (intensity === 0) return 'rgba(255, 255, 255, 0.1)';
-        if (intensity === 1) return 'rgba(0, 255, 159, 0.3)';
-        if (intensity === 2) return 'rgba(0, 255, 159, 0.5)';
-        if (intensity === 3) return 'rgba(0, 255, 159, 0.7)';
+        if (intensity === 1) return 'rgba(221, 237, 0, 0.3)';
+        if (intensity === 2) return 'rgba(221, 237, 0, 0.5)';
+        if (intensity === 3) return 'rgba(221, 237, 0, 0.7)';
         if (intensity >= 4) return theme.palette.primary.main;
         return 'rgba(255, 255, 255, 0.1)';
     };
@@ -100,9 +100,9 @@ const LegendSquare = styled(Box, {
 })(({ theme, intensity }) => {
     const getColor = () => {
         if (intensity === 0) return 'rgba(255, 255, 255, 0.1)';
-        if (intensity === 1) return 'rgba(0, 255, 159, 0.3)';
-        if (intensity === 2) return 'rgba(0, 255, 159, 0.5)';
-        if (intensity === 3) return 'rgba(0, 255, 159, 0.7)';
+        if (intensity === 1) return 'rgba(221, 237, 0, 0.3)';
+        if (intensity === 2) return 'rgba(221, 237, 0, 0.5)';
+        if (intensity === 3) return 'rgba(221, 237, 0, 0.7)';
         if (intensity >= 4) return theme.palette.primary.main;
         return 'rgba(255, 255, 255, 0.1)';
     };

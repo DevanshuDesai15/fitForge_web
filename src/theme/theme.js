@@ -2,86 +2,111 @@ import { createTheme } from "@mui/material";
 
 // Define the color palette for easy maintenance
 const colors = {
-  // Primary brand colors (emerald)
+  // Primary brand colors (yellow/lime from new palette)
   primary: {
-    main: "#22c55e",
-    light: "#34d399",
-    dark: "#16a34a",
-    contrastText: "#0b0f14",
-  },
-
-  // Secondary colors (indigo)
-  secondary: {
-    main: "#6366f1",
-    light: "#818cf8",
-    dark: "#4f46e5",
-  },
-
-  // Background colors (neutral darks)
-  background: {
-    default: "#0b0f14",
-    paper: "#12161f",
-    surface: "#151b26",
-    dark: "#070a0f",
-    medium: "#0f141b",
-    gradient: {
-      primary: "linear-gradient(135deg, #0b0f14 0%, #12161f 50%, #1a2230 100%)",
-      hero: "linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(99, 102, 241, 0.10) 100%)",
-      card: "linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05))",
-      home: "linear-gradient(135deg, #0b0f14 0%, #12161f 50%, #1a2230 100%)",
-      button: "linear-gradient(45deg, #16a34a 0%, #34d399 100%)",
-      buttonHover: "linear-gradient(45deg, #34d399 0%, #16a34a 100%)",
+    main: "#dded00", // Primary - a0
+    light: "#e8f15d", // Primary - a20
+    dark: "#e3ef3f", // Primary - a10
+    contrastText: "#121212", // Dark surface for contrast
+    variants: {
+      a0: "#dded00",
+      a10: "#e3ef3f",
+      a20: "#e8f15d",
+      a30: "#edf377",
+      a40: "#f1f58f",
+      a50: "#f5f7a6",
     },
   },
 
-  // Text colors
+  // Secondary colors (keeping some complementary colors)
+  secondary: {
+    main: "#717171", // Surface - a40 for secondary elements
+    light: "#8b8b8b", // Surface - a50
+    dark: "#575757", // Surface - a30
+  },
+
+  // Background colors (dark surface palette)
+  background: {
+    default: "#121212", // Surface - a0
+    paper: "#282828", // Surface - a10
+    surface: "#3f3f3f", // Surface - a20
+    dark: "#121212", // Surface - a0
+    medium: "#242417", // Tonal - a0
+    gradient: {
+      primary: "linear-gradient(135deg, #121212 0%, #282828 50%, #3f3f3f 100%)",
+      hero: "linear-gradient(135deg, rgba(221, 237, 0, 0.12) 0%, rgba(40, 40, 40, 0.10) 100%)",
+      card: "linear-gradient(rgba(221, 237, 0, 0.03), rgba(221, 237, 0, 0.03))",
+      home: "linear-gradient(135deg, #121212 0%, #282828 50%, #3f3f3f 100%)",
+      button: "linear-gradient(45deg, #dded00 0%, #e8f15d 100%)",
+      buttonHover: "linear-gradient(45deg, #e8f15d 0%, #dded00 100%)",
+    },
+  },
+
+  // Text colors (adjusted for new theme)
   text: {
-    primary: "#e5e7eb",
-    secondary: "#9ca3af",
-    muted: "rgba(229, 231, 235, 0.72)",
-    disabled: "rgba(229, 231, 235, 0.42)",
-    hint: "rgba(229, 231, 235, 0.6)",
+    primary: "#ffffff",
+    secondary: "#8b8b8b", // Surface - a50
+    muted: "rgba(255, 255, 255, 0.72)",
+    disabled: "rgba(255, 255, 255, 0.42)",
+    hint: "rgba(255, 255, 255, 0.6)",
   },
 
   // Status colors
   status: {
     error: "#ef4444",
     warning: "#f59e0b",
-    success: "#22c55e",
-    info: "#0ea5e9",
+    success: "#dded00", // Using primary color for success
+    info: "#717171", // Using secondary for info
   },
 
   // Action colors for different workout actions
   actions: {
-    library: "#22c55e",
-    templates: "#6366f1",
-    quickAdd: "#f59e0b",
-    progress: "#0ea5e9",
+    library: "#dded00", // Primary
+    templates: "#e8f15d", // Primary variant
+    quickAdd: "#edf377", // Primary variant
+    progress: "#f1f58f", // Primary variant
   },
 
   // Difficulty levels
   difficulty: {
-    beginner: "#22c55e",
-    intermediate: "#f59e0b",
-    expert: "#ef4444",
-    unknown: "#9e9e9e",
+    beginner: "#dded00", // Primary
+    intermediate: "#edf377", // Primary variant
+    expert: "#ef4444", // Keep red for expert
+    unknown: "#717171", // Secondary
   },
 
   // Border and divider colors
   border: {
     main: "rgba(255, 255, 255, 0.08)",
     strong: "rgba(255, 255, 255, 0.16)",
-    primary: "rgba(34, 197, 94, 0.28)",
+    primary: "rgba(221, 237, 0, 0.28)",
     light: "rgba(255, 255, 255, 0.04)",
   },
 
   // Surface colors for cards and containers
   surface: {
-    primary: "rgba(34, 197, 94, 0.06)",
-    secondary: "rgba(99, 102, 241, 0.08)",
-    tertiary: "rgba(14, 165, 233, 0.08)",
-    hover: "rgba(255, 255, 255, 0.06)",
+    primary: "rgba(221, 237, 0, 0.06)",
+    secondary: "rgba(40, 40, 40, 0.08)",
+    tertiary: "rgba(63, 63, 63, 0.08)",
+    hover: "rgba(221, 237, 0, 0.06)",
     transparent: "rgba(255, 255, 255, 0.03)",
+    // Additional surface variants from palette
+    variants: {
+      a0: "#121212",
+      a10: "#282828",
+      a20: "#3f3f3f",
+      a30: "#575757",
+      a40: "#717171",
+      a50: "#8b8b8b",
+    },
+    tonal: {
+      a0: "#242417",
+      a10: "#39382c",
+      a20: "#4e4e43",
+      a30: "#65655b",
+      a40: "#7d7d74",
+      a50: "#96958e",
+    },
   },
 };
 

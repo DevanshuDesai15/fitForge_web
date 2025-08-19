@@ -26,7 +26,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const StyledCard = styled(Card)(({ theme }) => ({
-    background: 'rgba(30, 30, 30, 0.9)',
+    background: '#282828',
     backdropFilter: 'blur(10px)',
     borderRadius: '16px',
     boxShadow: '0 4px 30px rgba(0, 255, 159, 0.1)',
@@ -39,14 +39,14 @@ const StyledTextField = styled(TextField)({
             borderColor: 'rgba(255, 255, 255, 0.23)',
         },
         '&:hover fieldset': {
-            borderColor: '#00ff9f',
+            borderColor: '#dded00',
         },
         '&.Mui-focused fieldset': {
-            borderColor: '#00ff9f',
+            borderColor: '#dded00',
         },
     },
     '& label.Mui-focused': {
-        color: '#00ff9f',
+        color: '#dded00',
     },
 });
 
@@ -201,11 +201,11 @@ export default function ExerciseLibrary() {
     return (
         <Box sx={{
             minHeight: '100vh',
-            background: 'linear-gradient(135deg, #121212 0%, #2d2d2d 100%)',
+            background: '#121212',
             padding: '1rem',
         }}>
             <div className="max-w-4xl mx-auto">
-                <Typography variant="h4" sx={{ color: '#00ff9f', fontWeight: 'bold', mb: 3 }}>
+                <Typography variant="h4" sx={{ color: '#dded00', fontWeight: 'bold', mb: 3 }}>
                     Exercise Library
                     <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', ml: 2 }}>
                         ({filteredExercises.length} exercises)
@@ -236,8 +236,8 @@ export default function ExerciseLibrary() {
                         scrollButtons="auto"
                         sx={{
                             '& .MuiTab-root': { color: 'rgba(255, 255, 255, 0.7)' },
-                            '& .Mui-selected': { color: '#00ff9f !important' },
-                            '& .MuiTabs-indicator': { backgroundColor: '#00ff9f' },
+                            '& .Mui-selected': { color: '#dded00 !important' },
+                            '& .MuiTabs-indicator': { backgroundColor: '#dded00' },
                         }}
                     >
                         {bodyParts.map((part) => (
@@ -248,7 +248,7 @@ export default function ExerciseLibrary() {
 
                 {loading ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                        <CircularProgress sx={{ color: '#00ff9f' }} />
+                        <CircularProgress sx={{ color: '#dded00' }} />
                         <Typography sx={{ color: '#fff', ml: 2 }}>
                             Loading exercises...
                         </Typography>
@@ -264,19 +264,19 @@ export default function ExerciseLibrary() {
                                 <Table>
                                     <TableHead>
                                         <TableRow>
-                                            <TableCell sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
+                                            <TableCell sx={{ color: '#dded00', fontWeight: 'bold' }}>
                                                 Exercise Name
                                             </TableCell>
-                                            <TableCell sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
+                                            <TableCell sx={{ color: '#dded00', fontWeight: 'bold' }}>
                                                 Body Part
                                             </TableCell>
-                                            <TableCell sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
+                                            <TableCell sx={{ color: '#dded00', fontWeight: 'bold' }}>
                                                 Target
                                             </TableCell>
-                                            <TableCell sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
+                                            <TableCell sx={{ color: '#dded00', fontWeight: 'bold' }}>
                                                 Equipment
                                             </TableCell>
-                                            <TableCell sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
+                                            <TableCell sx={{ color: '#dded00', fontWeight: 'bold' }}>
                                                 Difficulty
                                             </TableCell>
                                         </TableRow>
@@ -306,7 +306,7 @@ export default function ExerciseLibrary() {
                                                 >
                                                     <TableCell>
                                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                            <MdFitnessCenter size={20} color="#00ff9f" />
+                                                            <MdFitnessCenter size={20} color="#dded00" />
                                                             <Typography sx={{ color: '#fff' }}>
                                                                 {exercise.name}
                                                             </Typography>
@@ -317,8 +317,8 @@ export default function ExerciseLibrary() {
                                                             label={exercise.bodyPart}
                                                             size="small"
                                                             sx={{
-                                                                backgroundColor: 'rgba(0, 255, 159, 0.2)',
-                                                                color: '#00ff9f',
+                                                                backgroundColor: 'rgba(221, 237, 0, 0.2)',
+                                                                color: '#dded00',
                                                                 textTransform: 'capitalize'
                                                             }}
                                                         />
@@ -358,8 +358,8 @@ export default function ExerciseLibrary() {
                         {loadingMore && (
                             <Fade in={loadingMore}>
                                 <InfiniteScrollLoader>
-                                    <CircularProgress size={24} sx={{ color: '#00ff9f', mr: 2 }} />
-                                    <Typography sx={{ color: '#00ff9f', fontWeight: 500 }}>
+                                    <CircularProgress size={24} sx={{ color: '#dded00', mr: 2 }} />
+                                    <Typography sx={{ color: '#dded00', fontWeight: 500 }}>
                                         Loading more exercises...
                                     </Typography>
                                 </InfiniteScrollLoader>
@@ -388,7 +388,7 @@ export default function ExerciseLibrary() {
                                     borderRadius: 2,
                                     mt: 2
                                 }}>
-                                    <Typography sx={{ color: '#00ff9f', fontWeight: 500 }}>
+                                    <Typography sx={{ color: '#dded00', fontWeight: 500 }}>
                                         🎉 You've reached the end! {exercises.length} exercises loaded.
                                     </Typography>
                                 </Box>

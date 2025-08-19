@@ -3,13 +3,35 @@
   line-height: 1.5;
   font-weight: 400;
   color-scheme: dark;
+  
+  /* New Color Palette Variables */
+  --primary-a0: #dded00;
+  --primary-a10: #e3ef3f;
+  --primary-a20: #e8f15d;
+  --primary-a30: #edf377;
+  --primary-a40: #f1f58f;
+  --primary-a50: #f5f7a6;
+  
+  --surface-a0: #121212;
+  --surface-a10: #282828;
+  --surface-a20: #3f3f3f;
+  --surface-a30: #575757;
+  --surface-a40: #717171;
+  --surface-a50: #8b8b8b;
+  
+  --tonal-a0: #242417;
+  --tonal-a10: #39382c;
+  --tonal-a20: #4e4e43;
+  --tonal-a30: #65655b;
+  --tonal-a40: #7d7d74;
+  --tonal-a50: #96958e;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #121212;
+  background-color: var(--surface-a0);
   color: #ffffff;
 }
 

@@ -44,9 +44,9 @@ export default function TimerTest() {
 
     return (
         <Box sx={{ p: 3, maxWidth: 400, mx: 'auto' }}>
-            <Card sx={{ mb: 3, backgroundColor: 'rgba(30, 30, 30, 0.9)' }}>
+            <Card sx={{ mb: 3, backgroundColor: '#282828' }}>
                 <CardContent sx={{ textAlign: 'center' }}>
-                    <Typography variant="h4" sx={{ color: '#00ff9f', mb: 2 }}>
+                    <Typography variant="h4" sx={{ color: '#dded00', mb: 2 }}>
                         {formatTime(workoutTime)}
                     </Typography>
                     <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
@@ -86,7 +86,7 @@ export default function TimerTest() {
 
             <Card sx={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}>
                 <CardContent>
-                    <Typography variant="h6" sx={{ color: '#00ff9f', mb: 1 }}>
+                    <Typography variant="h6" sx={{ color: '#dded00', mb: 1 }}>
                         Debug Log:
                     </Typography>
                     {logs.length === 0 ? (

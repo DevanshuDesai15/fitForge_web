@@ -29,7 +29,7 @@ import { db } from '../firebase/config';
 import { format, isToday } from 'date-fns';
 
 const HeroCard = styled(Card)(({ theme }) => ({
-    background: theme.palette.background.gradient.hero,
+    background: '#282828',
     backdropFilter: 'blur(20px)',
     borderRadius: '24px',
     border: `1px solid ${theme.palette.surface.secondary}`,
@@ -76,7 +76,7 @@ const FeaturedCard = styled(Card)(({ theme }) => ({
 const ActionCard = styled(Card, {
     shouldForwardProp: (prop) => prop !== 'gradient',
 })(({ theme, gradient }) => ({
-    background: gradient || 'rgba(30, 30, 30, 0.9)',
+    background: gradient || '#282828',
     backdropFilter: 'blur(10px)',
     borderRadius: '16px',
     border: `1px solid ${theme.palette.border.main}`,
@@ -193,7 +193,7 @@ export default function Workout() {
     return (
         <Box sx={{
             minHeight: '100vh',
-            background: theme.palette.background.gradient.primary,
+            background: '#121212',
             padding: { xs: '0.5rem', sm: '1rem' },
             paddingBottom: { xs: '100px', sm: '1rem' },
         }}>

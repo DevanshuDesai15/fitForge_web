@@ -54,10 +54,10 @@ import { useWakeLock } from '../../utils/wakeLock';
 import { useNotifications } from '../../utils/notifications';
 
 const StyledCard = styled(Card)(() => ({
-    background: 'rgba(30, 30, 30, 0.9)',
+    background: '#282828',
     backdropFilter: 'blur(10px)',
     borderRadius: '16px',
-    boxShadow: '0 4px 30px rgba(0, 255, 159, 0.1)',
+    boxShadow: '0 4px 30px rgba(221, 237, 0, 0.1)',
     border: '1px solid rgba(255, 255, 255, 0.1)',
 }));
 
@@ -67,14 +67,14 @@ const StyledTextField = styled(TextField)({
             borderColor: 'rgba(255, 255, 255, 0.23)',
         },
         '&:hover fieldset': {
-            borderColor: '#00ff9f',
+            borderColor: '#dded00',
         },
         '&.Mui-focused fieldset': {
-            borderColor: '#00ff9f',
+            borderColor: '#dded00',
         },
     },
     '& label.Mui-focused': {
-        color: '#00ff9f',
+        color: '#dded00',
     },
 });
 
@@ -626,7 +626,7 @@ export default function StartWorkout() {
     return (
         <Box sx={{
             minHeight: '100vh',
-            background: 'linear-gradient(135deg, #121212 0%, #2d2d2d 100%)',
+            background: '#121212',
             padding: '1rem',
         }}>
             <div className="max-w-4xl mx-auto">
@@ -649,8 +649,8 @@ export default function StartWorkout() {
                         severity="success"
                         sx={{
                             mb: 3,
-                            backgroundColor: 'rgba(0, 255, 159, 0.1)',
-                            color: '#00ff9f'
+                            backgroundColor: 'rgba(221, 237, 0, 0.1)',
+                            color: '#dded00'
                         }}
                         onClose={() => setSuccess('')}
                     >
@@ -659,7 +659,7 @@ export default function StartWorkout() {
                 )}
 
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                    <Typography variant="h4" sx={{ color: '#00ff9f', fontWeight: 'bold' }}>
+                    <Typography variant="h4" sx={{ color: '#dded00', fontWeight: 'bold' }}>
                         {workoutStarted
                             ? currentTemplate
                                 ? `${currentTemplate.name} - ${templateDays.find(d => d.id.toString() === selectedDay)?.name || 'Active Workout'}`
@@ -675,9 +675,9 @@ export default function StartWorkout() {
                                 icon={<MdTimer />}
                                 label={`Started: ${formatTime(workoutStartTime)}`}
                                 sx={{
-                                    backgroundColor: 'rgba(0, 255, 159, 0.1)',
-                                    color: '#00ff9f',
-                                    '& .MuiChip-icon': { color: '#00ff9f' }
+                                    backgroundColor: 'rgba(221, 237, 0, 0.1)',
+                                    color: '#dded00',
+                                    '& .MuiChip-icon': { color: '#dded00' }
                                 }}
                             />
                         </Box>
@@ -688,7 +688,7 @@ export default function StartWorkout() {
                 {!workoutStarted && showTemplateSelection && (
                     <StyledCard sx={{ mb: 3 }}>
                         <CardContent>
-                            <Typography variant="h6" sx={{ color: '#00ff9f', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography variant="h6" sx={{ color: '#dded00', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <MdLibraryBooks /> Choose How to Start
                             </Typography>
 
@@ -712,10 +712,10 @@ export default function StartWorkout() {
                                                     borderColor: 'rgba(255, 255, 255, 0.1)',
                                                 },
                                                 '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                    borderColor: 'rgba(0, 255, 159, 0.5)',
+                                                    borderColor: 'rgba(221, 237, 0, 0.5)',
                                                 },
                                                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                    borderColor: '#00ff9f',
+                                                    borderColor: '#dded00',
                                                 },
                                             }}
                                         >
@@ -741,7 +741,7 @@ export default function StartWorkout() {
                                         onClick={handleSelectTemplate}
                                         disabled={!selectedTemplate}
                                         sx={{
-                                            background: selectedTemplate ? 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)' : 'rgba(255, 255, 255, 0.1)',
+                                            background: selectedTemplate ? 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)' : 'rgba(255, 255, 255, 0.1)',
                                             color: selectedTemplate ? '#000' : 'rgba(255, 255, 255, 0.5)',
                                             fontWeight: 'bold',
                                             mb: 2
@@ -765,12 +765,12 @@ export default function StartWorkout() {
                                     startIcon={<MdFitnessCenter />}
                                     onClick={handleStartWorkout}
                                     sx={{
-                                        borderColor: '#00ff9f',
-                                        color: '#00ff9f',
+                                        borderColor: '#dded00',
+                                        color: '#dded00',
                                         fontWeight: 'bold',
                                         '&:hover': {
-                                            borderColor: '#00e676',
-                                            backgroundColor: 'rgba(0, 255, 159, 0.1)',
+                                            borderColor: '#e8f15d',
+                                            backgroundColor: 'rgba(221, 237, 0, 0.1)',
                                         },
                                     }}
                                 >
@@ -790,7 +790,7 @@ export default function StartWorkout() {
                                 startIcon={<MdPlayArrow />}
                                 onClick={handleStartWorkout}
                                 sx={{
-                                    background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
+                                    background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
                                     color: '#000',
                                     fontWeight: 'bold',
                                 }}
@@ -806,7 +806,7 @@ export default function StartWorkout() {
                     <StyledCard sx={{ mb: 3 }}>
                         <CardContent>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                                <Typography variant="h6" sx={{ color: '#00ff9f', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Typography variant="h6" sx={{ color: '#dded00', display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <MdToday /> Select Workout Day
                                 </Typography>
                                 <Button
@@ -816,8 +816,8 @@ export default function StartWorkout() {
                                         borderColor: 'rgba(255, 255, 255, 0.3)',
                                         color: 'rgba(255, 255, 255, 0.7)',
                                         '&:hover': {
-                                            borderColor: '#00ff9f',
-                                            color: '#00ff9f',
+                                            borderColor: '#dded00',
+                                            color: '#dded00',
                                         },
                                     }}
                                 >
@@ -835,16 +835,16 @@ export default function StartWorkout() {
                                         <Card
                                             sx={{
                                                 background: selectedDay === day.id.toString()
-                                                    ? 'rgba(0, 255, 159, 0.1)'
+                                                    ? 'rgba(221, 237, 0, 0.1)'
                                                     : 'rgba(255, 255, 255, 0.05)',
                                                 border: selectedDay === day.id.toString()
-                                                    ? '2px solid #00ff9f'
+                                                    ? '2px solid #dded00'
                                                     : '1px solid rgba(255, 255, 255, 0.1)',
                                                 cursor: 'pointer',
                                                 transition: 'all 0.2s ease',
                                                 '&:hover': {
                                                     transform: 'translateY(-2px)',
-                                                    boxShadow: '0 4px 20px rgba(0, 255, 159, 0.2)',
+                                                    boxShadow: '0 4px 20px rgba(221, 237, 0, 0.2)',
                                                 }
                                             }}
                                             onClick={() => {
@@ -854,11 +854,11 @@ export default function StartWorkout() {
                                         >
                                             <CardContent>
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                                    <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                                    <Typography variant="h6" sx={{ color: '#dded00' }}>
                                                         {day.name}
                                                     </Typography>
                                                     {selectedDay === day.id.toString() && (
-                                                        <MdCheckCircle style={{ color: '#00ff9f' }} />
+                                                        <MdCheckCircle style={{ color: '#dded00' }} />
                                                     )}
                                                 </Box>
 
@@ -875,8 +875,8 @@ export default function StartWorkout() {
                                                                     label={mg.name}
                                                                     size="small"
                                                                     sx={{
-                                                                        backgroundColor: 'rgba(0, 255, 159, 0.2)',
-                                                                        color: '#00ff9f',
+                                                                        backgroundColor: 'rgba(221, 237, 0, 0.2)',
+                                                                        color: '#dded00',
                                                                         fontSize: '0.75rem'
                                                                     }}
                                                                 />
@@ -918,16 +918,16 @@ export default function StartWorkout() {
                     fullWidth
                     PaperProps={{
                         sx: {
-                            background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
-                            border: '1px solid rgba(0, 255, 159, 0.3)',
+                            background: '#282828',
+                            border: '1px solid rgba(221, 237, 0, 0.3)',
                             borderRadius: 2,
                         }
                     }}
                 >
                     <DialogTitle sx={{
-                        color: '#00ff9f',
+                        color: '#dded00',
                         textAlign: 'center',
-                        borderBottom: '1px solid rgba(0, 255, 159, 0.2)',
+                        borderBottom: '1px solid rgba(221, 237, 0, 0.2)',
                         pb: 2
                     }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
@@ -942,7 +942,7 @@ export default function StartWorkout() {
                                     {templateDays.find(d => d.id.toString() === selectedDay)?.name}
                                 </Typography>
                                 <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 2 }}>
-                                    Template: <strong style={{ color: '#00ff9f' }}>{currentTemplate?.name}</strong>
+                                    Template: <strong style={{ color: '#dded00' }}>{currentTemplate?.name}</strong>
                                 </Typography>
 
                                 {/* Show exercise count and muscle groups */}
@@ -966,8 +966,8 @@ export default function StartWorkout() {
                                                                 label={mg.name}
                                                                 size="small"
                                                                 sx={{
-                                                                    backgroundColor: 'rgba(0, 255, 159, 0.2)',
-                                                                    color: '#00ff9f',
+                                                                    backgroundColor: 'rgba(221, 237, 0, 0.2)',
+                                                                    color: '#dded00',
                                                                     fontSize: '0.75rem'
                                                                 }}
                                                             />
@@ -1004,12 +1004,12 @@ export default function StartWorkout() {
                             variant="contained"
                             startIcon={<MdPlayArrow />}
                             sx={{
-                                background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
+                                background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
                                 color: '#000',
                                 fontWeight: 'bold',
                                 px: 3,
                                 '&:hover': {
-                                    background: 'linear-gradient(45deg, #00e676 30%, #00ff9f 90%)',
+                                    background: 'linear-gradient(45deg, #e8f15d 30%, #dded00 90%)',
                                 }
                             }}
                         >
@@ -1026,7 +1026,7 @@ export default function StartWorkout() {
                     fullWidth
                     PaperProps={{
                         sx: {
-                            background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
+                            background: '#282828',
                             border: '1px solid rgba(255, 68, 68, 0.3)',
                             borderRadius: 2,
                         }
@@ -1124,11 +1124,11 @@ export default function StartWorkout() {
                                         onClick={handleFinishWorkout}
                                         disabled={loading}
                                         sx={{
-                                            background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
+                                            background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
                                             color: '#000',
                                             fontWeight: 'bold',
                                             '&:hover': {
-                                                background: 'linear-gradient(45deg, #00e676 30%, #00ff9f 90%)',
+                                                background: 'linear-gradient(45deg, #e8f15d 30%, #dded00 90%)',
                                             }
                                         }}
                                     >
@@ -1143,8 +1143,8 @@ export default function StartWorkout() {
                                                 color: 'rgba(255, 255, 255, 0.7)',
                                                 minWidth: '140px',
                                                 '&:hover': {
-                                                    borderColor: '#00ff9f',
-                                                    color: '#00ff9f',
+                                                    borderColor: '#dded00',
+                                                    color: '#dded00',
                                                 },
                                             }}
                                         >
@@ -1160,23 +1160,23 @@ export default function StartWorkout() {
                                 <List>
                                     {allExercises.map((exercise, exerciseIndex) => (
                                         <Accordion key={exerciseIndex} sx={{
-                                            background: 'rgba(30, 30, 30, 0.9)',
+                                            background: '#282828',
                                             color: 'white',
                                             mb: 2,
                                             borderRadius: '16px',
                                             '&.Mui-expanded': {
                                                 margin: '16px 0',
                                             },
-                                            boxShadow: '0 4px 30px rgba(0, 255, 159, 0.1)',
+                                            boxShadow: '0 4px 30px rgba(221, 237, 0, 0.1)',
                                             border: '1px solid rgba(255, 255, 255, 0.1)',
                                         }}>
                                             <AccordionSummary
-                                                expandIcon={<MdExpandMore sx={{ color: '#00ff9f' }} />}
+                                                expandIcon={<MdExpandMore sx={{ color: '#dded00' }} />}
                                                 aria-controls={`panel${exerciseIndex}-content`}
                                                 id={`panel${exerciseIndex}-header`}
                                             >
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                                                    <Typography sx={{ color: '#00ff9f' }}>{exercise.name}</Typography>
+                                                    <Typography sx={{ color: '#dded00' }}>{exercise.name}</Typography>
                                                     <IconButton
                                                         edge="end"
                                                         sx={{ color: '#ff4444' }}
@@ -1197,7 +1197,7 @@ export default function StartWorkout() {
                                                         sx={{
                                                             mb: 2,
                                                             bgcolor: 'rgba(40, 50, 70, 0.3)',
-                                                            border: `1px solid ${set.completed ? '#00ff9f' : 'rgba(255, 255, 255, 0.1)'}`,
+                                                            border: `1px solid ${set.completed ? '#dded00' : 'rgba(255, 255, 255, 0.1)'}`,
                                                             borderRadius: 2,
                                                             backdropFilter: 'blur(10px)'
                                                         }}
@@ -1304,10 +1304,10 @@ export default function StartWorkout() {
                                                                                     alignItems: 'center',
                                                                                     justifyContent: 'center',
                                                                                     height: '48px',
-                                                                                    bgcolor: 'rgba(0, 255, 159, 0.1)',
-                                                                                    border: '1px solid rgba(0, 255, 159, 0.3)',
+                                                                                    bgcolor: 'rgba(221, 237, 0, 0.1)',
+                                                                                    border: '1px solid rgba(221, 237, 0, 0.3)',
                                                                                     borderRadius: 1,
-                                                                                    color: '#00ff9f',
+                                                                                    color: '#dded00',
                                                                                     fontWeight: 'bold',
                                                                                     fontSize: '1.1rem'
                                                                                 }}
@@ -1369,11 +1369,11 @@ export default function StartWorkout() {
                                                                 onClick={() => toggleSetCompletion(exerciseIndex, setIndex)}
                                                                 sx={{
                                                                     mt: 2,
-                                                                    bgcolor: set.completed ? '#00ff9f' : '#4a90e2',
+                                                                    bgcolor: set.completed ? '#dded00' : '#4a90e2',
                                                                     color: set.completed ? '#000' : '#fff',
                                                                     fontWeight: 'bold',
                                                                     '&:hover': {
-                                                                        bgcolor: set.completed ? '#00e676' : '#357abd'
+                                                                        bgcolor: set.completed ? '#e8f15d' : '#357abd'
                                                                     }
                                                                 }}
                                                             >
@@ -1451,7 +1451,7 @@ export default function StartWorkout() {
                                         position: 'fixed',
                                         bottom: 72,
                                         right: 16,
-                                        background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
+                                        background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
                                     }}
                                     onClick={() => setOpenDialog(true)}
                                 >
@@ -1476,7 +1476,7 @@ export default function StartWorkout() {
                         }
                     }}
                 >
-                    <DialogTitle sx={{ color: '#00ff9f', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <DialogTitle sx={{ color: '#dded00', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         Add Exercise
                         <IconButton onClick={() => setOpenDialog(false)} sx={{ color: '#fff' }}>
                             <MdClose />
@@ -1486,7 +1486,7 @@ export default function StartWorkout() {
                         {/* Template Exercises Quick Select */}
                         {templateExercises.length > 0 && (
                             <Box sx={{ mb: 3 }}>
-                                <Typography variant="h6" sx={{ color: '#00ff9f', mb: 2 }}>
+                                <Typography variant="h6" sx={{ color: '#dded00', mb: 2 }}>
                                     From Your Template
                                 </Typography>
                                 <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
@@ -1518,12 +1518,12 @@ export default function StartWorkout() {
                                                         setExercises(prev => [...prev, exerciseWithColumns]);
                                                     }}
                                                     sx={{
-                                                        borderColor: newExercise.name === exercise.name ? '#00ff9f' : 'rgba(255, 255, 255, 0.3)',
-                                                        color: newExercise.name === exercise.name ? '#00ff9f' : '#fff',
-                                                        backgroundColor: newExercise.name === exercise.name ? 'rgba(0, 255, 159, 0.1)' : 'transparent',
+                                                        borderColor: newExercise.name === exercise.name ? '#dded00' : 'rgba(255, 255, 255, 0.3)',
+                                                        color: newExercise.name === exercise.name ? '#dded00' : '#fff',
+                                                        backgroundColor: newExercise.name === exercise.name ? 'rgba(221, 237, 0, 0.1)' : 'transparent',
                                                         '&:hover': {
-                                                            borderColor: '#00ff9f',
-                                                            backgroundColor: 'rgba(0, 255, 159, 0.1)',
+                                                            borderColor: '#dded00',
+                                                            backgroundColor: 'rgba(221, 237, 0, 0.1)',
                                                         },
                                                         textTransform: 'none',
                                                         fontSize: '0.875rem'
@@ -1545,7 +1545,7 @@ export default function StartWorkout() {
 
                         {/* Exercise Selection */}
                         <Box sx={{ mb: 3 }}>
-                            <Typography variant="h6" sx={{ color: '#00ff9f', mb: 2 }}>
+                            <Typography variant="h6" sx={{ color: '#dded00', mb: 2 }}>
                                 {templateExercises.length > 0 ? 'Search More Exercises' : 'Select Exercise'}
                             </Typography>
                             <ExerciseSelector
@@ -1642,11 +1642,11 @@ export default function StartWorkout() {
                             onClick={handleAddExercise}
                             disabled={!newExercise.name || !newExercise.weight || !newExercise.reps || !newExercise.sets}
                             sx={{
-                                background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
+                                background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
                                 color: '#000',
                                 fontWeight: 'bold',
                                 '&:hover': {
-                                    background: 'linear-gradient(45deg, #00e676 30%, #00ff9f 90%)',
+                                    background: 'linear-gradient(45deg, #e8f15d 30%, #dded00 90%)',
                                 },
                                 '&:disabled': {
                                     background: 'rgba(255, 255, 255, 0.1)',

@@ -42,7 +42,7 @@ import {
 } from 'date-fns';
 
 const StyledCard = styled(Card)(({ theme }) => ({
-    background: 'rgba(30, 30, 30, 0.9)',
+    background: '#282828',
     backdropFilter: 'blur(10px)',
     borderRadius: '16px',
     boxShadow: `0 4px 30px ${theme.palette.surface.secondary}`,
@@ -558,7 +558,7 @@ export default function History() {
     return (
         <Box sx={{
             minHeight: '100vh',
-            background: theme.palette.background.gradient.primary,
+            background: '#121212',
             padding: '1rem',
         }}>
             <div className="max-w-4xl mx-auto">
@@ -618,7 +618,7 @@ export default function History() {
                     fullWidth
                     PaperProps={{
                         sx: {
-                            background: 'rgba(30, 30, 30, 0.95)',
+                            background: '#282828',
                             backdropFilter: 'blur(10px)',
                             border: `1px solid ${theme.palette.surface.secondary}`,
                         }

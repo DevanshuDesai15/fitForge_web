@@ -24,19 +24,19 @@ const StyledTextField = styled(TextField)({
             borderColor: 'rgba(255, 255, 255, 0.23)',
         },
         '&:hover fieldset': {
-            borderColor: '#00ff9f',
+            borderColor: '#dded00',
         },
         '&.Mui-focused fieldset': {
-            borderColor: '#00ff9f',
+            borderColor: '#dded00',
         },
     },
     '& label.Mui-focused': {
-        color: '#00ff9f',
+        color: '#dded00',
     },
 });
 
 const StyledCard = styled(Card)(({ theme }) => ({
-    background: 'rgba(30, 30, 30, 0.9)',
+    background: '#282828',
     backdropFilter: 'blur(10px)',
     borderRadius: '16px',
     boxShadow: '0 4px 30px rgba(0, 255, 159, 0.1)',
@@ -103,7 +103,7 @@ export default function SignUp() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: 'linear-gradient(135deg, #121212 0%, #2d2d2d 100%)',
+                background: '#121212',
                 padding: { xs: '0.5rem', sm: '1rem' },
                 boxSizing: 'border-box',
                 overflow: 'hidden',
@@ -122,14 +122,14 @@ export default function SignUp() {
                     borderRadius: '3px',
                 },
                 '&::-webkit-scrollbar-thumb': {
-                    background: '#00ff9f',
+                    background: '#dded00',
                     borderRadius: '3px',
                 },
             }}>
                 <CardHeader
                     title={
                         <Typography variant="h4" sx={{
-                            color: '#00ff9f',
+                            color: '#dded00',
                             fontWeight: 'bold',
                             textAlign: 'center',
                             mb: 1
@@ -228,11 +228,11 @@ export default function SignUp() {
                             sx={{
                                 mt: 2,
                                 mb: 1,
-                                background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
+                                background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
                                 color: '#000',
                                 fontWeight: 'bold',
                                 '&:hover': {
-                                    background: 'linear-gradient(45deg, #00e676 30%, #00ff9f 90%)',
+                                    background: 'linear-gradient(45deg, #e8f15d 30%, #dded00 90%)',
                                 },
                             }}
                             startIcon={<MdPersonAddAlt />}
@@ -273,7 +273,7 @@ export default function SignUp() {
                             <Link
                                 to="/signin"
                                 style={{
-                                    color: '#00ff9f',
+                                    color: '#dded00',
                                     textDecoration: 'none',
                                     '&:hover': {
                                         textDecoration: 'underline',

@@ -28,7 +28,7 @@ import {
 import { fetchExerciseImages } from '../../services/exerciseAPI';
 
 const StyledCard = styled(Card)(({ theme }) => ({
-    background: 'rgba(30, 30, 30, 0.9)',
+    background: '#282828',
     backdropFilter: 'blur(10px)',
     borderRadius: '16px',
     boxShadow: '0 4px 30px rgba(0, 255, 159, 0.1)',
@@ -137,7 +137,7 @@ export default function ExerciseDetail() {
         return (
             <Box sx={{
                 minHeight: '100vh',
-                background: 'linear-gradient(135deg, #121212 0%, #2d2d2d 100%)',
+                background: '#121212',
                 padding: '1rem',
                 display: 'flex',
                 alignItems: 'center',

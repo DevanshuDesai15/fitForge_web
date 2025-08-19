@@ -52,18 +52,18 @@ import { getWeightUnit, getWeightLabel } from '../utils/weightUnit';
 import { format, subDays, subWeeks, subMonths, isWithinInterval } from 'date-fns';
 
 const StyledCard = styled(Card)(({ theme }) => ({
-    background: 'rgba(30, 30, 30, 0.9)',
+    background: '#282828',
     backdropFilter: 'blur(10px)',
     borderRadius: '16px',
-    boxShadow: '0 4px 30px rgba(0, 255, 159, 0.1)',
+    boxShadow: '0 4px 30px rgba(221, 237, 0, 0.1)',
     border: '1px solid rgba(255, 255, 255, 0.1)',
 }));
 
 const StatCard = styled(Card)(() => ({
-    background: 'linear-gradient(135deg, rgba(0, 255, 159, 0.1) 0%, rgba(0, 229, 118, 0.1) 100%)',
+    background: '#282828',
     backdropFilter: 'blur(10px)',
     borderRadius: '12px',
-    border: '1px solid rgba(0, 255, 159, 0.2)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
     padding: '1rem',
 }));
 
@@ -82,7 +82,7 @@ const ProgressChart = styled(Box)(({ progress }) => ({
         height: '100%',
         width: `${Math.min(progress, 100)}%`,
         background: progress >= 100 ?
-            'linear-gradient(90deg, #00ff9f, #00e676)' :
+            'linear-gradient(90deg, #dded00, #e8f15d)' :
             'linear-gradient(90deg, #ff9800, #ffc107)',
         transition: 'width 0.3s ease',
     }
@@ -299,7 +299,7 @@ export default function Progress() {
 
         const avgOlder = older.reduce((sum, item) => sum + item.weight, 0) / older.length;
 
-        if (avgRecent > avgOlder) return <MdTrendingUp style={{ color: '#00ff9f' }} />;
+        if (avgRecent > avgOlder) return <MdTrendingUp style={{ color: '#dded00' }} />;
         if (avgRecent < avgOlder) return <MdTrendingDown style={{ color: '#ff4444' }} />;
         return <MdTrendingFlat style={{ color: '#ffc107' }} />;
     };
@@ -431,7 +431,7 @@ export default function Progress() {
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     {getTrendIcon(filteredData)}
                                     <Box>
-                                        <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                        <Typography variant="h6" sx={{ color: '#dded00' }}>
                                             {filteredData.length > 0 ? `${filteredData[filteredData.length - 1].weight}${weightUnit}` : 'N/A'}
                                         </Typography>
                                         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
@@ -444,9 +444,9 @@ export default function Progress() {
                         <Grid item xs={6} sm={3}>
                             <StatCard>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <MdShowChart style={{ color: '#00ff9f' }} />
+                                    <MdShowChart style={{ color: '#dded00' }} />
                                     <Box>
-                                        <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                        <Typography variant="h6" sx={{ color: '#dded00' }}>
                                             {filteredData.length > 0 ? Math.max(...filteredData.map(d => d.weight)) : 0}{weightUnit}
                                         </Typography>
                                         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
@@ -459,9 +459,9 @@ export default function Progress() {
                         <Grid item xs={6} sm={3}>
                             <StatCard>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <MdFitnessCenter style={{ color: '#00ff9f' }} />
+                                    <MdFitnessCenter style={{ color: '#dded00' }} />
                                     <Box>
-                                        <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                        <Typography variant="h6" sx={{ color: '#dded00' }}>
                                             {filteredData.length}
                                         </Typography>
                                         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
@@ -474,9 +474,9 @@ export default function Progress() {
                         <Grid item xs={6} sm={3}>
                             <StatCard>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <MdTrendingUp style={{ color: '#00ff9f' }} />
+                                    <MdTrendingUp style={{ color: '#dded00' }} />
                                     <Box>
-                                        <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                                        <Typography variant="h6" sx={{ color: '#dded00' }}>
                                             {(() => {
                                                 if (filteredData.length < 2) return '0%';
 
@@ -514,7 +514,7 @@ export default function Progress() {
                 {filteredData.length > 0 && (
                     <StyledCard sx={{ mb: 3 }}>
                         <CardContent>
-                            <Typography variant="h6" sx={{ color: '#00ff9f', mb: 2 }}>
+                            <Typography variant="h6" sx={{ color: '#dded00', mb: 2 }}>
                                 Weight Progress Timeline
                             </Typography>
                             <List>
@@ -557,7 +557,7 @@ export default function Progress() {
         return (
             <Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                    <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                    <Typography variant="h6" sx={{ color: '#dded00' }}>
                         Personal Records ({filteredRecords.length})
                     </Typography>
                     <FormControlLabel
@@ -567,10 +567,10 @@ export default function Progress() {
                                 onChange={(e) => setShowOnlyRecent(e.target.checked)}
                                 sx={{
                                     '& .MuiSwitch-switchBase.Mui-checked': {
-                                        color: '#00ff9f',
+                                        color: '#dded00',
                                     },
                                     '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                                        backgroundColor: '#00ff9f',
+                                        backgroundColor: '#dded00',
                                     },
                                 }}
                             />
@@ -589,12 +589,12 @@ export default function Progress() {
                             <StyledCard>
                                 <CardContent>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                                        <MdEmojiEvents style={{ color: index === 0 ? '#ffd700' : index === 1 ? '#c0c0c0' : index === 2 ? '#cd7f32' : '#00ff9f' }} />
+                                        <MdEmojiEvents style={{ color: index === 0 ? '#ffd700' : index === 1 ? '#c0c0c0' : index === 2 ? '#cd7f32' : '#dded00' }} />
                                         <Typography variant="h6" sx={{ color: '#fff' }}>
                                             {record.exerciseName}
                                         </Typography>
                                     </Box>
-                                    <Typography variant="h4" sx={{ color: '#00ff9f', mb: 1 }}>
+                                    <Typography variant="h4" sx={{ color: '#dded00', mb: 1 }}>
                                         {record.weight}{weightUnit}
                                     </Typography>
                                     <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
@@ -627,7 +627,7 @@ export default function Progress() {
         return (
             <Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                    <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                    <Typography variant="h6" sx={{ color: '#dded00' }}>
                         Fitness Goals ({goals.length})
                     </Typography>
                     <Button
@@ -638,10 +638,10 @@ export default function Progress() {
                             setCustomExerciseName('');
                         }}
                         sx={{
-                            background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
+                            background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
                             color: '#000',
                             '&:hover': {
-                                background: 'linear-gradient(45deg, #00e676 30%, #00ff9f 90%)',
+                                background: 'linear-gradient(45deg, #e8f15d 30%, #dded00 90%)',
                             },
                         }}
                     >
@@ -670,7 +670,7 @@ export default function Progress() {
                                                         setNewGoal(goal);
                                                         setGoalDialog(true);
                                                     }}
-                                                    sx={{ color: '#00ff9f', mr: 1 }}
+                                                    sx={{ color: '#dded00', mr: 1 }}
                                                 >
                                                     <MdEdit />
                                                 </IconButton>
@@ -712,7 +712,7 @@ export default function Progress() {
                                                 <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                                                     Progress
                                                 </Typography>
-                                                <Typography variant="body2" sx={{ color: isCompleted ? '#00ff9f' : '#fff' }}>
+                                                <Typography variant="body2" sx={{ color: isCompleted ? '#dded00' : '#fff' }}>
                                                     {progress.toFixed(1)}%
                                                 </Typography>
                                             </Box>
@@ -723,8 +723,8 @@ export default function Progress() {
                                             <Chip
                                                 label="Goal Achieved!"
                                                 sx={{
-                                                    backgroundColor: 'rgba(0, 255, 159, 0.2)',
-                                                    color: '#00ff9f',
+                                                    backgroundColor: 'rgba(221, 237, 0, 0.2)',
+                                                    color: '#dded00',
                                                     mt: 1
                                                 }}
                                             />
@@ -746,11 +746,11 @@ export default function Progress() {
                             startIcon={<MdAdd />}
                             onClick={() => setGoalDialog(true)}
                             sx={{
-                                borderColor: '#00ff9f',
-                                color: '#00ff9f',
+                                borderColor: '#dded00',
+                                color: '#dded00',
                                 '&:hover': {
-                                    borderColor: '#00e676',
-                                    backgroundColor: 'rgba(0, 255, 159, 0.1)',
+                                    borderColor: '#e8f15d',
+                                    backgroundColor: 'rgba(221, 237, 0, 0.1)',
                                 },
                             }}
                         >
@@ -765,14 +765,14 @@ export default function Progress() {
     return (
         <Box sx={{
             minHeight: '100vh',
-            background: 'linear-gradient(135deg, #121212 0%, #2d2d2d 100%)',
+            background: '#121212',
             padding: '1rem',
         }}>
             <div className="max-w-4xl mx-auto">
                 <Typography
                     variant="h4"
                     sx={{
-                        color: '#00ff9f',
+                        color: '#dded00',
                         fontWeight: 'bold',
                         mb: 3
                     }}
@@ -797,8 +797,8 @@ export default function Progress() {
                         variant="fullWidth"
                         sx={{
                             '& .MuiTab-root': { color: 'rgba(255, 255, 255, 0.7)' },
-                            '& .Mui-selected': { color: '#00ff9f !important' },
-                            '& .MuiTabs-indicator': { backgroundColor: '#00ff9f' },
+                            '& .Mui-selected': { color: '#dded00 !important' },
+                            '& .MuiTabs-indicator': { backgroundColor: '#dded00' },
                         }}
                     >
                         <Tab icon={<MdShowChart />} label="Weight Progress" />
@@ -811,7 +811,7 @@ export default function Progress() {
                     <CardContent>
                         {loading ? (
                             <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                                <CircularProgress sx={{ color: '#00ff9f' }} />
+                                <CircularProgress sx={{ color: '#dded00' }} />
                             </Box>
                         ) : (
                             <>
@@ -842,13 +842,13 @@ export default function Progress() {
                     fullWidth
                     PaperProps={{
                         sx: {
-                            background: 'rgba(30, 30, 30, 0.95)',
+                            background: '#282828',
                             backdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(0, 255, 159, 0.2)',
+                            border: '1px solid rgba(221, 237, 0, 0.2)',
                         }
                     }}
                 >
-                    <DialogTitle sx={{ color: '#00ff9f' }}>
+                    <DialogTitle sx={{ color: '#dded00' }}>
                         {editingGoal ? 'Edit Goal' : 'Add New Goal'}
                     </DialogTitle>
                     <DialogContent>
@@ -874,10 +874,10 @@ export default function Progress() {
                                                 borderColor: 'rgba(255, 255, 255, 0.1)',
                                             },
                                             '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                borderColor: 'rgba(0, 255, 159, 0.5)',
+                                                borderColor: 'rgba(221, 237, 0, 0.5)',
                                             },
                                             '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                borderColor: '#00ff9f',
+                                                borderColor: '#dded00',
                                             },
                                         }}
                                     >
@@ -914,10 +914,10 @@ export default function Progress() {
                                                     borderColor: 'rgba(255, 255, 255, 0.1)',
                                                 },
                                                 '&:hover fieldset': {
-                                                    borderColor: 'rgba(0, 255, 159, 0.5)',
+                                                    borderColor: 'rgba(221, 237, 0, 0.5)',
                                                 },
                                                 '&.Mui-focused fieldset': {
-                                                    borderColor: '#00ff9f',
+                                                    borderColor: '#dded00',
                                                 },
                                             },
                                             '& .MuiInputLabel-root': {
@@ -946,10 +946,10 @@ export default function Progress() {
                                                 borderColor: 'rgba(255, 255, 255, 0.1)',
                                             },
                                             '&:hover fieldset': {
-                                                borderColor: 'rgba(0, 255, 159, 0.5)',
+                                                borderColor: 'rgba(221, 237, 0, 0.5)',
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: '#00ff9f',
+                                                borderColor: '#dded00',
                                             },
                                         },
                                         '& .MuiInputLabel-root': {
@@ -972,10 +972,10 @@ export default function Progress() {
                                                 borderColor: 'rgba(255, 255, 255, 0.1)',
                                             },
                                             '&:hover fieldset': {
-                                                borderColor: 'rgba(0, 255, 159, 0.5)',
+                                                borderColor: 'rgba(221, 237, 0, 0.5)',
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: '#00ff9f',
+                                                borderColor: '#dded00',
                                             },
                                         },
                                         '& .MuiInputLabel-root': {
@@ -998,10 +998,10 @@ export default function Progress() {
                                                 borderColor: 'rgba(255, 255, 255, 0.1)',
                                             },
                                             '&:hover fieldset': {
-                                                borderColor: 'rgba(0, 255, 159, 0.5)',
+                                                borderColor: 'rgba(221, 237, 0, 0.5)',
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: '#00ff9f',
+                                                borderColor: '#dded00',
                                             },
                                         },
                                         '& .MuiInputLabel-root': {
@@ -1027,10 +1027,10 @@ export default function Progress() {
                                                 borderColor: 'rgba(255, 255, 255, 0.1)',
                                             },
                                             '&:hover fieldset': {
-                                                borderColor: 'rgba(0, 255, 159, 0.5)',
+                                                borderColor: 'rgba(221, 237, 0, 0.5)',
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: '#00ff9f',
+                                                borderColor: '#dded00',
                                             },
                                         },
                                         '& .MuiInputLabel-root': {
@@ -1065,10 +1065,10 @@ export default function Progress() {
                             startIcon={<MdSave />}
                             disabled={!newGoal.exerciseName}
                             sx={{
-                                background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
+                                background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
                                 color: '#000',
                                 '&:hover': {
-                                    background: 'linear-gradient(45deg, #00e676 30%, #00ff9f 90%)',
+                                    background: 'linear-gradient(45deg, #e8f15d 30%, #dded00 90%)',
                                 },
                             }}
                         >

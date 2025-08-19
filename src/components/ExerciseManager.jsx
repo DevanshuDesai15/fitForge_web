@@ -43,10 +43,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { groupSimilarExercises, validateExerciseName, autoCorrectExerciseName } from '../utils/exerciseValidator';
 
 const StyledCard = styled(Card)(() => ({
-    background: 'rgba(30, 30, 30, 0.9)',
+    background: 'rgba(40, 40, 40, 0.9)',
     backdropFilter: 'blur(10px)',
     borderRadius: '16px',
-    boxShadow: '0 4px 30px rgba(0, 255, 159, 0.1)',
+    boxShadow: '0 4px 30px rgba(221, 237, 0, 0.1)',
     border: '1px solid rgba(255, 255, 255, 0.1)',
 }));
 
@@ -108,21 +108,21 @@ export default function ExerciseManager() {
         }
     };
 
-        const handleMergeExercises = async () => {
+    const handleMergeExercises = async () => {
         if (!selectedGroup || !mergeTarget || selectedExercises.length === 0) return;
-        
+
         setLoading(true);
         try {
             const batch = writeBatch(db);
-            
+
             // Update all selected exercises to use the target name
             selectedExercises.forEach(exercise => {
                 const exerciseRef = doc(db, 'exercises', exercise.id);
                 batch.update(exerciseRef, { exerciseName: mergeTarget });
             });
-            
+
             await batch.commit();
-            
+
             // Debug: Log merged exercise details
             console.log('🔄 Merged exercises:', {
                 target: mergeTarget,
@@ -134,16 +134,16 @@ export default function ExerciseManager() {
                     date: new Date(ex.timestamp).toLocaleString()
                 })).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
             });
-            
+
             setSuccess(`Successfully merged ${selectedExercises.length} exercises to "${mergeTarget}". Check progress tab to verify data.`);
             setMergeDialog(false);
             setSelectedGroup(null);
             setSelectedExercises([]);
             setMergeTarget('');
-            
+
             // Reload data
             await loadExercises();
-            
+
         } catch (err) {
             console.error('Error merging exercises:', err);
             setError('Error merging exercises: ' + err.message);
@@ -258,7 +258,7 @@ export default function ExerciseManager() {
     if (loading && exercises.length === 0) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                <CircularProgress sx={{ color: '#00ff9f' }} />
+                <CircularProgress sx={{ color: '#dded00' }} />
             </Box>
         );
     }
@@ -266,14 +266,14 @@ export default function ExerciseManager() {
     return (
         <Box sx={{
             minHeight: '100vh',
-            background: 'linear-gradient(135deg, #121212 0%, #2d2d2d 100%)',
+            background: '#121212',
             padding: '1rem',
         }}>
             <div className="max-w-4xl mx-auto">
                 <Typography
                     variant="h4"
                     sx={{
-                        color: '#00ff9f',
+                        color: '#dded00',
                         fontWeight: 'bold',
                         mb: 3
                     }}
@@ -294,7 +294,7 @@ export default function ExerciseManager() {
                 {success && (
                     <Alert
                         severity="success"
-                        sx={{ mb: 3, backgroundColor: 'rgba(0, 255, 159, 0.1)', color: '#00ff9f' }}
+                        sx={{ mb: 3, backgroundColor: 'rgba(221, 237, 0, 0.1)', color: '#dded00' }}
                         onClose={() => setSuccess('')}
                     >
                         {success}
@@ -305,7 +305,7 @@ export default function ExerciseManager() {
                 <StyledCard sx={{ mb: 3 }}>
                     <CardContent>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                            <Typography variant="h6" sx={{ color: '#00ff9f' }}>
+                            <Typography variant="h6" sx={{ color: '#dded00' }}>
                                 Data Summary
                             </Typography>
                             <Button
@@ -326,7 +326,7 @@ export default function ExerciseManager() {
                         </Box>
                         <Box sx={{ display: 'flex', gap: 4 }}>
                             <Box>
-                                <Typography variant="h4" sx={{ color: '#00ff9f' }}>
+                                <Typography variant="h4" sx={{ color: '#dded00' }}>
                                     {exercises.length}
                                 </Typography>
                                 <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -357,7 +357,7 @@ export default function ExerciseManager() {
                 {similarGroups.length > 0 && (
                     <StyledCard sx={{ mb: 3 }}>
                         <CardContent>
-                            <Typography variant="h6" sx={{ color: '#00ff9f', mb: 2 }}>
+                            <Typography variant="h6" sx={{ color: '#dded00', mb: 2 }}>
                                 <MdWarning style={{ marginRight: 8 }} />
                                 Potential Duplicates ({similarGroups.length} groups)
                             </Typography>
@@ -371,7 +371,7 @@ export default function ExerciseManager() {
                                         '&:before': { display: 'none' }
                                     }}
                                 >
-                                    <AccordionSummary expandIcon={<MdExpandMore style={{ color: '#00ff9f' }} />}>
+                                    <AccordionSummary expandIcon={<MdExpandMore style={{ color: '#dded00' }} />}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
                                             <Typography sx={{ color: '#fff', fontWeight: 'bold' }}>
                                                 {group.main.exerciseName}
@@ -391,11 +391,11 @@ export default function ExerciseManager() {
                                                     primary={group.main.exerciseName}
                                                     secondary={`${getExerciseStats(group.main.exerciseName).count} entries`}
                                                     sx={{
-                                                        '& .MuiListItemText-primary': { color: '#00ff9f', fontWeight: 'bold' },
+                                                        '& .MuiListItemText-primary': { color: '#dded00', fontWeight: 'bold' },
                                                         '& .MuiListItemText-secondary': { color: 'text.secondary' }
                                                     }}
                                                 />
-                                                <Chip label="Main" size="small" sx={{ backgroundColor: 'rgba(0, 255, 159, 0.2)', color: '#00ff9f' }} />
+                                                <Chip label="Main" size="small" sx={{ backgroundColor: 'rgba(221, 237, 0, 0.2)', color: '#dded00' }} />
                                             </ListItem>
 
                                             {/* Similar exercises */}
@@ -428,10 +428,10 @@ export default function ExerciseManager() {
                                             }}
                                             sx={{
                                                 mt: 2,
-                                                background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
+                                                background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
                                                 color: '#000',
                                                 '&:hover': {
-                                                    background: 'linear-gradient(45deg, #00e676 30%, #00ff9f 90%)',
+                                                    background: 'linear-gradient(45deg, #e8f15d 30%, #dded00 90%)',
                                                 },
                                             }}
                                         >
@@ -447,7 +447,7 @@ export default function ExerciseManager() {
                 {/* All Exercises List */}
                 <StyledCard>
                     <CardContent>
-                        <Typography variant="h6" sx={{ color: '#00ff9f', mb: 2 }}>
+                        <Typography variant="h6" sx={{ color: '#dded00', mb: 2 }}>
                             All Exercises ({[...new Set(exercises.map(ex => ex.exerciseName))].length} unique)
                         </Typography>
 
@@ -473,7 +473,7 @@ export default function ExerciseManager() {
                                                     setNewName(exerciseName);
                                                     setEditDialog(true);
                                                 }}
-                                                sx={{ color: '#00ff9f', mr: 1 }}
+                                                sx={{ color: '#dded00', mr: 1 }}
                                             >
                                                 <MdEdit />
                                             </IconButton>
@@ -503,13 +503,13 @@ export default function ExerciseManager() {
                     fullWidth
                     PaperProps={{
                         sx: {
-                            background: 'rgba(30, 30, 30, 0.95)',
+                            background: '#282828',
                             backdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(0, 255, 159, 0.2)',
+                            border: '1px solid rgba(221, 237, 0, 0.2)',
                         }
                     }}
                 >
-                    <DialogTitle sx={{ color: '#00ff9f' }}>
+                    <DialogTitle sx={{ color: '#dded00' }}>
                         Merge Similar Exercises
                     </DialogTitle>
                     <DialogContent>
@@ -523,8 +523,8 @@ export default function ExerciseManager() {
                                 '& .MuiOutlinedInput-root': {
                                     color: '#fff',
                                     '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.1)' },
-                                    '&:hover fieldset': { borderColor: 'rgba(0, 255, 159, 0.5)' },
-                                    '&.Mui-focused fieldset': { borderColor: '#00ff9f' },
+                                    '&:hover fieldset': { borderColor: 'rgba(221, 237, 0, 0.5)' },
+                                    '&.Mui-focused fieldset': { borderColor: '#dded00' },
                                 },
                                 '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.7)' },
                             }}
@@ -549,7 +549,7 @@ export default function ExerciseManager() {
                                                             setSelectedExercises(selectedExercises.filter(ex => ex.id !== exercise.id));
                                                         }
                                                     }}
-                                                    sx={{ color: '#00ff9f' }}
+                                                    sx={{ color: '#dded00' }}
                                                 />
                                             }
                                             label={
@@ -578,10 +578,10 @@ export default function ExerciseManager() {
                             variant="contained"
                             startIcon={<MdSave />}
                             sx={{
-                                background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
+                                background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
                                 color: '#000',
                                 '&:hover': {
-                                    background: 'linear-gradient(45deg, #00e676 30%, #00ff9f 90%)',
+                                    background: 'linear-gradient(45deg, #e8f15d 30%, #dded00 90%)',
                                 },
                             }}
                         >
@@ -598,13 +598,13 @@ export default function ExerciseManager() {
                     fullWidth
                     PaperProps={{
                         sx: {
-                            background: 'rgba(30, 30, 30, 0.95)',
+                            background: '#282828',
                             backdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(0, 255, 159, 0.2)',
+                            border: '1px solid rgba(221, 237, 0, 0.2)',
                         }
                     }}
                 >
-                    <DialogTitle sx={{ color: '#00ff9f' }}>
+                    <DialogTitle sx={{ color: '#dded00' }}>
                         Rename Exercise
                     </DialogTitle>
                     <DialogContent>
@@ -618,8 +618,8 @@ export default function ExerciseManager() {
                                 '& .MuiOutlinedInput-root': {
                                     color: '#fff',
                                     '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.1)' },
-                                    '&:hover fieldset': { borderColor: 'rgba(0, 255, 159, 0.5)' },
-                                    '&.Mui-focused fieldset': { borderColor: '#00ff9f' },
+                                    '&:hover fieldset': { borderColor: 'rgba(221, 237, 0, 0.5)' },
+                                    '&.Mui-focused fieldset': { borderColor: '#dded00' },
                                 },
                                 '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.7)' },
                             }}
@@ -635,10 +635,10 @@ export default function ExerciseManager() {
                             variant="contained"
                             startIcon={<MdSave />}
                             sx={{
-                                background: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
+                                background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
                                 color: '#000',
                                 '&:hover': {
-                                    background: 'linear-gradient(45deg, #00e676 30%, #00ff9f 90%)',
+                                    background: 'linear-gradient(45deg, #e8f15d 30%, #dded00 90%)',
                                 },
                             }}
                         >

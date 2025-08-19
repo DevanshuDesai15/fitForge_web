@@ -28,7 +28,7 @@ import { getWeightUnit } from '../../utils/weightUnit';
 import ExerciseSelector from '../common/ExerciseSelector';
 
 const StyledCard = styled(Card)(({ theme }) => ({
-    background: 'rgba(30, 30, 30, 0.9)',
+    background: '#282828',
     backdropFilter: 'blur(10px)',
     borderRadius: '16px',
     border: `1px solid ${theme.palette.border.main}`,
@@ -196,7 +196,7 @@ export default function QuickAdd() {
     return (
         <Box sx={{
             minHeight: '100vh',
-            background: theme.palette.background.gradient.primary,
+            background: '#121212',
             padding: '1rem',
             paddingBottom: '100px',
         }}>

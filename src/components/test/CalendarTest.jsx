@@ -16,9 +16,9 @@ export default function CalendarTest() {
 
     return (
         <Box sx={{ p: 3, maxWidth: 600, mx: 'auto' }}>
-            <Card sx={{ mb: 3, backgroundColor: 'rgba(30, 30, 30, 0.9)' }}>
+            <Card sx={{ mb: 3, backgroundColor: '#282828' }}>
                 <CardContent>
-                    <Typography variant="h5" sx={{ color: '#00ff9f', mb: 2 }}>
+                    <Typography variant="h5" sx={{ color: '#dded00', mb: 2 }}>
                         Calendar Date Test
                     </Typography>
 
@@ -26,7 +26,7 @@ export default function CalendarTest() {
                         <Typography variant="body1" sx={{ color: 'white' }}>
                             System Date: {format(currentDate, 'MMMM dd, yyyy')}
                         </Typography>
-                        <Typography variant="body1" sx={{ color: '#00ff9f' }}>
+                        <Typography variant="body1" sx={{ color: '#dded00' }}>
                             Corrected Date: {format(correctedDate, 'MMMM dd, yyyy')}
                         </Typography>
                         <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
@@ -55,7 +55,7 @@ export default function CalendarTest() {
 
                     {testResults && (
                         <Box sx={{ mt: 2, p: 2, backgroundColor: 'rgba(0, 0, 0, 0.3)', borderRadius: 1 }}>
-                            <Typography variant="h6" sx={{ color: '#00ff9f', mb: 1 }}>
+                            <Typography variant="h6" sx={{ color: '#dded00', mb: 1 }}>
                                 Test Results:
                             </Typography>
                             <Typography variant="body2" sx={{ color: 'white' }}>
@@ -80,7 +80,7 @@ export default function CalendarTest() {
 
             <Card sx={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}>
                 <CardContent>
-                    <Typography variant="h6" sx={{ color: '#00ff9f', mb: 2 }}>
+                    <Typography variant="h6" sx={{ color: '#dded00', mb: 2 }}>
                         Expected vs Actual
                     </Typography>
                     <Typography variant="body2" sx={{ color: 'white' }}>

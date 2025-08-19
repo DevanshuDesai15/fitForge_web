@@ -72,7 +72,7 @@ export default function ModernNavigation() {
             {/* Floating Tab Container */}
             <Box
                 sx={{
-                    background: 'rgba(30, 30, 30, 0.9)',
+                    background: '#282828',
                     borderRadius: '24px',
                     padding: '8px',
                     display: 'flex',

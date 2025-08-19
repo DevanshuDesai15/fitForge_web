@@ -32,46 +32,46 @@ import {
 import { getWeightUnit } from '../utils/weightUnit';
 import { format, isToday, isThisWeek } from 'date-fns';
 
-const StyledCard = styled(Card)(({ theme }) => ({
-    background: 'rgba(30, 30, 30, 0.9)',
+const StyledCard = styled(Card)(() => ({
+    background: '#282828',
     backdropFilter: 'blur(10px)',
     borderRadius: '20px',
-    boxShadow: '0 8px 40px rgba(0, 255, 159, 0.15)',
-    border: '1px solid rgba(0, 255, 159, 0.2)',
+    boxShadow: '0 8px 40px rgba(221, 237, 0, 0.15)',
+    border: '1px solid rgba(221, 237, 0, 0.2)',
     transition: 'all 0.3s ease',
     '&:hover': {
         transform: 'translateY(-8px)',
-        boxShadow: '0 12px 50px rgba(0, 255, 159, 0.25)',
+        boxShadow: '0 12px 50px rgba(221, 237, 0, 0.25)',
     },
 }));
 
 const HeroCard = styled(Card)(() => ({
-    background: 'linear-gradient(135deg, rgba(0, 255, 159, 0.1) 0%, rgba(0, 229, 118, 0.05) 100%)',
+    background: '#282828',
     backdropFilter: 'blur(20px)',
     borderRadius: '24px',
-    border: '1px solid rgba(0, 255, 159, 0.3)',
+    border: '1px solid rgba(221, 237, 0, 0.3)',
     padding: '2rem',
     marginBottom: '2rem',
 }));
 
-const QuickActionCard = styled(Card)(({ theme }) => ({
-    background: 'linear-gradient(135deg, rgba(0, 255, 159, 0.05) 0%, rgba(0, 229, 118, 0.02) 100%)',
+const QuickActionCard = styled(Card)(() => ({
+    background: '#282828',
     backdropFilter: 'blur(10px)',
     borderRadius: '16px',
-    border: '1px solid rgba(0, 255, 159, 0.1)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
     '&:hover': {
         transform: 'translateY(-4px)',
-        background: 'linear-gradient(135deg, rgba(0, 255, 159, 0.1) 0%, rgba(0, 229, 118, 0.05) 100%)',
-        border: '1px solid rgba(0, 255, 159, 0.3)',
+        background: 'linear-gradient(135deg, rgba(221, 237, 0, 0.1) 0%, rgba(221, 237, 0, 0.05) 100%)',
+        border: '1px solid rgba(221, 237, 0, 0.3)',
     },
 }));
 
 const StatCard = styled(Card)(() => ({
-    background: 'linear-gradient(135deg, rgba(0, 255, 159, 0.08) 0%, rgba(0, 229, 118, 0.03) 100%)',
+    background: '#282828',
     borderRadius: '16px',
-    border: '1px solid rgba(0, 255, 159, 0.15)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
     padding: '1.5rem',
 }));
 
@@ -207,7 +207,7 @@ export default function Home() {
             subtitle: 'Begin your training session',
             icon: MdPlayArrow,
             color: 'primary.main',
-            gradient: 'linear-gradient(45deg, #00ff9f 30%, #00e676 90%)',
+            gradient: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
             onClick: () => navigate('/workout/start')
         },
         {
@@ -258,7 +258,7 @@ export default function Home() {
     return (
         <Box sx={{
             minHeight: '100vh',
-            background: (theme) => theme.palette.background.gradient.home,
+            background: '#121212',
             padding: '1rem',
         }}>
             <div className="max-w-6xl mx-auto">
@@ -276,7 +276,7 @@ export default function Home() {
                                 sx={{
                                     width: 64,
                                     height: 64,
-                                    background: 'linear-gradient(135deg, #00ff9f 0%, #00e676 100%)',
+                                    background: 'linear-gradient(135deg, #dded00 0%, #e8f15d 100%)',
                                     color: '#000',
                                     fontSize: '1.5rem',
                                     fontWeight: 'bold'
@@ -288,7 +288,7 @@ export default function Home() {
                                 <Typography variant="h4" sx={{
                                     color: 'primary.main',
                                     fontWeight: 'bold',
-                                    background: 'linear-gradient(135deg, #00ff9f 0%, #00e676 100%)',
+                                    background: 'linear-gradient(135deg, #dded00 0%, #e8f15d 100%)',
                                     backgroundClip: 'text',
                                     WebkitBackgroundClip: 'text',
                                     WebkitTextFillColor: 'transparent'

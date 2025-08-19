@@ -32,7 +32,7 @@ class ErrorBoundary extends React.Component {
                 }}>
                     <Card sx={{
                         maxWidth: 500,
-                        background: 'rgba(30, 30, 30, 0.9)',
+                        background: '#282828',
                         border: '1px solid rgba(255, 68, 68, 0.3)'
                     }}>
                         <CardContent sx={{ textAlign: 'center', p: 4 }}>

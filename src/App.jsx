@@ -35,7 +35,7 @@ function AppWrapper({ children }) {
 
   return (
     <div style={{
-      backgroundColor: '#121212',
+      backgroundColor: 'var(--surface-a0)',
       minHeight: '100vh',
       paddingBottom: currentUser ? '70px' : '0', // Only add padding for authenticated users with navigation
     }}>

@@ -26,11 +26,11 @@ import { db } from '../firebase/config';
 import { MdArrowBack, MdPerson, MdEmail, MdLock, MdSave, MdLogout, MdSettings, MdCleaningServices, MdFitnessCenter, MdAccountCircle, MdVerified } from "react-icons/md";
 
 const ProfileHeaderCard = styled(Paper)(() => ({
-    background: 'linear-gradient(135deg, rgba(0, 255, 159, 0.1) 0%, rgba(0, 230, 118, 0.05) 100%)',
+    background: '#282828',
     backdropFilter: 'blur(10px)',
     borderRadius: '16px',
     padding: '24px',
-    border: '1px solid rgba(0, 255, 159, 0.2)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
     marginBottom: '24px',
     position: 'relative',
     overflow: 'hidden',
@@ -41,7 +41,7 @@ const ProfileHeaderCard = styled(Paper)(() => ({
         left: 0,
         right: 0,
         height: '3px',
-        background: 'linear-gradient(90deg, #00ff9f, #00e676, #00ff9f)',
+        background: '#dded00',
         animation: 'shimmer 2s ease-in-out infinite',
     },
     '@keyframes shimmer': {
@@ -58,8 +58,8 @@ const SectionCard = styled(Card)(() => ({
     marginBottom: '20px',
     transition: 'all 0.3s ease',
     '&:hover': {
-        border: '1px solid rgba(0, 255, 159, 0.3)',
-        boxShadow: '0 4px 20px rgba(0, 255, 159, 0.1)',
+        border: '1px solid rgba(221, 237, 0, 0.3)',
+        boxShadow: '0 4px 20px rgba(221, 237, 0, 0.1)',
     },
 }));
 
@@ -73,19 +73,19 @@ const StyledTextField = styled(TextField)({
             borderWidth: '1px',
         },
         '&:hover fieldset': {
-            borderColor: 'rgba(0, 255, 159, 0.5)',
+            borderColor: 'rgba(221, 237, 0, 0.5)',
         },
         '&.Mui-focused fieldset': {
-            borderColor: '#00ff9f',
+            borderColor: '#dded00',
             borderWidth: '2px',
-            boxShadow: '0 0 0 3px rgba(0, 255, 159, 0.1)',
+            boxShadow: '0 0 0 3px rgba(221, 237, 0, 0.1)',
         },
         '&.Mui-focused': {
-            backgroundColor: 'rgba(0, 255, 159, 0.05)',
+            backgroundColor: 'rgba(221, 237, 0, 0.05)',
         },
     },
     '& label.Mui-focused': {
-        color: '#00ff9f',
+        color: '#dded00',
         fontWeight: '500',
     },
     '& .MuiInputLabel-root': {
@@ -105,13 +105,13 @@ const GradientButton = styled(Button)(({ variant }) => ({
     padding: '12px 24px',
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     ...(variant === 'primary' && {
-        background: 'linear-gradient(135deg, #00ff9f 0%, #00e676 100%)',
+        background: 'linear-gradient(135deg, #dded00 0%, #e8f15d 100%)',
         color: '#000',
         border: 'none',
         '&:hover': {
-            background: 'linear-gradient(135deg, #00e676 0%, #00c853 100%)',
+            background: 'linear-gradient(135deg, #e8f15d 0%, #edf377 100%)',
             transform: 'translateY(-2px)',
-            boxShadow: '0 8px 25px rgba(0, 255, 159, 0.3)',
+            boxShadow: '0 8px 25px rgba(221, 237, 0, 0.3)',
         },
         '&:disabled': {
             background: 'rgba(255, 255, 255, 0.1)',
@@ -120,11 +120,11 @@ const GradientButton = styled(Button)(({ variant }) => ({
     }),
     ...(variant === 'secondary' && {
         background: 'transparent',
-        color: '#00ff9f',
-        border: '2px solid rgba(0, 255, 159, 0.3)',
+        color: '#dded00',
+        border: '2px solid rgba(221, 237, 0, 0.3)',
         '&:hover': {
-            backgroundColor: 'rgba(0, 255, 159, 0.1)',
-            borderColor: '#00ff9f',
+            backgroundColor: 'rgba(221, 237, 0, 0.1)',
+            borderColor: '#dded00',
             transform: 'translateY(-1px)',
         },
     }),
@@ -265,7 +265,7 @@ export default function Profile() {
     return (
         <Box sx={{
             minHeight: '100vh',
-            background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2a2a2a 100%)',
+            background: '#121212',
             position: 'relative',
             '&::before': {
                 content: '""',
@@ -274,7 +274,7 @@ export default function Profile() {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                background: 'radial-gradient(circle at 20% 80%, rgba(0, 255, 159, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(0, 230, 118, 0.1) 0%, transparent 50%)',
+                background: 'transparent',
                 pointerEvents: 'none',
             },
         }}>
@@ -298,11 +298,11 @@ export default function Profile() {
                             sx={{
                                 width: { xs: 80, sm: 100 },
                                 height: { xs: 80, sm: 100 },
-                                background: 'linear-gradient(135deg, #00ff9f 0%, #00e676 100%)',
+                                background: 'linear-gradient(135deg, #dded00 0%, #e8f15d 100%)',
                                 fontSize: { xs: '2rem', sm: '2.5rem' },
                                 color: '#000',
                                 fontWeight: 'bold',
-                                boxShadow: '0 8px 25px rgba(0, 255, 159, 0.3)',
+                                boxShadow: '0 8px 25px rgba(221, 237, 0, 0.3)',
                             }}
                         >
                             <MdAccountCircle size={isMobile ? 40 : 50} />
@@ -319,7 +319,7 @@ export default function Profile() {
                                     sx={{
                                         color: '#ffffff',
                                         fontWeight: '700',
-                                        background: 'linear-gradient(135deg, #ffffff 0%, #00ff9f 100%)',
+                                        background: 'linear-gradient(135deg, #ffffff 0%, #dded00 100%)',
                                         backgroundClip: 'text',
                                         WebkitBackgroundClip: 'text',
                                         WebkitTextFillColor: 'transparent',
@@ -327,7 +327,7 @@ export default function Profile() {
                                 >
                                     Profile Settings
                                 </Typography>
-                                <MdVerified style={{ color: '#00ff9f', fontSize: '24px' }} />
+                                <MdVerified style={{ color: '#dded00', fontSize: '24px' }} />
                             </Box>
 
                             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: { xs: 'center', sm: 'flex-start' } }}>
@@ -336,10 +336,10 @@ export default function Profile() {
                                     label={currentUser?.email}
                                     size="small"
                                     sx={{
-                                        backgroundColor: 'rgba(0, 255, 159, 0.1)',
-                                        color: '#00ff9f',
-                                        border: '1px solid rgba(0, 255, 159, 0.3)',
-                                        '& .MuiChip-icon': { color: '#00ff9f' }
+                                        backgroundColor: 'rgba(221, 237, 0, 0.1)',
+                                        color: '#dded00',
+                                        border: '1px solid rgba(221, 237, 0, 0.3)',
+                                        '& .MuiChip-icon': { color: '#dded00' }
                                     }}
                                 />
                                 <Chip
@@ -412,9 +412,9 @@ export default function Profile() {
                         severity="success"
                         sx={{
                             mb: 3,
-                            backgroundColor: 'rgba(0, 255, 159, 0.1)',
-                            color: '#00ff9f',
-                            border: '1px solid rgba(0, 255, 159, 0.3)',
+                            backgroundColor: 'rgba(221, 237, 0, 0.1)',
+                            color: '#dded00',
+                            border: '1px solid rgba(221, 237, 0, 0.3)',
                             borderRadius: '12px',
                         }}
                     >
@@ -428,7 +428,7 @@ export default function Profile() {
                         <SectionCard>
                             <CardContent sx={{ p: 3 }}>
                                 <Typography variant="h6" sx={{
-                                    color: '#00ff9f',
+                                    color: '#dded00',
                                     mb: 3,
                                     display: 'flex',
                                     alignItems: 'center',
@@ -468,7 +468,7 @@ export default function Profile() {
                         <SectionCard>
                             <CardContent sx={{ p: 3 }}>
                                 <Typography variant="h6" sx={{
-                                    color: '#00ff9f',
+                                    color: '#dded00',
                                     mb: 3,
                                     display: 'flex',
                                     alignItems: 'center',
@@ -488,12 +488,12 @@ export default function Profile() {
                                                 alignItems: { xs: 'flex-start', sm: 'center' },
                                                 gap: { xs: 2, sm: 3 },
                                                 p: 3,
-                                                background: 'linear-gradient(135deg, rgba(0, 255, 159, 0.05) 0%, rgba(0, 230, 118, 0.02) 100%)',
+                                                background: 'linear-gradient(135deg, rgba(221, 237, 0, 0.05) 0%, rgba(227, 239, 63, 0.02) 100%)',
                                                 borderRadius: '16px',
-                                                border: '1px solid rgba(0, 255, 159, 0.2)'
+                                                border: '1px solid rgba(221, 237, 0, 0.2)'
                                             }}>
                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexShrink: 0 }}>
-                                                    <MdFitnessCenter style={{ color: '#00ff9f', fontSize: '24px' }} />
+                                                    <MdFitnessCenter style={{ color: '#dded00', fontSize: '24px' }} />
                                                     <Typography variant="h6" sx={{ color: '#fff', fontWeight: '600' }}>
                                                         Weight Unit Preference
                                                     </Typography>
@@ -513,10 +513,10 @@ export default function Profile() {
                                                         onChange={(e) => handleWeightUnitChange(e.target.checked ? 'lb' : 'kg')}
                                                         sx={{
                                                             '& .MuiSwitch-switchBase.Mui-checked': {
-                                                                color: '#00ff9f',
+                                                                color: '#dded00',
                                                             },
                                                             '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                                                                backgroundColor: '#00ff9f',
+                                                                backgroundColor: '#dded00',
                                                             },
                                                             '& .MuiSwitch-track': {
                                                                 backgroundColor: 'rgba(255, 255, 255, 0.3)',
@@ -591,7 +591,7 @@ export default function Profile() {
                         <SectionCard>
                             <CardContent sx={{ p: 3 }}>
                                 <Typography variant="h6" sx={{
-                                    color: '#00ff9f',
+                                    color: '#dded00',
                                     mb: 3,
                                     display: 'flex',
                                     alignItems: 'center',
@@ -617,7 +617,7 @@ export default function Profile() {
                         <SectionCard>
                             <CardContent sx={{ p: 3 }}>
                                 <Typography variant="h6" sx={{
-                                    color: '#00ff9f',
+                                    color: '#dded00',
                                     mb: 3,
                                     display: 'flex',
                                     alignItems: 'center',
