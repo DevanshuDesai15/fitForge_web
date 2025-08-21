@@ -52,6 +52,7 @@ import { getWeightUnit, getWeightLabel } from '../../utils/weightUnit';
 
 import { useWakeLock } from '../../utils/wakeLock';
 import { useNotifications } from '../../utils/notifications';
+import { invalidateCacheAfterWorkout } from '../../utils/aiSuggestionCache';
 
 const StyledCard = styled(Card)(() => ({
     background: '#282828',
@@ -495,6 +496,12 @@ export default function StartWorkout() {
             await Promise.all(exercisePromises);
 
             console.log(`✅ Workout saved with ${exercises.length} exercises saved individually for progress tracking`);
+
+            // Invalidate AI suggestion cache for completed exercises
+            // This ensures fresh suggestions are generated next time based on the completed workout
+            const completedExerciseIds = exercises.map(exercise => exercise.name);
+            const invalidatedCount = invalidateCacheAfterWorkout(currentUser.uid, completedExerciseIds);
+            console.log(`🗑️ Invalidated AI cache for ${invalidatedCount} completed exercises`);
 
             const templateInfo = currentTemplate && selectedDay
                 ? ` Template: ${currentTemplate.name} - ${templateDays.find(d => d.id.toString() === selectedDay)?.name}`

@@ -8,7 +8,6 @@ import {
     Button,
     Chip,
     Avatar,
-    LinearProgress,
     Alert,
     CircularProgress
 } from '@mui/material';
@@ -25,12 +24,12 @@ import {
     MdAdd,
     MdShowChart,
     MdCalendarToday,
-    MdTimer,
     MdEmojiEvents,
-    MdPerson
+    MdAutoAwesome
 } from "react-icons/md";
 import { getWeightUnit } from '../utils/weightUnit';
 import { format, isToday, isThisWeek } from 'date-fns';
+import AISuggestionCards from './common/AISuggestionCards';
 
 const StyledCard = styled(Card)(() => ({
     background: '#282828',
@@ -255,6 +254,28 @@ export default function Home() {
 
     const displayName = userData.fullName || userData.username || currentUser?.email?.split('@')[0] || 'Athlete';
 
+    const handleSuggestionAccept = (suggestion) => {
+        // Navigate to workout creation with pre-populated suggestion
+        navigate('/workout/start', {
+            state: {
+                aiSuggestion: suggestion,
+                prePopulateExercise: {
+                    exerciseId: suggestion.exerciseId,
+                    exerciseName: suggestion.exerciseName,
+                    suggestedWeight: suggestion.suggestedWeight,
+                    suggestedReps: suggestion.suggestedReps,
+                    suggestedSets: suggestion.suggestedSets
+                }
+            }
+        });
+    };
+
+    const handleSuggestionDismiss = (suggestionId) => {
+        // Suggestion dismissal is handled within the AISuggestionCards component
+        // This callback can be used for additional UI updates if needed
+        console.log('Suggestion dismissed:', suggestionId);
+    };
+
     return (
         <Box sx={{
             minHeight: '100vh',
@@ -319,8 +340,8 @@ export default function Home() {
                     Quick Actions
                 </Typography>
                 <Grid2 container spacing={3} sx={{ mb: 4, width: '100%' }}>
-                    {quickActions.map((action, index) => (
-                        <Grid2 size={{ xs: 12, sm: 6, md: 3 }} key={index}>
+                    {quickActions.map((action, actionIndex) => (
+                        <Grid2 size={{ xs: 12, sm: 6, md: 3 }} key={actionIndex}>
                             <QuickActionCard onClick={action.onClick}>
                                 <CardContent sx={{ textAlign: 'center', p: 3 }}>
                                     <Box
@@ -349,6 +370,34 @@ export default function Home() {
                         </Grid2>
                     ))}
                 </Grid2>
+
+                {/* AI Suggestions Section */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                    <MdAutoAwesome size={24} style={{ color: '#00ff9f' }} />
+                    <Typography variant="h5" sx={{ color: 'text.primary', fontWeight: 'bold' }}>
+                        AI Suggestions
+                    </Typography>
+                    <Chip
+                        label="BETA"
+                        size="small"
+                        sx={{
+                            backgroundColor: 'rgba(0, 255, 159, 0.2)',
+                            color: 'primary.main',
+                            fontWeight: 'bold',
+                            fontSize: '0.7rem'
+                        }}
+                    />
+                </Box>
+                <Box sx={{ mb: 4 }}>
+                    <AISuggestionCards
+                        userId={currentUser?.uid}
+                        workoutContext="home"
+                        onSuggestionAccept={handleSuggestionAccept}
+                        onSuggestionDismiss={handleSuggestionDismiss}
+                        maxSuggestions={3}
+                        showPlateauWarnings={true}
+                    />
+                </Box>
 
                 {/* Stats Overview */}
                 <Typography variant="h5" sx={{ color: 'text.primary', fontWeight: 'bold', mb: 3 }}>

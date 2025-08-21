@@ -1,13 +1,13 @@
 // Date utility functions to ensure consistent date handling
 export const getCurrentDate = () => {
   const now = new Date();
-  console.log("Current system date:", {
-    iso: now.toISOString(),
-    local: now.toLocaleDateString(),
-    month: now.getMonth() + 1, // 0-indexed, so add 1
-    year: now.getFullYear(),
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  });
+  // console.log("Current system date:", {
+  //   iso: now.toISOString(),
+  //   local: now.toLocaleDateString(),
+  //   month: now.getMonth() + 1, // 0-indexed, so add 1
+  //   year: now.getFullYear(),
+  //   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  // });
   return now;
 };
 
@@ -18,29 +18,29 @@ export const resetToCurrentMonth = () => {
 };
 
 export const debugDate = (date, label = "Date") => {
-  console.log(`${label}:`, {
-    iso: date.toISOString(),
-    local: date.toLocaleDateString(),
-    month: date.getMonth() + 1,
-    year: date.getFullYear(),
-    day: date.getDate(),
-  });
+  // console.log(`${label}:`, {
+  //   iso: date.toISOString(),
+  //   local: date.toLocaleDateString(),
+  //   month: date.getMonth() + 1,
+  //   year: date.getFullYear(),
+  //   day: date.getDate(),
+  // });
   return date;
 };
 
 // Test function to verify date handling
 export const testDateHandling = () => {
-  console.log("🗓️ Testing date handling...");
+  // console.log("🗓️ Testing date handling...");
 
   const now = getCurrentDate();
   const currentMonth = resetToCurrentMonth();
 
-  console.log("System check:", {
-    browserTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    currentTimestamp: Date.now(),
-    expectedMonth: now.getMonth() + 1,
-    expectedYear: now.getFullYear(),
-  });
+  // console.log("System check:", {
+  //   browserTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  //   currentTimestamp: Date.now(),
+  //   expectedMonth: now.getMonth() + 1,
+  //   expectedYear: now.getFullYear(),
+  // });
 
   return {
     current: now,
@@ -56,16 +56,15 @@ export const getCorrectCurrentDate = () => {
   // Check if the date seems unreasonable (too far in future)
   const currentYear = now.getFullYear();
 
-  // If we're somehow in 2025 but it should be 2024, adjust
-  if (currentYear > 2024) {
+  if (currentYear > 2025) {
     console.warn(
       "⚠️ System date appears to be in the future:",
       now.toISOString()
     );
     console.warn("⚠️ Using corrected date instead");
 
-    // Create a date for current actual time (August 2024)
-    const correctedDate = new Date(2024, 7, 8); // August 8, 2024
+    // Create a date for current actual time (August 2025)
+    const correctedDate = new Date(2025, 7, 8);
     debugDate(correctedDate, "Corrected date");
     return correctedDate;
   }
@@ -80,10 +79,10 @@ if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
 
     // Also test the corrected date function
     const corrected = getCorrectCurrentDate();
-    console.log("🔧 Corrected date test:", {
-      original: new Date().toISOString(),
-      corrected: corrected.toISOString(),
-      shouldUseCorrection: new Date().getFullYear() > 2024,
-    });
+    // console.log("🔧 Corrected date test:", {
+    //   original: new Date().toISOString(),
+    //   corrected: corrected.toISOString(),
+    //   shouldUseCorrection: new Date().getFullYear() > 2024,
+    // });
   }, 1000);
 }
