@@ -31,3 +31,11 @@ dist-ssr
 firebase-debug.log
 docs/
 .kiro
+# Ignore all JSON data files in split_data and its subdirectories
+split_data/**/*.json
+
+# Ignore all JSON files in the project root and subfolders (if desired)
+*.json
+
+# If you want to keep some example JSONs, you can whitelist them like:
+# !example.json
