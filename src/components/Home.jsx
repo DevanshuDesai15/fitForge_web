@@ -27,6 +27,8 @@ import {
     MdEmojiEvents,
     MdAutoAwesome
 } from "react-icons/md";
+import maleAvatar from '../assets/image/avatars/maleAv.png';
+import femaleAvatar from '../assets/image/avatars/femaleAv.png';
 import { getWeightUnit } from '../utils/weightUnit';
 import { format, isToday, isThisWeek } from 'date-fns';
 import AISuggestionCards from './common/AISuggestionCards';
@@ -54,10 +56,10 @@ const HeroCard = styled(Card)(() => ({
 }));
 
 const QuickActionCard = styled(Card)(() => ({
-    background: '#282828',
+    background: 'transparent',
     backdropFilter: 'blur(10px)',
     borderRadius: '16px',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
+    // border: '1px solid rgba(255, 255, 255, 0.1)',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
     '&:hover': {
@@ -87,7 +89,7 @@ export default function Home() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [weightUnit, setWeightUnitState] = useState('kg');
-    const [userData, setUserData] = useState({ username: '', fullName: '' });
+    const [userData, setUserData] = useState({ username: '', fullName: '', gender: 'male' });
 
     const { currentUser } = useAuth();
     const navigate = useNavigate();
@@ -120,7 +122,8 @@ export default function Home() {
                 const data = userDoc.docs[0].data();
                 setUserData({
                     username: data.username || 'Fitness Enthusiast',
-                    fullName: data.fullName || currentUser.email?.split('@')[0] || 'User'
+                    fullName: data.fullName || currentUser.email?.split('@')[0] || 'User',
+                    gender: data.gender || 'male'
                 });
             }
         } catch (error) {
@@ -206,7 +209,7 @@ export default function Home() {
             subtitle: 'Begin your training session',
             icon: MdPlayArrow,
             color: 'primary.main',
-            gradient: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
+            gradient: 'linear-gradient(45deg, #ffffff 30%, #ffffff 90%)',
             onClick: () => navigate('/workout/start')
         },
         {
@@ -214,7 +217,7 @@ export default function Home() {
             subtitle: 'Log a single exercise',
             icon: MdAdd,
             color: 'info.main',
-            gradient: 'linear-gradient(135deg, #00bcd4 0%, #00acc1 100%)',
+            gradient: 'linear-gradient(45deg, #ffffff 30%, #ffffff 90%)',
             onClick: () => navigate('/workout/quick-add')
         },
         {
@@ -222,7 +225,7 @@ export default function Home() {
             subtitle: 'Track your improvements',
             icon: MdShowChart,
             color: 'actions.quickAdd',
-            gradient: 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)',
+            gradient: 'linear-gradient(45deg, #ffffff 30%, #ffffff 90%)',
             onClick: () => navigate('/progress')
         },
         {
@@ -230,7 +233,7 @@ export default function Home() {
             subtitle: 'Manage your routines',
             icon: MdCalendarToday,
             color: 'actions.templates',
-            gradient: 'linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%)',
+            gradient: 'linear-gradient(45deg, #ffffff 30%, #ffffff 90%)',
             onClick: () => navigate('/workout/templates')
         }
     ];
@@ -294,17 +297,14 @@ export default function Home() {
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                             <Avatar
+                                src={userData.gender === 'female' ? femaleAvatar : maleAvatar}
                                 sx={{
                                     width: 64,
                                     height: 64,
-                                    background: 'linear-gradient(135deg, #dded00 0%, #e8f15d 100%)',
-                                    color: '#000',
-                                    fontSize: '1.5rem',
-                                    fontWeight: 'bold'
+                                    border: '3px solid #dded00',
+                                    boxShadow: '0 4px 15px rgba(221, 237, 0, 0.3)',
                                 }}
-                            >
-                                {userData.fullName.charAt(0).toUpperCase()}
-                            </Avatar>
+                            />
                             <Box>
                                 <Typography variant="h4" sx={{
                                     color: 'primary.main',
@@ -354,7 +354,7 @@ export default function Home() {
                                             alignItems: 'center',
                                             justifyContent: 'center',
                                             margin: '0 auto 1rem',
-                                            color: '#000'
+                                            color: '#000',
                                         }}
                                     >
                                         <action.icon size={28} />
@@ -407,9 +407,9 @@ export default function Home() {
                     <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
                         <StatCard>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <MdFitnessCenter style={{ color: 'var(--mui-palette-primary-main)', fontSize: '2rem' }} />
+                                <MdFitnessCenter style={{ color: '#d7ea26', fontSize: '2rem' }} />
                                 <Box>
-                                    <Typography variant="h4" sx={{ color: 'primary.main', fontWeight: 'bold' }}>
+                                    <Typography variant="h4" sx={{ color: '#ededed', fontWeight: 'bold' }}>
                                         {stats.totalWorkouts}
                                     </Typography>
                                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -424,7 +424,7 @@ export default function Home() {
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                 <MdTrendingUp style={{ color: '#ff9800', fontSize: '2rem' }} />
                                 <Box>
-                                    <Typography variant="h4" sx={{ color: '#ff9800', fontWeight: 'bold' }}>
+                                    <Typography variant="h4" sx={{ color: '#ededed', fontWeight: 'bold' }}>
                                         {stats.totalWeight.toFixed(0)}{weightUnit}
                                     </Typography>
                                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -439,7 +439,7 @@ export default function Home() {
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                 <MdCalendarToday style={{ color: '#9c27b0', fontSize: '2rem' }} />
                                 <Box>
-                                    <Typography variant="h4" sx={{ color: '#9c27b0', fontWeight: 'bold' }}>
+                                    <Typography variant="h4" sx={{ color: '#ededed', fontWeight: 'bold' }}>
                                         {stats.thisWeekWorkouts}
                                     </Typography>
                                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -454,7 +454,7 @@ export default function Home() {
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                 <MdEmojiEvents style={{ color: '#ffc107', fontSize: '2rem' }} />
                                 <Box>
-                                    <Typography variant="h4" sx={{ color: '#ffc107', fontWeight: 'bold' }}>
+                                    <Typography variant="h4" sx={{ color: '#ededed', fontWeight: 'bold' }}>
                                         {stats.totalExercises}
                                     </Typography>
                                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -473,13 +473,13 @@ export default function Home() {
                         <StyledCard>
                             <CardContent>
                                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-                                    <Typography variant="h6" sx={{ color: 'primary.main', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Typography variant="h6" sx={{ color: 'var(--primary-a30)', display: 'flex', alignItems: 'center', gap: 1 }}>
                                         <MdHistory /> Recent Workouts
                                     </Typography>
                                     <Button
                                         size="small"
                                         onClick={() => navigate('/history')}
-                                        sx={{ color: 'primary.main' }}
+                                        sx={{ color: 'var(--surface-a40)', '&:hover': { bgcolor: 'var(--surface-a20)', color: 'var(--surface-a0)' } }}
                                     >
                                         View All
                                     </Button>
@@ -494,7 +494,7 @@ export default function Home() {
                                         No workouts yet. Start your first workout!
                                     </Typography>
                                 ) : (
-                                    recentWorkouts.map((workout, index) => (
+                                    recentWorkouts.map((workout) => (
                                         <Box key={workout.id} sx={{ mb: 2, p: 2, backgroundColor: 'rgba(255, 255, 255, 0.02)', borderRadius: '8px' }}>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Box>
@@ -522,13 +522,13 @@ export default function Home() {
                         <StyledCard>
                             <CardContent>
                                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-                                    <Typography variant="h6" sx={{ color: 'primary.main', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Typography variant="h6" sx={{ color: 'var(--primary-a30)', display: 'flex', alignItems: 'center', gap: 1 }}>
                                         <MdFitnessCenter /> Recent Exercises
                                     </Typography>
                                     <Button
                                         size="small"
                                         onClick={() => navigate('/progress')}
-                                        sx={{ color: 'primary.main' }}
+                                        sx={{ color: 'var(--surface-a40)', '&:hover': { bgcolor: 'var(--surface-a20)', color: 'var(--surface-a0)' } }}
                                     >
                                         View Progress
                                     </Button>

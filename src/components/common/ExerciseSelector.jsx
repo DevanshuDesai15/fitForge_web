@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     TextField,
     Box,
@@ -22,12 +22,13 @@ import {
     MdSearch,
     MdFavorite,
     MdHistory,
-    MdClose
+    MdClose,
+    MdArrowDropDown
 } from 'react-icons/md';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useAuth } from '../../contexts/AuthContext';
-import { fetchExercisesByName } from '../../services/exerciseAPI';
+import { fetchExercisesByName } from '../../services/localExerciseService';
 
 const SearchContainer = styled(Box)(() => ({
     position: 'relative',
@@ -70,15 +71,33 @@ const SuggestionsList = styled(Paper)(({ theme }) => ({
     top: '100%',
     left: 0,
     right: 0,
-    zIndex: 9999, // Higher z-index to appear above dialogs
+    zIndex: 99999, // Much higher z-index to appear above all dialogs and modals
     minHeight: '60px', // Ensure minimum height
     maxHeight: '300px',
     overflowY: 'auto',
-    backgroundColor: theme.palette.background.paper,
+    backgroundColor: theme.palette.background?.paper || '#2a2a2a', // Solid background color
     borderRadius: '12px',
-    border: `1px solid ${theme.palette.border.main}`,
-    boxShadow: `0 8px 30px ${theme.palette.surface.secondary}`,
+    border: `1px solid ${theme.palette.border?.main || 'rgba(255, 255, 255, 0.2)'}`,
+    boxShadow: `0 16px 60px rgba(0, 0, 0, 0.4)`,
     marginTop: '4px', // Small gap between input and dropdown
+    // Ensure it doesn't get clipped by parent containers
+    willChange: 'transform',
+    transform: 'translateZ(0)',
+    // Add backdrop blur and solid background to prevent see-through
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    // Ensure completely opaque background
+    '&::before': {
+        content: '""',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: theme.palette.background?.paper || '#2a2a2a',
+        borderRadius: '12px',
+        zIndex: -1,
+    }
 }));
 
 const SuggestionItem = styled(ListItem)(({ theme }) => ({
@@ -86,8 +105,9 @@ const SuggestionItem = styled(ListItem)(({ theme }) => ({
     borderRadius: '8px',
     margin: '4px 8px',
     minHeight: '60px', // Ensure each item has sufficient height
+    backgroundColor: 'transparent',
     '&:hover': {
-        backgroundColor: theme.palette.surface.primary,
+        backgroundColor: theme.palette.surface?.primary || 'rgba(255, 255, 255, 0.08)',
     },
     '&.MuiListItem-root': {
         padding: '12px 16px',
@@ -109,32 +129,16 @@ export default function ExerciseSelector({
     const [suggestions, setSuggestions] = useState([]);
     const [loading, setLoading] = useState(false);
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [recentExercises, setRecentExercises] = useState([]);
     const [selectedExercises, setSelectedExercises] = useState([]);
 
     const { currentUser } = useAuth();
     const theme = useTheme();
 
-    useEffect(() => {
-        if (includeHistory && currentUser) {
-            loadRecentExercises();
-        }
-    }, [includeHistory, currentUser]);
+    const loadRecentExercises = useCallback(async () => {
+        if (!currentUser) return;
 
-    useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            if (searchTerm.length >= 2) {
-                searchExercises(searchTerm);
-            } else {
-                setSuggestions([]);
-                setShowSuggestions(false);
-            }
-        }, 300);
-
-        return () => clearTimeout(timeoutId);
-    }, [searchTerm]);
-
-    const loadRecentExercises = async () => {
         try {
             const q = query(
                 collection(db, 'exercises'),
@@ -152,7 +156,26 @@ export default function ExerciseSelector({
         } catch (error) {
             console.error('Error loading recent exercises:', error);
         }
-    };
+    }, [currentUser]);
+
+    useEffect(() => {
+        if (includeHistory && currentUser) {
+            loadRecentExercises();
+        }
+    }, [includeHistory, currentUser, loadRecentExercises]);
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            if (searchTerm.length >= 2 && isDropdownOpen) {
+                searchExercises(searchTerm);
+            } else if (searchTerm.length < 2) {
+                setSuggestions([]);
+                setShowSuggestions(false);
+            }
+        }, 300);
+
+        return () => clearTimeout(timeoutId);
+    }, [searchTerm, isDropdownOpen]);
 
     const searchExercises = async (term) => {
         console.log('🔍 Searching exercises for term:', term);
@@ -188,6 +211,7 @@ export default function ExerciseSelector({
         } else {
             setSearchTerm(exercise.name);
             setShowSuggestions(false);
+            setIsDropdownOpen(false);
             onExerciseSelect(exercise);
         }
     };
@@ -210,8 +234,13 @@ export default function ExerciseSelector({
             searchTerm
         });
 
-        if (!showSuggestions && !includeHistory) {
-            console.log('❌ Not showing suggestions: showSuggestions =', showSuggestions);
+        if ((!showSuggestions || !isDropdownOpen) && !includeHistory) {
+            console.log('❌ Not showing suggestions: showSuggestions =', showSuggestions, 'isDropdownOpen =', isDropdownOpen);
+            return null;
+        }
+
+        if (!isDropdownOpen) {
+            console.log('❌ Dropdown not open');
             return null;
         }
 
@@ -325,9 +354,16 @@ export default function ExerciseSelector({
                 placeholder={placeholder}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onClick={() => {
+                    console.log('🎯 Search field clicked, opening dropdown');
+                    setIsDropdownOpen(true);
+                    if (searchTerm.length >= 2 || recentExercises.length > 0) {
+                        setShowSuggestions(true);
+                    }
+                }}
                 onFocus={() => {
-                    console.log('🎯 Search field focused, showing suggestions');
-                    setShowSuggestions(true);
+                    console.log('🎯 Search field focused');
+                    // Don't automatically show suggestions on focus anymore
                 }}
                 onBlur={() => {
                     // Delay hiding suggestions to allow for selection
@@ -335,10 +371,24 @@ export default function ExerciseSelector({
                     setTimeout(() => {
                         console.log('⏱️ Hiding suggestions now');
                         setShowSuggestions(false);
+                        setIsDropdownOpen(false);
                     }, 500);
                 }}
                 InputProps={{
-                    startAdornment: <MdSearch style={{ marginRight: '8px' }} />,
+                    startAdornment: <MdSearch style={{ marginRight: '8px', color: theme.palette.primary.main }} />,
+                    endAdornment: (
+                        <Box sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            cursor: 'pointer',
+                            color: theme.palette.text.secondary,
+                            '&:hover': {
+                                color: theme.palette.primary.main
+                            }
+                        }}>
+                            <MdArrowDropDown />
+                        </Box>
+                    )
                 }}
             />
             {renderSuggestions()}
@@ -356,6 +406,17 @@ export default function ExerciseSelector({
                     sx: {
                         backgroundColor: theme.palette.background.paper,
                         borderRadius: '16px',
+                        // Ensure dropdown can overflow the dialog boundaries
+                        overflow: 'visible',
+                    }
+                }}
+                sx={{
+                    // Allow content to overflow dialog boundaries for dropdowns
+                    '& .MuiDialog-container': {
+                        overflow: 'visible',
+                    },
+                    '& .MuiDialog-paper': {
+                        overflow: 'visible',
                     }
                 }}
             >
@@ -365,7 +426,11 @@ export default function ExerciseSelector({
                         <MdClose />
                     </IconButton>
                 </DialogTitle>
-                <DialogContent>
+                <DialogContent sx={{
+                    // Ensure dropdown can overflow dialog content area
+                    overflow: 'visible',
+                    position: 'relative'
+                }}>
                     {mainContent}
 
                     {selectedExercises.length > 0 && (
