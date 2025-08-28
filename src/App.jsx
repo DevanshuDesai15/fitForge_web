@@ -4,7 +4,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from '@mui/material';
 import { theme } from './theme/theme';
 import ProtectedRoute from './components/ProtectedRoute';
-import Navigation from './components/Navigation';
+import Layout from './components/Layout';
 
 // Main components
 import Home from './components/Home';
@@ -31,13 +31,10 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 // Wrapper component to handle conditional styling
 function AppWrapper({ children }) {
-  const { currentUser } = useAuth();
-
   return (
     <div style={{
       backgroundColor: 'var(--surface-a0)',
       minHeight: '100vh',
-      paddingBottom: currentUser ? '70px' : '0', // Only add padding for authenticated users with navigation
     }}>
       {children}
     </div>
@@ -78,92 +75,82 @@ function App() {
               {/* Workout routes */}
               <Route path="/workout" element={
                 <ProtectedRoute>
-                  <>
+                  <Layout>
                     <Workout />
-                    <Navigation />
-                  </>
+                  </Layout>
                 </ProtectedRoute>
               } />
               <Route path="/workout/start" element={
                 <ProtectedRoute>
-                  <>
+                  <Layout>
                     <StartWorkout />
-                    <Navigation />
-                  </>
+                  </Layout>
                 </ProtectedRoute>
               } />
               <Route path="/workout/library" element={
                 <ProtectedRoute>
-                  <>
+                  <Layout>
                     <ExerciseLibrary />
-                    <Navigation />
-                  </>
+                  </Layout>
                 </ProtectedRoute>
               } />
               <Route path="/workout/exercise/:id" element={
                 <ProtectedRoute>
-                  <>
+                  <Layout>
                     <ExerciseDetail />
-                    <Navigation />
-                  </>
+                  </Layout>
                 </ProtectedRoute>
               } />
               <Route path="/workout/templates" element={
                 <ProtectedRoute>
-                  <>
+                  <Layout>
                     <WorkoutTemplates />
-                    <Navigation />
-                  </>
+                  </Layout>
                 </ProtectedRoute>
               } />
               <Route path="/workout/quick-add" element={
                 <ProtectedRoute>
-                  <>
+                  <Layout>
                     <QuickAdd />
-                    <Navigation />
-                  </>
+                  </Layout>
                 </ProtectedRoute>
               } />
 
               {/* History route */}
               <Route path="/history" element={
                 <ProtectedRoute>
-                  <>
+                  <Layout>
                     <ErrorBoundary>
                       <History />
                     </ErrorBoundary>
-                    <Navigation />
-                  </>
+                  </Layout>
                 </ProtectedRoute>
               } />
 
               {/* Progress route */}
               <Route path="/progress" element={
                 <ProtectedRoute>
-                  <>
+                  <Layout>
                     <Progress />
-                    <Navigation />
-                  </>
+                  </Layout>
                 </ProtectedRoute>
               } />
 
               {/* Exercise Manager route */}
               <Route path="/exercise-manager" element={
                 <ProtectedRoute>
-                  <>
+                  <Layout>
                     <ExerciseManager />
-                    <Navigation />
-                  </>
+                  </Layout>
                 </ProtectedRoute>
               } />
 
               {/* Profile route */}
               <Route path="/profile" element={
                 <ProtectedRoute>
-                  <>
+                  <Layout>
                     <Profile />
-                    <Navigation />
-                  </>
+                  </Layout>
                 </ProtectedRoute>
               } />
 

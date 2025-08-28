@@ -5,7 +5,16 @@ import {
     Paper,
     useTheme,
     Badge,
-    Box
+    Box,
+    Drawer,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemIcon,
+    ListItemText,
+    Typography,
+    useMediaQuery,
+    Divider
 } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -21,6 +30,9 @@ export default function Navigation() {
     const location = useLocation();
     const theme = useTheme();
     const [value, setValue] = useState('/');
+    const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
+
+    const sidebarWidth = 280;
 
     // Function to determine which navigation tab should be active based on current path
     const getActiveTab = (pathname) => {
@@ -56,6 +68,16 @@ export default function Navigation() {
         }
     };
 
+    const handleSidebarItemClick = (path) => {
+        setValue(path);
+        navigate(path);
+
+        // Add haptic feedback for mobile devices
+        if (navigator.vibrate) {
+            navigator.vibrate(30);
+        }
+    };
+
     const navigationItems = [
         {
             label: 'Home',
@@ -84,6 +106,103 @@ export default function Navigation() {
         },
     ];
 
+    if (isDesktop) {
+        // Desktop Sidebar Navigation
+        return (
+            <Drawer
+                variant="permanent"
+                sx={{
+                    width: sidebarWidth,
+                    flexShrink: 0,
+                    '& .MuiDrawer-paper': {
+                        width: sidebarWidth,
+                        boxSizing: 'border-box',
+                        background: 'linear-gradient(180deg, rgba(18, 18, 18, 0.95) 0%, rgba(30, 30, 30, 0.98) 100%)',
+                        backdropFilter: 'blur(20px)',
+                        borderRight: `1px solid ${theme.palette.primary.main}20`,
+                        zIndex: 1000,
+                        overflow: 'hidden',
+                    },
+                }}
+            >
+                <Box sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    p: 3,
+                    borderBottom: `1px solid ${theme.palette.primary.main}20`,
+                }}>
+                    <Typography variant="h6" sx={{
+                        color: theme.palette.primary.main,
+                        fontWeight: 'bold',
+                        textAlign: 'center',
+                        background: 'linear-gradient(135deg, #dded00 0%, #e8f15d 100%)',
+                        backgroundClip: 'text',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent'
+                    }}>
+                        FitForge
+                    </Typography>
+                </Box>
+
+                <List sx={{ px: 2, py: 3 }}>
+                    {navigationItems.map((item) => {
+                        const isActive = value === item.value;
+                        return (
+                            <ListItem key={item.value} disablePadding sx={{ mb: 1 }}>
+                                <ListItemButton
+                                    onClick={() => handleSidebarItemClick(item.value)}
+                                    sx={{
+                                        borderRadius: 2,
+                                        py: 1.5,
+                                        px: 2,
+                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                        backgroundColor: isActive
+                                            ? `${theme.palette.primary.main}15`
+                                            : 'transparent',
+                                        '&:hover': {
+                                            backgroundColor: isActive
+                                                ? `${theme.palette.primary.main}20`
+                                                : `${theme.palette.primary.main}08`,
+                                            transform: 'translateX(4px)',
+                                        },
+                                        '&.Mui-selected': {
+                                            backgroundColor: `${theme.palette.primary.main}15`,
+                                        },
+                                    }}
+                                >
+                                    <ListItemIcon sx={{
+                                        minWidth: 40,
+                                        color: isActive
+                                            ? theme.palette.primary.main
+                                            : 'rgba(255, 255, 255, 0.7)',
+                                        transition: 'all 0.3s ease',
+                                    }}>
+                                        <item.icon size={24} />
+                                    </ListItemIcon>
+                                    <ListItemText
+                                        primary={item.label}
+                                        sx={{
+                                            '& .MuiListItemText-primary': {
+                                                fontSize: '0.95rem',
+                                                fontWeight: isActive ? 700 : 500,
+                                                color: isActive
+                                                    ? theme.palette.primary.main
+                                                    : 'rgba(255, 255, 255, 0.8)',
+                                                transition: 'all 0.3s ease',
+                                            }
+                                        }}
+                                    />
+                                </ListItemButton>
+                            </ListItem>
+                        );
+                    })}
+                </List>
+            </Drawer>
+        );
+    }
+
+    // Mobile Bottom Navigation
     return (
         <Paper
             sx={{

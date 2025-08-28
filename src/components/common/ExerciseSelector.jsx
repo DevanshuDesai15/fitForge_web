@@ -71,7 +71,7 @@ const SuggestionsList = styled(Paper)(({ theme }) => ({
     top: '100%',
     left: 0,
     right: 0,
-    zIndex: 99999, // Much higher z-index to appear above all dialogs and modals
+    zIndex: 1500,
     minHeight: '60px', // Ensure minimum height
     maxHeight: '300px',
     overflowY: 'auto',
