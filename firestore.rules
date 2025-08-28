@@ -57,5 +57,24 @@ service cloud.firestore {
       // Only allow writes during initialization (you might want to restrict this further)
       allow write: if isAuthenticated();
     }
+
+    // ==================== AI Collections Rules ====================
+    
+    // AI Suggestions collection rules
+    match /aiSuggestions/{userId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // User Progression Profiles collection rules
+    match /userProgressionProfiles/{userId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Exercise Analytics collection rules
+    match /exerciseAnalytics/{analyticsId} {
+      // analyticsId format: {userId}_{exerciseId}
+      allow read, write: if isAuthenticated() && 
+        analyticsId.matches('.*' + request.auth.uid + '_.*');
+    }
   }
 } 

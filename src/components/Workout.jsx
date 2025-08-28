@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     Box,
     Card,
@@ -19,8 +19,7 @@ import {
     MdTimer,
     MdFlashOn,
     MdStar,
-    MdHistory,
-    MdArrowForward
+    MdHistory
 } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -46,33 +45,6 @@ const HeroCard = styled(Card)(({ theme }) => ({
     }
 }));
 
-const FeaturedCard = styled(Card)(({ theme }) => ({
-    background: theme.palette.background.gradient.button,
-    borderRadius: '20px',
-    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-    cursor: 'pointer',
-    position: 'relative',
-    overflow: 'hidden',
-    '&:hover': {
-        transform: 'translateY(-8px) scale(1.02)',
-        boxShadow: `0 20px 40px ${theme.palette.surface.tertiary}`,
-    },
-    '&::after': {
-        content: '""',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(255, 255, 255, 0.1)',
-        opacity: 0,
-        transition: 'opacity 0.3s ease',
-    },
-    '&:hover::after': {
-        opacity: 1,
-    }
-}));
-
 const ActionCard = styled(Card, {
     shouldForwardProp: (prop) => prop !== 'gradient',
 })(({ theme, gradient }) => ({
@@ -84,6 +56,17 @@ const ActionCard = styled(Card, {
     cursor: 'pointer',
     position: 'relative',
     overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+    [theme.breakpoints.down('sm')]: {
+        width: '100% !important',
+        maxWidth: '100%',
+        height: '140px',
+        boxSizing: 'border-box',
+    },
+    [theme.breakpoints.up('sm')]: {
+        minHeight: '120px',
+    },
     '&:hover': {
         transform: 'translateY(-6px)',
         boxShadow: '0 12px 24px rgba(0, 0, 0, 0.3)',
@@ -111,11 +94,7 @@ export default function Workout() {
         streak: 0
     });
 
-    useEffect(() => {
-        loadDashboardData();
-    }, [currentUser]);
-
-    const loadDashboardData = async () => {
+    const loadDashboardData = useCallback(async () => {
         if (!currentUser) return;
 
         try {
@@ -151,9 +130,21 @@ export default function Workout() {
         } catch (error) {
             console.error('Error loading dashboard data:', error);
         }
-    };
+    }, [currentUser]);
+
+    useEffect(() => {
+        loadDashboardData();
+    }, [loadDashboardData]);
 
     const workoutActions = [
+        {
+            title: 'Start New Workout',
+            icon: MdPlayArrow,
+            description: 'Tap to begin an empty session or pick a template',
+            path: '/workout/start',
+            gradient: `linear-gradient(135deg, ${theme.palette.actions.quickAdd}20 0%, ${theme.palette.actions.quickAdd}05 100%)`,
+            color: theme.palette.actions.quickAdd
+        },
         {
             title: 'Exercise Library',
             icon: MdFitnessCenter,
@@ -194,10 +185,15 @@ export default function Workout() {
         <Box sx={{
             minHeight: '100vh',
             background: '#121212',
-            padding: { xs: '0.5rem', sm: '1rem' },
+            padding: '1rem',
             paddingBottom: { xs: '100px', sm: '1rem' },
         }}>
-            <div className="max-w-4xl mx-auto">
+            <Box sx={{
+                maxWidth: '1200px',
+                // margin: '0 auto',
+                width: '100%',
+                // px: { xs: 1, sm: 2 }
+            }}>
                 {/* Hero Section */}
                 <HeroCard sx={{ mb: 4 }}>
                     <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
@@ -231,7 +227,7 @@ export default function Workout() {
                                         label={`${stats.thisWeek} workouts this week`}
                                         sx={{
                                             backgroundColor: theme.palette.surface.secondary,
-                                            color: theme.palette.primary.main,
+                                            color: 'var(--primary-a30)',
                                             border: `1px solid ${theme.palette.border.primary}`
                                         }}
                                     />
@@ -277,48 +273,34 @@ export default function Workout() {
                     </CardContent>
                 </HeroCard>
 
-                {/* Featured Action - Start Workout */}
-                <FeaturedCard sx={{ mb: 4 }} onClick={() => navigate('/workout/start')}>
-                    <CardContent sx={{ p: 3, color: theme.palette.primary.contrastText }}>
-                        <Box sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            flexDirection: { xs: 'column', sm: 'row' },
-                            gap: 2
-                        }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <Avatar sx={{
-                                    bgcolor: 'rgba(0, 0, 0, 0.2)',
-                                    width: 56,
-                                    height: 56,
-                                    color: theme.palette.primary.contrastText
-                                }}>
-                                    <MdFitnessCenter style={{ fontSize: '2rem' }} />
-                                </Avatar>
-                                <Box>
-                                    <Typography variant="h5" sx={{ fontWeight: 'bold', color: theme.palette.primary.contrastText }}>
-                                        Start New Workout
-                                    </Typography>
-                                    <Typography variant="body1" sx={{ color: 'rgba(0, 0, 0, 0.72)' }}>
-                                        Tap to begin an empty session or pick a template
-                                    </Typography>
-                                </Box>
-                            </Box>
-                            <MdArrowForward style={{ fontSize: '2rem', color: 'rgba(0, 0, 0, 0.6)' }} />
-                        </Box>
-                    </CardContent>
-                </FeaturedCard>
-
                 {/* Action Cards Grid */}
-                <Grid2 container spacing={3} sx={{ mb: 4 }}>
+                <Grid2
+                    container
+                    spacing={{ xs: 2, sm: 2 }}
+                    sx={{
+                        mb: 4,
+                        width: '100%'
+                    }}
+                >
                     {workoutActions.map((action) => (
-                        <Grid2 xs={12} sm={6} md={4} key={action.title}>
+                        <Grid2
+                            xs={12}
+                            sm={3}
+                            key={action.title}
+                            sx={{
+                                width: { xs: '100%', sm: 'auto' }
+                            }}
+                        >
                             <ActionCard
                                 gradient={action.gradient}
                                 onClick={() => navigate(action.path)}
                             >
-                                <CardContent sx={{ p: 3 }}>
+                                <CardContent sx={{
+                                    p: 3,
+                                    flex: { xs: 1, sm: 'auto' },
+                                    display: 'flex',
+                                    flexDirection: 'column'
+                                }}>
                                     <Box sx={{
                                         display: 'flex',
                                         alignItems: 'center',
@@ -345,7 +327,8 @@ export default function Workout() {
                                     </Box>
                                     <Typography variant="body2" sx={{
                                         color: theme.palette.text.muted,
-                                        lineHeight: 1.5
+                                        lineHeight: 1.5,
+                                        flex: { xs: 1, sm: 'auto' }
                                     }}>
                                         {action.description}
                                     </Typography>
@@ -401,7 +384,7 @@ export default function Workout() {
                         </CardContent>
                     </HeroCard>
                 )}
-            </div>
+            </Box>
         </Box>
     );
 }

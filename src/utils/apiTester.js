@@ -1,20 +1,21 @@
-// API Testing Utility for ExerciseDB
-// This file helps debug API connectivity and target muscle names
+// Local Exercise Data Testing Utility
+// This file helps test the local exercise data service
 
 import {
   fetchExercises,
   fetchAllExercises,
   getExerciseCount,
-} from "../services/exerciseAPI";
+  testLocalService,
+} from "../services/localExerciseService";
 
 export const testAPI = async () => {
-  console.log("🧪 Starting API Tests...");
+  console.log("🧪 Starting Local Exercise Data Tests...");
 
   try {
-    // Test 1: Basic API connectivity
-    console.log("\n📡 Test 1: Basic API connectivity");
+    // Test 1: Basic data loading
+    console.log("\n📊 Test 1: Basic data loading");
     const singleExercise = await fetchExercises(1, 0);
-    console.log("✅ API connected successfully");
+    console.log("✅ Local data loaded successfully");
     console.log("Sample exercise:", singleExercise[0]?.name);
 
     // Test 2: Test with limit=10 (should work on all plans)
@@ -22,28 +23,22 @@ export const testAPI = async () => {
     const tenExercises = await fetchExercises(10, 0);
     console.log(`✅ Fetched ${tenExercises.length} exercises with limit=10`);
 
-    // Test 3: Test with limit=0 to detect plan type
-    console.log("\n🔍 Test 3: Detect API plan type");
-    const allExercisesTest = await fetchExercises(0, 0);
-    if (allExercisesTest.length > 10) {
-      console.log(
-        `✅ PAID PLAN DETECTED! Got ${allExercisesTest.length} exercises with limit=0`
-      );
-    } else {
-      console.log(
-        `⚠️ FREE PLAN DETECTED. Got ${allExercisesTest.length} exercises with limit=0`
-      );
-    }
+    // Test 3: Test all exercises loading
+    console.log("\n🔍 Test 3: Load all exercises");
+    const allExercisesTest = await fetchAllExercises();
+    console.log(
+      `✅ LOCAL DATA: Got ${allExercisesTest.length} exercises from JSON file`
+    );
 
-    // Test 4: Test the new fetchAllExercises function
-    console.log("\n🚀 Test 4: Testing fetchAllExercises function");
+    // Test 4: Test the local service functionality
+    console.log("\n🚀 Test 4: Testing local service functions");
     const startTime = Date.now();
-    const allExercises = await fetchAllExercises();
+    const serviceTest = await testLocalService();
     const endTime = Date.now();
     const duration = (endTime - startTime) / 1000;
 
-    console.log(`✅ fetchAllExercises completed!`);
-    console.log(`📈 Total exercises: ${allExercises.length}`);
+    console.log(`✅ Local service test: ${serviceTest ? "PASSED" : "FAILED"}`);
+    console.log(`📈 Total exercises: ${allExercisesTest.length}`);
     console.log(`⏱️ Time taken: ${duration.toFixed(2)} seconds`);
 
     // Test 5: Get exercise count using utility function
@@ -53,22 +48,18 @@ export const testAPI = async () => {
 
     // Summary
     console.log("\n📋 TEST SUMMARY:");
-    console.log(`🔗 API Status: Connected`);
-    console.log(
-      `📊 Plan Type: ${
-        allExercisesTest.length > 10 ? "PAID (Pro/Ultra/Mega)" : "FREE"
-      }`
-    );
-    console.log(`📈 Total Exercises Available: ${allExercises.length}`);
-    console.log(`⏱️ Fetch Duration: ${duration.toFixed(2)}s`);
-    console.log(`🎯 Recommended Function: fetchAllExercises()`);
+    console.log(`🔗 Data Source: Local JSON File`);
+    console.log(`📊 Data Type: Complete Exercise Database`);
+    console.log(`📈 Total Exercises Available: ${allExercisesTest.length}`);
+    console.log(`⏱️ Load Duration: ${duration.toFixed(2)}s`);
+    console.log(`🎯 Status: Local data service active`);
 
     return {
       connected: true,
-      planType: allExercisesTest.length > 10 ? "paid" : "free",
-      totalExercises: allExercises.length,
-      fetchDuration: duration,
-      exercises: allExercises,
+      dataSource: "local",
+      totalExercises: allExercisesTest.length,
+      loadDuration: duration,
+      exercises: allExercisesTest,
     };
   } catch (error) {
     console.error("❌ API Test Failed:", error);

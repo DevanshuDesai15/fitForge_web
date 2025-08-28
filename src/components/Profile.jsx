@@ -15,7 +15,11 @@ import {
     Avatar,
     Chip,
     Paper,
-    Container
+    Container,
+    Radio,
+    RadioGroup,
+    FormControlLabel,
+    FormControl
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useAuth } from '../contexts/AuthContext';
@@ -24,6 +28,8 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { updateEmail, updatePassword } from 'firebase/auth';
 import { db } from '../firebase/config';
 import { MdArrowBack, MdPerson, MdEmail, MdLock, MdSave, MdLogout, MdSettings, MdCleaningServices, MdFitnessCenter, MdAccountCircle, MdVerified } from "react-icons/md";
+import maleAvatar from '../assets/image/avatars/maleAv.png';
+import femaleAvatar from '../assets/image/avatars/femaleAv.png';
 
 const ProfileHeaderCard = styled(Paper)(() => ({
     background: '#282828',
@@ -144,6 +150,7 @@ export default function Profile() {
         fullName: '',
         age: '',
         weight: '',
+        gender: 'male', // default to male
         email: currentUser?.email || '',
         newPassword: '',
         confirmPassword: '',
@@ -198,6 +205,7 @@ export default function Profile() {
                     fullName: data.fullName || '',
                     age: data.age || '',
                     weight: data.weight || '',
+                    gender: data.gender || 'male',
                 }));
             }
         } catch (error) {
@@ -225,12 +233,13 @@ export default function Profile() {
         setSuccess('');
 
         try {
-            // Update user profile data including weight unit preference
+            // Update user profile data including weight unit preference and gender
             await setDoc(doc(db, 'users', currentUser.uid), {
                 username: userData.username,
                 fullName: userData.fullName,
                 age: userData.age,
                 weight: userData.weight,
+                gender: userData.gender,
                 weightUnit: weightUnit, // Save weight unit preference
                 updatedAt: new Date().toISOString(),
             }, { merge: true });
@@ -295,18 +304,15 @@ export default function Profile() {
                         mb: 2
                     }}>
                         <Avatar
+                            src={userData.gender === 'female' ? femaleAvatar : maleAvatar}
                             sx={{
                                 width: { xs: 80, sm: 100 },
                                 height: { xs: 80, sm: 100 },
-                                background: 'linear-gradient(135deg, #dded00 0%, #e8f15d 100%)',
-                                fontSize: { xs: '2rem', sm: '2.5rem' },
-                                color: '#000',
-                                fontWeight: 'bold',
+                                border: '3px solid #dded00',
                                 boxShadow: '0 8px 25px rgba(221, 237, 0, 0.3)',
                             }}
-                        >
-                            <MdAccountCircle size={isMobile ? 40 : 50} />
-                        </Avatar>
+                        />
+
 
                         <Box sx={{
                             flex: 1,
@@ -480,6 +486,95 @@ export default function Profile() {
 
                                 <form onSubmit={handleUpdateProfile}>
                                     <Grid container spacing={3}>
+                                        {/* Avatar Selection */}
+                                        <Grid item xs={12}>
+                                            <Box sx={{
+                                                display: 'flex',
+                                                flexDirection: { xs: 'column', sm: 'row' },
+                                                alignItems: { xs: 'flex-start', sm: 'center' },
+                                                gap: { xs: 2, sm: 3 },
+                                                p: 3,
+                                                background: 'linear-gradient(135deg, rgba(221, 237, 0, 0.05) 0%, rgba(227, 239, 63, 0.02) 100%)',
+                                                borderRadius: '16px',
+                                                border: '1px solid rgba(221, 237, 0, 0.2)',
+                                                mb: 2
+                                            }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexShrink: 0 }}>
+                                                    <MdPerson style={{ color: '#dded00', fontSize: '24px' }} />
+                                                    <Typography variant="h6" sx={{ color: '#fff', fontWeight: '600' }}>
+                                                        Avatar Selection
+                                                    </Typography>
+                                                </Box>
+
+                                                <FormControl component="fieldset">
+                                                    <RadioGroup
+                                                        row
+                                                        value={userData.gender}
+                                                        onChange={(e) => setUserData(prev => ({ ...prev, gender: e.target.value }))}
+                                                        sx={{
+                                                            gap: 3,
+                                                            '& .MuiFormControlLabel-root': {
+                                                                margin: 0,
+                                                            },
+                                                        }}
+                                                    >
+                                                        <FormControlLabel
+                                                            value="male"
+                                                            control={
+                                                                <Radio
+                                                                    sx={{
+                                                                        color: 'rgba(255, 255, 255, 0.5)',
+                                                                        '&.Mui-checked': {
+                                                                            color: '#dded00',
+                                                                        },
+                                                                    }}
+                                                                />
+                                                            }
+                                                            label={
+                                                                <Typography sx={{
+                                                                    color: userData.gender === 'male' ? '#dded00' : 'rgba(255, 255, 255, 0.8)',
+                                                                    fontWeight: userData.gender === 'male' ? '600' : '400',
+                                                                    ml: 1
+                                                                }}>
+                                                                    Male
+                                                                </Typography>
+                                                            }
+                                                        />
+                                                        <FormControlLabel
+                                                            value="female"
+                                                            control={
+                                                                <Radio
+                                                                    sx={{
+                                                                        color: 'rgba(255, 255, 255, 0.5)',
+                                                                        '&.Mui-checked': {
+                                                                            color: '#dded00',
+                                                                        },
+                                                                    }}
+                                                                />
+                                                            }
+                                                            label={
+                                                                <Typography sx={{
+                                                                    color: userData.gender === 'female' ? '#dded00' : 'rgba(255, 255, 255, 0.8)',
+                                                                    fontWeight: userData.gender === 'female' ? '600' : '400',
+                                                                    ml: 1
+                                                                }}>
+                                                                    Female
+                                                                </Typography>
+                                                            }
+                                                        />
+                                                    </RadioGroup>
+                                                </FormControl>
+
+                                                <Typography variant="body2" sx={{
+                                                    color: 'rgba(255, 255, 255, 0.6)',
+                                                    fontStyle: 'italic',
+                                                    mt: { xs: 0, sm: 0 }
+                                                }}>
+                                                    Choose your avatar representation
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+
                                         {/* Weight Unit Preference */}
                                         <Grid item xs={12}>
                                             <Box sx={{

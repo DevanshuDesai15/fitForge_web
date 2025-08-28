@@ -21,7 +21,7 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { MdFitnessCenter } from 'react-icons/md';
-import { fetchExercises, fetchExercisesByBodyPart } from '../../services/exerciseAPI';
+import { fetchExercises, fetchExercisesByBodyPart } from '../../services/localExerciseService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -81,14 +81,29 @@ export default function ExerciseLibrary() {
 
     const bodyParts = [
         'all',
-        'Abs',
+        'Abdominals',
+        'Abductors',
+        'Adductor',
         'Arms',
         'Back',
+        'Biceps',
         'Calves',
-        'Cardio',
         'Chest',
+        'Forearms',
+        'Full Body',
+        'Glutes',
+        'Hamstrings',
+        'Hip Flexors',
         'Legs',
-        'Shoulders'
+        'Lower Back',
+        'Neck',
+        'Obliques',
+        'Piriformis',
+        'Quadriceps',
+        'Shoulders',
+        'Trapezius',
+        'Triceps',
+        'Wrists'
     ];
 
     // Memoized load function to prevent infinite loops
@@ -313,15 +328,37 @@ export default function ExerciseLibrary() {
                                                         </Box>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Chip
-                                                            label={exercise.bodyPart}
-                                                            size="small"
-                                                            sx={{
-                                                                backgroundColor: 'rgba(221, 237, 0, 0.2)',
-                                                                color: '#dded00',
-                                                                textTransform: 'capitalize'
-                                                            }}
-                                                        />
+                                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                                            {exercise.muscle_groups && exercise.muscle_groups.length > 0 ?
+                                                                exercise.muscle_groups.slice(0, 2).map((group, index) => (
+                                                                    <Chip
+                                                                        key={index}
+                                                                        label={group}
+                                                                        size="small"
+                                                                        sx={{
+                                                                            backgroundColor: 'rgba(221, 237, 0, 0.2)',
+                                                                            color: '#dded00',
+                                                                            textTransform: 'capitalize',
+                                                                            fontSize: '0.7rem'
+                                                                        }}
+                                                                    />
+                                                                )) :
+                                                                <Chip
+                                                                    label={exercise.bodyPart}
+                                                                    size="small"
+                                                                    sx={{
+                                                                        backgroundColor: 'rgba(221, 237, 0, 0.2)',
+                                                                        color: '#dded00',
+                                                                        textTransform: 'capitalize'
+                                                                    }}
+                                                                />
+                                                            }
+                                                            {exercise.muscle_groups && exercise.muscle_groups.length > 2 && (
+                                                                <Typography variant="caption" sx={{ color: '#999', alignSelf: 'center' }}>
+                                                                    +{exercise.muscle_groups.length - 2}
+                                                                </Typography>
+                                                            )}
+                                                        </Box>
                                                     </TableCell>
                                                     <TableCell sx={{ textTransform: 'capitalize' }}>
                                                         {exercise.target}
