@@ -156,7 +156,7 @@ export default function ModernSidebar() {
             label: 'Workouts',
             path: '/workout',
             icon: Activity,
-            badge: 3,
+            // badge: 3,
             isActive: activeTab === '/workout',
         },
         {
@@ -283,7 +283,7 @@ export default function ModernSidebar() {
             {/* Bottom Section */}
             <BottomSection>
                 {/* Settings */}
-                <List sx={{ padding: 0, mb: 2 }}>
+                {/* <List sx={{ padding: 0, mb: 2 }}>
                     <NavListItem disablePadding>
                         <NavListItemButton
                             active={false}
@@ -309,10 +309,10 @@ export default function ModernSidebar() {
                             />
                         </NavListItemButton>
                     </NavListItem>
-                </List>
+                </List> */}
 
                 {/* User Profile */}
-                <UserSection>
+                {/* <UserSection>
                     <Avatar
                         sx={{
                             width: 36,
@@ -349,7 +349,7 @@ export default function ModernSidebar() {
                             Free Plan
                         </Typography>
                     </Box>
-                </UserSection>
+                </UserSection> */}
 
                 {/* Sign Out */}
                 <Button
