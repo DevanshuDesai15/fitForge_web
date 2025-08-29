@@ -11,6 +11,37 @@ class GeminiAIService {
   constructor() {
     this.config = geminiConfig;
 
+    // 🔥 Rate limiting to prevent 429 errors
+    this.requestQueue = [];
+    this.isProcessingQueue = false;
+    this.lastRequestTime = 0;
+    this.minRequestInterval = 1000; // 1 second between requests
+    this.maxConcurrentRequests = 1; // Only 1 request at a time
+    this.requestCount = 0;
+    this.requestCountResetTime = Date.now();
+
+    // 🔥 Request deduplication to prevent duplicate API calls
+    this.pendingRequests = new Map(); // Cache ongoing requests
+    this.requestCache = new Map(); // Cache recent results (5 minutes)
+
+    // 🔥 Circuit breaker pattern to handle API failures gracefully
+    this.circuitBreaker = {
+      isOpen: false,
+      failureCount: 0,
+      lastFailureTime: 0,
+      threshold: 2, // Open circuit after 2 failures (more aggressive)
+      timeout: 10 * 60 * 1000, // 10 minutes before trying again (longer)
+    };
+
+    // 🚨 Emergency brake - completely disable API if too many requests
+    this.emergencyBrake = {
+      isActive: true, // 🚨 FORCE DISABLE until 429 issue is resolved
+      dailyRequestCount: 999, // Set high to trigger emergency brake
+      dailyResetTime: Date.now(),
+      maxDailyRequests: 100, // Hard limit per day
+      activationThreshold: 10, // Very low threshold (10 requests)
+    };
+
     // Validate API key configuration
     if (
       !this.config.apiKey ||
@@ -44,6 +75,11 @@ class GeminiAIService {
       console.log(
         `🔑 API Key configured: ${this.config.apiKey.substring(0, 10)}...`
       );
+
+      // 🔥 Set up automatic cleanup every 5 minutes
+      if (typeof window !== "undefined") {
+        setInterval(() => this.cleanup(), 5 * 60 * 1000);
+      }
     } catch (error) {
       console.error("❌ Failed to initialize Gemini AI Service:", error);
       throw error;
@@ -62,6 +98,79 @@ class GeminiAIService {
     userProfile,
     workoutHistory
   ) {
+    // 🔥 Request deduplication: create unique key for this request
+    const requestKey = `progression_${analysisData.exerciseId}_${analysisData.currentWeight}_${analysisData.currentReps}`;
+
+    // Check if we have a cached result (5 minutes)
+    const cached = this.requestCache.get(requestKey);
+    if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
+      console.log(
+        `✅ Using cached Gemini result for ${analysisData.exerciseId}`
+      );
+      return cached.result;
+    }
+
+    // Check if this exact request is already pending
+    if (this.pendingRequests.has(requestKey)) {
+      console.log(
+        `⏳ Waiting for pending Gemini request for ${analysisData.exerciseId}`
+      );
+      return this.pendingRequests.get(requestKey);
+    }
+
+    // Create new request
+    const requestPromise = this._executeProgressionRequest(
+      analysisData,
+      userProfile,
+      workoutHistory
+    );
+    this.pendingRequests.set(requestKey, requestPromise);
+
+    try {
+      const result = await requestPromise;
+
+      // Cache the result
+      this.requestCache.set(requestKey, {
+        result,
+        timestamp: Date.now(),
+      });
+
+      return result;
+    } finally {
+      // Clean up pending request
+      this.pendingRequests.delete(requestKey);
+    }
+  }
+
+  /**
+   * Execute the actual progression request
+   * @private
+   */
+  async _executeProgressionRequest(analysisData, userProfile, workoutHistory) {
+    // 🚨 Global kill switch: check if Gemini is completely disabled
+    if (this.config.emergencyDisable || !this.config.useGeminiAI) {
+      console.log(
+        "🚨 GEMINI API GLOBALLY DISABLED - using rule-based fallback"
+      );
+      return this._generateFallbackSuggestion(analysisData);
+    }
+
+    // 🚨 Emergency brake: check if we've hit daily limits
+    if (this._isEmergencyBrakeActive()) {
+      console.log(
+        "🚨 EMERGENCY BRAKE ACTIVE - API completely disabled for today"
+      );
+      return this._generateFallbackSuggestion(analysisData);
+    }
+
+    // 🔥 Circuit breaker: check if API is temporarily disabled
+    if (this._isCircuitOpen()) {
+      console.log(
+        "🚫 Circuit breaker OPEN - using fallback (Gemini API temporarily disabled)"
+      );
+      return this._generateFallbackSuggestion(analysisData);
+    }
+
     try {
       const prompt = this._buildProgressionPrompt(
         analysisData,
@@ -78,6 +187,9 @@ class GeminiAIService {
       );
       const aiResponse = this._extractJsonFromResponse(responseText);
 
+      // 🔥 Success: reset circuit breaker
+      this._resetCircuitBreaker();
+
       return {
         ...aiResponse,
         confidence: this._calculateEnhancedConfidence(analysisData, aiResponse),
@@ -90,7 +202,114 @@ class GeminiAIService {
         "Gemini API error, falling back to rule-based system:",
         error
       );
+
+      // 🔥 Record failure for circuit breaker
+      this._recordFailure(error);
+
       return this._generateFallbackSuggestion(analysisData);
+    }
+  }
+
+  /**
+   * Check if circuit breaker is open (API temporarily disabled)
+   * @private
+   */
+  _isCircuitOpen() {
+    if (!this.circuitBreaker.isOpen) return false;
+
+    // Check if timeout has passed
+    const now = Date.now();
+    if (
+      now - this.circuitBreaker.lastFailureTime >
+      this.circuitBreaker.timeout
+    ) {
+      console.log(
+        "🔄 Circuit breaker timeout passed - attempting to close circuit"
+      );
+      this.circuitBreaker.isOpen = false;
+      this.circuitBreaker.failureCount = 0;
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Record API failure for circuit breaker
+   * @private
+   */
+  _recordFailure() {
+    this.circuitBreaker.failureCount++;
+    this.circuitBreaker.lastFailureTime = Date.now();
+
+    // Open circuit if threshold reached
+    if (this.circuitBreaker.failureCount >= this.circuitBreaker.threshold) {
+      this.circuitBreaker.isOpen = true;
+      console.log(
+        `🚫 Circuit breaker OPENED after ${this.circuitBreaker.failureCount} failures - Gemini API disabled for 5 minutes`
+      );
+      console.log(
+        "💡 All requests will use rule-based fallbacks until circuit closes"
+      );
+    }
+  }
+
+  /**
+   * Reset circuit breaker on successful request
+   * @private
+   */
+  _resetCircuitBreaker() {
+    if (this.circuitBreaker.failureCount > 0) {
+      console.log("✅ Circuit breaker RESET - Gemini API working normally");
+    }
+    this.circuitBreaker.isOpen = false;
+    this.circuitBreaker.failureCount = 0;
+  }
+
+  /**
+   * Check if emergency brake is active (daily limit protection)
+   * @private
+   */
+  _isEmergencyBrakeActive() {
+    const now = Date.now();
+
+    // Reset daily counter if new day
+    if (now - this.emergencyBrake.dailyResetTime > 24 * 60 * 60 * 1000) {
+      this.emergencyBrake.dailyRequestCount = 0;
+      this.emergencyBrake.dailyResetTime = now;
+      this.emergencyBrake.isActive = false;
+    }
+
+    // Check if we should activate emergency brake
+    if (
+      !this.emergencyBrake.isActive &&
+      this.emergencyBrake.dailyRequestCount >=
+        this.emergencyBrake.activationThreshold
+    ) {
+      this.emergencyBrake.isActive = true;
+      console.log(
+        `🚨 EMERGENCY BRAKE ACTIVATED - Hit ${this.emergencyBrake.dailyRequestCount} requests today`
+      );
+      console.log("🛡️ All Gemini API calls disabled until tomorrow");
+    }
+
+    return this.emergencyBrake.isActive;
+  }
+
+  /**
+   * Increment daily request counter
+   * @private
+   */
+  _incrementDailyCounter() {
+    this.emergencyBrake.dailyRequestCount++;
+
+    if (
+      this.emergencyBrake.dailyRequestCount >=
+      this.emergencyBrake.activationThreshold - 5
+    ) {
+      console.warn(
+        `⚠️ Approaching daily limit: ${this.emergencyBrake.dailyRequestCount}/${this.emergencyBrake.activationThreshold}`
+      );
     }
   }
 
@@ -107,6 +326,85 @@ class GeminiAIService {
     userProfile,
     workoutHistory
   ) {
+    // 🔥 Circuit breaker: check if API is temporarily disabled
+    if (this._isCircuitOpen()) {
+      console.log(
+        "🚫 Circuit breaker OPEN - using batch fallback (Gemini API temporarily disabled)"
+      );
+      return this._generateBatchFallbackSuggestions(analysesData);
+    }
+
+    // 🔥 Request deduplication for batch requests
+    const exerciseIds = analysesData
+      .map((a) => a.exerciseId)
+      .sort()
+      .join(",");
+    const requestKey = `batch_${exerciseIds}_${
+      Date.now() - (Date.now() % (5 * 60 * 1000))
+    }`; // 5-minute buckets
+
+    // Check cache
+    const cached = this.requestCache.get(requestKey);
+    if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
+      console.log(
+        `✅ Using cached batch Gemini result for ${analysesData.length} exercises`
+      );
+      return cached.result;
+    }
+
+    // Check pending
+    if (this.pendingRequests.has(requestKey)) {
+      console.log(
+        `⏳ Waiting for pending batch Gemini request for ${analysesData.length} exercises`
+      );
+      return this.pendingRequests.get(requestKey);
+    }
+
+    const requestPromise = this._executeBatchProgressionRequest(
+      analysesData,
+      userProfile,
+      workoutHistory
+    );
+    this.pendingRequests.set(requestKey, requestPromise);
+
+    try {
+      const result = await requestPromise;
+
+      // Cache the result
+      this.requestCache.set(requestKey, {
+        result,
+        timestamp: Date.now(),
+      });
+
+      return result;
+    } finally {
+      this.pendingRequests.delete(requestKey);
+    }
+  }
+
+  /**
+   * Execute the actual batch progression request
+   * @private
+   */
+  async _executeBatchProgressionRequest(
+    analysesData,
+    userProfile,
+    workoutHistory
+  ) {
+    // 🚨 Global kill switch: check if Gemini is completely disabled
+    if (this.config.emergencyDisable || !this.config.useGeminiAI) {
+      console.log("🚨 GEMINI API GLOBALLY DISABLED - using batch fallback");
+      return this._generateBatchFallbackSuggestions(analysesData);
+    }
+
+    // 🚨 Emergency brake: check if we've hit daily limits
+    if (this._isEmergencyBrakeActive()) {
+      console.log(
+        "🚨 EMERGENCY BRAKE ACTIVE - batch API completely disabled for today"
+      );
+      return this._generateBatchFallbackSuggestions(analysesData);
+    }
+
     try {
       this._log("Generating batch progression suggestions", {
         exerciseCount: analysesData.length,
@@ -127,6 +425,9 @@ class GeminiAIService {
       );
       const aiResponse = this._extractJsonFromResponse(responseText);
 
+      // 🔥 Success: reset circuit breaker
+      this._resetCircuitBreaker();
+
       return {
         suggestions: aiResponse.suggestions || [],
         overallInsights: aiResponse.overallInsights,
@@ -141,6 +442,10 @@ class GeminiAIService {
         "Gemini batch API error, falling back to rule-based system:",
         error
       );
+
+      // 🔥 Record failure for circuit breaker
+      this._recordFailure(error);
+
       return this._generateBatchFallbackSuggestions(analysesData);
     }
   }
@@ -519,30 +824,130 @@ Respond in JSON format:
   }
 
   /**
-   * Make request to Gemini API with retry logic
+   * Rate-limited request queue to prevent 429 errors
+   * @private
+   */
+  async _queueRequest(requestFn) {
+    return new Promise((resolve, reject) => {
+      this.requestQueue.push({ requestFn, resolve, reject });
+      this._processQueue();
+    });
+  }
+
+  /**
+   * Process the request queue with rate limiting
+   * @private
+   */
+  async _processQueue() {
+    if (this.isProcessingQueue || this.requestQueue.length === 0) {
+      return;
+    }
+
+    this.isProcessingQueue = true;
+
+    while (this.requestQueue.length > 0) {
+      const { requestFn, resolve, reject } = this.requestQueue.shift();
+
+      try {
+        // Rate limiting: ensure minimum interval between requests
+        const now = Date.now();
+        const timeSinceLastRequest = now - this.lastRequestTime;
+
+        if (timeSinceLastRequest < this.minRequestInterval) {
+          const waitTime = this.minRequestInterval - timeSinceLastRequest;
+          console.log(
+            `⏳ Rate limiting: waiting ${waitTime}ms before next request`
+          );
+          await this._delay(waitTime);
+        }
+
+        // Check daily request count (reset every hour)
+        if (now - this.requestCountResetTime > 60 * 60 * 1000) {
+          this.requestCount = 0;
+          this.requestCountResetTime = now;
+        }
+
+        // Prevent excessive requests
+        if (this.requestCount >= 50) {
+          // Max 50 requests per hour
+          throw new Error("Rate limit exceeded: too many requests per hour");
+        }
+
+        this.lastRequestTime = Date.now();
+        this.requestCount++;
+        this._incrementDailyCounter(); // Track daily usage
+
+        console.log(
+          `🔄 Making Gemini API request (${this.requestCount}/50 this hour, ${this.emergencyBrake.dailyRequestCount} today)`
+        );
+        const result = await requestFn();
+        resolve(result);
+      } catch (error) {
+        console.error("🚨 Gemini API request failed:", error.message);
+        reject(error);
+      }
+
+      // Small delay between queue items
+      await this._delay(100);
+    }
+
+    this.isProcessingQueue = false;
+  }
+
+  /**
+   * Make request to Gemini API with retry logic and rate limiting
    * @private
    */
   async _makeGeminiRequest(prompt, retryCount = 0) {
-    try {
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(
-          () => reject(new Error("Request timeout")),
-          this.requestTimeout
-        )
-      );
+    const requestFn = async () => {
+      try {
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error("Request timeout")),
+            this.requestTimeout
+          )
+        );
 
-      const requestPromise = this.model.generateContent(prompt);
+        const requestPromise = this.model.generateContent(prompt);
+        const result = await Promise.race([requestPromise, timeoutPromise]);
 
-      const result = await Promise.race([requestPromise, timeoutPromise]);
-      return result;
-    } catch (error) {
-      if (retryCount < this.maxRetries) {
-        console.log(`Gemini API retry ${retryCount + 1}/${this.maxRetries}`);
-        await this._delay(1000 * (retryCount + 1)); // Exponential backoff
-        return this._makeGeminiRequest(prompt, retryCount + 1);
+        console.log("✅ Gemini API request successful");
+        return result;
+      } catch (error) {
+        // Handle specific 429 error
+        if (
+          error.message?.includes("429") ||
+          error.message?.includes("quota") ||
+          error.message?.includes("Too Many Requests")
+        ) {
+          console.error("🚨 429 Too Many Requests - Rate limit hit!");
+          console.error("📊 Current stats:", this.getUsageStats());
+          console.error("⏰ Implementing exponential backoff...");
+
+          // Exponential backoff for rate limits: 5s, 10s, 20s
+          const backoffDelay = 5000 * Math.pow(2, retryCount);
+          await this._delay(backoffDelay);
+
+          throw new Error(
+            `Rate limit exceeded (429) - backing off for ${
+              backoffDelay / 1000
+            }s`
+          );
+        }
+
+        if (retryCount < this.maxRetries) {
+          console.log(
+            `🔄 Gemini API retry ${retryCount + 1}/${this.maxRetries}`
+          );
+          await this._delay(2000 * (retryCount + 1)); // Longer exponential backoff
+          return this._makeGeminiRequest(prompt, retryCount + 1);
+        }
+        throw error;
       }
-      throw error;
-    }
+    };
+
+    // Queue the request to ensure rate limiting
+    return this._queueRequest(requestFn);
   }
 
   /**
@@ -799,13 +1204,45 @@ Respond in JSON format:
    * @returns {Object} Usage stats
    */
   getUsageStats() {
-    // Implementation would track API calls, costs, response times
     return {
-      totalRequests: 0,
-      successRate: 0,
-      averageResponseTime: 0,
-      estimatedCost: 0,
+      totalRequests: this.requestCount,
+      pendingRequests: this.pendingRequests.size,
+      cachedResults: this.requestCache.size,
+      circuitBreakerStatus: this.circuitBreaker.isOpen ? "OPEN" : "CLOSED",
+      failureCount: this.circuitBreaker.failureCount,
+      requestsThisHour: this.requestCount,
+      // Emergency brake stats
+      emergencyBrakeActive: this.emergencyBrake.isActive,
+      dailyRequestCount: this.emergencyBrake.dailyRequestCount,
+      dailyLimit: this.emergencyBrake.activationThreshold,
     };
+  }
+
+  /**
+   * Clean up expired cache entries and reset counters
+   * Call this periodically to prevent memory leaks
+   */
+  cleanup() {
+    const now = Date.now();
+    let cleanedCache = 0;
+
+    // Clean expired cache entries (older than 5 minutes)
+    for (const [key, value] of this.requestCache.entries()) {
+      if (now - value.timestamp > 5 * 60 * 1000) {
+        this.requestCache.delete(key);
+        cleanedCache++;
+      }
+    }
+
+    // Reset request count if hour has passed
+    if (now - this.requestCountResetTime > 60 * 60 * 1000) {
+      this.requestCount = 0;
+      this.requestCountResetTime = now;
+    }
+
+    if (cleanedCache > 0) {
+      console.log(`🧹 Cleaned ${cleanedCache} expired cache entries`);
+    }
   }
 }
 

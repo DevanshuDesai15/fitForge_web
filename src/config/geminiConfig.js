@@ -37,11 +37,15 @@ const getEnvVar = (key, defaultValue = "") => {
 export const geminiConfig = {
   // API Configuration
   apiKey: getEnvVar("VITE_GEMINI_API_KEY"),
-  model: "gemini-1.5-flash",
+  model: "gemini-2.5-flash",
 
   // Feature Flags
-  useGeminiAI: getEnvVar("VITE_USE_GEMINI_AI", "true") === "true",
+  useGeminiAI: getEnvVar("VITE_USE_GEMINI_AI", "false") === "true", // 🚨 DISABLED by default
   hybridMode: getEnvVar("VITE_HYBRID_MODE", "true") === "true",
+
+  // 🚨 Emergency kill switch - completely disable Gemini API
+  emergencyDisable:
+    getEnvVar("VITE_GEMINI_EMERGENCY_DISABLE", "true") === "true",
 
   // Performance Settings
   geminiPriority: parseFloat(getEnvVar("VITE_GEMINI_PRIORITY", "0.4")),

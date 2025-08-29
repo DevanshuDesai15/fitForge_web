@@ -47,7 +47,6 @@ const BrandSection = styled(Box)(() => ({
 const QuickAddButton = styled(Button)(() => ({
     backgroundColor: 'var(--primary-a0)',
     color: '#121212',
-    fontWeight: 'bold',
     borderRadius: '12px',
     textTransform: 'none',
     padding: '12px 16px',
@@ -222,7 +221,7 @@ export default function ModernSidebar() {
                 startIcon={<Plus size={20} />}
                 onClick={handleQuickAdd}
             >
-                Quick Add Exercise
+                Quick Add
             </QuickAddButton>
 
             {/* Navigation */}

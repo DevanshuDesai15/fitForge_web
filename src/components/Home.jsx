@@ -9,7 +9,8 @@ import {
     Alert,
     useTheme,
     useMediaQuery,
-    Chip
+    Chip,
+    Skeleton
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { collection, getDocs, query, where } from 'firebase/firestore';
@@ -26,6 +27,10 @@ import {
     Zap,
     Activity
 } from "lucide-react";
+import progressiveOverloadAI from '../services/progressiveOverloadAI';
+import { logGeminiStats } from '../utils/geminiMonitor';
+import { checkGeminiStatus } from '../utils/geminiStatus';
+
 
 // Welcome Hero Card
 const WelcomeCard = styled(Card)(() => ({
@@ -89,6 +94,55 @@ const QuickActionCard = styled(Card)(() => ({
     },
 }));
 
+// AI Recommendation utility functions
+const getPriorityColor = (priority) => {
+    switch (priority) {
+        case 'high':
+            return {
+                backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                color: '#f87171',
+                border: '1px solid rgba(239, 68, 68, 0.3)'
+            };
+        case 'medium':
+            return {
+                backgroundColor: 'rgba(234, 179, 8, 0.2)',
+                color: '#facc15',
+                border: '1px solid rgba(234, 179, 8, 0.3)'
+            };
+        case 'low':
+        default:
+            return {
+                backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                color: '#60a5fa',
+                border: '1px solid rgba(59, 130, 246, 0.3)'
+            };
+    }
+};
+
+const getRecommendationTitle = (recommendation) => {
+    if (recommendation.progressionType === 'weight') {
+        return 'Increase Weight';
+    } else if (recommendation.progressionType === 'reps') {
+        return 'Increase Reps';
+    } else if (recommendation.progressionType === 'deload') {
+        return 'Deload Week';
+    } else {
+        return 'Progression Suggested';
+    }
+};
+
+const getRecommendationDescription = (recommendation) => {
+    if (recommendation.progressionType === 'weight') {
+        return `Try increasing ${recommendation.exerciseName} from ${recommendation.currentWeight}kg to ${recommendation.suggestedWeight}kg.`;
+    } else if (recommendation.progressionType === 'reps') {
+        return `Try increasing reps for ${recommendation.exerciseName} from ${recommendation.currentReps} to ${recommendation.suggestedReps}.`;
+    } else if (recommendation.progressionType === 'deload') {
+        return `Consider a deload week for ${recommendation.exerciseName}. Reduce weight to ${recommendation.suggestedWeight}kg.`;
+    } else {
+        return recommendation.reasoning || `Consider progression for ${recommendation.exerciseName}.`;
+    }
+};
+
 // Dynamic greeting function
 const getDynamicGreeting = () => {
     const hour = new Date().getHours();
@@ -133,6 +187,9 @@ export default function Home() {
         workoutsDone: 4,
         activeMinutes: 187
     });
+    const [aiRecommendations, setAiRecommendations] = useState([]);
+    const [aiLoading, setAiLoading] = useState(false);
+    const [aiError, setAiError] = useState('');
 
     const { currentUser } = useAuth();
     const navigate = useNavigate();
@@ -174,12 +231,89 @@ export default function Home() {
         }
     }, [currentUser?.uid]);
 
+    const loadAIRecommendations = useCallback(async () => {
+        if (!currentUser?.uid) return;
+
+        try {
+            setAiLoading(true);
+            console.log('Loading AI recommendations for user:', currentUser.uid);
+
+            // 🔍 Monitor API usage in development
+            if (import.meta.env?.MODE === 'development') {
+                logGeminiStats();
+                checkGeminiStatus();
+            }
+
+            // Get workout history analysis
+            const analyses = await progressiveOverloadAI.analyzeWorkoutHistory(currentUser.uid);
+            console.log('Workout history analyses:', analyses);
+
+            if (analyses && analyses.length > 0) {
+                // Get top 3 suggestions
+                const topAnalyses = analyses.slice(0, 3);
+                const exerciseIds = topAnalyses.map(analysis => analysis.exerciseId);
+
+                console.log('🚀 Using BATCH API call for exercises:', exerciseIds);
+
+                // 🔥 FIX: Use batch API call instead of individual calls
+                // This reduces API calls from 3 to 1, preventing rate limits
+                const batchProgressions = await progressiveOverloadAI.calculateBatchProgressions(
+                    currentUser.uid,
+                    exerciseIds
+                );
+
+                console.log('✅ Batch progressions result:', batchProgressions);
+
+                // Map batch results back to suggestions
+                const suggestions = batchProgressions.map((progression, index) => {
+                    const analysis = topAnalyses[index];
+
+                    if (!progression) {
+                        console.warn('No progression returned for exercise:', analysis.exerciseId);
+                        return null;
+                    }
+
+                    return {
+                        ...progression,
+                        ...analysis,
+                        priority: (progression.confidenceLevel || 0) >= 0.8 ? 'high' :
+                            (progression.confidenceLevel || 0) >= 0.6 ? 'medium' : 'low',
+                        icon: progression.progressionType === 'weight' ? TrendingUp :
+                            progression.progressionType === 'deload' ? Clock : Brain
+                    };
+                }).filter(s => s !== null);
+
+                setAiRecommendations(suggestions);
+                console.log('✅ Loaded AI recommendations via batch:', suggestions.length);
+            } else {
+                // No workout history, set empty recommendations
+                console.log('No workout history found for AI recommendations');
+                setAiRecommendations([]);
+            }
+        } catch (error) {
+            console.error('Error loading AI recommendations:', error);
+            setAiRecommendations([]);
+
+            // Set user-friendly error message
+            if (error.message?.includes('429') || error.message?.includes('Rate limit')) {
+                setAiError('AI suggestions temporarily unavailable due to high usage. Using smart fallbacks.');
+            } else {
+                setAiError('');
+            }
+        } finally {
+            setAiLoading(false);
+        }
+    }, [currentUser?.uid]);
+
     useEffect(() => {
         if (currentUser) {
             loadDashboardData();
             loadUserData();
+            loadAIRecommendations();
         }
-    }, [currentUser, loadDashboardData, loadUserData]);
+        // 🔥 FIX: Remove loadAIRecommendations from dependencies to prevent infinite loop
+        // Only depend on currentUser change, not the callback itself
+    }, [currentUser?.uid, loadDashboardData, loadUserData]);
 
     // Update greeting every minute to keep it current
     useEffect(() => {
@@ -733,7 +867,6 @@ export default function Home() {
                                 <Brain size={20} style={{ color: 'var(--primary-a0)' }} />
                                 <Typography variant="h6" sx={{
                                     color: 'text.primary',
-                                    // fontWeight: 600,
                                     fontSize: '1.125rem'
                                 }}>
                                     AI Recommendations
@@ -742,215 +875,148 @@ export default function Home() {
 
                             {/* AI Recommendations List */}
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                                {/* Focus on Legs - High Priority */}
-                                <Box sx={{
-                                    background: 'rgba(255, 255, 255, 0.02)',
-                                    borderRadius: '12px',
-                                    // border: '1px solid rgba(255, 255, 255, 0.1)',
-                                    p: 2.5,
-                                    transition: 'all 0.2s ease',
-                                    // '&:hover': {
-                                    //     background: 'rgba(255, 255, 255, 0.05)',
-                                    //     border: '1px solid rgba(255, 255, 255, 0.2)'
-                                    // }
-                                }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
-                                        <Target size={20} style={{ color: 'var(--primary-a0)', marginTop: '2px' }} />
-                                        <Box sx={{ flex: 1 }}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                                                <Typography variant="subtitle1" sx={{
-                                                    color: 'text.primary',
-                                                    // fontWeight: 600,
-                                                    fontSize: '1rem'
-                                                }}>
-                                                    Focus on Legs
-                                                </Typography>
-                                                <Chip
-                                                    label="high"
-                                                    size="small"
-                                                    sx={{
-                                                        backgroundColor: 'rgba(239, 68, 68, 0.2)', // bg-red-500/20
-                                                        color: '#f87171', // text-red-400
-                                                        border: '1px solid rgba(239, 68, 68, 0.3)', // border-red-500/30
-                                                        fontSize: '0.7rem',
-                                                        height: 22,
-                                                        // fontWeight: 600,
-                                                        '& .MuiChip-label': {
-                                                            px: 1.5
-                                                        }
-                                                    }}
-                                                />
-                                            </Box>
-                                            <Typography variant="body2" sx={{
-                                                color: 'rgba(255, 255, 255, 0.7)',
-                                                mb: 2.5,
-                                                lineHeight: 1.4,
-                                                fontSize: '0.875rem'
+                                {aiLoading ? (
+                                    // Loading state
+                                    <>
+                                        {[1, 2, 3].map((i) => (
+                                            <Box key={i} sx={{
+                                                background: 'rgba(255, 255, 255, 0.02)',
+                                                borderRadius: '12px',
+                                                p: 2.5
                                             }}>
-                                                You haven&rsquo;t trained legs in 4 days. Try the Lower Body Power workout.
-                                            </Typography>
-                                            <Button
-                                                variant="text"
-                                                size="small"
-                                                sx={{
-                                                    color: 'var(--primary-a0)',
-                                                    // fontWeight: 600,
-                                                    textTransform: 'none',
-                                                    fontSize: '0.875rem',
-                                                    p: 0,
-                                                    minWidth: 'auto',
-                                                    '&:hover': {
-                                                        backgroundColor: 'transparent',
-                                                        color: 'var(--primary-a50)'
-                                                    }
-                                                }}
-                                                onClick={() => navigate('/workout/start')}
-                                            >
-                                                Start Workout
-                                            </Button>
-                                        </Box>
-                                    </Box>
-                                </Box>
-
-                                {/* Rest Day Suggested - Medium Priority */}
-                                <Box sx={{
-                                    background: 'rgba(255, 255, 255, 0.02)',
-                                    borderRadius: '12px',
-                                    // border: '1px solid rgba(255, 255, 255, 0.1)',
-                                    p: 2.5,
-                                    transition: 'all 0.2s ease',
-                                    // '&:hover': {
-                                    //     background: 'rgba(255, 255, 255, 0.05)',
-                                    //     border: '1px solid rgba(255, 255, 255, 0.2)'
-                                    // }
-                                }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
-                                        <Clock size={20} style={{ color: 'var(--primary-a0)', marginTop: '2px' }} />
-                                        <Box sx={{ flex: 1 }}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                                                <Typography variant="subtitle1" sx={{
-                                                    color: 'text.primary',
-                                                    // fontWeight: 600,
-                                                    fontSize: '1rem'
-                                                }}>
-                                                    Rest Day Suggested
-                                                </Typography>
-                                                <Chip
-                                                    label="medium"
-                                                    size="small"
-                                                    sx={{
-                                                        backgroundColor: 'rgba(234, 179, 8, 0.2)', // bg-yellow-500/20
-                                                        color: '#facc15', // text-yellow-400
-                                                        border: '1px solid rgba(234, 179, 8, 0.3)', // border-yellow-500/30
-                                                        fontSize: '0.7rem',
-                                                        height: 22,
-                                                        // fontWeight: 600,
-                                                        '& .MuiChip-label': {
-                                                            px: 1.5
-                                                        }
-                                                    }}
-                                                />
+                                                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                                                    <Skeleton variant="circular" width={20} height={20} />
+                                                    <Box sx={{ flex: 1 }}>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                                                            <Skeleton variant="text" width="60%" height={24} />
+                                                            <Skeleton variant="rectangular" width={60} height={22} sx={{ borderRadius: '12px' }} />
+                                                        </Box>
+                                                        <Skeleton variant="text" width="90%" height={20} />
+                                                        <Skeleton variant="text" width="70%" height={20} />
+                                                        <Skeleton variant="text" width="40%" height={16} sx={{ mt: 1 }} />
+                                                    </Box>
+                                                </Box>
                                             </Box>
-                                            <Typography variant="body2" sx={{
-                                                color: 'rgba(255, 255, 255, 0.7)',
-                                                mb: 2.5,
-                                                lineHeight: 1.4,
-                                                fontSize: '0.875rem'
-                                            }}>
-                                                You&rsquo;ve been training hard. Consider taking tomorrow as a recovery day.
-                                            </Typography>
-                                            <Button
-                                                variant="text"
-                                                size="small"
-                                                sx={{
-                                                    color: 'var(--primary-a0)',
-                                                    // fontWeight: 600,
-                                                    textTransform: 'none',
-                                                    fontSize: '0.875rem',
-                                                    p: 0,
-                                                    minWidth: 'auto',
-                                                    '&:hover': {
-                                                        backgroundColor: 'transparent',
-                                                        color: 'var(--primary-a10)'
-                                                    }
-                                                }}
-                                                onClick={() => navigate('/progress')}
-                                            >
-                                                Schedule Rest
-                                            </Button>
-                                        </Box>
-                                    </Box>
-                                </Box>
-
-                                {/* Increase Weight - Low Priority */}
-                                <Box sx={{
-                                    background: 'rgba(255, 255, 255, 0.02)',
-                                    borderRadius: '12px',
-                                    // border: '1px solid rgba(255, 255, 255, 0.1)',
-                                    p: 2.5,
-                                    transition: 'all 0.2s ease',
-                                    // '&:hover': {
-                                    //     background: 'rgba(255, 255, 255, 0.05)',
-                                    //     border: '1px solid rgba(255, 255, 255, 0.2)'
-                                    // }
-                                }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
-                                        <Brain size={20} style={{ color: 'var(--primary-a0)', marginTop: '2px' }} />
-                                        <Box sx={{ flex: 1 }}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                                                <Typography variant="subtitle1" sx={{
-                                                    color: 'text.primary',
-                                                    // fontWeight: 600,
-                                                    fontSize: '1rem'
-                                                }}>
-                                                    Increase Weight
-                                                </Typography>
-                                                <Chip
-                                                    label="low"
-                                                    size="small"
-                                                    sx={{
-                                                        backgroundColor: 'rgba(59, 130, 246, 0.2)', // bg-blue-500/20
-                                                        color: '#60a5fa', // text-blue-400
-                                                        border: '1px solid rgba(59, 130, 246, 0.3)', // border-blue-500/30
-                                                        fontSize: '0.7rem',
-                                                        height: 22,
-                                                        // fontWeight: 600,
-                                                        '& .MuiChip-label': {
-                                                            px: 1.5
-                                                        }
-                                                    }}
-                                                />
+                                        ))}
+                                    </>
+                                ) : aiRecommendations.length > 0 ? (
+                                    // Real AI Recommendations
+                                    aiRecommendations.map((recommendation, index) => (
+                                        <Box key={recommendation.exerciseId || index} sx={{
+                                            background: 'rgba(255, 255, 255, 0.02)',
+                                            borderRadius: '12px',
+                                            p: 2.5,
+                                            transition: 'all 0.2s ease',
+                                            '&:hover': {
+                                                background: 'rgba(255, 255, 255, 0.05)',
+                                            }
+                                        }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                                                <recommendation.icon size={20} style={{ color: 'var(--primary-a0)', marginTop: '2px' }} />
+                                                <Box sx={{ flex: 1 }}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                                                        <Typography variant="subtitle1" sx={{
+                                                            color: 'text.primary',
+                                                            fontSize: '1rem'
+                                                        }}>
+                                                            {getRecommendationTitle(recommendation)}
+                                                        </Typography>
+                                                        <Chip
+                                                            label={recommendation.priority}
+                                                            size="small"
+                                                            sx={{
+                                                                ...getPriorityColor(recommendation.priority),
+                                                                fontSize: '0.7rem',
+                                                                height: 22,
+                                                                '& .MuiChip-label': {
+                                                                    px: 1.5
+                                                                }
+                                                            }}
+                                                        />
+                                                    </Box>
+                                                    <Typography variant="body2" sx={{
+                                                        color: 'rgba(255, 255, 255, 0.7)',
+                                                        mb: 2.5,
+                                                        lineHeight: 1.4,
+                                                        fontSize: '0.875rem'
+                                                    }}>
+                                                        {getRecommendationDescription(recommendation)}
+                                                    </Typography>
+                                                    <Button
+                                                        variant="text"
+                                                        size="small"
+                                                        sx={{
+                                                            color: 'var(--primary-a0)',
+                                                            textTransform: 'none',
+                                                            fontSize: '0.875rem',
+                                                            p: 0,
+                                                            minWidth: 'auto',
+                                                            '&:hover': {
+                                                                backgroundColor: 'transparent',
+                                                                color: 'var(--primary-a10)'
+                                                            }
+                                                        }}
+                                                        onClick={() => {
+                                                            console.log('Accepted recommendation:', recommendation);
+                                                            navigate('/workout/start');
+                                                        }}
+                                                    >
+                                                        Start Workout
+                                                    </Button>
+                                                </Box>
                                             </Box>
-                                            <Typography variant="body2" sx={{
-                                                color: 'rgba(255, 255, 255, 0.7)',
-                                                mb: 2.5,
-                                                lineHeight: 1.4,
-                                                fontSize: '0.875rem'
-                                            }}>
-                                                Your bench press has been consistent. Try adding 5lbs next session.
-                                            </Typography>
-                                            <Button
-                                                variant="text"
-                                                size="small"
-                                                sx={{
-                                                    color: 'var(--primary-a0)',
-                                                    // fontWeight: 600,
-                                                    textTransform: 'none',
-                                                    fontSize: '0.875rem',
-                                                    p: 0,
-                                                    minWidth: 'auto',
-                                                    '&:hover': {
-                                                        backgroundColor: 'transparent',
-                                                        color: 'var(--primary-a10)'
-                                                    }
-                                                }}
-                                                onClick={() => navigate('/progress')}
-                                            >
-                                                Update Goal
-                                            </Button>
                                         </Box>
+                                    ))
+                                ) : (
+                                    // No recommendations state
+                                    <Box sx={{
+                                        background: 'rgba(255, 255, 255, 0.02)',
+                                        borderRadius: '12px',
+                                        p: 3,
+                                        textAlign: 'center'
+                                    }}>
+                                        {aiError ? (
+                                            <>
+                                                <Alert severity="info" sx={{
+                                                    mb: 2,
+                                                    backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                                                    color: '#64b5f6'
+                                                }}>
+                                                    {aiError}
+                                                </Alert>
+                                                <Brain size={32} style={{ color: 'rgba(255, 255, 255, 0.3)', marginBottom: '12px' }} />
+                                                <Typography variant="body1" sx={{
+                                                    color: 'text.secondary',
+                                                    mb: 1
+                                                }}>
+                                                    Using Smart Fallbacks
+                                                </Typography>
+                                                <Typography variant="body2" sx={{
+                                                    color: 'rgba(255, 255, 255, 0.5)',
+                                                    fontSize: '0.875rem'
+                                                }}>
+                                                    Rule-based progression system is still working
+                                                </Typography>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Brain size={32} style={{ color: 'rgba(255, 255, 255, 0.3)', marginBottom: '12px' }} />
+                                                <Typography variant="body1" sx={{
+                                                    color: 'text.secondary',
+                                                    mb: 1
+                                                }}>
+                                                    No AI recommendations yet
+                                                </Typography>
+                                                <Typography variant="body2" sx={{
+                                                    color: 'rgba(255, 255, 255, 0.5)',
+                                                    fontSize: '0.875rem'
+                                                }}>
+                                                    Complete more workouts to get personalized suggestions
+                                                </Typography>
+                                            </>
+                                        )}
                                     </Box>
-                                </Box>
+                                )}
                             </Box>
                         </Card>
                     </Grid>
