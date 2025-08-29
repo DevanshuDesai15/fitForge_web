@@ -17,15 +17,14 @@ import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import {
-    Sparkles,
+    Brain,
     Plus,
     TrendingUp,
     Flame,
     Target,
     Clock,
     Zap,
-    Activity,
-    AlertTriangle
+    Activity
 } from "lucide-react";
 
 // Welcome Hero Card
@@ -90,9 +89,41 @@ const QuickActionCard = styled(Card)(() => ({
     },
 }));
 
+// Dynamic greeting function
+const getDynamicGreeting = () => {
+    const hour = new Date().getHours();
+
+    if (hour >= 5 && hour < 12) {
+        return {
+            text: "Good morning",
+            emoji: "🌅",
+            message: "Ready to start your day strong?"
+        };
+    } else if (hour >= 12 && hour < 17) {
+        return {
+            text: "Good afternoon",
+            emoji: "☀️",
+            message: "Time for that midday energy boost?"
+        };
+    } else if (hour >= 17 && hour < 21) {
+        return {
+            text: "Good evening",
+            emoji: "🌆",
+            message: "Perfect time for an evening workout!"
+        };
+    } else {
+        return {
+            text: "Good night",
+            emoji: "🌙",
+            message: "Late night session? You're dedicated!"
+        };
+    }
+};
+
 export default function Home() {
     const [error, setError] = useState('');
     const [userData, setUserData] = useState({ username: '', fullName: '', gender: 'male' });
+    const [greeting, setGreeting] = useState(getDynamicGreeting());
     const [weeklyStats] = useState({
         caloriesBurned: 2340,
         caloriesChange: '+12%',
@@ -150,7 +181,22 @@ export default function Home() {
         }
     }, [currentUser, loadDashboardData, loadUserData]);
 
-    const displayName = userData.fullName || userData.username || currentUser?.email?.split('@')[0] || 'John';
+    // Update greeting every minute to keep it current
+    useEffect(() => {
+        const updateGreeting = () => {
+            setGreeting(getDynamicGreeting());
+        };
+
+        // Update immediately
+        updateGreeting();
+
+        // Set up interval to update every minute
+        const interval = setInterval(updateGreeting, 60000);
+
+        return () => clearInterval(interval);
+    }, []);
+
+    const displayName = userData.username || userData.fullName || currentUser?.email?.split('@')[0] || 'John';
 
     return (
         <Box sx={{
@@ -178,18 +224,27 @@ export default function Home() {
                             <Box>
                                 <Typography variant="h3" sx={{
                                     color: 'text.primary',
-                                    fontWeight: 'bold',
+                                    // fontWeight: 'bold',
                                     mb: 1,
                                     fontSize: { xs: '2rem', md: '2.5rem' }
                                 }}>
-                                    Good morning, {displayName}! 👋
+                                    {greeting.text}, {displayName}! {greeting.emoji}
                                 </Typography>
                                 <Typography variant="h6" sx={{
                                     color: 'text.secondary',
                                     fontWeight: 'normal',
-                                    fontSize: { xs: '1rem', md: '1.25rem' }
+                                    fontSize: { xs: '1rem', md: '1.25rem' },
+                                    mb: 1
                                 }}>
                                     You&rsquo;re on a {weeklyStats.streakDays}-day streak! Let&rsquo;s keep the momentum going.
+                                </Typography>
+                                <Typography variant="body1" sx={{
+                                    color: 'text.secondary',
+                                    fontStyle: 'italic',
+                                    fontSize: { xs: '0.9rem', md: '1rem' },
+                                    opacity: 0.8
+                                }}>
+                                    {greeting.message}
                                 </Typography>
                             </Box>
                             <Box sx={{
@@ -249,7 +304,7 @@ export default function Home() {
                 <Box sx={{ mb: 4 }}>
                     <Typography variant="h4" sx={{
                         color: 'text.primary',
-                        fontWeight: 'bold',
+                        // fontWeight: 'bold',
                         mb: 3,
                         fontSize: { xs: '1.5rem', md: '2rem' }
                     }}>
@@ -274,7 +329,7 @@ export default function Home() {
                                         }} />
                                         <Typography variant="caption" sx={{
                                             color: 'var(--primary-a0)',
-                                            fontWeight: 'bold',
+                                            // fontWeight: 'bold',
                                             fontSize: '0.875rem',
                                             letterSpacing: 1,
                                             textTransform: 'uppercase'
@@ -284,7 +339,7 @@ export default function Home() {
                                     </Box>
                                     <Typography variant="h4" sx={{
                                         color: 'text.primary',
-                                        fontWeight: 'bold',
+                                        // fontWeight: 'bold',
                                         mb: 2,
                                         fontSize: { xs: '1.75rem', md: '2.25rem' }
                                     }}>
@@ -371,7 +426,7 @@ export default function Home() {
                 <Box sx={{ mb: 4 }}>
                     <Typography variant="h4" sx={{
                         color: 'text.primary',
-                        fontWeight: 'bold',
+                        // fontWeight: 'bold',
                         mb: 3,
                         fontSize: { xs: '1.5rem', md: '2rem' }
                     }}>
@@ -393,7 +448,7 @@ export default function Home() {
                                     </Box>
                                     <Typography variant="h4" sx={{
                                         color: 'text.primary',
-                                        fontWeight: 'bold',
+                                        // fontWeight: 'bold',
                                         mb: 1,
                                         fontSize: { xs: '1.5rem', md: '2rem' }
                                     }}>
@@ -423,7 +478,7 @@ export default function Home() {
                                     </Box>
                                     <Typography variant="h4" sx={{
                                         color: 'text.primary',
-                                        fontWeight: 'bold',
+                                        //fontWeight: 'bold',
                                         mb: 1,
                                         fontSize: { xs: '1.5rem', md: '2rem' }
                                     }}>
@@ -453,7 +508,7 @@ export default function Home() {
                                     </Box>
                                     <Typography variant="h4" sx={{
                                         color: 'text.primary',
-                                        fontWeight: 'bold',
+                                        // fontWeight: 'bold',
                                         mb: 1,
                                         fontSize: { xs: '1.5rem', md: '2rem' }
                                     }}>
@@ -483,7 +538,7 @@ export default function Home() {
                                     </Box>
                                     <Typography variant="h4" sx={{
                                         color: 'text.primary',
-                                        fontWeight: 'bold',
+                                        // fontWeight: 'bold',
                                         mb: 1,
                                         fontSize: { xs: '1.5rem', md: '2rem' }
                                     }}>
@@ -509,7 +564,7 @@ export default function Home() {
                         <Box sx={{ mb: 4 }}>
                             <Typography variant="h4" sx={{
                                 color: 'text.primary',
-                                fontWeight: 'bold',
+                                // fontWeight: 'bold',
                                 mb: 3,
                                 fontSize: { xs: '1.5rem', md: '2rem' }
                             }}>
@@ -587,10 +642,10 @@ export default function Home() {
                         </Box>
 
                         {/* Quick Actions */}
-                        <Box>
+                        <Box sx={{ mb: 4 }}>
                             <Typography variant="h5" sx={{
                                 color: 'text.primary',
-                                fontWeight: 'bold',
+                                // fontWeight: 'bold',
                                 mb: 3,
                                 fontSize: { xs: '1.25rem', md: '1.5rem' }
                             }}>
@@ -605,7 +660,7 @@ export default function Home() {
                                             flexDirection: 'column',
                                             alignItems: 'center',
                                             textAlign: 'center',
-                                            minHeight: 100
+                                            // minHeight: 100
                                         }}>
                                             <Zap size={32} style={{ color: 'var(--primary-a0)', marginBottom: 8 }} />
                                             <Typography variant="caption" sx={{
@@ -626,7 +681,7 @@ export default function Home() {
                                             flexDirection: 'column',
                                             alignItems: 'center',
                                             textAlign: 'center',
-                                            minHeight: 100
+                                            // minHeight: 100
                                         }}>
                                             <Activity size={32} style={{ color: 'var(--primary-a0)', marginBottom: 8 }} />
                                             <Typography variant="caption" sx={{
@@ -647,7 +702,7 @@ export default function Home() {
                                             flexDirection: 'column',
                                             alignItems: 'center',
                                             textAlign: 'center',
-                                            minHeight: 100
+                                            // minHeight: 100
                                         }}>
                                             <Target size={32} style={{ color: 'var(--primary-a0)', marginBottom: 8 }} />
                                             <Typography variant="caption" sx={{
@@ -666,33 +721,46 @@ export default function Home() {
 
                     {/* Right Column - AI Recommendations */}
                     <Grid item xs={12} lg={4}>
-                        <Box>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-                                <Sparkles size={24} style={{ color: 'var(--primary-a0)' }} />
-                                <Typography variant="h5" sx={{
+                        {/* AI Recommendations Container */}
+                        <Card sx={{
+                            background: 'rgba(40, 40, 40, 0.6)',
+                            backdropFilter: 'blur(10px)',
+                            borderRadius: '16px',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            p: 3
+                        }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                                <Brain size={20} style={{ color: 'var(--primary-a0)' }} />
+                                <Typography variant="h6" sx={{
                                     color: 'text.primary',
-                                    fontWeight: 'bold',
-                                    fontSize: { xs: '1.25rem', md: '1.5rem' }
+                                    // fontWeight: 600,
+                                    fontSize: '1.125rem'
                                 }}>
                                     AI Recommendations
                                 </Typography>
                             </Box>
 
-                            {/* Mock AI Recommendations */}
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                                <Card sx={{
-                                    background: 'linear-gradient(135deg, rgba(255, 87, 87, 0.15) 0%, rgba(255, 87, 87, 0.08) 100%)',
-                                    backdropFilter: 'blur(10px)',
+                            {/* AI Recommendations List */}
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                                {/* Focus on Legs - High Priority */}
+                                <Box sx={{
+                                    background: 'rgba(255, 255, 255, 0.02)',
                                     borderRadius: '12px',
-                                    border: '1px solid rgba(255, 87, 87, 0.3)',
+                                    // border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    p: 2.5,
+                                    transition: 'all 0.2s ease',
+                                    // '&:hover': {
+                                    //     background: 'rgba(255, 255, 255, 0.05)',
+                                    //     border: '1px solid rgba(255, 255, 255, 0.2)'
+                                    // }
                                 }}>
-                                    <CardContent sx={{ p: 3 }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                                            <AlertTriangle size={24} style={{ color: '#ff5722' }} />
-                                            <Box sx={{ flex: 1 }}>
-                                                <Typography variant="h6" sx={{
+                                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                                        <Target size={20} style={{ color: 'var(--primary-a0)', marginTop: '2px' }} />
+                                        <Box sx={{ flex: 1 }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                                                <Typography variant="subtitle1" sx={{
                                                     color: 'text.primary',
-                                                    fontWeight: 'bold',
+                                                    // fontWeight: 600,
                                                     fontSize: '1rem'
                                                 }}>
                                                     Focus on Legs
@@ -701,52 +769,68 @@ export default function Home() {
                                                     label="high"
                                                     size="small"
                                                     sx={{
-                                                        backgroundColor: 'rgba(255, 87, 87, 0.2)',
-                                                        color: '#ff5722',
-                                                        fontSize: '0.75rem',
-                                                        height: 20
+                                                        backgroundColor: 'rgba(239, 68, 68, 0.2)', // bg-red-500/20
+                                                        color: '#f87171', // text-red-400
+                                                        border: '1px solid rgba(239, 68, 68, 0.3)', // border-red-500/30
+                                                        fontSize: '0.7rem',
+                                                        height: 22,
+                                                        // fontWeight: 600,
+                                                        '& .MuiChip-label': {
+                                                            px: 1.5
+                                                        }
                                                     }}
                                                 />
                                             </Box>
-                                        </Box>
-                                        <Typography variant="body2" sx={{
-                                            color: 'text.secondary',
-                                            mb: 2,
-                                            lineHeight: 1.5
-                                        }}>
-                                            You haven&rsquo;t trained legs in 4 days. Try the Lower Body Power workout.
-                                        </Typography>
-                                        <Button
-                                            variant="contained"
-                                            size="small"
-                                            sx={{
-                                                backgroundColor: 'var(--primary-a0)',
-                                                color: '#121212',
-                                                fontWeight: 'bold',
-                                                borderRadius: '8px',
-                                                textTransform: 'none',
+                                            <Typography variant="body2" sx={{
+                                                color: 'rgba(255, 255, 255, 0.7)',
+                                                mb: 2.5,
+                                                lineHeight: 1.4,
                                                 fontSize: '0.875rem'
-                                            }}
-                                            onClick={() => navigate('/workout/start')}
-                                        >
-                                            Start Workout
-                                        </Button>
-                                    </CardContent>
-                                </Card>
+                                            }}>
+                                                You haven&rsquo;t trained legs in 4 days. Try the Lower Body Power workout.
+                                            </Typography>
+                                            <Button
+                                                variant="text"
+                                                size="small"
+                                                sx={{
+                                                    color: 'var(--primary-a0)',
+                                                    // fontWeight: 600,
+                                                    textTransform: 'none',
+                                                    fontSize: '0.875rem',
+                                                    p: 0,
+                                                    minWidth: 'auto',
+                                                    '&:hover': {
+                                                        backgroundColor: 'transparent',
+                                                        color: 'var(--primary-a50)'
+                                                    }
+                                                }}
+                                                onClick={() => navigate('/workout/start')}
+                                            >
+                                                Start Workout
+                                            </Button>
+                                        </Box>
+                                    </Box>
+                                </Box>
 
-                                <Card sx={{
-                                    background: 'linear-gradient(135deg, rgba(255, 152, 0, 0.12) 0%, rgba(255, 152, 0, 0.06) 100%)',
-                                    backdropFilter: 'blur(10px)',
+                                {/* Rest Day Suggested - Medium Priority */}
+                                <Box sx={{
+                                    background: 'rgba(255, 255, 255, 0.02)',
                                     borderRadius: '12px',
-                                    border: '1px solid rgba(255, 152, 0, 0.25)',
+                                    // border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    p: 2.5,
+                                    transition: 'all 0.2s ease',
+                                    // '&:hover': {
+                                    //     background: 'rgba(255, 255, 255, 0.05)',
+                                    //     border: '1px solid rgba(255, 255, 255, 0.2)'
+                                    // }
                                 }}>
-                                    <CardContent sx={{ p: 3 }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                                            <Clock size={24} style={{ color: '#ff9800' }} />
-                                            <Box sx={{ flex: 1 }}>
-                                                <Typography variant="h6" sx={{
+                                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                                        <Clock size={20} style={{ color: 'var(--primary-a0)', marginTop: '2px' }} />
+                                        <Box sx={{ flex: 1 }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                                                <Typography variant="subtitle1" sx={{
                                                     color: 'text.primary',
-                                                    fontWeight: 'bold',
+                                                    // fontWeight: 600,
                                                     fontSize: '1rem'
                                                 }}>
                                                     Rest Day Suggested
@@ -755,51 +839,68 @@ export default function Home() {
                                                     label="medium"
                                                     size="small"
                                                     sx={{
-                                                        backgroundColor: 'rgba(255, 152, 0, 0.2)',
-                                                        color: '#ff9800',
-                                                        fontSize: '0.75rem',
-                                                        height: 20
+                                                        backgroundColor: 'rgba(234, 179, 8, 0.2)', // bg-yellow-500/20
+                                                        color: '#facc15', // text-yellow-400
+                                                        border: '1px solid rgba(234, 179, 8, 0.3)', // border-yellow-500/30
+                                                        fontSize: '0.7rem',
+                                                        height: 22,
+                                                        // fontWeight: 600,
+                                                        '& .MuiChip-label': {
+                                                            px: 1.5
+                                                        }
                                                     }}
                                                 />
                                             </Box>
-                                        </Box>
-                                        <Typography variant="body2" sx={{
-                                            color: 'text.secondary',
-                                            mb: 2,
-                                            lineHeight: 1.5
-                                        }}>
-                                            You&rsquo;ve been training hard. Consider taking tomorrow as a recovery day.
-                                        </Typography>
-                                        <Button
-                                            variant="outlined"
-                                            size="small"
-                                            sx={{
-                                                borderColor: 'rgba(255, 152, 0, 0.5)',
-                                                color: '#ff9800',
-                                                borderRadius: '8px',
-                                                textTransform: 'none',
+                                            <Typography variant="body2" sx={{
+                                                color: 'rgba(255, 255, 255, 0.7)',
+                                                mb: 2.5,
+                                                lineHeight: 1.4,
                                                 fontSize: '0.875rem'
-                                            }}
-                                            onClick={() => navigate('/progress')}
-                                        >
-                                            Schedule Rest
-                                        </Button>
-                                    </CardContent>
-                                </Card>
+                                            }}>
+                                                You&rsquo;ve been training hard. Consider taking tomorrow as a recovery day.
+                                            </Typography>
+                                            <Button
+                                                variant="text"
+                                                size="small"
+                                                sx={{
+                                                    color: 'var(--primary-a0)',
+                                                    // fontWeight: 600,
+                                                    textTransform: 'none',
+                                                    fontSize: '0.875rem',
+                                                    p: 0,
+                                                    minWidth: 'auto',
+                                                    '&:hover': {
+                                                        backgroundColor: 'transparent',
+                                                        color: 'var(--primary-a10)'
+                                                    }
+                                                }}
+                                                onClick={() => navigate('/progress')}
+                                            >
+                                                Schedule Rest
+                                            </Button>
+                                        </Box>
+                                    </Box>
+                                </Box>
 
-                                <Card sx={{
-                                    background: 'linear-gradient(135deg, rgba(221, 237, 0, 0.12) 0%, rgba(221, 237, 0, 0.06) 100%)',
-                                    backdropFilter: 'blur(10px)',
+                                {/* Increase Weight - Low Priority */}
+                                <Box sx={{
+                                    background: 'rgba(255, 255, 255, 0.02)',
                                     borderRadius: '12px',
-                                    border: '1px solid rgba(221, 237, 0, 0.25)',
+                                    // border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    p: 2.5,
+                                    transition: 'all 0.2s ease',
+                                    // '&:hover': {
+                                    //     background: 'rgba(255, 255, 255, 0.05)',
+                                    //     border: '1px solid rgba(255, 255, 255, 0.2)'
+                                    // }
                                 }}>
-                                    <CardContent sx={{ p: 3 }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                                            <TrendingUp size={24} style={{ color: 'var(--primary-a0)' }} />
-                                            <Box sx={{ flex: 1 }}>
-                                                <Typography variant="h6" sx={{
+                                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                                        <Brain size={20} style={{ color: 'var(--primary-a0)', marginTop: '2px' }} />
+                                        <Box sx={{ flex: 1 }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                                                <Typography variant="subtitle1" sx={{
                                                     color: 'text.primary',
-                                                    fontWeight: 'bold',
+                                                    // fontWeight: 600,
                                                     fontSize: '1rem'
                                                 }}>
                                                     Increase Weight
@@ -808,39 +909,50 @@ export default function Home() {
                                                     label="low"
                                                     size="small"
                                                     sx={{
-                                                        backgroundColor: 'rgba(221, 237, 0, 0.2)',
-                                                        color: 'var(--primary-a0)',
-                                                        fontSize: '0.75rem',
-                                                        height: 20
+                                                        backgroundColor: 'rgba(59, 130, 246, 0.2)', // bg-blue-500/20
+                                                        color: '#60a5fa', // text-blue-400
+                                                        border: '1px solid rgba(59, 130, 246, 0.3)', // border-blue-500/30
+                                                        fontSize: '0.7rem',
+                                                        height: 22,
+                                                        // fontWeight: 600,
+                                                        '& .MuiChip-label': {
+                                                            px: 1.5
+                                                        }
                                                     }}
                                                 />
                                             </Box>
-                                        </Box>
-                                        <Typography variant="body2" sx={{
-                                            color: 'text.secondary',
-                                            mb: 2,
-                                            lineHeight: 1.5
-                                        }}>
-                                            Your bench press has been consistent. Try adding 5lbs next session.
-                                        </Typography>
-                                        <Button
-                                            variant="outlined"
-                                            size="small"
-                                            sx={{
-                                                borderColor: 'rgba(221, 237, 0, 0.5)',
-                                                color: 'var(--primary-a0)',
-                                                borderRadius: '8px',
-                                                textTransform: 'none',
+                                            <Typography variant="body2" sx={{
+                                                color: 'rgba(255, 255, 255, 0.7)',
+                                                mb: 2.5,
+                                                lineHeight: 1.4,
                                                 fontSize: '0.875rem'
-                                            }}
-                                            onClick={() => navigate('/progress')}
-                                        >
-                                            Update Goal
-                                        </Button>
-                                    </CardContent>
-                                </Card>
+                                            }}>
+                                                Your bench press has been consistent. Try adding 5lbs next session.
+                                            </Typography>
+                                            <Button
+                                                variant="text"
+                                                size="small"
+                                                sx={{
+                                                    color: 'var(--primary-a0)',
+                                                    // fontWeight: 600,
+                                                    textTransform: 'none',
+                                                    fontSize: '0.875rem',
+                                                    p: 0,
+                                                    minWidth: 'auto',
+                                                    '&:hover': {
+                                                        backgroundColor: 'transparent',
+                                                        color: 'var(--primary-a10)'
+                                                    }
+                                                }}
+                                                onClick={() => navigate('/progress')}
+                                            >
+                                                Update Goal
+                                            </Button>
+                                        </Box>
+                                    </Box>
+                                </Box>
                             </Box>
-                        </Box>
+                        </Card>
                     </Grid>
                 </Grid>
             </Box>
