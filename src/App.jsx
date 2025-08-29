@@ -44,7 +44,7 @@ function AppWrapper({ children }) {
 // Import API testing utilities in development
 if (process.env.NODE_ENV === 'development') {
   import('./utils/apiTester.js');
-  import('./utils/testBackgroundTimer.js');
+  // import('./utils/testBackgroundTimer.js');
 }
 
 function App() {
