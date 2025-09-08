@@ -17,6 +17,7 @@ import {
     Divider
 } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
+import appLogo from '../assets/appLogo.svg';
 import {
     MdDashboard,
     MdFitnessCenter,
@@ -132,17 +133,15 @@ export default function Navigation() {
                     p: 3,
                     borderBottom: `1px solid ${theme.palette.primary.main}20`,
                 }}>
-                    <Typography variant="h6" sx={{
-                        color: theme.palette.primary.main,
-                        fontWeight: 'bold',
-                        textAlign: 'center',
-                        background: 'linear-gradient(135deg, #dded00 0%, #e8f15d 100%)',
-                        backgroundClip: 'text',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent'
-                    }}>
-                        FitForge
-                    </Typography>
+                    <Box
+                        component="img"
+                        src={appLogo}
+                        alt="FitForge Logo"
+                        sx={{
+                            height: 48,
+                            width: 'auto'
+                        }}
+                    />
                 </Box>
 
                 <List sx={{ px: 2, py: 3 }}>

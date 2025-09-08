@@ -8,22 +8,19 @@ import {
     ListItemButton,
     ListItemIcon,
     ListItemText,
-    Badge,
-    Divider,
-    Avatar
+    Badge
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import appLogo from '../assets/appLogo.svg';
 import {
     Home,
     Activity,
     BarChart3,
     User,
-    Settings,
     LogOut,
-    Plus,
-    Zap
+    Plus
 } from 'lucide-react';
 
 const SidebarContainer = styled(Box)(() => ({
@@ -178,41 +175,14 @@ export default function ModernSidebar() {
             <BrandSection>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
                     <Box
+                        component="img"
+                        src={appLogo}
+                        alt="FitForge Logo"
                         sx={{
-                            width: 40,
                             height: 40,
-                            backgroundColor: 'var(--primary-a0)',
-                            borderRadius: '12px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
+                            width: 'auto'
                         }}
-                    >
-                        <Zap size={24} style={{ color: '#121212' }} />
-                    </Box>
-                    <Box>
-                        <Typography
-                            variant="h6"
-                            sx={{
-                                color: 'white',
-                                fontWeight: 'bold',
-                                fontSize: '1.5rem',
-                                lineHeight: 1,
-                            }}
-                        >
-                            FitForge
-                        </Typography>
-                        <Typography
-                            variant="caption"
-                            sx={{
-                                color: 'rgba(255, 255, 255, 0.6)',
-                                fontSize: '0.875rem',
-                                lineHeight: 1,
-                            }}
-                        >
-                            AI Fitness Tracker
-                        </Typography>
-                    </Box>
+                    />
                 </Box>
             </BrandSection>
 

@@ -28,6 +28,7 @@ import {
 } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import appLogo from '../assets/appLogo.svg';
 
 const HeroSection = styled(Box)(({ theme }) => ({
     minHeight: '100vh',
@@ -254,22 +255,15 @@ export default function LandingPage() {
                         py: 3
                     }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Avatar sx={{
-                                width: 48,
-                                height: 48,
-                                background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
-                                color: theme.palette.primary.contrastText,
-                                fontWeight: 'bold',
-                                fontSize: '1.5rem'
-                            }}>
-                                F
-                            </Avatar>
-                            <Typography variant="h5" sx={{
-                                color: theme.palette.text.primary,
-                                fontWeight: 'bold'
-                            }}>
-                                FitForge
-                            </Typography>
+                            <Box
+                                component="img"
+                                src={appLogo}
+                                alt="FitForge Logo"
+                                sx={{
+                                    height: 120,
+                                    width: 'auto'
+                                }}
+                            />
                         </Box>
 
                         <Box sx={{ display: 'flex', gap: 2 }}>
@@ -698,15 +692,15 @@ export default function LandingPage() {
                         gap: 2
                     }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Avatar sx={{
-                                width: 32,
-                                height: 32,
-                                background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
-                                color: theme.palette.primary.contrastText,
-                                fontSize: '1rem'
-                            }}>
-                                F
-                            </Avatar>
+                            <Box
+                                component="img"
+                                src={appLogo}
+                                alt="FitForge Logo"
+                                sx={{
+                                    height: 40,
+                                    width: 'auto'
+                                }}
+                            />
                             <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                                 © 2024 FitForge. Built with ❤️ for fitness enthusiasts.
                             </Typography>

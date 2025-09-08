@@ -1,4 +1,5 @@
 import { AppBar, Toolbar, Typography, useTheme, useMediaQuery, Box } from '@mui/material';
+import shortLogo from '../assets/shortLogo.svg';
 
 export default function Header() {
     const theme = useTheme();
@@ -20,16 +21,15 @@ export default function Header() {
         >
             <Toolbar>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="h6" sx={{
-                        color: theme.palette.primary.main,
-                        fontWeight: 'bold',
-                        background: 'linear-gradient(135deg, #dded00 0%, #e8f15d 100%)',
-                        backgroundClip: 'text',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent'
-                    }}>
-                        FitForge
-                    </Typography>
+                    <Box
+                        component="img"
+                        src={shortLogo}
+                        alt="FitForge Logo"
+                        sx={{
+                            height: 32,
+                            width: 'auto'
+                        }}
+                    />
                 </Box>
             </Toolbar>
         </AppBar>

@@ -38,8 +38,8 @@ class NotificationManager {
     }
 
     const defaultOptions = {
-      icon: "/logo.svg",
-      badge: "/logo.svg",
+      icon: "/shortLogo.svg",
+      badge: "/shortLogo.svg",
       tag: "fitforge-workout",
       requireInteraction: true,
       ...options,

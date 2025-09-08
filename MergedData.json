@@ -13,27 +13,44 @@
         "480p": "https://video.wixstatic.com/video/3864fa_7735dba8c5014405967757a5f098325b/480p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T12:33:02.597650",
-      "muscle_groups": [
-        "Back",
-        "Arms"
+      "difficulty": "Beginner",
+      "description": "The kettlebell single arm row is a unilateral pulling exercise that builds back strength and improves posture. This exercise allows you to work each side independently, helping to identify and correct strength imbalances while developing a strong, defined back.",
+      "primary_muscle": "Latissimus Dorsi",
+      "secondary_muscles": [
+        "Rhomboids",
+        "Middle Trapezius", 
+        "Rear Deltoids",
+        "Biceps Brachii",
+        "Lower Trapezius"
       ],
-      "exercise_types": [
-        "Strength"
-      ],
-      "description": "The kettlebell single arm row is an excellent unilateral pulling exercise that targets the latissimus dorsi, rhomboids, middle trapezius, biceps brachii, and rear deltoids, biceps, lower trapezius. This exercise helps improve posture, strengthens the back muscles, and corrects muscle imbalances between sides of the body.",
-      "steps": [
-        "Stand with feet hip-width apart, holding a kettlebell in one hand",
-        "Hinge at the hips and bend slightly forward, keeping your back straight and core engaged",
-        "Let the kettlebell hang naturally with your arm extended toward the floor",
-        "Pull the kettlebell up toward your ribcage, leading with your elbow",
-        "Squeeze your shoulder blade back and down at the top of the movement",
-        "Lower the kettlebell back to the starting position with control",
-        "Complete all reps on one side before switching to the other arm"
-      ],
-      "equipment": [
+      "equipment_needed": [
         "Kettlebell"
       ],
-      "difficulty": "Beginner"
+      "steps": [
+        "Stand with feet hip-width apart, holding a kettlebell in one hand",
+        "Hinge at the hips and lean forward 45-60 degrees, keeping your back straight and core braced",
+        "Let the kettlebell hang naturally with your arm fully extended toward the floor",
+        "Initiate the pull by driving your elbow back toward your hip, keeping it close to your body",
+        "Pull the kettlebell toward your lower ribcage, focusing on squeezing your shoulder blade back",
+        "Pause briefly at the top, feeling the contraction in your back muscles",
+        "Lower the kettlebell with control back to the starting position",
+        "Complete all repetitions on one side before switching to the other arm"
+      ],
+      "pro_tips": [
+        "Think about pulling your elbow back rather than lifting the weight up",
+        "Keep your torso stable - avoid rotating or twisting during the movement",
+        "Focus on initiating the movement with your back muscles, not your arm",
+        "Use a full range of motion for maximum muscle activation",
+        "Consider using a bench or elevated surface to support your non-working hand for better stability"
+      ],
+      "common_mistakes": [
+        "Using too much momentum and swinging the weight",
+        "Allowing the torso to rotate during the pulling motion",
+        "Pulling the weight too high toward the shoulder instead of the ribcage",
+        "Not maintaining a neutral spine position",
+        "Using the bicep too much instead of engaging the back muscles",
+        "Rushing through the eccentric (lowering) portion of the movement"
+      ]
     },
     {
       "id": "0002",
@@ -45,29 +62,44 @@
         "480p": "https://video.wixstatic.com/video/3864fa_18a2063854864776a2687da1ba357537/480p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T12:33:03.926682",
-      "muscle_groups": [
-        "Shoulders",
-        "Back",
-        "Arms"
+      "difficulty": "Intermediate",
+      "description": "The kettlebell single arm rear delt fly is an isolation exercise that targets the often-neglected posterior deltoids. This exercise is crucial for shoulder health, posture improvement, and creating balanced shoulder development by strengthening the muscles that pull the shoulders back.",
+      "primary_muscle": "Posterior Deltoids",
+      "secondary_muscles": [
+        "Rhomboids",
+        "Middle Trapezius",
+        "Infraspinatus",
+        "Teres Minor"
       ],
-      "exercise_types": [
-        "Strength"
-      ],
-      "description": "The kettlebell single arm rear delt fly is an isolation exercise that primarily targets the posterior deltoids, rhomboids, and middle trapezius. This exercise helps improve posture, strengthens the often-neglected rear shoulder muscles, and balances the strength ratio between front and back deltoids.",
-      "steps": [
-        "Stand with feet shoulder-width apart, holding a kettlebell in one hand",
-        "Hinge at the hips and lean forward slightly, keeping your back straight",
-        "Let the kettlebell hang naturally with your arm slightly bent",
-        "Lift the kettlebell out to the side, leading with your pinky finger",
-        "Squeeze your shoulder blade back and feel the contraction in your rear delt",
-        "Hold briefly at the top, focusing on the posterior deltoid activation",
-        "Lower the kettlebell back to starting position with control",
-        "Complete all reps on one side before switching arms"
-      ],
-      "equipment": [
+      "equipment_needed": [
         "Kettlebell"
       ],
-      "difficulty": "Intermediate"
+      "steps": [
+        "Stand with feet shoulder-width apart, holding a kettlebell in one hand",
+        "Hinge at the hips and lean forward 45 degrees, maintaining a straight back",
+        "Let the kettlebell hang naturally with your arm slightly bent (15-20 degrees)",
+        "Lift the kettlebell out to the side in a wide arc, leading with your pinky finger",
+        "Raise the weight until your arm is parallel to the floor or slightly higher",
+        "Squeeze your shoulder blade back and feel the contraction in your rear deltoid",
+        "Hold briefly at the top position for maximum muscle activation",
+        "Lower the kettlebell slowly back to the starting position with control",
+        "Complete all repetitions on one side before switching arms"
+      ],
+      "pro_tips": [
+        "Lead with your pinky finger to maximize rear deltoid activation",
+        "Keep a slight bend in your elbow throughout the entire movement",
+        "Focus on squeezing your shoulder blade back at the top of the movement",
+        "Use lighter weight than you think - this is an isolation exercise",
+        "Avoid using momentum by controlling both the lifting and lowering phases"
+      ],
+      "common_mistakes": [
+        "Using too much weight and compensating with other muscles",
+        "Allowing the elbow to bend too much, turning it into a rowing motion",
+        "Not maintaining the forward-leaned position throughout the set",
+        "Lifting the weight too high, which shifts emphasis to the traps",
+        "Using momentum instead of controlled muscle contraction",
+        "Neglecting the eccentric (lowering) phase of the movement"
+      ]
     },
     {
       "id": "0003",
@@ -79,29 +111,45 @@
         "480p": "https://video.wixstatic.com/video/3864fa_bda0c36cae6146d38d90092a8311ba03/480p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T12:33:05.379524",
-      "muscle_groups": [
-        "Shoulders",
-        "Arms"
+      "difficulty": "Beginner",
+      "description": "The kettlebell single arm lateral raise is an isolation exercise that builds shoulder width and strength by targeting the medial deltoids. This unilateral movement helps identify and correct strength imbalances between shoulders while improving overall shoulder stability and definition.",
+      "primary_muscle": "Medial Deltoids",
+      "secondary_muscles": [
+        "Anterior Deltoids",
+        "Upper Trapezius",
+        "Supraspinatus",
+        "Serratus Anterior"
       ],
-      "exercise_types": [
-        "Strength"
-      ],
-      "description": "The kettlebell single arm lateral raise is an isolation exercise that primarily targets the medial deltoids (middle shoulder), with secondary activation of the anterior deltoids and upper trapezius. This exercise helps build shoulder width, improves shoulder stability, and enhances overall shoulder strength and definition.",
-      "steps": [
-        "Stand with feet shoulder-width apart, holding a kettlebell in one hand at your side",
-        "Keep your torso upright and core engaged throughout the movement",
-        "Start with the kettlebell hanging naturally beside your leg",
-        "Lift the kettlebell out to the side until your arm is parallel to the floor",
-        "Lead the movement with your elbow, keeping a slight bend in your arm",
-        "Focus on lifting through your shoulder, not your hand or wrist",
-        "Pause briefly at the top, feeling the tension in your shoulder",
-        "Lower the kettlebell slowly back to the starting position with control",
-        "Complete all reps on one side before switching arms"
-      ],
-      "equipment": [
+      "equipment_needed": [
         "Kettlebell"
       ],
-      "difficulty": "Beginner"
+      "steps": [
+        "Stand with feet shoulder-width apart, holding a kettlebell in one hand at your side",
+        "Keep your torso upright with core engaged and shoulders back",
+        "Start with the kettlebell hanging naturally beside your thigh",
+        "Lift the kettlebell directly out to the side, leading with your elbow",
+        "Keep a slight bend in your arm (15-20 degrees) throughout the movement",
+        "Raise the weight until your arm is parallel to the floor",
+        "Focus on lifting through your shoulder, not your hand or wrist",
+        "Pause briefly at the top, feeling tension in your shoulder",
+        "Lower the kettlebell slowly back to the starting position with control",
+        "Complete all repetitions on one side before switching arms"
+      ],
+      "pro_tips": [
+        "Imagine you're pouring water from a pitcher at the top of the movement",
+        "Lead with your elbow rather than your hand to maximize deltoid activation",
+        "Keep your torso completely still - avoid leaning or swaying",
+        "Use a controlled tempo: 2 seconds up, 1-second pause, 2 seconds down",
+        "Stop at shoulder height - going higher shifts emphasis to the traps"
+      ],
+      "common_mistakes": [
+        "Using too much weight and compensating with body momentum",
+        "Lifting the weight too high above shoulder level",
+        "Allowing the torso to lean or sway during the movement",
+        "Using a completely straight arm instead of maintaining a slight bend",
+        "Rushing through the movement without proper control",
+        "Not engaging the core, leading to lower back stress"
+      ]
     },
     {
       "id": "0004",
@@ -113,157 +161,43 @@
       },
       "extracted_at": "2025-08-21T12:33:06.896175",
       "video_redone_at": "2025-08-21T12:33:08.789097",
-      "muscle_groups": [
-        "Arms",
-        "Biceps"
+      "difficulty": "Beginner",
+      "description": "The kettlebell single arm curl is an isolation exercise that builds bicep strength and size while improving grip strength. The unilateral nature allows you to focus on each arm individually, helping to identify and correct strength imbalances between arms.",
+      "primary_muscle": "Biceps Brachii",
+      "secondary_muscles": [
+        "Brachialis",
+        "Brachioradialis",
+        "Forearm Flexors"
       ],
-      "exercise_types": [
-        "Strength"
+      "equipment_needed": [
+        "Kettlebell"
       ],
-      "description": "The kettlebell single arm curl is an isolation exercise that primarily targets the biceps brachii and brachialis, with secondary activation of the brachioradialis. This unilateral exercise helps build arm strength, improves muscle definition, and corrects strength imbalances between arms.",
       "steps": [
-        "Stand with feet shoulder-width apart, holding the kettlebell in one hand with an underhand grip",
-        "Keep your elbow close to your side throughout the entire movement",
+        "Stand with feet shoulder-width apart, holding a kettlebell in one hand with an underhand grip",
+        "Keep your elbow pressed against your side throughout the entire movement",
         "Start with your arm extended but not completely locked out",
-        "Curl the kettlebell up by contracting your bicep, keeping your wrist straight",
-        "Focus on moving only your forearm, keeping your upper arm stationary",
-        "Squeeze your bicep at the top of the movement for maximum contraction",
-        "Lower the kettlebell slowly back to the starting position under control",
-        "Complete all reps on one arm before switching to the other side"
+        "Curl the kettlebell up by contracting your bicep, keeping your wrist straight and strong",
+        "Focus on moving only your forearm while keeping your upper arm stationary",
+        "Continue curling until the kettlebell reaches your shoulder level",
+        "Squeeze your bicep hard at the top of the movement for maximum contraction",
+        "Lower the kettlebell slowly back to the starting position under complete control",
+        "Complete all repetitions on one arm before switching to the other side"
       ],
-      "equipment": [
-        "Kettlebell"
+      "pro_tips": [
+        "Keep your elbow glued to your side - imagine holding a towel between your elbow and ribs",
+        "Focus on squeezing the kettlebell handle tightly to improve grip strength",
+        "Control the eccentric (lowering) phase for 2-3 seconds for maximum muscle growth",
+        "Don't fully lock out your elbow at the bottom to maintain tension",
+        "Consider alternating arms to allow for brief rest periods between sets"
       ],
-      "difficulty": "Beginner"
-    },
-    {
-      "id": "0005",
-      "title": "Kettlebell Single Arm Row",
-      "slug": "kettlebell-single-arm-row",
-      "url": "https://www.exerciseanimatic.com/product-page/kettlebell-single-arm-row",
-      "video_urls": {
-        "720p": "https://video.wixstatic.com/video/3864fa_7735dba8c5014405967757a5f098325b/720p/mp4/file.mp4"
-      },
-      "extracted_at": "2025-08-21T11:34:32.277102",
-      "muscle_groups": [
-        "Back",
-        "Arms"
-      ],
-      "exercise_types": [
-        "Strength"
-      ],
-      "description": "The kettlebell single arm row is an excellent unilateral pulling exercise that targets the latissimus dorsi, rhomboids, middle trapezius, and rear deltoids. This exercise helps improve posture, strengthens the back muscles, and corrects muscle imbalances between sides of the body.",
-      "steps": [
-        "Stand with feet hip-width apart, holding a kettlebell in one hand",
-        "Hinge at the hips and bend slightly forward, keeping your back straight and core engaged",
-        "Let the kettlebell hang naturally with your arm extended toward the floor",
-        "Pull the kettlebell up toward your ribcage, leading with your elbow",
-        "Squeeze your shoulder blade back and down at the top of the movement",
-        "Lower the kettlebell back to the starting position with control",
-        "Complete all reps on one side before switching to the other arm"
-      ],
-      "equipment": [
-        "Kettlebell"
-      ],
-      "difficulty": "Beginner"
-    },
-    {
-      "id": "0006",
-      "title": "Kettlebell Single Arm Rear Delt Fly",
-      "slug": "kettlebell-single-arm-rear-delt-fly",
-      "url": "https://www.exerciseanimatic.com/product-page/kettlebell-single-arm-rear-delt-fly",
-      "video_urls": {
-        "720p": "https://video.wixstatic.com/video/3864fa_18a2063854864776a2687da1ba357537/720p/mp4/file.mp4"
-      },
-      "extracted_at": "2025-08-21T11:34:33.174334",
-      "muscle_groups": [
-        "Shoulders",
-        "Back",
-        "Arms"
-      ],
-      "exercise_types": [
-        "Strength"
-      ],
-      "description": "The kettlebell single arm rear delt fly is an isolation exercise that primarily targets the posterior deltoids, rhomboids, and middle trapezius. This exercise helps improve posture, strengthens the often-neglected rear shoulder muscles, and balances the strength ratio between front and back deltoids.",
-      "steps": [
-        "Stand with feet shoulder-width apart, holding a kettlebell in one hand",
-        "Hinge at the hips and lean forward slightly, keeping your back straight",
-        "Let the kettlebell hang naturally with your arm slightly bent",
-        "Lift the kettlebell out to the side, leading with your pinky finger",
-        "Squeeze your shoulder blade back and feel the contraction in your rear delt",
-        "Hold briefly at the top, focusing on the posterior deltoid activation",
-        "Lower the kettlebell back to starting position with control",
-        "Complete all reps on one side before switching arms"
-      ],
-      "equipment": [
-        "Kettlebell"
-      ],
-      "difficulty": "Intermediate"
-    },
-    {
-      "id": "0007",
-      "title": "Kettlebell Single Arm Lateral Raise",
-      "slug": "kettlebell-single-arm-lateral-raise",
-      "url": "https://www.exerciseanimatic.com/product-page/kettlebell-single-arm-lateral-raise",
-      "video_urls": {
-        "720p": "https://video.wixstatic.com/video/3864fa_bda0c36cae6146d38d90092a8311ba03/720p/mp4/file.mp4"
-      },
-      "extracted_at": "2025-08-21T11:34:34.022115",
-      "muscle_groups": [
-        "Shoulders",
-        "Arms"
-      ],
-      "exercise_types": [
-        "Strength"
-      ],
-      "description": "The kettlebell single arm lateral raise is an isolation exercise that primarily targets the medial deltoids (middle shoulder), with secondary activation of the anterior deltoids and upper trapezius. This exercise helps build shoulder width, improves shoulder stability, and enhances overall shoulder strength and definition.",
-      "steps": [
-        "Stand with feet shoulder-width apart, holding a kettlebell in one hand at your side",
-        "Keep your torso upright and core engaged throughout the movement",
-        "Start with the kettlebell hanging naturally beside your leg",
-        "Lift the kettlebell out to the side until your arm is parallel to the floor",
-        "Lead the movement with your elbow, keeping a slight bend in your arm",
-        "Focus on lifting through your shoulder, not your hand or wrist",
-        "Pause briefly at the top, feeling the tension in your shoulder",
-        "Lower the kettlebell slowly back to the starting position with control",
-        "Complete all reps on one side before switching arms"
-      ],
-      "equipment": [
-        "Kettlebell"
-      ],
-      "difficulty": "Beginner"
-    },
-    {
-      "id": "0008",
-      "title": "Kettlebell Single Arm Curl",
-      "slug": "kettlebell-single-arm-curl",
-      "url": "https://www.exerciseanimatic.com/product-page/kettlebell-single-arm-curl",
-      "video_urls": {
-        "720p": "https://video.wixstatic.com/video/3864fa_03ed6d6296254d67949565a0c3998204/720p/mp4/file.mp4"
-      },
-      "extracted_at": "2025-08-21T11:34:34.840251",
-      "muscle_groups": [
-        "Arms",
-        "Biceps"
-      ],
-      "exercise_types": [
-        "Strength"
-      ],
-      "description": "The kettlebell single arm curl is an isolation exercise that primarily targets the biceps brachii and brachialis, with secondary activation of the brachioradialis. This unilateral exercise helps build arm strength, improves muscle definition, and corrects strength imbalances between arms.",
-      "steps": [
-        "Stand with feet shoulder-width apart, holding the kettlebell in one hand with an underhand grip",
-        "Keep your elbow close to your side throughout the entire movement",
-        "Start with your arm extended but not completely locked out",
-        "Curl the kettlebell up by contracting your bicep, keeping your wrist straight",
-        "Focus on moving only your forearm, keeping your upper arm stationary",
-        "Squeeze your bicep at the top of the movement for maximum contraction",
-        "Lower the kettlebell slowly back to the starting position under control",
-        "Complete all reps on one arm before switching to the other side"
-      ],
-      "equipment": [
-        "Kettlebell"
-      ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Swinging the weight or using momentum from the body",
+        "Allowing the elbow to drift forward or away from the side",
+        "Not controlling the lowering phase of the movement",
+        "Using the shoulders or back to assist with the curl",
+        "Fully extending the arm at the bottom and losing muscle tension",
+        "Curling too fast without focusing on the muscle contraction"
+      ]
     },
     {
       "id": "0009",
@@ -274,30 +208,46 @@
         "720p": "https://video.wixstatic.com/video/3864fa_b2a8f5196d6b4c808951b7b8f8ad9321/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:34:35.847285",
-      "muscle_groups": [
-        "Chest",
-        "Shoulders",
-        "Arms"
+      "difficulty": "Intermediate",
+      "description": "The kettlebell single arm chest fly is an isolation exercise that targets the chest muscles while challenging core stability. This unilateral movement helps build chest strength and definition while improving shoulder stability and correcting muscle imbalances between sides.",
+      "primary_muscle": "Pectoralis Major",
+      "secondary_muscles": [
+        "Anterior Deltoids",
+        "Serratus Anterior",
+        "Core Stabilizers",
+        "Triceps Brachii"
       ],
-      "exercise_types": [
-        "Strength"
+      "equipment_needed": [
+        "Kettlebell",
+        "Bench or flat surface"
       ],
-      "description": "The kettlebell single arm chest fly is an isolation exercise that primarily targets the pectoralis major, with secondary activation of the anterior deltoids and serratus anterior. This unilateral exercise helps build chest strength and definition while improving shoulder stability and correcting muscle imbalances between sides.",
       "steps": [
         "Lie on a bench with feet flat on the floor, holding a kettlebell in one hand",
-        "Start with the kettlebell directly above your chest, arm slightly bent",
-        "Keep your opposite arm extended for stability or place hand on chest",
+        "Start with the kettlebell directly above your chest, arm slightly bent (15-20 degrees)",
+        "Place your non-working hand on your chest or extend it out for stability",
         "Lower the kettlebell out to the side in a wide arc motion",
-        "Feel a stretch across your chest as you lower the weight",
-        "Keep your elbow slightly bent throughout the entire movement",
-        "Bring the kettlebell back up using the same arc motion",
-        "Squeeze your chest at the top of the movement",
-        "Complete all reps on one side before switching arms"
+        "Feel a deep stretch across your chest as you lower the weight",
+        "Keep your elbow angle constant throughout the entire movement",
+        "Lower until you feel a good stretch but not pain in your shoulder",
+        "Bring the kettlebell back up using the same wide arc motion",
+        "Squeeze your chest muscles hard at the top of the movement",
+        "Complete all repetitions on one side before switching arms"
       ],
-      "equipment": [
-        "Kettlebell"
+      "pro_tips": [
+        "Think of 'hugging a tree' - maintain the arc motion throughout",
+        "Keep your shoulder blades pulled back and down on the bench",
+        "Don't lower the weight too far - stop when you feel a good chest stretch",
+        "Focus on feeling the stretch and contraction in your chest, not your shoulders",
+        "Use your core to prevent your body from tilting toward the working side"
       ],
-      "difficulty": "Intermediate"
+      "common_mistakes": [
+        "Allowing the elbow angle to change during the movement (turning it into a press)",
+        "Lowering the weight too far and risking shoulder injury",
+        "Using too much weight and compromising form",
+        "Not maintaining core stability and allowing the body to tilt",
+        "Rushing through the movement without focusing on the chest muscles",
+        "Pressing the weight straight up instead of following the arc pattern"
+      ]
     },
     {
       "id": "0010",
@@ -308,29 +258,44 @@
         "720p": "https://video.wixstatic.com/video/3864fa_91ac947cba1c48a79edb1f5792917f3b/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:34:36.689775",
-      "muscle_groups": [
-        "Trapezius",
-        "Shoulders"
+      "difficulty": "Beginner",
+      "description": "The kettlebell silverback shrug is an isolation exercise that builds impressive upper trap development and improves posture. This exercise mimics the powerful shoulder position of a silverback gorilla, helping develop the thick, muscular upper back that contributes to a strong, confident posture.",
+      "primary_muscle": "Upper Trapezius",
+      "secondary_muscles": [
+        "Levator Scapulae",
+        "Rhomboids",
+        "Middle Trapezius"
       ],
-      "exercise_types": [
-        "Strength"
+      "equipment_needed": [
+        "Kettlebell (2 recommended)"
       ],
-      "description": "The kettlebell silverback shrug is an isolation exercise that primarily targets the upper trapezius and levator scapulae, with secondary activation of the rhomboids and middle trapezius. This exercise helps build upper back strength, improves posture, and develops the thick, powerful appearance of the upper traps.",
       "steps": [
         "Stand with feet shoulder-width apart, holding a kettlebell in each hand at your sides",
-        "Keep your arms straight and let the kettlebells hang naturally",
-        "Maintain a neutral spine and engage your core throughout the movement",
+        "Keep your arms completely straight and let the kettlebells hang naturally",
+        "Maintain a neutral spine with chest up and shoulders back",
+        "Engage your core to stabilize your torso throughout the movement",
         "Shrug your shoulders straight up toward your ears as high as possible",
-        "Focus on lifting with your trapezius muscles, not your arms",
-        "Hold the contracted position briefly at the top",
-        "Slowly lower your shoulders back to the starting position",
-        "Avoid rolling your shoulders forward or backward during the movement",
+        "Focus on lifting with your trapezius muscles, keeping your arms relaxed",
+        "Hold the fully contracted position at the top for 1-2 seconds",
+        "Slowly lower your shoulders back to the starting position with control",
+        "Avoid rolling your shoulders forward or backward during any part of the movement",
         "Repeat for the desired number of repetitions"
       ],
-      "equipment": [
-        "Kettlebell"
+      "pro_tips": [
+        "Imagine someone is pulling strings attached to your shoulders straight up",
+        "Keep your head in neutral position - don't look up or down",
+        "Use a full range of motion - shrug as high as possible",
+        "Hold the top position briefly to maximize muscle activation",
+        "Focus on feeling the contraction in your upper traps, not your arms"
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Rolling the shoulders in circles instead of straight up and down",
+        "Using the arms to lift the weight instead of the trapezius muscles",
+        "Not achieving full range of motion at the top of the shrug",
+        "Rushing through the movement without controlling the weight",
+        "Allowing the head to move forward or backward during the exercise",
+        "Not maintaining proper posture throughout the entire set"
+      ]
     },
     {
       "id": "0011",
@@ -341,28 +306,42 @@
         "720p": "https://video.wixstatic.com/video/3864fa_7aafac25eafb40fe909a818ff58a26dc/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:34:37.632528",
-      "muscle_groups": [
-        "Trapezius",
-        "Shoulders"
+      "difficulty": "Beginner",
+      "description": "The kettlebell shrug is a classic isolation exercise that builds impressive upper trapezius development and improves posture. This bilateral movement allows for heavier loading compared to single-arm variations, making it excellent for building the thick, muscular upper back that contributes to a powerful physique.",
+      "primary_muscle": "Upper Trapezius",
+      "secondary_muscles": [
+        "Levator Scapulae",
+        "Rhomboids",
+        "Middle Trapezius"
       ],
-      "exercise_types": [
-        "Strength"
+      "equipment_needed": [
+        "Kettlebell (2 recommended)"
       ],
-      "description": "The kettlebell shrug is an isolation exercise that primarily targets the upper trapezius and levator scapulae, with secondary activation of the rhomboids and middle trapezius. This exercise helps build upper back strength, improves posture, and develops the thick, powerful appearance of the upper traps.",
       "steps": [
         "Stand with feet shoulder-width apart, holding kettlebells in each hand at your sides",
-        "Keep your arms straight and let the kettlebells hang naturally",
-        "Maintain a neutral spine and engage your core throughout the movement",
+        "Keep your arms completely straight and let the kettlebells hang naturally",
+        "Maintain a neutral spine with chest up and core engaged",
         "Shrug your shoulders straight up toward your ears as high as possible",
-        "Focus on lifting with your trapezius muscles, not your arms",
-        "Hold the contracted position briefly at the top",
-        "Slowly lower your shoulders back to the starting position",
-        "Avoid rolling your shoulders forward or backward during the movement"
+        "Focus on lifting with your trapezius muscles, keeping your arms relaxed",
+        "Hold the fully contracted position at the top for 1-2 seconds",
+        "Slowly lower your shoulders back to the starting position with control",
+        "Avoid rolling your shoulders in any direction during the movement"
       ],
-      "equipment": [
-        "Kettlebell"
+      "pro_tips": [
+        "Think of trying to touch your ears with your shoulders at the top",
+        "Use a full range of motion - shrug as high as physically possible",
+        "Keep your head in neutral position throughout the movement",
+        "Focus on the mind-muscle connection with your upper traps",
+        "Consider pausing at the top for enhanced muscle activation"
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Rolling the shoulders in circles instead of straight up and down",
+        "Using the arms to lift instead of the trapezius muscles",
+        "Not achieving full range of motion at the top",
+        "Moving too quickly without controlling the weight",
+        "Allowing the head to jut forward during the exercise",
+        "Not maintaining proper posture throughout the set"
+      ]
     },
     {
       "id": "0012",
@@ -373,30 +352,43 @@
         "720p": "https://video.wixstatic.com/video/3864fa_ad53b1483fee4eb3abcfdf6c9613b87e/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:34:38.709120",
-      "muscle_groups": [
-        "Shoulders",
-        "Back",
-        "Triceps"
+      "difficulty": "Intermediate",
+      "description": "The kettlebell shoulder extension is a compound movement that targets the posterior chain while improving shoulder mobility and strength. This exercise enhances shoulder extension range of motion, strengthens the lats and rear delts, and helps counteract forward shoulder posture from daily activities.",
+      "primary_muscle": "Latissimus Dorsi",
+      "secondary_muscles": [
+        "Posterior Deltoids",
+        "Teres Major",
+        "Long Head Triceps",
+        "Rhomboids"
       ],
-      "exercise_types": [
-        "Strength"
+      "equipment_needed": [
+        "Kettlebell"
       ],
-      "description": "The kettlebell shoulder extension is an isolation exercise that primarily targets the posterior deltoids, latissimus dorsi, and teres major. This exercise helps improve shoulder mobility, strengthens the muscles responsible for shoulder extension, and enhances overall shoulder stability and function.",
       "steps": [
-        "Stand with feet shoulder-width apart, holding a kettlebell in both hands",
+        "Stand with feet shoulder-width apart, holding a kettlebell with both hands",
         "Start with the kettlebell held overhead with arms fully extended",
         "Keep your core engaged and maintain a neutral spine throughout",
         "Slowly lower the kettlebell behind your head by extending at the shoulders",
         "Keep your elbows pointing forward and maintain control of the weight",
-        "Lower until you feel a stretch in your shoulders and lats",
-        "Reverse the movement by contracting your lats and posterior delts",
-        "Return the kettlebell to the starting overhead position",
-        "Repeat for the desired number of repetitions"
+        "Lower until you feel a comfortable stretch in your shoulders and lats",
+        "Reverse the movement by contracting your lats and posterior deltoids",
+        "Return the kettlebell to the starting overhead position with control"
       ],
-      "equipment": [
-        "Kettlebell"
+      "pro_tips": [
+        "Start with lighter weight to master the movement pattern",
+        "Focus on the stretch in your lats and shoulders during the lowering phase",
+        "Keep your elbows pointing forward to maintain proper shoulder mechanics",
+        "Breathe deeply during the stretch phase to enhance mobility",
+        "Consider warming up your shoulders thoroughly before this exercise"
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Using too much weight and compromising range of motion",
+        "Allowing the elbows to flare out to the sides",
+        "Arching the back excessively to compensate for tight shoulders",
+        "Moving too quickly without controlling the eccentric phase",
+        "Not maintaining core engagement throughout the movement",
+        "Forcing the range of motion beyond comfortable limits"
+      ]
     },
     {
       "id": "0013",
@@ -407,29 +399,44 @@
         "720p": "https://video.wixstatic.com/video/3864fa_75f6ee4f72b6485e8498ab58cb883180/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:34:39.723971",
-      "muscle_groups": [
-        "Calves"
+      "difficulty": "Beginner",
+      "description": "The kettlebell seated calf raise specifically targets the soleus muscle, which is the deeper calf muscle that's often underdeveloped. The seated position eliminates gastrocnemius involvement, allowing for focused soleus development, improved ankle stability, and better overall calf strength and definition.",
+      "primary_muscle": "Soleus",
+      "secondary_muscles": [
+        "Gastrocnemius",
+        "Tibialis Posterior",
+        "Flexor Digitorum Longus"
       ],
-      "exercise_types": [
-        "Strength"
+      "equipment_needed": [
+        "Kettlebell",
+        "Bench or chair"
       ],
-      "description": "The kettlebell seated calf raise is an isolation exercise that primarily targets the soleus muscle of the calves, with secondary activation of the gastrocnemius. This seated variation allows for focused calf development with added resistance, helping to build calf strength, improve ankle stability, and enhance lower leg definition.",
       "steps": [
         "Sit on a bench with feet flat on the floor, knees bent at 90 degrees",
         "Place the kettlebell securely on your thighs, just above your knees",
         "Keep your feet shoulder-width apart and parallel to each other",
         "Press through the balls of your feet to lift your heels as high as possible",
         "Focus on contracting your calf muscles at the top of the movement",
-        "Hold the peak contraction briefly to maximize muscle activation",
+        "Hold the peak contraction for 1-2 seconds to maximize muscle activation",
         "Slowly lower your heels back down to the starting position",
         "Feel the stretch in your calves at the bottom before repeating",
         "Keep the weight balanced and avoid bouncing during the movement"
       ],
-      "equipment": [
-        "Kettlebell",
-        "Bench"
+      "pro_tips": [
+        "Place a block or plate under your toes to increase range of motion",
+        "Focus on a slow, controlled movement for maximum muscle activation",
+        "Use a towel or pad under the kettlebell for comfort",
+        "Point your toes slightly outward to target different areas of the calf",
+        "Consider single-leg variations to address imbalances"
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Bouncing at the bottom instead of controlling the movement",
+        "Not achieving full range of motion at the top",
+        "Using momentum instead of muscle contraction",
+        "Placing the weight too high on the thighs",
+        "Not holding the peak contraction at the top",
+        "Moving too quickly through the repetitions"
+      ]
     },
     {
       "id": "0014",
@@ -440,28 +447,44 @@
         "720p": "https://video.wixstatic.com/video/3864fa_856d07e097d0433a979144a68e948fe8/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:34:40.914089",
-      "muscle_groups": [
-        "Back",
-        "Arms"
+      "difficulty": "Beginner",
+      "description": "The kettlebell row is a fundamental bilateral pulling exercise that builds overall back strength and thickness. This compound movement targets multiple back muscles simultaneously while improving posture and developing the pulling strength essential for balanced upper body development.",
+      "primary_muscle": "Latissimus Dorsi",
+      "secondary_muscles": [
+        "Rhomboids",
+        "Middle Trapezius",
+        "Rear Deltoids",
+        "Biceps Brachii",
+        "Lower Trapezius"
       ],
-      "exercise_types": [
-        "Strength"
+      "equipment_needed": [
+        "Kettlebell"
       ],
-      "description": "The kettlebell row is a fundamental pulling exercise that primarily targets the latissimus dorsi, rhomboids, middle trapezius. This compound movement also engages the rear deltoids, biceps, lower trapezius, helping to improve posture, strengthen the posterior chain, and build overall upper body pulling strength.",
       "steps": [
         "Stand with feet shoulder-width apart, holding the kettlebell with both hands",
-        "Hinge at your hips and bend forward 45-60 degrees, keeping your back straight",
+        "Hinge at your hips and lean forward 45-60 degrees, keeping your back straight",
         "Let the kettlebell hang naturally with arms extended, maintaining a neutral spine",
-        "Pull the kettlebell toward your lower chest, leading with your elbows",
+        "Pull the kettlebell toward your lower chest/upper abdomen, leading with your elbows",
         "Squeeze your shoulder blades together at the top of the movement",
         "Focus on driving your elbows back rather than just pulling with your hands",
         "Lower the kettlebell back to the starting position with control",
         "Keep your core engaged throughout the entire movement"
       ],
-      "equipment": [
-        "Kettlebell"
+      "pro_tips": [
+        "Think about pulling your shoulder blades together before initiating the row",
+        "Keep your elbows close to your body rather than flaring them out",
+        "Focus on feeling the muscles between your shoulder blades working",
+        "Use a hip hinge position similar to a deadlift setup",
+        "Consider using a staggered stance for better stability"
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Rounding the back instead of maintaining neutral spine",
+        "Using too much arm and not enough back muscles",
+        "Not achieving full range of motion at the top",
+        "Allowing the torso to rise up during the pulling motion",
+        "Using momentum instead of controlled muscle contraction",
+        "Not squeezing the shoulder blades together at the top"
+      ]
     },
     {
       "id": "0015",
@@ -472,27 +495,43 @@
         "720p": "https://video.wixstatic.com/video/3864fa_332388de060941329c8aafb452fe66fc/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:34:41.790394",
-      "muscle_groups": [
-        "Legs"
+      "difficulty": "Beginner",
+      "description": "The kettlebell reverse lunge is a unilateral lower body exercise that builds functional leg strength while improving balance and stability. The reverse stepping pattern is knee-friendly and allows for better control, making it an excellent choice for developing single-leg strength and correcting imbalances.",
+      "primary_muscle": "Quadriceps",
+      "secondary_muscles": [
+        "Gluteus Maximus",
+        "Hamstrings",
+        "Calves",
+        "Core Stabilizers"
       ],
-      "exercise_types": [
-        "Strength"
+      "equipment_needed": [
+        "Kettlebell"
       ],
-      "description": "The kettlebell reverse lunge is a unilateral lower body exercise that targets the quadriceps, hamstrings, gluteus maximus while challenging balance and stability. This exercise helps correct muscle imbalances, improves functional movement patterns, and builds single-leg strength essential for athletic performance.",
       "steps": [
-        "Stand tall with feet hip-width apart, kettlebell held securely",
+        "Stand tall with feet hip-width apart, holding kettlebell at chest or sides",
         "Keep your core engaged and shoulders back throughout the movement",
         "Step your right foot back approximately 2-3 feet behind you",
-        "Lower your body by bending both knees to 90-degree angles",
+        "Lower your body by bending both knees to approximately 90-degree angles",
         "Keep your front knee directly above your ankle, not pushed forward",
         "Your back knee should lightly touch or nearly touch the ground",
         "Push through your front heel to drive back to the starting position",
         "Complete all repetitions on one side before switching legs"
       ],
-      "equipment": [
-        "Kettlebell"
+      "pro_tips": [
+        "Focus on stepping straight back, not at an angle",
+        "Keep most of your weight on your front leg throughout the movement",
+        "Think about dropping straight down rather than lunging backward",
+        "Use your back leg primarily for balance, not support",
+        "Consider holding the kettlebell in a goblet position for better stability"
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Taking too small of a step back, causing knee tracking issues",
+        "Leaning forward excessively during the descent",
+        "Pushing off the back foot instead of the front foot to return",
+        "Allowing the front knee to cave inward",
+        "Not descending low enough to achieve proper range of motion",
+        "Stepping back at an angle instead of straight back"
+      ]
     },
     {
       "id": "0016",
@@ -503,15 +542,18 @@
         "720p": "https://video.wixstatic.com/video/3864fa_2aaf65fb3ee346e2baf059f1945bc820/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:34:42.596142",
-      "muscle_groups": [
-        "Shoulders",
-        "Back",
-        "Arms"
+      "difficulty": "Intermediate",
+      "description": "The kettlebell rear delt row is a specialized pulling exercise that emphasizes the posterior deltoids more than traditional rows. This exercise is crucial for shoulder health, postural improvement, and creating balanced shoulder development by strengthening the often-neglected rear shoulder muscles.",
+      "primary_muscle": "Posterior Deltoids",
+      "secondary_muscles": [
+        "Rhomboids",
+        "Middle Trapezius",
+        "Infraspinatus",
+        "Teres Minor"
       ],
-      "exercise_types": [
-        "Strength"
+      "equipment_needed": [
+        "Kettlebell (2 recommended)"
       ],
-      "description": "The kettlebell rear delt row is a pulling exercise that specifically targets the posterior deltoids, rhomboids, and middle trapezius. This exercise emphasizes the rear shoulders more than a traditional row, helping to improve posture, balance front-to-back shoulder strength, and enhance overall shoulder stability.",
       "steps": [
         "Stand with feet shoulder-width apart, holding kettlebells in each hand",
         "Hinge at your hips and lean forward about 45 degrees, keeping your back straight",
@@ -523,10 +565,21 @@
         "Lower the kettlebells back to the starting position with control",
         "Keep your torso stable and avoid using momentum"
       ],
-      "equipment": [
-        "Kettlebell"
+      "pro_tips": [
+        "Think about leading with your pinkies to maximize rear delt activation",
+        "Keep your elbows higher than your wrists throughout the movement",
+        "Focus on pulling your elbows apart, not just back",
+        "Use lighter weight than regular rows to maintain proper form",
+        "Imagine trying to squeeze a pencil between your shoulder blades"
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Using too much weight and turning it into a regular row",
+        "Not keeping the elbows wide and high enough",
+        "Focusing too much on the lats instead of rear delts",
+        "Allowing the torso to rise during the pulling motion",
+        "Not maintaining the forward-leaned position",
+        "Using momentum instead of controlled muscle contraction"
+      ]
     },
     {
       "id": "0017",
@@ -537,15 +590,19 @@
         "720p": "https://video.wixstatic.com/video/3864fa_98d88110199143aca4965f32be68f6ed/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:34:43.560371",
-      "muscle_groups": [
-        "Back",
-        "Chest",
-        "Arms"
+      "difficulty": "Intermediate",
+      "description": "The kettlebell pullover is a unique compound exercise that targets both the lats and chest while improving shoulder mobility. This classic movement helps expand the ribcage, strengthens the core, and builds functional strength in an overhead plane while enhancing shoulder flexibility.",
+      "primary_muscle": "Latissimus Dorsi",
+      "secondary_muscles": [
+        "Pectoralis Major",
+        "Serratus Anterior",
+        "Core Stabilizers",
+        "Long Head Triceps"
       ],
-      "exercise_types": [
-        "Strength"
+      "equipment_needed": [
+        "Kettlebell",
+        "Bench"
       ],
-      "description": "The kettlebell pullover is a compound exercise that primarily targets the latissimus dorsi, pectoralis major, and serratus anterior. This exercise helps expand the rib cage, improves shoulder mobility, strengthens the core, and builds functional pulling and pressing strength in an overhead plane.",
       "steps": [
         "Lie on a bench with your upper back supported, feet flat on the floor",
         "Hold the kettlebell with both hands by the handle, arms extended above your chest",
@@ -557,10 +614,21 @@
         "Focus on the stretch and contraction rather than the weight used",
         "Breathe deeply during the stretch phase to enhance rib cage expansion"
       ],
-      "equipment": [
-        "Kettlebell"
+      "pro_tips": [
+        "Think of it as a 'breathing' exercise - inhale deeply during the stretch",
+        "Keep your hips slightly dropped to enhance the lat stretch",
+        "Focus on feeling the stretch across your entire torso",
+        "Use a lighter weight than you think - this is about mobility and stretch",
+        "Consider placing your feet up on the bench for better core engagement"
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Using too much weight and losing the stretch component",
+        "Bending the elbows too much, turning it into a tricep exercise",
+        "Not lowering the weight far enough to get a proper stretch",
+        "Arching the back excessively instead of using core stability",
+        "Moving too quickly without focusing on the stretch and contraction",
+        "Holding the kettlebell incorrectly, causing wrist strain"
+      ]
     },
     {
       "id": "0018",
@@ -571,29 +639,43 @@
         "720p": "https://video.wixstatic.com/video/3864fa_abb1232953be469a804913cb070bc404/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:34:44.653793",
-      "muscle_groups": [
-        "Arms",
-        "Biceps"
+      "difficulty": "Intermediate",
+      "description": "The kettlebell preacher curl is a strict isolation exercise that eliminates momentum and cheating, providing intense bicep stimulation. The preacher bench angle places the biceps in a mechanically disadvantageous position, creating maximum tension throughout the range of motion for superior muscle development.",
+      "primary_muscle": "Biceps Brachii",
+      "secondary_muscles": [
+        "Brachialis",
+        "Brachioradialis",
+        "Forearm Flexors"
       ],
-      "exercise_types": [
-        "Strength"
+      "equipment_needed": [
+        "Kettlebell",
+        "Preacher bench"
       ],
-      "description": "The kettlebell preacher curl is an isolation exercise that targets the biceps brachii and brachialis, with secondary activation of the brachioradialis. The preacher bench position eliminates momentum and provides constant tension throughout the range of motion, maximizing muscle activation and promoting peak contraction.",
       "steps": [
         "Sit at the preacher bench with your chest pressed firmly against the pad",
-        "Hold the kettlebell with an underhand grip, hands shoulder-width apart",
+        "Hold the kettlebell with both hands using an underhand grip",
         "Position your armpits at the top of the preacher bench pad",
         "Start with your arms slightly bent, never fully locked out",
         "Curl the weight up by contracting your biceps, keeping wrists straight",
-        "Squeeze your biceps at the top of the movement for a brief pause",
+        "Squeeze your biceps hard at the top of the movement for a brief pause",
         "Lower the weight slowly and under control, maintaining tension",
         "Stop just short of full arm extension to maintain constant muscle tension"
       ],
-      "equipment": [
-        "Kettlebell",
-        "Preacher Bench"
+      "pro_tips": [
+        "Focus on the eccentric (lowering) phase for maximum muscle growth",
+        "Never fully lock out your elbows at the bottom",
+        "Keep your wrists straight and strong throughout the movement",
+        "Use a controlled tempo: 2 seconds up, 1 second pause, 3 seconds down",
+        "Consider using a slightly lighter weight than standing curls"
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Fully extending the arms at the bottom and losing tension",
+        "Using momentum to lift the weight instead of muscle contraction",
+        "Not positioning the chest properly against the pad",
+        "Lifting the elbows off the pad during the curl",
+        "Using too much weight and compromising form",
+        "Not controlling the eccentric portion of the movement"
+      ]
     },
     {
       "id": "0019",
@@ -604,30 +686,45 @@
         "720p": "https://video.wixstatic.com/video/3864fa_ef73ed2727664cfc99b74d7132f87876/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:34:45.124872",
-      "muscle_groups": [
-        "Shoulders",
-        "Arms"
+      "difficulty": "Intermediate",
+      "description": "The kettlebell long lever lateral raise is an advanced shoulder isolation exercise that increases difficulty by maintaining a straight arm throughout the movement. This creates a longer lever arm, providing greater challenge to the medial deltoids and requiring more shoulder stability and strength.",
+      "primary_muscle": "Medial Deltoids",
+      "secondary_muscles": [
+        "Anterior Deltoids",
+        "Upper Trapezius",
+        "Supraspinatus",
+        "Core Stabilizers"
       ],
-      "exercise_types": [
-        "Strength"
+      "equipment_needed": [
+        "Kettlebell"
       ],
-      "description": "The kettlebell long lever lateral raise is an advanced shoulder isolation exercise that primarily targets the medial deltoids with increased difficulty due to the extended lever arm. This exercise builds shoulder width, improves shoulder stability, and enhances overall shoulder strength while providing a greater challenge than standard lateral raises.",
       "steps": [
         "Stand with feet shoulder-width apart, holding a kettlebell in one hand",
-        "Keep your arm fully extended throughout the entire movement",
+        "Keep your arm completely straight throughout the entire movement",
         "Start with the kettlebell hanging naturally at your side",
-        "Slowly lift the kettlebell out to the side with your arm straight",
+        "Slowly lift the kettlebell out to the side with your arm fully extended",
         "Raise the weight until your arm is parallel to the floor",
         "Focus on leading with your pinky finger to maximize deltoid activation",
         "Hold briefly at the top, feeling the tension in your shoulder",
         "Lower the kettlebell slowly back to starting position with control",
-        "Keep your torso upright and avoid using momentum or swinging",
+        "Keep your torso upright and avoid using momentum or swaying",
         "Complete all reps on one side before switching arms"
       ],
-      "equipment": [
-        "Kettlebell"
+      "pro_tips": [
+        "Use significantly lighter weight than bent-arm lateral raises",
+        "Think about pouring water from a pitcher at the top",
+        "Keep your core tight to prevent compensatory movements",
+        "Focus on quality over quantity - perfect form is crucial",
+        "Consider starting with just bodyweight to master the movement"
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Using too much weight and bending the arm to compensate",
+        "Swinging the weight up using momentum",
+        "Not maintaining the straight arm position throughout",
+        "Lifting the weight higher than shoulder level",
+        "Leaning away from the working side",
+        "Moving too quickly without controlling the weight"
+      ]
     },
     {
       "id": "0020",
@@ -638,28 +735,43 @@
         "720p": "https://video.wixstatic.com/video/3864fa_7095bcd5921749c6a61ccd6ff7288dc4/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:34:46.123468",
-      "muscle_groups": [
-        "Legs",
-        "Glutes",
-        "Quadriceps"
+      "difficulty": "Intermediate",
+      "description": "The kettlebell lateral lunge is a multi-planar lower body exercise that targets muscles in the frontal plane, improving hip mobility and lateral movement patterns. This functional movement builds unilateral leg strength while enhancing balance, stability, and athletic performance in side-to-side movements.",
+      "primary_muscle": "Quadriceps",
+      "secondary_muscles": [
+        "Gluteus Medius",
+        "Adductors",
+        "Hamstrings",
+        "Calves",
+        "Core Stabilizers"
       ],
-      "exercise_types": [
-        "Strength"
+      "equipment_needed": [
+        "Kettlebell"
       ],
-      "description": "The kettlebell lateral lunge is a unilateral lower body exercise that targets the quadriceps, gluteus medius, adductors, and hamstrings while challenging balance and stability. This exercise helps correct muscle imbalances, improves hip mobility and lateral movement patterns, and builds single-leg strength essential for athletic performance.",
       "steps": [
-        "Stand with feet together, kettlebell held at chest level or sides",
+        "Stand with feet together, holding kettlebell at chest level (goblet style)",
         "Keep your chest up and core engaged throughout the movement",
         "Take a large step out to your right side, keeping your left leg straight",
         "Sit back into your right hip, bending your right knee to about 90 degrees",
-        "Keep your right knee in line with your right toe",
+        "Keep your right knee tracking over your right toe",
         "Push through your right heel to drive back to the starting position",
-        "Alternate sides or complete all reps on one side before switching"
+        "Alternate sides or complete all repetitions on one side before switching"
       ],
-      "equipment": [
-        "Kettlebell"
+      "pro_tips": [
+        "Keep the non-working leg completely straight throughout the movement",
+        "Focus on sitting back into the working hip rather than just bending the knee",
+        "Keep your chest up and avoid leaning forward excessively",
+        "Start with bodyweight only to master the movement pattern",
+        "Think about pushing the floor away with your working leg"
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Not stepping out far enough, limiting range of motion",
+        "Allowing the straight leg to bend during the movement",
+        "Leaning forward excessively instead of sitting back",
+        "Not tracking the knee properly over the toe",
+        "Using too much weight before mastering the movement pattern",
+        "Pushing off the wrong leg when returning to center"
+      ]
     },
     {
       "id": "0021",
@@ -670,14 +782,18 @@
         "720p": "https://video.wixstatic.com/video/3864fa_5bd05868785f41bea975c3dfeac4d838/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:34:46.999815",
-      "muscle_groups": [
-        "Trapezius",
-        "Shoulders"
+      "difficulty": "Intermediate",
+      "description": "The kettlebell incline shrug targets the upper trapezius from a prone inclined position, providing a different angle of muscle stimulation compared to standing shrugs. This variation reduces lower back stress while allowing for focused upper trap development and improved posture.",
+      "primary_muscle": "Upper Trapezius",
+      "secondary_muscles": [
+        "Levator Scapulae",
+        "Rhomboids",
+        "Middle Trapezius"
       ],
-      "exercise_types": [
-        "Strength"
+      "equipment_needed": [
+        "Kettlebell (2 recommended)",
+        "Incline bench"
       ],
-      "description": "The kettlebell incline shrug is an isolation exercise that targets the upper trapezius and levator scapulae from an inclined position. This angle provides a different stimulus than traditional shrugs, helping to build upper back strength, improve posture, and develop the thick, powerful appearance of the upper traps.",
       "steps": [
         "Set an incline bench to approximately 45-60 degrees",
         "Lie face down on the incline bench with your chest supported",
@@ -689,75 +805,114 @@
         "Slowly lower your shoulders back to the starting position",
         "Avoid rolling your shoulders or using momentum"
       ],
-      "equipment": [
-        "Kettlebell",
-        "Incline Bench"
+      "pro_tips": [
+        "The incline angle reduces stress on the lower back",
+        "Focus on the upward movement more than the weight used",
+        "Keep your head in a neutral position against the bench",
+        "Think about trying to touch your ears with your shoulders",
+        "Use a full range of motion for maximum muscle activation"
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Setting the bench angle too steep or too shallow",
+        "Not maintaining chest contact with the bench pad",
+        "Using momentum instead of controlled muscle contraction",
+        "Not achieving full range of motion at the top",
+        "Allowing the arms to bend during the movement",
+        "Rolling the shoulders instead of moving straight up and down"
+      ]
     },
     {
       "id": "0022",
-      "title": "Kettlebell Hip Thrusts",
+      "title": "Kettlebell Hip Thrust",
       "slug": "kettlebell-hip-thrusts",
       "url": "https://www.exerciseanimatic.com/product-page/kettlebell-hip-thrusts",
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_e5e56b3550a249ce97957a8c4098c6b3/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:34:47.925265",
-      "muscle_groups": [
-        "Glutes"
+      "difficulty": "Beginner",
+      "description": "The kettlebell hip thrust is a powerful hip-dominant exercise that maximally activates the glutes while building hip extension strength. This exercise is essential for athletic performance, helps counteract sitting posture, and builds a strong, well-developed posterior chain.",
+      "primary_muscle": "Gluteus Maximus",
+      "secondary_muscles": [
+        "Gluteus Medius",
+        "Hamstrings",
+        "Core Stabilizers"
       ],
-      "exercise_types": [
-        "Strength"
-      ],
-      "description": "The kettlebell hip thrust is a hip-dominant exercise that primarily targets the gluteus maximus, gluteus medius while engaging the gluteus minimus, piriformis. This exercise builds powerful hip extension, improves glute activation, and helps counteract the effects of prolonged sitting.",
-      "steps": [
-        "Sit with your upper back against a bench, knees bent, feet flat on the floor",
-        "Position the kettlebell across your hips if using weight",
-        "Keep your feet approximately shoulder-width apart",
-        "Drive through your heels to lift your hips up toward the ceiling",
-        "Squeeze your glutes at the top, creating a straight line from knees to shoulders",
-        "Keep your core engaged and avoid overarching your lower back",
-        "Hold the top position briefly for maximum glute contraction",
-        "Lower your hips back down with control, maintaining tension"
-      ],
-      "equipment": [
+      "equipment_needed": [
         "Kettlebell"
       ],
-      "difficulty": "Beginner"
+      "steps": [
+        "Sit on the floor with your upper back against a bench or elevated surface",
+        "Position the kettlebell across your hips, holding it securely in place",
+        "Place your feet flat on the floor, approximately shoulder-width apart",
+        "Drive through your heels to lift your hips up toward the ceiling",
+        "Squeeze your glutes hard at the top, creating a straight line from knees to shoulders",
+        "Keep your core engaged and avoid overarching your lower back",
+        "Hold the top position briefly for maximum glute contraction",
+        "Lower your hips back down with control, maintaining tension throughout"
+      ],
+      "pro_tips": [
+        "Focus on squeezing your glutes, not just lifting your hips",
+        "Keep your knees pointing forward throughout the movement",
+        "Use a towel or pad under the kettlebell for comfort",
+        "Think about driving your heels through the floor",
+        "Maintain a neutral spine - don't arch your back excessively"
+      ],
+      "common_mistakes": [
+        "Arching the back excessively instead of using glutes",
+        "Not achieving full hip extension at the top",
+        "Using momentum instead of controlled muscle contraction",
+        "Placing feet too close together or too far apart",
+        "Not holding the peak contraction at the top",
+        "Allowing the knees to cave inward during the movement"
+      ]
     },
     {
       "id": "0023",
-      "title": "Kettlebell Hip Thrusts With Bench",
+      "title": "Kettlebell Hip Thrust With Bench",
       "slug": "kettlebell-hip-thrusts-with-bench",
       "url": "https://www.exerciseanimatic.com/product-page/kettlebell-hip-thrusts-with-bench",
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_17005c871a6343edbbea210bcdea15ed/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:34:49.080213",
-      "muscle_groups": [
-        "Glutes",
-        "Hamstrings"
+      "difficulty": "Beginner",
+      "description": "The kettlebell hip thrust with bench provides increased range of motion compared to floor-based hip thrusts, making it more effective for maximum glute activation and strength development. The elevated position allows for deeper hip flexion and more complete glute engagement throughout the movement.",
+      "primary_muscle": "Gluteus Maximus",
+      "secondary_muscles": [
+        "Gluteus Medius",
+        "Hamstrings",
+        "Core Stabilizers"
       ],
-      "exercise_types": [
-        "Strength"
+      "equipment_needed": [
+        "Kettlebell",
+        "Bench"
       ],
-      "description": "The kettlebell hip thrust with bench is a hip-dominant exercise that primarily targets the gluteus maximus, gluteus medius, and hamstrings. Using a bench increases the range of motion compared to floor bridges, making it more effective for building powerful hip extension, improving glute activation, and developing lower body strength.",
       "steps": [
         "Sit with your upper back against a bench, knees bent, feet flat on the floor",
         "Position the kettlebell securely across your hips",
         "Keep your feet approximately shoulder-width apart",
         "Drive through your heels to lift your hips up toward the ceiling",
-        "Squeeze your glutes at the top, creating a straight line from knees to shoulders",
+        "Squeeze your glutes hard at the top, creating a straight line from knees to shoulders",
         "Keep your core engaged and avoid overarching your lower back",
         "Hold the top position briefly for maximum glute contraction",
-        "Lower your hips back down with control, maintaining tension"
+        "Lower your hips back down with control, maintaining tension throughout"
       ],
-      "equipment": [
-        "Kettlebell",
-        "Bench"
+      "pro_tips": [
+        "The bench allows for greater range of motion than floor variations",
+        "Focus on the glute squeeze at the top rather than just lifting higher",
+        "Keep your chin tucked to maintain neutral spine alignment",
+        "Use a pad or towel under the kettlebell for comfort",
+        "Consider single-leg variations for increased difficulty and balance"
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Hyperextending the back instead of focusing on hip extension",
+        "Not using the full range of motion that the bench provides",
+        "Rushing through the movement without proper glute contraction",
+        "Allowing the knees to cave inward during the thrust",
+        "Not maintaining contact between upper back and bench",
+        "Using too much weight and compensating with other muscles"
+      ]
     },
     {
       "id": "0024",
@@ -768,30 +923,45 @@
         "720p": "https://video.wixstatic.com/video/3864fa_14740dcb82e84d46b84fe512adc90809/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:34:49.947265",
-      "muscle_groups": [
-        "Back",
-        "Arms",
-        "Abdominals"
+      "difficulty": "Intermediate",
+      "description": "The kettlebell gorilla row is a dynamic, athletic movement that combines unilateral pulling with core stability and hip hinge mechanics. This functional exercise builds back strength while challenging balance, coordination, and anti-rotation core stability in a position that mimics real-world movement patterns.",
+      "primary_muscle": "Latissimus Dorsi",
+      "secondary_muscles": [
+        "Rhomboids",
+        "Middle Trapezius",
+        "Rear Deltoids",
+        "Core Stabilizers",
+        "Hip Flexors"
       ],
-      "exercise_types": [
-        "Strength"
+      "equipment_needed": [
+        "Kettlebell (2 required)"
       ],
-      "description": "The kettlebell gorilla row is a dynamic compound exercise that targets the latissimus dorsi, rhomboids, middle trapezius, and rear deltoids. This athletic movement mimics a gorilla's posture and rowing motion, combining unilateral pulling strength with core stability and hip hinge mechanics for functional strength development.",
       "steps": [
         "Place two kettlebells on the floor, shoulder-width apart",
         "Stand between the kettlebells with feet wider than shoulder-width",
         "Hinge at the hips and bend your knees to reach down and grab both handles",
         "Keep your back straight and chest up in a gorilla-like stance",
-        "Pull one kettlebell up toward your ribcage while keeping the other planted",
+        "Pull one kettlebell up toward your ribcage while keeping the other planted on the floor",
         "Focus on driving your elbow back and squeezing your shoulder blade",
         "Lower the kettlebell back to the floor with control",
         "Alternate sides, rowing one kettlebell while the other stays grounded",
         "Maintain the hip hinge position throughout the entire movement"
       ],
-      "equipment": [
-        "Kettlebell"
+      "pro_tips": [
+        "Think of this as a single-arm row in a deadlift position",
+        "Keep your core tight to prevent rotation during the row",
+        "Focus on the working side while using the planted arm for stability",
+        "Maintain the hip hinge - don't let your hips rise during the row",
+        "Start with lighter weights to master the coordination pattern"
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Allowing the hips to rise during the rowing motion",
+        "Rotating the torso instead of keeping it square",
+        "Not maintaining the proper hip hinge position",
+        "Using too much weight and compromising form",
+        "Not fully lowering the kettlebell back to the floor",
+        "Losing the gorilla stance and standing too upright"
+      ]
     },
     {
       "id": "0025",
@@ -802,15 +972,17 @@
         "720p": "https://video.wixstatic.com/video/3864fa_31e05877353945cda9c8d2bbbc0e0036/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:34:50.824113",
-      "muscle_groups": [
-        "Arms",
-        "Biceps",
-        "Forearms"
+      "difficulty": "Beginner",
+      "description": "The kettlebell goblet curl is a unique variation that challenges both the biceps and grip strength simultaneously. The goblet grip position requires greater forearm and grip engagement while providing a different stimulus to the biceps compared to traditional curls.",
+      "primary_muscle": "Biceps Brachii",
+      "secondary_muscles": [
+        "Brachialis",
+        "Forearm Flexors",
+        "Grip Stabilizers"
       ],
-      "exercise_types": [
-        "Strength"
+      "equipment_needed": [
+        "Kettlebell"
       ],
-      "description": "The kettlebell goblet curl is an isolation exercise that targets the biceps brachii and brachialis, with secondary activation of the forearms. The goblet grip position provides a unique stimulus and challenges grip strength while allowing for focused bicep development and improved muscle definition.",
       "steps": [
         "Stand with feet shoulder-width apart, holding the kettlebell by the horns (handle sides)",
         "Keep the kettlebell close to your chest in a goblet position",
@@ -818,14 +990,25 @@
         "Start with the kettlebell at chest level",
         "Lower the kettlebell slowly by extending your arms, feeling the stretch in your biceps",
         "Curl the kettlebell back up to chest level by contracting your biceps",
-        "Squeeze your biceps at the top of the movement",
+        "Squeeze your biceps hard at the top of the movement",
         "Keep your wrists straight and core engaged throughout",
         "Control both the lifting and lowering phases of the movement"
       ],
-      "equipment": [
-        "Kettlebell"
+      "pro_tips": [
+        "The goblet grip significantly challenges your grip strength",
+        "Keep the kettlebell close to your body throughout the movement",
+        "Focus on the stretch at the bottom and contraction at the top",
+        "This variation naturally prevents cheating with momentum",
+        "Consider this exercise for grip strength development as well as biceps"
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Allowing the kettlebell to drift away from the body",
+        "Not maintaining the goblet grip properly",
+        "Using momentum instead of controlled muscle contraction",
+        "Not achieving full range of motion due to the grip challenge",
+        "Allowing the elbows to flare out from the sides",
+        "Gripping too tightly and causing forearm fatigue"
+      ]
     },
     {
       "id": "0026",
@@ -836,27 +1019,42 @@
         "720p": "https://video.wixstatic.com/video/3864fa_d9206b31c56e486fbe83e391b93dc6ab/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:34:51.769784",
-      "muscle_groups": [
-        "Glutes"
+      "difficulty": "Beginner",
+      "description": "The kettlebell glute bridge is a foundational hip-dominant exercise that activates and strengthens the glutes while improving hip extension mobility. This floor-based movement is perfect for beginners learning proper hip hinge mechanics and glute activation patterns.",
+      "primary_muscle": "Gluteus Maximus",
+      "secondary_muscles": [
+        "Gluteus Medius",
+        "Hamstrings",
+        "Core Stabilizers"
       ],
-      "exercise_types": [
-        "Strength"
-      ],
-      "description": "The kettlebell glute bridge is a hip-dominant exercise that primarily targets the gluteus maximus, gluteus medius while engaging the gluteus minimus, piriformis. This exercise builds powerful hip extension, improves glute activation, and helps counteract the effects of prolonged sitting.",
-      "steps": [
-        "Lie on your back with knees bent and feet flat on the floor",
-        "Place the kettlebell across your hips if using weight",
-        "Keep your arms at your sides for stability",
-        "Drive through your heels to lift your hips off the ground",
-        "Squeeze your glutes and create a straight line from knees to shoulders",
-        "Keep your core engaged and avoid pushing through your toes",
-        "Hold the top position briefly for maximum muscle activation",
-        "Lower your hips back to the ground with control"
-      ],
-      "equipment": [
+      "equipment_needed": [
         "Kettlebell"
       ],
-      "difficulty": "Beginner"
+      "steps": [
+        "Lie on your back with knees bent and feet flat on the floor",
+        "Place the kettlebell across your hips, holding it securely in place",
+        "Keep your arms at your sides for stability",
+        "Drive through your heels to lift your hips off the ground",
+        "Squeeze your glutes hard and create a straight line from knees to shoulders",
+        "Keep your core engaged and avoid pushing through your toes",
+        "Hold the top position briefly for maximum muscle activation",
+        "Lower your hips back to the ground with control, maintaining tension"
+      ],
+      "pro_tips": [
+        "Focus on initiating the movement with your glutes, not your back",
+        "Keep your feet flat and drive through your heels",
+        "Avoid overarching your back - focus on hip extension",
+        "Use a towel or pad under the kettlebell for comfort",
+        "Think about tilting your pelvis upward at the top"
+      ],
+      "common_mistakes": [
+        "Arching the back instead of extending the hips",
+        "Not squeezing the glutes at the top of the movement",
+        "Pushing through the toes instead of the heels",
+        "Not achieving full hip extension at the top",
+        "Using momentum instead of controlled muscle contraction",
+        "Allowing the knees to cave inward during the bridge"
+      ]
     },
     {
       "id": "0027",
@@ -867,29 +1065,43 @@
         "720p": "https://video.wixstatic.com/video/3864fa_24b385bbca2f40d0b6a02531511c1912/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:34:52.881806",
-      "muscle_groups": [
-        "Shoulders",
-        "Arms"
+      "difficulty": "Beginner",
+      "description": "The kettlebell front raise is an isolation exercise that targets the anterior deltoids while improving shoulder stability and strength in the frontal plane. This movement helps build front shoulder strength, enhances shoulder definition, and balances overall shoulder development.",
+      "primary_muscle": "Anterior Deltoids",
+      "secondary_muscles": [
+        "Upper Trapezius",
+        "Serratus Anterior",
+        "Core Stabilizers"
       ],
-      "exercise_types": [
-        "Strength"
+      "equipment_needed": [
+        "Kettlebell"
       ],
-      "description": "The kettlebell front raise is an isolation exercise that primarily targets the anterior deltoids (front shoulders), with secondary activation of the upper trapezius and serratus anterior. This exercise helps build front shoulder strength, improves shoulder stability, and enhances overall shoulder definition and function.",
       "steps": [
-        "Stand with feet shoulder-width apart, holding a kettlebell in both hands",
+        "Stand with feet shoulder-width apart, holding a kettlebell with both hands",
         "Keep your arms straight and hold the kettlebell in front of your thighs",
-        "Maintain a neutral spine and engage your core throughout",
+        "Maintain a neutral spine and engage your core throughout the movement",
         "Slowly raise the kettlebell directly in front of you to shoulder height",
         "Keep your arms straight and lead the movement with your shoulders",
         "Focus on contracting your front deltoids during the lift",
-        "Pause briefly at shoulder height, feeling the tension",
-        "Lower the kettlebell slowly back to the starting position",
-        "Avoid using momentum or swinging the weight"
+        "Pause briefly at shoulder height, feeling the tension in your shoulders",
+        "Lower the kettlebell slowly back to the starting position with control",
+        "Avoid using momentum or swinging the weight upward"
       ],
-      "equipment": [
-        "Kettlebell"
+      "pro_tips": [
+        "Think about lifting the weight with your shoulders, not your arms",
+        "Keep your core tight to prevent compensatory back arching",
+        "Stop at shoulder height - going higher shifts emphasis to the traps",
+        "Use a controlled tempo for maximum muscle activation",
+        "Consider alternating single-arm variations for unilateral development"
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Using momentum or swinging the weight up",
+        "Raising the weight higher than shoulder level",
+        "Arching the back to compensate for heavy weight",
+        "Not maintaining straight arms throughout the movement",
+        "Using the traps instead of the front delts to lift",
+        "Moving too quickly without controlling the eccentric phase"
+      ]
     },
     {
       "id": "0028",
@@ -900,14 +1112,17 @@
         "720p": "https://video.wixstatic.com/video/3864fa_e9dda6852d9a4b988839a45696fbdb50/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:34:53.940825",
-      "muscle_groups": [
-        "Triceps",
-        "Arms"
+      "difficulty": "Intermediate",
+      "description": "The kettlebell decline skull crusher is an advanced tricep isolation exercise that utilizes a decline angle to increase the stretch and muscle activation. The decline position provides a different stimulus than flat skull crushers, allowing for greater tricep development and improved lockout strength.",
+      "primary_muscle": "Triceps Brachii",
+      "secondary_muscles": [
+        "Anconeus",
+        "Core Stabilizers"
       ],
-      "exercise_types": [
-        "Strength"
+      "equipment_needed": [
+        "Kettlebell",
+        "Decline bench"
       ],
-      "description": "The kettlebell decline skull crusher is an isolation exercise that primarily targets the triceps brachii from a declined position. The decline angle increases the stretch on the triceps and provides a different stimulus than flat skull crushers, helping to build tricep strength, improve arm definition, and enhance overall pushing power.",
       "steps": [
         "Set a decline bench to approximately 15-30 degrees decline",
         "Lie on the decline bench with your feet secured at the top",
@@ -915,15 +1130,25 @@
         "Keep your upper arms stationary throughout the entire movement",
         "Slowly lower the kettlebell by bending only at the elbows",
         "Lower until the kettlebell nearly touches your forehead",
-        "Focus on feeling the stretch in your triceps at the bottom",
+        "Focus on feeling the stretch in your triceps at the bottom position",
         "Extend your elbows to press the kettlebell back to starting position",
         "Keep your core engaged and avoid arching your back excessively"
       ],
-      "equipment": [
-        "Kettlebell",
-        "Decline Bench"
+      "pro_tips": [
+        "The decline angle increases the stretch on the triceps",
+        "Keep your upper arms perpendicular to the floor throughout",
+        "Focus on the eccentric (lowering) phase for maximum muscle growth",
+        "Use a lighter weight than you would for flat skull crushers",
+        "Keep your wrists straight and stable throughout the movement"
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Allowing the upper arms to move during the exercise",
+        "Not lowering the weight far enough to get a proper stretch",
+        "Using too much weight and compromising form",
+        "Moving the upper arms instead of only bending at the elbows",
+        "Bouncing the weight at the bottom instead of controlling it",
+        "Not securing feet properly on the decline bench"
+      ]
     },
     {
       "id": "0029",
@@ -934,28 +1159,42 @@
         "720p": "https://video.wixstatic.com/video/3864fa_31a73abc4cca4a83b4a5f136cb8e0cd6/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:34:54.455310",
-      "muscle_groups": [
-        "Arms",
-        "Biceps"
+      "difficulty": "Beginner",
+      "description": "The kettlebell curl is a fundamental bilateral arm exercise that builds overall bicep strength and mass. This compound grip variation provides a different stimulus than single-arm curls and allows for heavier loading while developing both arms simultaneously.",
+      "primary_muscle": "Biceps Brachii",
+      "secondary_muscles": [
+        "Brachialis",
+        "Brachioradialis",
+        "Forearm Flexors"
       ],
-      "exercise_types": [
-        "Strength"
+      "equipment_needed": [
+        "Kettlebell"
       ],
-      "description": "The kettlebell curl is an isolation exercise that primarily targets the biceps brachii and brachialis, with secondary activation of the brachioradialis. This exercise builds arm strength, improves muscle definition, and helps develop the peak and overall mass of the biceps.",
       "steps": [
-        "Stand with feet shoulder-width apart, holding the kettlebell with an underhand grip",
+        "Stand with feet shoulder-width apart, holding the kettlebell with both hands using an underhand grip",
         "Keep your elbows close to your sides throughout the entire movement",
         "Start with your arms extended but not completely locked out",
         "Curl the weight up by flexing your biceps, keeping your wrists straight",
-        "Focus on moving only your forearms, keeping your upper arms stationary",
-        "Squeeze your biceps at the top of the movement",
+        "Focus on moving only your forearms while keeping your upper arms stationary",
+        "Squeeze your biceps hard at the top of the movement",
         "Lower the weight slowly back to the starting position under control",
         "Avoid swinging or using momentum to lift the weight"
       ],
-      "equipment": [
-        "Kettlebell"
+      "pro_tips": [
+        "The two-handed grip allows for heavier loading than single-arm variations",
+        "Focus on a controlled eccentric (lowering) phase for maximum muscle growth",
+        "Keep your elbows pinned to your sides throughout the movement",
+        "Consider pausing at the top for enhanced peak contraction",
+        "Use your core to maintain stability and prevent swaying"
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Using body momentum to swing the weight up",
+        "Allowing the elbows to drift forward during the curl",
+        "Not controlling the lowering phase of the movement",
+        "Fully extending the arms at the bottom and losing tension",
+        "Using too much weight and compromising form",
+        "Moving too quickly without focusing on muscle contraction"
+      ]
     },
     {
       "id": "0030",
@@ -966,28 +1205,42 @@
         "720p": "https://video.wixstatic.com/video/3864fa_16c1f1e420354fb8969e2a702738403a/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:34:55.431033",
-      "muscle_groups": [
-        "Arms",
-        "Biceps"
+      "difficulty": "Intermediate",
+      "description": "The kettlebell concentration curl is the ultimate bicep isolation exercise that eliminates all momentum and cheating. The seated position and elbow support allow for complete focus on the bicep muscle, making it excellent for developing peak contraction, muscle definition, and mind-muscle connection.",
+      "primary_muscle": "Biceps Brachii",
+      "secondary_muscles": [
+        "Brachialis",
+        "Brachioradialis"
       ],
-      "exercise_types": [
-        "Strength"
+      "equipment_needed": [
+        "Kettlebell",
+        "Bench or chair"
       ],
-      "description": "The kettlebell concentration curl is a single-arm isolation exercise that targets the biceps brachii and brachialis, with secondary activation of the brachioradialis. This exercise allows for focused muscle activation, eliminates cheating through momentum, and helps develop the peak of the bicep.",
       "steps": [
         "Sit on a bench with your legs spread wide for stability",
         "Hold the kettlebell in one hand with an underhand grip",
         "Rest your elbow against the inside of your same-side thigh",
-        "Let your arm hang naturally with the weight, maintaining a slight bend",
-        "Curl the weight up by contracting your bicep, keeping your wrist straight",
-        "Focus on squeezing your bicep at the top of the movement",
-        "Lower the weight slowly back to the starting position",
+        "Let your arm hang naturally with the weight, maintaining a slight bend in your elbow",
+        "Curl the weight up by contracting your bicep, keeping your wrist straight and strong",
+        "Focus on squeezing your bicep hard at the top of the movement",
+        "Lower the weight slowly back to the starting position with complete control",
         "Complete all repetitions on one arm before switching to the other side"
       ],
-      "equipment": [
-        "Kettlebell"
+      "pro_tips": [
+        "This exercise is all about quality over quantity - use lighter weight",
+        "Focus intensely on the mind-muscle connection with your bicep",
+        "The supported elbow position eliminates all cheating possibilities",
+        "Consider using a very slow tempo for maximum muscle activation",
+        "This is excellent for developing the bicep peak"
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Using too much weight and not being able to control the movement",
+        "Not resting the elbow properly against the thigh",
+        "Moving too quickly without focusing on muscle contraction",
+        "Not achieving full range of motion due to the seated position",
+        "Allowing the wrist to bend instead of staying straight",
+        "Not fully squeezing the bicep at the top of the movement"
+      ]
     },
     {
       "id": "0031",
@@ -998,28 +1251,44 @@
         "720p": "https://video.wixstatic.com/video/3864fa_c2adb03188394972a7f13578b0192854/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:34:56.438886",
-      "muscle_groups": [
-        "Calves"
+      "difficulty": "Beginner",
+      "description": "The kettlebell calf raise is a standing isolation exercise that targets both the gastrocnemius and soleus muscles of the calves. Adding kettlebell resistance increases the challenge beyond bodyweight, helping to build calf strength, improve ankle stability, and develop the distinctive definition of well-developed lower legs.",
+      "primary_muscle": "Gastrocnemius",
+      "secondary_muscles": [
+        "Soleus",
+        "Tibialis Posterior",
+        "Flexor Digitorum Longus",
+        "Core Stabilizers"
       ],
-      "exercise_types": [
-        "Strength"
-      ],
-      "description": "The kettlebell calf raise is an isolation exercise that primarily targets the gastrocnemius and soleus muscles of the calves. Adding kettlebell weight increases the resistance, helping to build calf strength, improve ankle stability, and develop the distinctive diamond-shaped appearance of well-developed calves.",
-      "steps": [
-        "Stand upright holding a kettlebell in both hands at chest level",
-        "Keep your feet hip-width apart with your toes pointing forward",
-        "Engage your core and maintain good posture throughout",
-        "Rise up onto the balls of your feet as high as possible",
-        "Squeeze your calf muscles at the top of the movement",
-        "Hold the peak contraction for a brief moment",
-        "Lower your heels slowly back to the starting position",
-        "Feel the stretch in your calves at the bottom before the next rep",
-        "Avoid bouncing and maintain control throughout the entire range"
-      ],
-      "equipment": [
+      "equipment_needed": [
         "Kettlebell"
       ],
-      "difficulty": "Beginner"
+      "steps": [
+        "Stand upright holding a kettlebell with both hands at chest level (goblet position)",
+        "Keep your feet hip-width apart with toes pointing forward",
+        "Engage your core and maintain tall, upright posture throughout the movement",
+        "Rise up onto the balls of your feet as high as possible",
+        "Squeeze your calf muscles hard at the top of the movement",
+        "Hold the peak contraction for 1-2 seconds for maximum muscle activation",
+        "Lower your heels slowly back to the starting position with control",
+        "Feel the stretch in your calves at the bottom before initiating the next repetition",
+        "Avoid bouncing and maintain smooth, controlled movement throughout the entire range"
+      ],
+      "pro_tips": [
+        "Stand on a block or platform to increase range of motion and calf stretch",
+        "Focus on rising as high as possible onto your toes for maximum contraction",
+        "Control the eccentric (lowering) phase for 2-3 seconds to maximize muscle growth",
+        "Keep your knees straight throughout the movement to emphasize the gastrocnemius",
+        "Consider single-leg variations to address imbalances and increase difficulty"
+      ],
+      "common_mistakes": [
+        "Bouncing at the bottom instead of using controlled movements",
+        "Not rising high enough onto the toes for full range of motion",
+        "Using momentum instead of muscle contraction to lift the weight",
+        "Bending the knees, which reduces gastrocnemius activation",
+        "Not holding the peak contraction at the top",
+        "Moving too quickly without focusing on the calf muscles"
+      ]
     },
     {
       "id": "0032",
@@ -1190,37 +1459,52 @@
     },
     {
       "id": "0037",
-      "title": "Hold the world med ball chest press",
+      "title": "Hold the World Med Ball Chest Press",
       "slug": "hold-the-world-med-ball-chest-press",
       "url": "https://www.exerciseanimatic.com/product-page/hold-the-world-med-ball-chest-press",
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_cd15805f4d5c415fa73bc7688fc71da9/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:35:31.082566",
-      "muscle_groups": [
-        "Chest",
-        "Shoulders",
-        "Triceps"
+      "difficulty": "Beginner",
+      "description": "The hold the world med ball chest press is a compound pushing exercise that challenges grip strength while building chest, shoulder, and tricep strength. The medicine ball's unique grip demands greater stabilization than traditional weights, enhancing functional pressing strength and coordination.",
+      "primary_muscle": "Pectoralis Major",
+      "secondary_muscles": [
+        "Anterior Deltoids",
+        "Triceps Brachii",
+        "Serratus Anterior",
+        "Core Stabilizers"
       ],
-      "exercise_types": [
-        "Strength"
+      "equipment_needed": [
+        "Medicine Ball",
+        "Bench (optional)"
       ],
-      "description": "The hold the world med ball chest press is a compound pushing exercise that targets the pectoralis major, anterior deltoids, and triceps. Using a medicine ball challenges grip strength and stability while building upper body pushing power, improving chest development, and enhancing functional pressing strength.",
       "steps": [
         "Lie on your back on a bench or floor, holding the medicine ball with both hands",
-        "Position the medicine ball at chest level with arms bent at 90 degrees",
-        "Keep your feet flat on the floor and core engaged",
-        "Press the medicine ball straight up toward the ceiling",
+        "Position the medicine ball at chest level with your elbows bent at approximately 90 degrees",
+        "Keep your feet flat on the floor and engage your core throughout",
+        "Press the medicine ball straight up toward the ceiling in a controlled motion",
         "Extend your arms fully while keeping the ball directly over your chest",
-        "Squeeze your chest muscles at the top of the movement",
-        "Lower the medicine ball slowly back to your chest",
-        "Feel the stretch in your chest at the bottom position",
-        "Maintain control throughout both the pressing and lowering phases"
+        "Squeeze your chest muscles hard at the top of the movement",
+        "Lower the medicine ball slowly back to your chest with control",
+        "Feel a stretch in your chest muscles at the bottom position",
+        "Maintain control and stability throughout both the pressing and lowering phases"
       ],
-      "equipment": [
-        "Medicine Ball"
+      "pro_tips": [
+        "The medicine ball's shape challenges grip and requires more stabilization",
+        "Focus on squeezing the ball throughout the movement to engage more muscles",
+        "Keep your shoulder blades pulled back and down on the bench",
+        "Control the eccentric (lowering) phase for maximum muscle development",
+        "Start with a lighter medicine ball than you would use for other exercises"
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Pressing the ball at an angle instead of straight up",
+        "Not maintaining a firm grip on the medicine ball throughout",
+        "Arching the back excessively instead of keeping core engaged",
+        "Bouncing the ball off the chest instead of controlling the movement",
+        "Not achieving full range of motion due to the ball's size",
+        "Moving too quickly without focusing on muscle contraction"
+      ]
     },
     {
       "id": "0038",
@@ -1231,33 +1515,45 @@
         "720p": "https://video.wixstatic.com/video/3864fa_0ada1c037d11497d901a1a45a8987599/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:35:32.146083",
-      "muscle_groups": [
-        "Shoulders",
-        "Arms",
-        "Abdominals",
-        "Neck"
+      "difficulty": "Advanced",
+      "description": "The headstand is a challenging inversion that builds exceptional upper body and core strength while offering numerous physiological benefits. This advanced pose improves circulation, enhances focus and concentration, develops body awareness, and builds the foundation for more advanced inversions.",
+      "primary_muscle": "Core Stabilizers",
+      "secondary_muscles": [
+        "Deltoids",
+        "Triceps",
+        "Upper Trapezius",
+        "Deep Neck Flexors"
       ],
-      "exercise_types": [
-        "Functional",
-        "Yoga"
-      ],
-      "description": "The headstand is an advanced inversion exercise that targets the shoulders, core, and neck while challenging balance and proprioception. This pose builds upper body strength, improves circulation, enhances focus and concentration, and develops overall body awareness and control.",
-      "steps": [
-        "Start in a kneeling position and place your forearms on the ground",
-        "Interlace your fingers and create a cup for your head with your hands",
-        "Place the crown of your head in your hands, forming a stable tripod base",
-        "Tuck your toes under and lift your hips up into a pike position",
-        "Walk your feet closer to your elbows, keeping legs straight",
-        "Slowly lift one leg, then the other, bringing knees to chest first",
-        "Gradually extend your legs straight up toward the ceiling",
-        "Engage your core and press through your forearms for stability",
-        "Breathe steadily and hold for 30 seconds to several minutes",
-        "Come down slowly by reversing the movement with control"
-      ],
-      "equipment": [
+      "equipment_needed": [
         "Bodyweight"
       ],
-      "difficulty": "Advanced"
+      "steps": [
+        "Start in a kneeling position and place your forearms firmly on the ground",
+        "Interlace your fingers and create a stable cup for your head with your hands",
+        "Place the crown of your head in your hands, forming a strong tripod base",
+        "Tuck your toes under and lift your hips up into a pike position",
+        "Walk your feet closer to your elbows while keeping your legs straight",
+        "Slowly lift one leg, then the other, bringing your knees to your chest first",
+        "Gradually extend your legs straight up toward the ceiling when stable",
+        "Engage your core strongly and press through your forearms for stability",
+        "Breathe steadily and maintain the position for 30 seconds to several minutes",
+        "Come down slowly by reversing the movement with complete control"
+      ],
+      "pro_tips": [
+        "Practice against a wall initially for safety and confidence",
+        "Build up your hold time gradually - start with just 10-15 seconds",
+        "Most of your weight should be on your forearms, not your head",
+        "Keep your legs active and engaged to maintain alignment",
+        "Exit immediately if you feel neck strain or discomfort"
+      ],
+      "common_mistakes": [
+        "Putting too much weight on the head instead of the forearms",
+        "Trying to kick up into the pose instead of controlled lifting",
+        "Not building sufficient shoulder and core strength before attempting",
+        "Holding the breath instead of breathing naturally",
+        "Attempting to hold too long before building proper technique",
+        "Not practicing proper exit technique for safety"
+      ]
     },
     {
       "id": "0039",
@@ -1268,27 +1564,42 @@
         "720p": "https://video.wixstatic.com/video/3864fa_6e8ae70b02064d3888dde07998a7823c/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:35:38.682454",
-      "muscle_groups": [
-        "Full Body"
+      "difficulty": "Beginner",
+      "description": "The happy baby pose is a gentle yoga position that provides deep hip and lower back release. This restorative pose helps calm the nervous system, improves hip flexibility, releases lower back tension, and promotes relaxation while gently massaging the spine.",
+      "primary_muscle": "Hip Flexors",
+      "secondary_muscles": [
+        "Inner Thighs",
+        "Lower Back",
+        "Glutes"
       ],
-      "exercise_types": [
-        "Yoga"
-      ],
-      "description": "This yoga pose helps improve flexibility, balance, and mindfulness while targeting the full body. Regular practice promotes relaxation, stress relief, enhanced body awareness, and improved postural alignment.",
-      "steps": [
-        "Lie on your back with your knees bent toward your chest",
-        "Grab the outside edges of your feet with your hands",
-        "Keep your knees wider than your torso, arms inside your legs",
-        "Gently pull your feet down toward the floor beside your ribs",
-        "Keep your lower back pressed into the mat throughout",
-        "Rock gently from side to side if it feels comfortable",
-        "Breathe deeply and hold for 30 seconds to 1 minute",
-        "Release slowly and hug your knees to your chest"
-      ],
-      "equipment": [
+      "equipment_needed": [
         "Bodyweight"
       ],
-      "difficulty": "Beginner"
+      "steps": [
+        "Lie on your back on a comfortable surface with your knees bent toward your chest",
+        "Grab the outside edges of your feet with your hands, arms inside your legs",
+        "Keep your knees wider than your torso, opening your hips naturally",
+        "Gently pull your feet down toward the floor beside your ribs",
+        "Keep your lower back pressed firmly into the mat throughout the pose",
+        "Rock gently from side to side if it feels comfortable and natural",
+        "Breathe deeply and hold the position for 30 seconds to 2 minutes",
+        "Release slowly and hug your knees gently to your chest to finish"
+      ],
+      "pro_tips": [
+        "Keep your lower back grounded - don't let it lift off the floor",
+        "If you can't reach your feet, hold your ankles or shins instead",
+        "The gentle rocking motion can provide a nice spinal massage",
+        "Focus on relaxing and breathing deeply rather than forcing the stretch",
+        "This pose should feel calming and restorative, never forced"
+      ],
+      "common_mistakes": [
+        "Lifting the lower back off the floor instead of keeping it grounded",
+        "Forcing the knees too wide or pulling too aggressively",
+        "Holding the breath instead of breathing deeply and naturally",
+        "Tensing the shoulders and neck instead of staying relaxed",
+        "Trying to make the pose look perfect instead of focusing on how it feels",
+        "Holding the pose when it causes discomfort instead of releasing"
+      ]
     },
     {
       "id": "0040",
@@ -1299,137 +1610,190 @@
         "720p": "https://video.wixstatic.com/video/3864fa_f4c5390c4af84980a946bb7e5f4683ab/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:35:42.038196",
-      "muscle_groups": [
-        "Abdominals",
+      "difficulty": "Advanced",
+      "description": "Hanging leg raises are one of the most challenging core exercises that build exceptional abdominal strength and grip endurance. This advanced movement targets the entire core while also strengthening the grip and lats, making it a comprehensive upper body and core exercise.",
+      "primary_muscle": "Rectus Abdominis",
+      "secondary_muscles": [
         "Hip Flexors",
-        "Forearms"
+        "Obliques",
+        "Forearms",
+        "Latissimus Dorsi"
       ],
-      "exercise_types": [
-        "Calisthenics",
-        "Strength"
-      ],
-      "description": "Hanging leg raises are an advanced core exercise that primarily targets the rectus abdominis, obliques, and hip flexors. This challenging movement also strengthens grip and forearm muscles while building exceptional core strength, improving hanging endurance, and developing functional abdominal power.",
-      "steps": [
-        "Hang from a pull-up bar with an overhand grip, arms fully extended",
-        "Keep your shoulders pulled down and engage your lats for stability",
-        "Start with your legs hanging straight down, feet together",
-        "Engage your core and lift your legs by flexing your hips",
-        "Raise your legs until they're parallel to the ground or higher",
-        "Keep your legs straight and avoid swinging or using momentum",
-        "Pause briefly at the top, feeling the contraction in your abs",
-        "Lower your legs slowly back to the starting position with control",
-        "Avoid letting your legs swing back - maintain constant tension",
-        "Breathe out during the lift and in during the lowering phase"
-      ],
-      "equipment": [
-        "Bodyweight",
+      "equipment_needed": [
         "Pull-up Bar"
       ],
-      "difficulty": "Advanced"
+      "steps": [
+        "Hang from a pull-up bar with an overhand grip, arms fully extended",
+        "Keep your shoulders pulled down and back, engaging your lats for stability",
+        "Start with your legs hanging straight down, feet together",
+        "Engage your core and lift your legs by flexing at the hips",
+        "Raise your legs until they're parallel to the ground or higher if possible",
+        "Keep your legs as straight as possible and avoid swinging or using momentum",
+        "Pause briefly at the top, feeling the strong contraction in your abs",
+        "Lower your legs slowly back to the starting position with complete control",
+        "Avoid letting your legs swing back - maintain constant tension throughout",
+        "Breathe out during the lifting phase and in during the lowering phase"
+      ],
+      "pro_tips": [
+        "Start with bent-knee raises if straight legs are too difficult initially",
+        "Focus on lifting your pelvis up, not just your legs",
+        "Think about bringing your pubic bone toward your ribcage",
+        "Keep your shoulders active and engaged throughout the entire set",
+        "Build up your hanging time gradually to develop grip strength"
+      ],
+      "common_mistakes": [
+        "Using momentum and swinging instead of controlled muscle contraction",
+        "Not lifting high enough to engage the lower abs effectively",
+        "Allowing the shoulders to relax and hang passively",
+        "Moving too quickly through the range of motion",
+        "Not controlling the eccentric (lowering) phase properly",
+        "Attempting this exercise without sufficient grip or core strength"
+      ]
     },
     {
       "id": "0041",
-      "title": "Hand Stand Hold",
+      "title": "Handstand Hold",
       "slug": "hand-stand-hold",
       "url": "https://www.exerciseanimatic.com/product-page/hand-stand-hold",
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_72843fdb8953466c8da6463eb06c4e08/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:35:48.393414",
-      "muscle_groups": [
-        "Shoulders",
-        "Arms",
-        "Abdominals",
-        "Wrists"
+      "difficulty": "Advanced",
+      "description": "The handstand hold is the ultimate bodyweight exercise for building upper body and core strength while developing exceptional body awareness and balance. This advanced inversion challenges every muscle from your fingertips to your toes, requiring strength, flexibility, and mental focus.",
+      "primary_muscle": "Deltoids",
+      "secondary_muscles": [
+        "Triceps",
+        "Core Stabilizers",
+        "Serratus Anterior",
+        "Wrist Flexors"
       ],
-      "exercise_types": [
-        "Functional",
-        "Calisthenics"
+      "equipment_needed": [
+        "Bodyweight",
+        "Wall (recommended for beginners)"
       ],
-      "description": "The handstand hold is an advanced bodyweight exercise that targets the shoulders, arms, core, and wrists. This challenging inversion builds exceptional upper body and core strength, improves balance and proprioception, enhances shoulder stability, and develops mental focus and body control.",
       "steps": [
-        "Start in a downward dog position against a wall for support",
-        "Place your hands firmly on the ground, fingers spread wide",
+        "Start in a downward dog position with hands about 6 inches from a wall",
+        "Place your hands firmly on the ground, fingers spread wide for stability",
         "Walk your feet up the wall slowly, one foot at a time",
         "Keep your arms straight and shoulders directly over your wrists",
-        "Engage your core and maintain a straight line from hands to feet",
+        "Engage your core strongly and maintain a straight line from hands to feet",
         "Press firmly through your hands and keep your fingers active",
-        "Look down at the ground, keeping your neck in neutral alignment",
-        "Hold the position while breathing steadily and maintaining tension",
+        "Look down at the ground between your hands, keeping your neck neutral",
+        "Hold the position while breathing steadily and maintaining full-body tension",
         "Start with short holds (10-30 seconds) and gradually increase duration",
-        "Exit slowly by walking your feet back down the wall with control"
+        "Exit slowly by walking your feet back down the wall with complete control"
       ],
-      "equipment": [
-        "Bodyweight"
+      "pro_tips": [
+        "Build up wrist strength gradually to prevent injury",
+        "Practice hollow body holds to develop the core strength needed",
+        "Use the wall for support until you can balance independently",
+        "Keep your entire body active and engaged - think 'tight like a board'",
+        "Practice kick-ups against the wall before attempting freestanding handstands"
       ],
-      "difficulty": "Advanced"
+      "common_mistakes": [
+        "Placing hands too close to the wall, causing arching of the back",
+        "Not engaging the core, leading to a banana-shaped position",
+        "Looking up instead of keeping the head in neutral position",
+        "Not spreading fingers wide enough for optimal stability",
+        "Attempting to hold too long before building proper strength",
+        "Not practicing proper entry and exit techniques safely"
+      ]
     },
     {
       "id": "0042",
-      "title": "Seated Toe Touch Hamstrings Stretch",
+      "title": "Seated Toe Touch Hamstring Stretch",
       "slug": "seated-toe-touch-hamstrings-stretch",
       "url": "https://www.exerciseanimatic.com/product-page/seated-toe-touch-hamstrings-stretch",
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_de7c66f41a604c6c8c72ca4df2f75afd/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:35:52.793432",
-      "muscle_groups": [
-        "Hamstrings",
-        "Calves",
-        "Lower Back"
+      "difficulty": "Beginner",
+      "description": "The seated toe touch hamstring stretch is a classic bilateral flexibility exercise that targets the entire posterior chain. This fundamental stretch helps improve hamstring and calf flexibility while also gently stretching the lower back, making it essential for overall mobility and injury prevention.",
+      "primary_muscle": "Hamstrings",
+      "secondary_muscles": [
+        "Gastrocnemius",
+        "Soleus",
+        "Lower Back",
+        "Glutes"
       ],
-      "exercise_types": [
-        "Stretching"
-      ],
-      "description": "The seated toe touch hamstrings stretch targets the hamstrings, calves, and lower back muscles. This classic flexibility exercise helps improve posterior chain mobility, reduce muscle tension, enhance range of motion, and can help alleviate lower back tightness caused by tight hamstrings.",
-      "steps": [
-        "Sit on the floor with both legs extended straight in front of you",
-        "Keep your legs together and your feet flexed upward",
-        "Sit tall with your spine straight and shoulders back",
-        "Place your hands on your thighs or by your sides",
-        "Slowly hinge forward at your hips, reaching toward your toes",
-        "Keep your back straight and avoid rounding your spine",
-        "Reach as far as comfortable, feeling the stretch in your hamstrings",
-        "Hold the stretch for 15-30 seconds while breathing deeply",
-        "Slowly return to the upright position with control"
-      ],
-      "equipment": [
+      "equipment_needed": [
         "Bodyweight"
       ],
-      "difficulty": "Beginner"
+      "steps": [
+        "Sit on the floor with both legs extended straight in front of you",
+        "Keep your legs together and actively flex both feet upward",
+        "Sit as tall as possible with your spine straight and shoulders pulled back",
+        "Place your hands on your thighs or rest them by your sides",
+        "Slowly hinge forward at your hips, reaching toward your toes",
+        "Keep your back straight and avoid rounding your spine forward",
+        "Reach as far as comfortable, feeling the stretch in your hamstrings and calves",
+        "Hold the stretch for 15-30 seconds while breathing deeply and slowly",
+        "Slowly return to the upright sitting position with control"
+      ],
+      "pro_tips": [
+        "Focus on tilting your pelvis forward rather than just reaching with your arms",
+        "Keep your legs completely straight and feet actively flexed",
+        "Don't worry about touching your toes - go only as far as comfortable",
+        "If tight, sit on a folded towel to help tilt your pelvis forward",
+        "Breathe deeply throughout the stretch to help muscles relax"
+      ],
+      "common_mistakes": [
+        "Rounding the spine instead of hinging at the hips",
+        "Bending the knees to reach further forward",
+        "Bouncing or forcing the stretch instead of holding steadily",
+        "Holding the breath during the stretch",
+        "Focusing too much on reaching the toes instead of feeling the stretch",
+        "Not sitting up straight before beginning the forward fold"
+      ]
     },
     {
       "id": "0043",
-      "title": "Lying Single Leg Extended On Wall Hamstrings Stretch",
+      "title": "Lying Single Leg Wall Hamstring Stretch",
       "slug": "lying-single-leg-extended-on-wall-hamstrings-stretch",
       "url": "https://www.exerciseanimatic.com/product-page/lying-single-leg-extended-on-wall-hamstrings-stretch",
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_911d2a9b5c2341e39a3261dd21d6c91f/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:35:53.783496",
-      "muscle_groups": [
-        "Legs",
-        "Hamstrings"
+      "difficulty": "Intermediate",
+      "description": "The lying single leg wall hamstring stretch is an effective way to isolate and stretch each hamstring individually while maintaining proper spinal alignment. Using a wall for support allows for a deeper, more controlled stretch while reducing strain on the lower back.",
+      "primary_muscle": "Hamstrings",
+      "secondary_muscles": [
+        "Gastrocnemius",
+        "Hip Flexors",
+        "Lower Back"
       ],
-      "exercise_types": [
-        "Stretching",
-        "Home workout"
-      ],
-      "description": "This legs stretch is designed to improve flexibility and mobility in the quadriceps, hamstrings, gluteus maximus, biceps femoris. Regular stretching helps reduce muscle tension, improve range of motion, prevent injury, and enhance overall movement quality.",
-      "steps": [
-        "Position yourself properly with the bodyweight, maintaining good posture",
-        "Engage your core and establish a stable base of support",
-        "Begin the movement with control, focusing on proper form",
-        "Move through the full range of motion with deliberate precision",
-        "Maintain tension in the target muscles throughout the exercise",
-        "Control both the concentric and eccentric phases of the movement",
-        "Breathe properly - exhale during exertion, inhale during the return phase",
-        "Complete the prescribed repetitions while maintaining perfect technique"
-      ],
-      "equipment": [
+      "equipment_needed": [
+        "Wall",
         "Bodyweight"
       ],
-      "difficulty": "Intermediate"
+      "steps": [
+        "Lie on your back perpendicular to a wall with your glutes close to the wall base",
+        "Extend one leg straight up the wall while keeping the other leg flat on the floor",
+        "Keep your lower back pressed into the floor throughout the stretch",
+        "Flex the foot of the leg against the wall to increase the stretch intensity",
+        "Gently pull your extended leg closer to your body if you need more stretch",
+        "Hold the position for 30-60 seconds while breathing deeply and steadily",
+        "Switch legs and repeat the stretch on the opposite side",
+        "Focus on maintaining proper alignment rather than forcing the stretch"
+      ],
+      "pro_tips": [
+        "Move closer to or further from the wall to adjust stretch intensity",
+        "Keep your shoulders relaxed and grounded throughout",
+        "Use a towel around your foot if you want to pull your leg closer",
+        "The non-stretching leg should remain completely straight on the floor",
+        "This position allows gravity to assist with the stretch naturally"
+      ],
+      "common_mistakes": [
+        "Lifting the lower back off the floor instead of keeping it grounded",
+        "Bending the leg that's supposed to be straight on the floor",
+        "Forcing the stretch by pulling too aggressively",
+        "Not positioning properly in relation to the wall",
+        "Tensing the shoulders and neck instead of staying relaxed",
+        "Holding the breath instead of breathing naturally through the stretch"
+      ]
     },
     {
       "id": "0044",
@@ -1440,27 +1804,42 @@
         "720p": "https://video.wixstatic.com/video/3864fa_691ced5168c34fff8a97419bf2bb0bda/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:36:00.791277",
-      "muscle_groups": [
-        "Neck"
+      "difficulty": "Beginner",
+      "description": "Half neck rolls are a gentle cervical mobility exercise that helps relieve neck tension and improve range of motion. This safe alternative to full neck circles reduces compression risk while effectively stretching the neck muscles that commonly become tight from poor posture and prolonged computer use.",
+      "primary_muscle": "Sternocleidomastoid",
+      "secondary_muscles": [
+        "Upper Trapezius",
+        "Levator Scapulae",
+        "Scalenes"
       ],
-      "exercise_types": [
-        "Functional"
-      ],
-      "description": "Half neck rolls are a gentle mobility exercise that targets the sternocleidomastoid, scalenes, upper trapezius, and levator scapulae muscles. This controlled movement helps relieve neck tension, improve cervical spine mobility, and counteract the forward head posture common from prolonged computer use. The half-roll motion is safer than full circles, reducing the risk of cervical compression.",
-      "steps": [
-        "Stand or sit with your spine straight and shoulders relaxed",
-        "Keep your head in a neutral position looking straight ahead",
-        "Slowly tilt your head to one side, bringing your ear toward your shoulder",
-        "Roll your head forward, dropping your chin toward your chest",
-        "Continue the rolling motion to the opposite side",
-        "Hold briefly at each position, feeling a gentle stretch",
-        "Reverse the direction and roll back to the starting position",
-        "Perform slowly and never force the movement beyond comfortable range"
-      ],
-      "equipment": [
+      "equipment_needed": [
         "Bodyweight"
       ],
-      "difficulty": "Beginner"
+      "steps": [
+        "Stand or sit with your spine straight and shoulders relaxed down and back",
+        "Keep your head in a neutral position, looking straight ahead",
+        "Slowly tilt your head to one side, bringing your ear toward your shoulder",
+        "Roll your head forward slowly, dropping your chin toward your chest",
+        "Continue the rolling motion to the opposite side in a smooth arc",
+        "Hold briefly at each position, feeling a gentle stretch in your neck",
+        "Reverse the direction and roll back through the same path",
+        "Perform the movement slowly and never force it beyond comfortable range"
+      ],
+      "pro_tips": [
+        "Never roll your head backward as this can compress cervical vertebrae",
+        "Move slowly and mindfully - this is about mobility, not speed",
+        "Stop immediately if you feel any pain or dizziness",
+        "Keep your shoulders relaxed and avoid lifting them during the movement",
+        "Practice this regularly throughout the day if you work at a computer"
+      ],
+      "common_mistakes": [
+        "Rolling the head in complete circles, including backward extension",
+        "Moving too quickly without control",
+        "Forcing the movement beyond comfortable range of motion",
+        "Tensing the shoulders instead of keeping them relaxed",
+        "Continuing the exercise if pain or dizziness occurs",
+        "Not maintaining good posture in the rest of the body"
+      ]
     },
     {
       "id": "0045",
@@ -1471,89 +1850,135 @@
         "720p": "https://video.wixstatic.com/video/3864fa_da8e902013114103b16f8f3975dda49d/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:36:02.102881",
-      "muscle_groups": [
-        "Full Body"
+      "difficulty": "Intermediate",
+      "description": "The half monkey pose is a preparatory yoga posture that builds toward the full splits while providing an excellent hamstring and hip flexor stretch. This pose combines balance, flexibility, and strength while teaching proper alignment for deeper hip opening poses.",
+      "primary_muscle": "Hamstrings",
+      "secondary_muscles": [
+        "Hip Flexors",
+        "Calves",
+        "Quadriceps"
       ],
-      "exercise_types": [
-        "Functional"
-      ],
-      "description": "This yoga pose helps improve flexibility, balance, and mindfulness while targeting the full body. Regular practice promotes relaxation, stress relief, enhanced body awareness, and improved postural alignment.",
-      "steps": [
-        "Position yourself properly with the bodyweight, maintaining good posture",
-        "Engage your core and establish a stable base of support",
-        "Begin the movement with control, focusing on proper form",
-        "Move through the full range of motion with deliberate precision",
-        "Maintain tension in the target muscles throughout the exercise",
-        "Control both the concentric and eccentric phases of the movement",
-        "Breathe properly - exhale during exertion, inhale during the return phase",
-        "Complete the prescribed repetitions while maintaining perfect technique"
-      ],
-      "equipment": [
+      "equipment_needed": [
         "Bodyweight"
       ],
-      "difficulty": "Beginner"
+      "steps": [
+        "Start in a low lunge position with your right foot forward",
+        "Place your hands on the floor on either side of your front foot",
+        "Slowly straighten your front leg while keeping your back knee on the ground",
+        "Shift your weight back over your back leg as you extend the front leg",
+        "Keep your front foot flexed and your hands firmly planted for support",
+        "Feel the stretch along the back of your front leg (hamstring)",
+        "Hold the position for 30-60 seconds while breathing deeply",
+        "Return to the lunge position and switch sides to stretch the other leg"
+      ],
+      "pro_tips": [
+        "Keep your hips square and avoid rotating to one side",
+        "Use blocks under your hands if you can't reach the floor comfortably",
+        "Focus on lengthening your spine rather than just folding forward",
+        "This pose prepares you for the full monkey pose (Hanumanasana)",
+        "Keep the back leg active and engaged, not just resting on the knee"
+      ],
+      "common_mistakes": [
+        "Rounding the back instead of maintaining a long spine",
+        "Allowing the hips to rotate instead of keeping them square",
+        "Forcing the front leg straight before the hamstring is ready",
+        "Not supporting yourself properly with your hands",
+        "Holding the breath instead of breathing through the stretch",
+        "Putting too much pressure on the back knee"
+      ]
     },
     {
       "id": "0046",
-      "title": "Seated Figure Four With Twist Glute Stretch",
+      "title": "Seated Figure Four with Twist Glute Stretch",
       "slug": "seated-figure-four-with-twist-glute-stretch",
       "url": "https://www.exerciseanimatic.com/product-page/seated-figure-four-with-twist-glute-stretch",
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_c4801c4743ed45639560c9dfd622743c/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:36:08.549658",
-      "muscle_groups": [
-        "Glutes"
+      "difficulty": "Intermediate",
+      "description": "The seated figure four with twist combines a deep glute stretch with spinal rotation, targeting multiple areas of tightness simultaneously. This compound stretch addresses both hip mobility and spinal rotation while providing an excellent stretch for the piriformis and IT band.",
+      "primary_muscle": "Gluteus Maximus",
+      "secondary_muscles": [
+        "Piriformis",
+        "IT Band",
+        "Spinal Rotators",
+        "Hip Flexors"
       ],
-      "exercise_types": [
-        "Stretching"
+      "equipment_needed": [
+        "Chair or bench"
       ],
-      "description": "This glutes stretch is designed to improve flexibility and mobility in the gluteus maximus, gluteus medius. Regular stretching helps reduce muscle tension, improve range of motion, prevent injury, and enhance overall movement quality.",
       "steps": [
-        "Position yourself properly with the bodyweight, maintaining good posture",
-        "Engage your core and establish a stable base of support",
-        "Begin the movement with control, focusing on proper form",
-        "Move through the full range of motion with deliberate precision",
-        "Maintain tension in the target muscles throughout the exercise",
-        "Control both the concentric and eccentric phases of the movement",
-        "Breathe properly - exhale during exertion, inhale during the return phase",
-        "Complete the prescribed repetitions while maintaining perfect technique"
+        "Sit on the edge of a sturdy chair or bench with your feet flat on the floor",
+        "Place your right ankle on top of your left thigh, creating a figure-four shape",
+        "Gently press down on your right knee to deepen the hip stretch",
+        "Place your left hand on your right knee for support",
+        "Slowly twist your torso to the right, using your right hand for balance",
+        "Feel the stretch in your right glute and the rotation through your spine",
+        "Hold the combined stretch for 30-45 seconds while breathing deeply",
+        "Return to center and repeat on the opposite side"
       ],
-      "equipment": [
-        "Bodyweight"
+      "pro_tips": [
+        "Keep your spine tall throughout the twist - don't collapse",
+        "The twist should come from your mid-back, not forcing from your lower back",
+        "Adjust the ankle placement on your thigh to modify stretch intensity",
+        "Keep both sit bones grounded on the chair throughout",
+        "This stretch is excellent for counteracting prolonged sitting"
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Rounding the spine instead of maintaining length through the torso",
+        "Forcing the twist from the lower back instead of the thoracic spine",
+        "Pressing too aggressively on the knee, causing hip strain",
+        "Not keeping both sit bones anchored to the seat",
+        "Holding the breath during the combined stretch",
+        "Trying to twist too far without proper hip flexibility first"
+      ]
     },
     {
       "id": "0047",
-      "title": "Lying Knee Pull Glutes Stretch",
+      "title": "Lying Knee Pull Glute Stretch",
       "slug": "lying-knee-pull-glutes-stretch",
       "url": "https://www.exerciseanimatic.com/product-page/lying-knee-pull-glutes-stretch",
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_b7038e6300e840239690e04b4cee4d7d/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:36:09.898145",
-      "muscle_groups": [
-        "Glutes"
+      "difficulty": "Beginner",
+      "description": "The lying knee pull glute stretch is a gentle, accessible way to stretch the glutes and lower back. This supine position reduces strain on the spine while allowing for a controlled stretch that's perfect for beginners or those with back sensitivity.",
+      "primary_muscle": "Gluteus Maximus",
+      "secondary_muscles": [
+        "Lower Back",
+        "Hip Flexors",
+        "Piriformis"
       ],
-      "exercise_types": [
-        "Stretching"
-      ],
-      "description": "This glutes stretch is designed to improve flexibility and mobility in the gluteus maximus, gluteus medius. Regular stretching helps reduce muscle tension, improve range of motion, prevent injury, and enhance overall movement quality.",
-      "steps": [
-        "Position yourself properly with the bodyweight, maintaining good posture",
-        "Engage your core and establish a stable base of support",
-        "Begin the movement with control, focusing on proper form",
-        "Move through the full range of motion with deliberate precision",
-        "Maintain tension in the target muscles throughout the exercise",
-        "Control both the concentric and eccentric phases of the movement",
-        "Breathe properly - exhale during exertion, inhale during the return phase",
-        "Complete the prescribed repetitions while maintaining perfect technique"
-      ],
-      "equipment": [
+      "equipment_needed": [
         "Bodyweight"
       ],
-      "difficulty": "Beginner"
+      "steps": [
+        "Lie on your back on a comfortable surface with both legs extended",
+        "Bend your right knee and bring it toward your chest",
+        "Interlace your fingers behind your right thigh or on top of your shin",
+        "Gently pull your knee closer to your chest until you feel a stretch",
+        "Keep your left leg extended and pressed into the floor",
+        "Relax your shoulders and keep your head on the ground",
+        "Hold the stretch for 30-60 seconds while breathing naturally",
+        "Lower your right leg back down and repeat with your left leg"
+      ],
+      "pro_tips": [
+        "Pull from behind the thigh rather than the shin if you have knee issues",
+        "Keep the non-stretching leg actively pressed into the floor",
+        "Focus on drawing the knee toward the same-side shoulder for optimal stretch",
+        "This stretch can be done in bed as part of a morning routine",
+        "Gentle rocking side to side can provide additional release"
+      ],
+      "common_mistakes": [
+        "Lifting the head or shoulders off the ground during the stretch",
+        "Allowing the extended leg to lift up instead of staying grounded",
+        "Pulling too aggressively instead of using gentle, sustained pressure",
+        "Holding the breath instead of breathing naturally",
+        "Not relaxing the shoulders and neck during the stretch",
+        "Pulling on the shin instead of the thigh if you have knee sensitivity"
+      ]
     },
     {
       "id": "0048",
@@ -1564,27 +1989,42 @@
         "720p": "https://video.wixstatic.com/video/3864fa_54ff40bdf99644ee9472e2dcde40f024/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:36:14.165104",
-      "muscle_groups": [
-        "Full Body"
+      "difficulty": "Intermediate",
+      "description": "The half lotus is a seated meditation pose that improves hip flexibility while providing a stable base for breathing and mindfulness practices. This pose opens the hips and encourages proper spinal alignment, making it an excellent position for meditation and pranayama.",
+      "primary_muscle": "Hip Flexors",
+      "secondary_muscles": [
+        "Inner Thighs",
+        "Glutes",
+        "Piriformis"
       ],
-      "exercise_types": [
-        "Yoga"
-      ],
-      "description": "This yoga pose helps improve flexibility, balance, and mindfulness while targeting the full body. Regular practice promotes relaxation, stress relief, enhanced body awareness, and improved postural alignment.",
-      "steps": [
-        "Sit cross-legged on a comfortable surface with your spine straight",
-        "Place your right foot on top of your left thigh, sole facing up",
-        "Gently place your left foot on top of your right thigh",
-        "Keep your spine erect and shoulders relaxed",
-        "Rest your hands on your knees or in a mudra position",
-        "Close your eyes and focus on your natural breath",
-        "Hold the position for 1-5 minutes, breathing slowly and deeply",
-        "Release slowly and shake out your legs to prevent stiffness"
-      ],
-      "equipment": [
+      "equipment_needed": [
         "Bodyweight"
       ],
-      "difficulty": "Beginner"
+      "steps": [
+        "Sit cross-legged on a comfortable surface with your spine naturally erect",
+        "Place your right foot on top of your left thigh, with the sole facing upward",
+        "Allow your left foot to rest naturally under your right thigh",
+        "Keep your spine straight and shoulders relaxed down and back",
+        "Rest your hands on your knees or in your preferred mudra position",
+        "Close your eyes gently and focus on your natural breathing pattern",
+        "Hold the position for 1-5 minutes, breathing slowly and deeply",
+        "Release slowly and gently shake out your legs before switching sides"
+      ],
+      "pro_tips": [
+        "Sit on a cushion or folded blanket to help tilt your pelvis forward",
+        "Switch which leg is on top to maintain balanced hip flexibility",
+        "Don't force your foot onto your thigh - work gradually toward this position",
+        "If uncomfortable, start with simple cross-legged sitting",
+        "Focus on the quality of your posture rather than achieving the perfect form"
+      ],
+      "common_mistakes": [
+        "Forcing the foot onto the thigh before sufficient hip flexibility",
+        "Slumping the spine instead of maintaining erect posture",
+        "Creating tension in the shoulders and neck",
+        "Staying in the pose too long initially, causing knee or hip strain",
+        "Not alternating which leg is on top over time",
+        "Focusing more on the pose than on the breath and meditation"
+      ]
     },
     {
       "id": "0049",
@@ -1595,67 +2035,91 @@
         "720p": "https://video.wixstatic.com/video/3864fa_3281cd52e7f743ba98b53c35cb9eb028/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:36:17.978260",
-      "muscle_groups": [
+      "difficulty": "Intermediate",
+      "description": "Good mornings are a fundamental hip-hinge movement that strengthens the entire posterior chain while teaching proper bending mechanics. This exercise is essential for developing lower back strength, hamstring flexibility, and the movement pattern used in deadlifts and daily activities.",
+      "primary_muscle": "Erector Spinae",
+      "secondary_muscles": [
         "Hamstrings",
-        "Glutes",
-        "Lower Back"
+        "Gluteus Maximus",
+        "Core Stabilizers"
       ],
-      "exercise_types": [
-        "Functional",
-        "Strength"
-      ],
-      "description": "Good mornings are a fundamental hip-hinge exercise that targets the posterior chain, primarily the hamstrings, glutes, and erector spinae. This movement pattern is essential for developing proper bending mechanics, strengthening the lower back, and improving hip mobility and stability.",
-      "steps": [
-        "Stand with feet shoulder-width apart, hands behind your head",
-        "Keep your chest up and shoulders pulled back throughout",
-        "Engage your core and maintain a neutral spine",
-        "Initiate the movement by pushing your hips back",
-        "Hinge at the hips while keeping your knees slightly bent",
-        "Lower your torso until you feel a stretch in your hamstrings",
-        "Keep your weight on your heels and maintain a straight back",
-        "Drive your hips forward to return to the starting position",
-        "Focus on the hip hinge movement rather than knee bending",
-        "Start with bodyweight only before adding any external load"
-      ],
-      "equipment": [
+      "equipment_needed": [
         "Bodyweight"
       ],
-      "difficulty": "Beginner"
+      "steps": [
+        "Stand with feet shoulder-width apart, hands placed gently behind your head",
+        "Keep your chest up and shoulders pulled back throughout the movement",
+        "Engage your core and maintain a neutral spine alignment",
+        "Initiate the movement by pushing your hips back like closing a car door",
+        "Hinge at the hips while keeping your knees only slightly bent",
+        "Lower your torso until you feel a moderate stretch in your hamstrings",
+        "Keep your weight distributed on your heels and maintain a straight back",
+        "Drive your hips forward to return to the upright starting position",
+        "Focus on the hip hinge movement pattern rather than knee bending",
+        "Master this movement with bodyweight before considering added resistance"
+      ],
+      "pro_tips": [
+        "Think about sticking your butt back rather than just leaning forward",
+        "Keep your knees soft but not actively bending",
+        "Stop at the point where you feel hamstring stretch, not lower back strain",
+        "This movement teaches the same pattern as deadlifts and kettlebell swings",
+        "Practice in front of a mirror to ensure proper hip hinge technique"
+      ],
+      "common_mistakes": [
+        "Rounding the back instead of hinging at the hips",
+        "Bending the knees too much, turning it into a squat movement",
+        "Going too low and straining the lower back",
+        "Not pushing the hips back far enough at the start",
+        "Placing too much pressure on the neck with the hands",
+        "Using momentum instead of controlled movement"
+      ]
     },
     {
       "id": "0050",
-      "title": "Pigeon Glutes Stretch",
+      "title": "Pigeon Glute Stretch",
       "slug": "pigeon-glutes-stretch",
       "url": "https://www.exerciseanimatic.com/product-page/pigeon-glutes-stretch",
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_712a6ce5a81b4744b72927625da48d51/720p/mp4/file.mp4"
       },
       "extracted_at": "2025-08-21T11:36:23.935881",
-      "muscle_groups": [
-        "Glutes",
+      "difficulty": "Intermediate",
+      "description": "The pigeon glute stretch is one of the most effective hip openers in yoga, providing a deep stretch for the glutes, hip flexors, and piriformis. This pose helps counteract the effects of prolonged sitting and is particularly beneficial for runners and cyclists who develop tight hips.",
+      "primary_muscle": "Gluteus Maximus",
+      "secondary_muscles": [
+        "Piriformis",
         "Hip Flexors",
-        "Piriformis"
+        "IT Band"
       ],
-      "exercise_types": [
-        "Yoga",
-        "Stretching"
-      ],
-      "description": "The pigeon glutes stretch is a deep hip opener that targets the glutes, hip flexors, and piriformis muscle. This yoga-inspired stretch helps improve hip mobility, releases tension in the deep hip muscles, and can help alleviate lower back pain caused by tight hips.",
-      "steps": [
-        "Start in a downward dog position or on your hands and knees",
-        "Bring your right knee forward and place it behind your right wrist",
-        "Angle your right shin toward the front of your mat, parallel if possible",
-        "Extend your left leg straight back behind you",
-        "Square your hips as much as possible toward the front of the mat",
-        "Place your hands on either side of your front leg for support",
-        "Slowly lower your torso down, feeling the stretch in your right glute",
-        "Hold the stretch for 30 seconds to 2 minutes, breathing deeply",
-        "Switch sides and repeat the stretch with your left leg forward"
-      ],
-      "equipment": [
+      "equipment_needed": [
         "Bodyweight"
       ],
-      "difficulty": "Beginner"
+      "steps": [
+        "Start in a tabletop position on your hands and knees",
+        "Bring your right knee forward and place it behind your right wrist",
+        "Angle your right shin as parallel to the front of your mat as comfortable",
+        "Extend your left leg straight back behind you, keeping the top of the foot down",
+        "Square your hips as much as possible toward the front of your space",
+        "Place your hands on either side of your front leg for support",
+        "Slowly lower your torso down, feeling the deep stretch in your right glute",
+        "Hold the stretch for 30 seconds to 2 minutes while breathing deeply",
+        "Press back through your hands and switch sides to repeat"
+      ],
+      "pro_tips": [
+        "Use a bolster or pillow under your front hip if the stretch is too intense",
+        "Don't worry if your shin isn't parallel - work within your range",
+        "Keep your back leg straight and active to enhance the hip flexor stretch",
+        "This pose can bring up emotional release - breathe through any intensity",
+        "Practice regularly as hip opening takes time and consistency"
+      ],
+      "common_mistakes": [
+        "Forcing the front shin to be parallel before sufficient hip flexibility",
+        "Collapsing over the front leg instead of maintaining some lift in the torso",
+        "Allowing the back leg to turn out instead of keeping it straight",
+        "Not supporting yourself adequately with props when needed",
+        "Pushing too hard into the stretch instead of allowing gradual opening",
+        "Holding the breath during intense sensations instead of breathing through them"
+      ]
     },
     {
       "id": "0051",
