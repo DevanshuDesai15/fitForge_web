@@ -30,12 +30,12 @@ import {
     MdClose,
 } from 'react-icons/md';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
-import { db } from '../firebase/config';
-import { useAuth } from '../contexts/AuthContext';
+import { db } from '../../firebase/config';
+import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { getWeightUnit } from '../utils/weightUnit';
+import { getWeightUnit } from '../../utils/weightUnit';
 // Date utils no longer needed for new calendar
-import WorkoutCalendar from './WorkoutCalendar';
+import WorkoutCalendar from '../Workout/WorkoutCalendar';
 import {
     format,
     isSameDay

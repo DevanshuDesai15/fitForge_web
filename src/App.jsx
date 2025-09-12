@@ -3,18 +3,18 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from '@mui/material';
 import { theme } from './theme/theme';
-import ProtectedRoute from './components/ProtectedRoute';
-import Layout from './components/Layout';
+import ProtectedRoute from './components/layout/ProtectedRoute';
+import Layout from './components/layout/Layout';
 
 // Main components
-import Home from './components/Home';
-import SignIn from './components/SignIn';
-import SignUp from './components/SignUp';
-import Profile from './components/Profile';
+import Home from './pages/Home';
+import SignIn from './pages/Auth/SignIn';
+import SignUp from './pages/Auth/SignUp';
+import Profile from './pages/Profile';
 import Workout from './components/Workout';
-import History from './components/History';
+import History from './pages/History';
 import Progress from './components/Progress';
-import ExerciseManager from './components/ExerciseManager';
+import ExerciseManager from './components/workout/ExerciseManager';
 
 // Workout sub-components
 import StartWorkout from './components/workout/StartWorkout';
@@ -24,9 +24,9 @@ import QuickAdd from './components/workout/QuickAdd';
 import ExerciseDetail from './components/workout/ExerciseDetail';
 import TimerTest from './components/test/TimerTest';
 import CalendarTest from './components/test/CalendarTest';
-import LandingPage from './components/LandingPage';
-import PublicRoute from './components/PublicRoute';
-import DefaultRoute from './components/DefaultRoute';
+import LandingPage from './pages/Landing/LandingPage';
+import PublicRoute from './components/layout/PublicRoute';
+import DefaultRoute from './components/layout/DefaultRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Wrapper component to handle conditional styling

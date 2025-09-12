@@ -1,5 +1,5 @@
 import { AppBar, Toolbar, Typography, useTheme, useMediaQuery, Box } from '@mui/material';
-import shortLogo from '../assets/shortLogo.svg';
+import shortLogo from '../../assets/shortLogo.svg';
 
 export default function Header() {
     const theme = useTheme();

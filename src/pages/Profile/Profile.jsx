@@ -22,14 +22,14 @@ import {
     FormControl
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { updateEmail, updatePassword } from 'firebase/auth';
-import { db } from '../firebase/config';
+import { db } from '../../firebase/config';
 import { MdArrowBack, MdPerson, MdEmail, MdLock, MdSave, MdLogout, MdSettings, MdCleaningServices, MdFitnessCenter, MdAccountCircle, MdVerified } from "react-icons/md";
-import maleAvatar from '../assets/image/avatars/maleAv.png';
-import femaleAvatar from '../assets/image/avatars/femaleAv.png';
+import maleAvatar from '../../assets/image/avatars/maleAv.png';
+import femaleAvatar from '../../assets/image/avatars/femaleAv.png';
 
 const ProfileHeaderCard = styled(Paper)(() => ({
     background: '#282828',

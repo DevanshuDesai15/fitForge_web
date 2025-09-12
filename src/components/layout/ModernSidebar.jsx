@@ -12,8 +12,8 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import appLogo from '../assets/appLogo.svg';
+import { useAuth } from '../../contexts/AuthContext';
+import appLogo from '../../assets/appLogo.svg';
 import {
     Home,
     Activity,
@@ -173,13 +173,13 @@ export default function ModernSidebar() {
         <SidebarContainer>
             {/* Brand Section */}
             <BrandSection>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2, mb: 1 }}>
                     <Box
                         component="img"
                         src={appLogo}
                         alt="FitForge Logo"
                         sx={{
-                            height: 40,
+                            height: 80,
                             width: 'auto'
                         }}
                     />

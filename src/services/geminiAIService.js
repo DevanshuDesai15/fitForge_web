@@ -35,8 +35,8 @@ class GeminiAIService {
 
     // 🚨 Emergency brake - completely disable API if too many requests
     this.emergencyBrake = {
-      isActive: true, // 🚨 FORCE DISABLE until 429 issue is resolved
-      dailyRequestCount: 999, // Set high to trigger emergency brake
+      isActive: false, // Start with the brake off
+      dailyRequestCount: 0, // Start with 0 requests
       dailyResetTime: Date.now(),
       maxDailyRequests: 100, // Hard limit per day
       activationThreshold: 10, // Very low threshold (10 requests)

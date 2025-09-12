@@ -1,6 +1,6 @@
-import { useAuth } from '../contexts/AuthContext';
-import LandingPage from './LandingPage';
-import Home from './Home';
+import { useAuth } from '../../contexts/AuthContext';
+import LandingPage from '../../pages/Landing/LandingPage';
+import Home from '../../pages/Home/Home';
 import Layout from './Layout';
 
 export default function DefaultRoute() {

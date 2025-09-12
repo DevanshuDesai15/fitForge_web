@@ -23,12 +23,14 @@ import {
     MdFavorite,
     MdHistory,
     MdClose,
-    MdArrowDropDown
+    MdArrowDropDown,
+    MdLightbulb
 } from 'react-icons/md';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useAuth } from '../../contexts/AuthContext';
 import { fetchExercisesByName } from '../../services/localExerciseService';
+import progressiveOverloadAI from '../../services/progressiveOverloadAI';
 
 const SearchContainer = styled(Box)(() => ({
     position: 'relative',
@@ -132,6 +134,8 @@ export default function ExerciseSelector({
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [recentExercises, setRecentExercises] = useState([]);
     const [selectedExercises, setSelectedExercises] = useState([]);
+    const [exerciseVariations, setExerciseVariations] = useState([]);
+    const [showVariations, setShowVariations] = useState(false);
 
     const { currentUser } = useAuth();
     const theme = useTheme();
@@ -183,6 +187,8 @@ export default function ExerciseSelector({
         try {
             const results = await fetchExercisesByName(term);
             console.log('📋 Search results:', results.length, 'exercises found');
+
+            // Format results and detect similar exercises
             const formattedResults = results.map(exercise => ({
                 id: exercise.id,
                 name: exercise.name,
@@ -191,6 +197,20 @@ export default function ExerciseSelector({
                 bodyPart: exercise.bodyPart,
                 type: 'api'
             }));
+
+            // Find exercise variations if user has workout history
+            if (currentUser && formattedResults.length > 0) {
+                try {
+                    const variations = await findExerciseVariations(formattedResults[0]);
+                    setExerciseVariations(variations);
+                    setShowVariations(variations.length > 0);
+                } catch (error) {
+                    console.log('No variations found:', error.message);
+                    setExerciseVariations([]);
+                    setShowVariations(false);
+                }
+            }
+
             setSuggestions(formattedResults);
             setShowSuggestions(true);
             console.log('✅ Showing suggestions, count:', formattedResults.length);
@@ -202,8 +222,88 @@ export default function ExerciseSelector({
         }
     };
 
-    const handleExerciseSelect = (exercise) => {
+    const findExerciseVariations = async (selectedExercise) => {
+        if (!currentUser || !selectedExercise) return [];
+
+        try {
+            // Get similar exercises based on target muscle and equipment
+            const similarResults = await fetchExercisesByName(selectedExercise.target);
+
+            // Filter for exercises with same target muscle but different equipment/name
+            const variations = similarResults
+                .filter(exercise =>
+                    exercise.target === selectedExercise.target &&
+                    exercise.name !== selectedExercise.name &&
+                    (exercise.equipment !== selectedExercise.equipment ||
+                        exercise.bodyPart === selectedExercise.bodyPart)
+                )
+                .slice(0, 3) // Limit to 3 variations
+                .map(exercise => ({
+                    id: exercise.id,
+                    name: exercise.name,
+                    target: exercise.target,
+                    equipment: exercise.equipment,
+                    bodyPart: exercise.bodyPart,
+                    type: 'variation',
+                    originalExercise: selectedExercise.name
+                }));
+
+            // Try to get progression data for variations
+            const variationsWithProgression = await Promise.all(
+                variations.map(async (variation) => {
+                    try {
+                        const progression = await progressiveOverloadAI.calculateNextProgression(
+                            currentUser.uid,
+                            variation.name
+                        );
+                        return {
+                            ...variation,
+                            hasProgressionData: progression && progression.confidenceLevel > 0.3,
+                            suggestedWeight: progression?.suggestedWeight,
+                            suggestedReps: progression?.suggestedReps,
+                            progressionReasoning: progression?.reasoning
+                        };
+                    } catch (error) {
+                        return {
+                            ...variation,
+                            hasProgressionData: false
+                        };
+                    }
+                })
+            );
+
+            return variationsWithProgression;
+        } catch (error) {
+            console.error('Error finding exercise variations:', error);
+            return [];
+        }
+    };
+
+    const handleExerciseSelect = async (exercise) => {
         console.log('🏋️ Exercise selected:', exercise.name);
+
+        // If this is a variation, try to transfer progression data
+        if (exercise.type === 'variation' && exercise.originalExercise && currentUser) {
+            try {
+                const originalProgression = await progressiveOverloadAI.calculateNextProgression(
+                    currentUser.uid,
+                    exercise.originalExercise
+                );
+
+                if (originalProgression && originalProgression.confidenceLevel > 0.5) {
+                    // Transfer progression data to the variation
+                    exercise.defaultWeight = originalProgression.currentWeight;
+                    exercise.defaultReps = originalProgression.currentReps;
+                    exercise.defaultSets = originalProgression.currentSets;
+                    exercise.notes = `Variation of ${exercise.originalExercise}. Previous: ${originalProgression.currentWeight}kg × ${originalProgression.currentReps} reps`;
+
+                    console.log(`📊 Transferred progression data from ${exercise.originalExercise} to ${exercise.name}`);
+                }
+            } catch (error) {
+                console.log('Could not transfer progression data:', error.message);
+            }
+        }
+
         if (multiSelect) {
             if (!selectedExercises.find(ex => ex.id === exercise.id)) {
                 setSelectedExercises(prev => [...prev, exercise]);
@@ -212,6 +312,7 @@ export default function ExerciseSelector({
             setSearchTerm(exercise.name);
             setShowSuggestions(false);
             setIsDropdownOpen(false);
+            setShowVariations(false);
             onExerciseSelect(exercise);
         }
     };
@@ -334,6 +435,96 @@ export default function ExerciseSelector({
                                     </Box>
                                 </SuggestionItem>
                             ))}
+
+                            {/* Exercise Variations Section */}
+                            {showVariations && exerciseVariations.length > 0 && (
+                                <>
+                                    <Divider sx={{ my: 1, bgcolor: theme.palette.border.main }} />
+                                    <Box sx={{ px: 2, py: 1 }}>
+                                        <Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontWeight: 'bold' }}>
+                                            Similar Exercises (AI Suggestions)
+                                        </Typography>
+                                    </Box>
+                                    {exerciseVariations.map((variation) => (
+                                        <SuggestionItem
+                                            key={`variation-${variation.id}`}
+                                            onClick={() => handleExerciseSelect(variation)}
+                                            onMouseDown={(e) => {
+                                                e.preventDefault();
+                                            }}
+                                            sx={{
+                                                backgroundColor: 'rgba(221, 237, 0, 0.05)',
+                                                border: '1px solid rgba(221, 237, 0, 0.2)',
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(221, 237, 0, 0.1)',
+                                                }
+                                            }}
+                                        >
+                                            <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                                                <Box sx={{ flexGrow: 1 }}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                        <Typography sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}>
+                                                            {variation.name}
+                                                        </Typography>
+                                                        <Chip
+                                                            size="small"
+                                                            label="AI Variation"
+                                                            sx={{
+                                                                backgroundColor: 'rgba(221, 237, 0, 0.2)',
+                                                                color: '#dded00',
+                                                                fontSize: '0.65rem',
+                                                                height: '18px'
+                                                            }}
+                                                        />
+                                                    </Box>
+                                                    <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                                                        <Chip
+                                                            size="small"
+                                                            label={variation.target}
+                                                            sx={{
+                                                                backgroundColor: theme.palette.surface.secondary,
+                                                                color: theme.palette.primary.main,
+                                                                fontSize: '0.75rem'
+                                                            }}
+                                                        />
+                                                        <Chip
+                                                            size="small"
+                                                            label={variation.equipment}
+                                                            sx={{
+                                                                backgroundColor: theme.palette.surface.transparent,
+                                                                color: theme.palette.text.secondary,
+                                                                fontSize: '0.75rem'
+                                                            }}
+                                                        />
+                                                        {variation.hasProgressionData && (
+                                                            <Chip
+                                                                size="small"
+                                                                label="Has History"
+                                                                sx={{
+                                                                    backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                                                                    color: '#4caf50',
+                                                                    fontSize: '0.65rem'
+                                                                }}
+                                                            />
+                                                        )}
+                                                    </Box>
+                                                    {variation.hasProgressionData && (
+                                                        <Typography variant="caption" sx={{
+                                                            color: theme.palette.text.secondary,
+                                                            display: 'block',
+                                                            mt: 0.5,
+                                                            fontStyle: 'italic'
+                                                        }}>
+                                                            Suggested: {variation.suggestedWeight}kg × {variation.suggestedReps} reps
+                                                        </Typography>
+                                                    )}
+                                                </Box>
+                                                <MdLightbulb style={{ color: '#dded00', fontSize: '16px' }} />
+                                            </Box>
+                                        </SuggestionItem>
+                                    ))}
+                                </>
+                            )}
                         </>
                     )}
 

@@ -27,8 +27,8 @@ import {
     MdEmojiEvents
 } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import appLogo from '../assets/appLogo.svg';
+import { useAuth } from '../../contexts/AuthContext';
+import appLogo from '../../assets/appLogo.svg';
 
 const HeroSection = styled(Box)(({ theme }) => ({
     minHeight: '100vh',

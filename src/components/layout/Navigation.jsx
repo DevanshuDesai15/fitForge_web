@@ -17,7 +17,7 @@ import {
     Divider
 } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
-import appLogo from '../assets/appLogo.svg';
+import appLogo from '../../assets/appLogo.svg';
 import {
     MdDashboard,
     MdFitnessCenter,

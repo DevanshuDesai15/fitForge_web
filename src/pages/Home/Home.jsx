@@ -14,8 +14,8 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db } from '../firebase/config';
-import { useAuth } from '../contexts/AuthContext';
+import { db } from '../../firebase/config';
+import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import {
     Brain,
@@ -27,9 +27,9 @@ import {
     Zap,
     Activity
 } from "lucide-react";
-import progressiveOverloadAI from '../services/progressiveOverloadAI';
-import { logGeminiStats } from '../utils/geminiMonitor';
-import { checkGeminiStatus } from '../utils/geminiStatus';
+import progressiveOverloadAI from '../../services/progressiveOverloadAI';
+import { logGeminiStats } from '../../utils/geminiMonitor';
+import { checkGeminiStatus } from '../../utils/geminiStatus';
 
 
 // Welcome Hero Card

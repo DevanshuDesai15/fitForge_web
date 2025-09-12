@@ -38,9 +38,9 @@ import {
     MdCleaningServices
 } from 'react-icons/md';
 import { collection, query, where, orderBy, getDocs, updateDoc, deleteDoc, doc, writeBatch } from 'firebase/firestore';
-import { db } from '../firebase/config';
-import { useAuth } from '../contexts/AuthContext';
-import { groupSimilarExercises, validateExerciseName, autoCorrectExerciseName } from '../utils/exerciseValidator';
+import { db } from '../../firebase/config';
+import { useAuth } from '../../contexts/AuthContext';
+import { groupSimilarExercises, validateExerciseName, autoCorrectExerciseName } from '../../utils/exerciseValidator';
 
 const StyledCard = styled(Card)(() => ({
     background: 'rgba(40, 40, 40, 0.9)',
