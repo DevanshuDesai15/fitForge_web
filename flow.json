@@ -1,0 +1,34 @@
+{
+  "name": "Newsletter Company Intelligence to Teams",
+  "nodes": [
+    {
+      "id": "6d373eda-500d-47ac-8608-a1f4bf9bad67",
+      "name": "Workflow Instructions",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-176, 1072],
+      "parameters": {
+        "content": "## Newsletter Company Intelligence System\n\n### Setup Required:\n1. Add Tavily API key for content extraction\n2. Add OpenAI API key for AI analysis\n3. Configure Microsoft Teams webhook URL\n4. Setup Google Sheets connection and sheet ID\n5. Add newsletter URLs in the input node\n6. Update credential IDs to match your setup\n\n### Configuration Variables:\n- YOUR_TEAMS_WEBHOOK_URL - Replace with your Teams webhook\n- YOUR_GOOGLE_SHEET_ID - Replace with your Google Sheet ID\n- Update all credential IDs to match your n8n setup",
+        "height": 400,
+        "width": 400
+      }
+    },
+    {
+      "id": "e561507a-dc0f-45c1-8b9d-fdc8f82fbada",
+      "name": "Input Newsletter URLs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [256, 1680],
+      "parameters": {
+        "jsCode": "const urls = [\n  \"https://www.moroccoworldnews.com/2025/09/259353/moroccos-35-15-billion-green-hydrogen-gamble-ambitious-plans-amid-market-doubts/\"\n];\n\nconst validUrls = urls.filter(url => {\n  try {\n    new URL(url);\n    return true;\n  } catch (error) {\n    console.error('Invalid URL:', url);\n    return false;\n  }\n});\n\nif (validUrls.length === 0) {\n  throw new Error('No valid URLs provided');\n}\n\nreturn validUrls.map((url, index) => ({\n  json: {\n    article_url: url,\n    extraction_id: `extract_${Date.now()}_${index}`,\n    timestamp: new Date().toISOString(),\n    batch_id: `batch_${Date.now()}`\n  }\n}));"
+      }
+    }
+  ],
+  "connections": {},
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "newsletter-intelligence-workflow"
+}

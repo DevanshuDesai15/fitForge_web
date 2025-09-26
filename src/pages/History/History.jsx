@@ -84,6 +84,7 @@ export default function History() {
             const workoutsQuery = query(
                 collection(db, 'workouts'),
                 where('userId', '==', currentUser.uid),
+                where('completed', '==', true),
                 orderBy('timestamp', 'desc')
             );
             const workoutDocs = await getDocs(workoutsQuery);
@@ -118,6 +119,7 @@ export default function History() {
                 const workoutsQuery = query(
                     collection(db, 'workouts'),
                     where('userId', '==', currentUser.uid),
+                    where('completed', '==', true),
                     orderBy('timestamp', 'desc')
                 );
                 const workoutDocs = await getDocs(workoutsQuery);

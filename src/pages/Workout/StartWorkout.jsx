@@ -171,6 +171,7 @@ const StartWorkout = () => {
                     notes: exercise.notes || ''
                 })),
                 duration: elapsedTime,
+                completed: true,
                 completedAt: new Date().toISOString(),
                 timestamp: Date.now()
             };

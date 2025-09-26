@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import {
     Dialog,
     DialogTitle,
@@ -19,8 +20,7 @@ import {
     CardContent,
     Chip,
     IconButton,
-    Grid,
-    Divider
+    Grid
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { MdClose, MdAdd, MdTimer, MdFitnessCenter, MdRemove } from 'react-icons/md';
@@ -35,8 +35,17 @@ const StyledDialog = styled(Dialog)(({ theme }) => ({
         border: '1px solid rgba(221, 237, 0, 0.2)',
         borderRadius: '16px',
         maxWidth: '800px',
-        width: '90vw',
-        maxHeight: '90vh',
+        width: '95vw',
+        maxHeight: '95vh',
+        margin: '8px',
+        [theme.breakpoints.down('sm')]: {
+            width: '100vw',
+            height: '100vh',
+            maxHeight: '100vh',
+            maxWidth: '100vw',
+            margin: 0,
+            borderRadius: 0,
+        },
     },
 }));
 
@@ -615,9 +624,18 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated }) => {
 
             case 1:
                 return (
-                    <Box sx={{ display: 'flex', gap: 3, height: '600px' }}>
+                    <Box sx={{
+                        display: 'flex',
+                        gap: 3,
+                        height: { xs: 'auto', md: '600px' },
+                        flexDirection: { xs: 'column', md: 'row' },
+                        minHeight: { xs: '70vh', md: 'auto' }
+                    }}>
                         {/* Left Side - Exercise Library */}
-                        <Box sx={{ flex: 1 }}>
+                        <Box sx={{
+                            flex: 1,
+                            minHeight: { xs: '300px', md: 'auto' }
+                        }}>
                             <Typography variant="h6" sx={{ color: '#fff', mb: 2 }}>
                                 Exercise Library
                             </Typography>
@@ -647,17 +665,27 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated }) => {
                             />
 
                             {/* Muscle Group Filter */}
-                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 3 }}>
+                            <Box sx={{
+                                display: 'flex',
+                                gap: { xs: 0.5, md: 1 },
+                                flexWrap: 'wrap',
+                                mb: 3,
+                                maxHeight: { xs: '120px', md: 'auto' },
+                                overflowY: { xs: 'auto', md: 'visible' }
+                            }}>
                                 {muscleGroups.map((group) => (
                                     <Chip
                                         key={group}
                                         label={group}
                                         onClick={() => setSelectedMuscleGroup(group)}
                                         variant={selectedMuscleGroup === group ? 'filled' : 'outlined'}
+                                        size="small"
                                         sx={{
                                             backgroundColor: selectedMuscleGroup === group ? '#dded00' : 'transparent',
                                             color: selectedMuscleGroup === group ? '#000' : '#fff',
                                             borderColor: selectedMuscleGroup === group ? '#dded00' : 'rgba(255, 255, 255, 0.3)',
+                                            fontSize: { xs: '0.7rem', md: '0.8rem' },
+                                            height: { xs: '24px', md: '32px' },
                                             '&:hover': {
                                                 backgroundColor: selectedMuscleGroup === group ? '#e8f15d' : 'rgba(221, 237, 0, 0.1)',
                                             },
@@ -667,7 +695,11 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated }) => {
                             </Box>
 
                             {/* Exercise List */}
-                            <Box sx={{ height: '400px', overflowY: 'auto', pr: 1 }}>
+                            <Box sx={{
+                                height: { xs: '250px', md: '400px' },
+                                overflowY: 'auto',
+                                pr: 1
+                            }}>
                                 {exercisesLoading ? (
                                     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
                                         <Typography sx={{ color: 'text.secondary' }}>Loading exercises...</Typography>
@@ -717,7 +749,10 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated }) => {
                         </Box>
 
                         {/* Right Side - Selected Exercises */}
-                        <Box sx={{ flex: 1 }}>
+                        <Box sx={{
+                            flex: 1,
+                            minHeight: { xs: '300px', md: 'auto' }
+                        }}>
                             <Typography variant="h6" sx={{ color: '#fff', mb: 2 }}>
                                 Selected Exercises ({selectedExercises.length})
                             </Typography>
@@ -743,7 +778,11 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated }) => {
                                     </Typography>
                                 </Box>
                             ) : (
-                                <Box sx={{ height: '400px', overflowY: 'auto', pr: 1 }}>
+                                <Box sx={{
+                                    height: { xs: '250px', md: '400px' },
+                                    overflowY: 'auto',
+                                    pr: 1
+                                }}>
                                     {selectedExercises.map((exercise, exerciseIndex) => (
                                         <Box key={exercise.id || exerciseIndex} sx={{
                                             background: 'rgba(40, 40, 40, 0.8)',
@@ -984,7 +1023,11 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated }) => {
                 </IconButton>
             </DialogTitle>
 
-            <DialogContent sx={{ p: 3 }}>
+            <DialogContent sx={{
+                p: { xs: 2, md: 3 },
+                height: { xs: 'calc(100vh - 120px)', md: 'auto' },
+                overflowY: 'auto'
+            }}>
                 {/* Stepper */}
                 <StyledStepper activeStep={activeStep} sx={{ mb: 4 }}>
                     {steps.map((label, index) => (
@@ -1002,13 +1045,24 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated }) => {
                 {renderStepContent(activeStep)}
             </DialogContent>
 
-            <DialogActions sx={{ p: 3, borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <DialogActions sx={{
+                p: { xs: 2, md: 3 },
+                borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                flexDirection: { xs: 'column', sm: 'row' },
+                gap: { xs: 1, sm: 0 }
+            }}>
                 {activeStep === 0 ? (
-                    <Button onClick={handleClose} sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                    <Button onClick={handleClose} sx={{
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        width: { xs: '100%', sm: 'auto' }
+                    }}>
                         Cancel
                     </Button>
                 ) : (
-                    <Button onClick={handleBack} sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                    <Button onClick={handleBack} sx={{
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        width: { xs: '100%', sm: 'auto' }
+                    }}>
                         Back
                     </Button>
                 )}
@@ -1022,6 +1076,7 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated }) => {
                             background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
                             color: '#000',
                             fontWeight: 'bold',
+                            width: { xs: '100%', sm: 'auto' },
                             '&:hover': {
                                 background: 'linear-gradient(45deg, #e8f15d 30%, #dded00 90%)',
                             },
@@ -1042,6 +1097,7 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated }) => {
                             background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
                             color: '#000',
                             fontWeight: 'bold',
+                            width: { xs: '100%', sm: 'auto' },
                             '&:hover': {
                                 background: 'linear-gradient(45deg, #e8f15d 30%, #dded00 90%)',
                             },
@@ -1057,6 +1113,12 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated }) => {
             </DialogActions>
         </StyledDialog>
     );
+};
+
+CreateWorkoutModal.propTypes = {
+    open: PropTypes.bool.isRequired,
+    onClose: PropTypes.func.isRequired,
+    onWorkoutCreated: PropTypes.func.isRequired,
 };
 
 export default CreateWorkoutModal;
