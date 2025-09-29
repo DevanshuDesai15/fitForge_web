@@ -322,7 +322,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🙏 Acknowledgments
 
-- [wger](https://wger.de/) for the comprehensive exercise database
 - [Firebase](https://firebase.google.com/) for backend infrastructure
 - [Material-UI](https://mui.com/) for beautiful React components
 - The open-source community for inspiration and tools
