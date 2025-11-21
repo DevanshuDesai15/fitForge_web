@@ -5,7 +5,6 @@ import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { collection, addDoc, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useAuth } from '../../contexts/AuthContext';
-import { getWeightUnit } from '../../utils/weightUnit';
 
 // Components
 import TemplateSelector from './components/TemplateSelector';
@@ -74,19 +73,28 @@ const StartWorkout = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Load weight unit preference
+    // Load weight unit preference from user's Firestore preferences
     useEffect(() => {
-        setWeightUnit(getWeightUnit());
+        const loadUserPreferences = async () => {
+            if (!currentUser) return;
 
-        const handleStorageChange = (e) => {
-            if (e.key === 'weightUnit') {
-                setWeightUnit(e.newValue || 'kg');
+            try {
+                const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    const unitPreference = userData.preferences?.units || 'imperial';
+                    // Set weightUnit based on unit preference
+                    setWeightUnit(unitPreference === 'metric' ? 'kg' : 'lbs');
+                }
+            } catch (error) {
+                console.error('Error loading user preferences:', error);
+                // Default to lbs if error
+                setWeightUnit('lbs');
             }
         };
 
-        window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
-    }, []);
+        loadUserPreferences();
+    }, [currentUser]);
 
     // Load AI suggestions when exercises are set
     useEffect(() => {
