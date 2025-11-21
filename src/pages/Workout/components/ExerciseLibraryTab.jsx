@@ -19,6 +19,14 @@ import {
 import { Activity, Target, Weight, BarChart3, Search } from 'lucide-react';
 import exerciseData from '../../../../MergedData.json';
 
+const ViewDetailsChip = styled(Chip)(({ theme }) => ({
+    backgroundColor: 'rgba(221, 237, 0, 0.118)',
+    color: theme.palette.primary.main,
+    // fontWeight: 'bold',
+    opacity: 0,
+    transition: 'opacity 0.2s ease-in-out',
+}));
+
 const StatsCard = styled(Card)(() => ({
     background: 'rgba(40, 40, 40, 0.9)',
     backdropFilter: 'blur(10px)',
@@ -55,8 +63,12 @@ const ExerciseCard = styled(Card)(() => ({
     transition: 'all 0.2s ease',
     '&:hover': {
         border: '1px solid rgba(221, 237, 0, 0.3)',
+        backgroundColor: 'rgba(221, 237, 0, 0.118)',
         transform: 'translateY(-2px)',
     },
+    '&:hover .view-details-chip': {
+        opacity: 1,
+    }
 }));
 
 const CategoryChip = styled(Chip)(({ active }) => ({
@@ -481,6 +493,11 @@ const ExerciseLibraryTab = () => {
                                             height: '20px',
                                             display: { xs: 'none', sm: 'inline-flex' }
                                         }}
+                                    />
+                                    <ViewDetailsChip
+                                        className="view-details-chip"
+                                        label="View Details"
+                                        size="small"
                                     />
                                     {exercise.isNew && (
                                         <Chip

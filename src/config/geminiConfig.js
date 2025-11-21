@@ -60,4 +60,8 @@ export const geminiConfig = {
   maxRequestsPerDay: parseInt(getEnvVar("VITE_MAX_REQUESTS_PER_DAY", "1000")),
 };
 
+export const getGeminiApiKey = () => {
+  return geminiConfig.apiKey;
+};
+
 export default geminiConfig;

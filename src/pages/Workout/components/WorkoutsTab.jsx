@@ -14,6 +14,7 @@ import CreateProgramModal from './CreateProgramModal';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import PropTypes from 'prop-types';
 import { Collapse } from '@mui/material';
+import { useWorkoutState } from '../hooks/useWorkoutState';
 
 const WorkoutCard = styled(Card)(() => ({
     background: 'rgba(40, 40, 40, 0.9)',
@@ -107,6 +108,7 @@ const WorkoutsTab = () => {
     const { currentUser } = useAuth();
     const { templates, loading: templatesLoading } = useWorkoutTemplates();
     const { programs, loading: programsLoading } = useWorkoutPrograms();
+    const { workoutStarted, exercises } = useWorkoutState();
 
     const [activeSubTab, setActiveSubTab] = useState(0); // 0 = Quick Start, 1 = Programs
     const [recommendedWorkouts, setRecommendedWorkouts] = useState([]);
@@ -119,6 +121,8 @@ const WorkoutsTab = () => {
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectedProgram, setSelectedProgram] = useState(null);
     const [editProgramData, setEditProgramData] = useState(null);
+    const [hasOngoingWorkout, setHasOngoingWorkout] = useState(false);
+    const [workoutInfo, setWorkoutInfo] = useState(null);
 
     const handleSubTabChange = (tabIndex) => {
         setActiveSubTab(tabIndex);
@@ -129,10 +133,20 @@ const WorkoutsTab = () => {
     };
 
     const handleStartWorkout = (program, day) => {
-        console.log('Starting workout:', { program: program.name, day: day.name });
-        // Here you would navigate to the workout session or open a workout modal
-        // For now, we'll just log it
-        alert(`Starting ${day.name} from ${program.name} program!`);
+        console.log('🚀 Starting workout:', { program: program.name, day: day.name });
+        // Navigate to workout with program/day data
+        navigate('/workout/start', {
+            state: {
+                workout: {
+                    name: `${program.name} - ${day.name}`,
+                    exercises: day.exercises || []
+                }
+            }
+        });
+    };
+
+    const handleContinueWorkout = () => {
+        navigate('/workout/start');
     };
 
     // Weekly performance data
@@ -145,6 +159,42 @@ const WorkoutsTab = () => {
         { date: 'Sat', value: 85 },
         { date: 'Sun', value: 95 }
     ];
+
+    // Check for ongoing workout
+    useEffect(() => {
+        const savedState = localStorage.getItem('workoutState');
+        if (savedState) {
+            try {
+                const state = JSON.parse(savedState);
+                if (state.workoutStarted && state.exercises && state.exercises.length > 0) {
+                    setHasOngoingWorkout(true);
+
+                    // Calculate progress
+                    const totalSets = state.exercises.reduce((total, exercise) =>
+                        total + (exercise.sets?.length || 0), 0
+                    );
+                    const completedSets = state.exercises.reduce((total, exercise) =>
+                        total + (exercise.sets?.filter(set => set.completed).length || 0), 0
+                    );
+                    const progress = totalSets > 0 ? (completedSets / totalSets) * 100 : 0;
+
+                    // Calculate estimated duration (8 min per exercise as rough estimate)
+                    const estimatedDuration = state.exercises.length * 8;
+
+                    setWorkoutInfo({
+                        name: state.selectedDay?.name || state.currentTemplate?.name || 'Workout',
+                        category: state.currentTemplate?.category || 'Strength Training',
+                        duration: estimatedDuration,
+                        exerciseCount: state.exercises.length,
+                        difficulty: state.currentTemplate?.difficulty || 'Intermediate',
+                        progress: Math.round(progress)
+                    });
+                }
+            } catch (error) {
+                console.error('Error parsing workout state:', error);
+            }
+        }
+    }, [workoutStarted, exercises]);
 
     const calculateRecommendations = useCallback((userTemplates, completedWorkouts) => {
         const recommendations = [];
@@ -304,7 +354,20 @@ const WorkoutsTab = () => {
     };
 
     const handleWorkoutClick = (workout) => {
-        if (workout.type === 'nextDay') {
+        if (workout.type === 'day') {
+            // Navigate to start workout with specific day data
+            console.log('🚀 Starting day workout:', workout);
+            navigate('/workout/start', {
+                state: {
+                    templateId: workout.templateId,
+                    dayId: workout.dayId,
+                    workout: {
+                        name: workout.title,
+                        exercises: workout.dayData?.exercises || []
+                    }
+                }
+            });
+        } else if (workout.type === 'nextDay') {
             // Navigate to start workout with specific template and day
             navigate('/workout/start', {
                 state: {
@@ -457,10 +520,125 @@ const WorkoutsTab = () => {
                     </Typography>
 
                     <Grid container spacing={3} sx={{ mb: 4 }}>
+                        {/* Continue Workout Card - Show first if available */}
+                        {hasOngoingWorkout && workoutInfo && (
+                            <Grid item xs={12} md={6} lg={4}>
+                                <Card sx={{
+                                    height: '100%',
+                                    background: 'linear-gradient(135deg, rgba(40, 40, 40, 0.95), rgba(30, 30, 30, 0.95))',
+                                    border: '1px solid rgba(221, 237, 0, 0.3)',
+                                    borderRadius: '16px',
+                                    overflow: 'hidden',
+                                    position: 'relative',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s ease',
+                                    '&::before': {
+                                        content: '""',
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        right: 0,
+                                        height: '4px',
+                                        background: 'linear-gradient(90deg, #dded00 0%, #e8f15d 100%)',
+                                    },
+                                    '&:hover': {
+                                        transform: 'translateY(-4px)',
+                                        boxShadow: '0 8px 24px rgba(221, 237, 0, 0.3)',
+                                    }
+                                }}>
+                                    <CardContent sx={{ p: 3 }}>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                            <Typography variant="h6" sx={{ color: '#fff', fontWeight: 'bold' }}>
+                                                {workoutInfo.name}
+                                            </Typography>
+                                            <Chip
+                                                label="AI Pick"
+                                                size="small"
+                                                sx={{
+                                                    backgroundColor: '#dded00',
+                                                    color: '#000',
+                                                    fontWeight: 'bold',
+                                                    fontSize: '0.7rem',
+                                                    height: '20px'
+                                                }}
+                                            />
+                                        </Box>
+
+                                        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+                                            {workoutInfo.category}
+                                        </Typography>
+
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                <MdTimer size={16} style={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+                                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                                    {workoutInfo.duration} min
+                                                </Typography>
+                                            </Box>
+                                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                                {workoutInfo.exerciseCount} exercises
+                                            </Typography>
+                                            <Chip
+                                                label={workoutInfo.difficulty}
+                                                size="small"
+                                                sx={{
+                                                    backgroundColor: 'rgba(221, 237, 0, 0.15)',
+                                                    color: '#dded00',
+                                                    fontSize: '0.7rem',
+                                                    height: '20px'
+                                                }}
+                                            />
+                                        </Box>
+
+                                        <Box sx={{ mb: 2 }}>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                                    Progress
+                                                </Typography>
+                                                <Typography variant="caption" sx={{ color: '#dded00' }}>
+                                                    {workoutInfo.progress}% complete
+                                                </Typography>
+                                            </Box>
+                                            <LinearProgress
+                                                variant="determinate"
+                                                value={workoutInfo.progress}
+                                                sx={{
+                                                    height: 6,
+                                                    borderRadius: 3,
+                                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                                    '& .MuiLinearProgress-bar': {
+                                                        background: 'linear-gradient(90deg, #dded00 0%, #e8f15d 100%)',
+                                                        borderRadius: 3,
+                                                    },
+                                                }}
+                                            />
+                                        </Box>
+
+                                        <Button
+                                            variant="contained"
+                                            startIcon={<MdPlayArrow />}
+                                            fullWidth
+                                            onClick={handleContinueWorkout}
+                                            sx={{
+                                                background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
+                                                color: '#000',
+                                                fontWeight: 'bold',
+                                                '&:hover': {
+                                                    background: 'linear-gradient(45deg, #e8f15d 30%, #dded00 90%)',
+                                                },
+                                            }}
+                                        >
+                                            Continue
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                        )}
+
                         {loading ? (
                             // Loading skeleton
                             [1, 2].map((i) => (
-                                <Grid item xs={12} md={6} key={i}>
+                                <Grid item xs={12} md={6} lg={4} key={i}>
                                     <WorkoutCard>
                                         <CardContent>
                                             <Box sx={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -472,7 +650,7 @@ const WorkoutsTab = () => {
                             ))
                         ) : recommendedWorkouts.length > 0 ? (
                             recommendedWorkouts.map((workout) => (
-                                <Grid item xs={12} md={6} key={workout.id}>
+                                <Grid item xs={12} md={6} lg={4} key={workout.id}>
                                     <WorkoutCard onClick={() => handleWorkoutClick(workout)}>
                                         <CardContent>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
@@ -618,82 +796,167 @@ const WorkoutsTab = () => {
                                         </Grid>
                                     ))
                                 ) : templates.length > 0 ? (
-                                    templates.map((template) => {
-                                        const templateWorkout = {
-                                            id: template.id,
-                                            title: template.name,
-                                            category: template.workoutDays?.length > 1 ? `${template.workoutDays.length} Day Split` : 'Single Day',
-                                            duration: estimateTemplateDuration(template),
-                                            exercises: getTotalExercises(template),
-                                            difficulty: 'Intermediate',
-                                            progress: 0,
-                                            isAIPick: template.isAIGenerated || false,
-                                            templateId: template.id,
-                                            type: 'template'
-                                        };
+                                    // 🎯 NEW: Flatten structure to show individual workout DAYS instead of programs
+                                    templates.flatMap((template) => {
+                                        // If template has workout days, create a card for each day
+                                        if (template.workoutDays && template.workoutDays.length > 0) {
+                                            return template.workoutDays.map((day, dayIndex) => {
+                                                const dayWorkout = {
+                                                    id: `${template.id}-${day.id || dayIndex}`,
+                                                    title: `${template.name} - ${day.name}`,
+                                                    category: day.category || template.category || 'Strength Training',
+                                                    duration: `${Math.ceil((day.exercises?.length || 0) * 8)} min`,
+                                                    exercises: day.exercises?.length || 0,
+                                                    difficulty: day.difficulty || template.difficulty || 'Intermediate',
+                                                    progress: 0,
+                                                    isAIPick: template.isAIGenerated || false,
+                                                    templateId: template.id,
+                                                    dayId: day.id || `day-${dayIndex}`,
+                                                    dayData: day,
+                                                    type: 'day'
+                                                };
 
-                                        return (
-                                            <Grid item xs={12} sm={6} key={template.id}>
-                                                <WorkoutCard onClick={() => handleWorkoutClick(templateWorkout)}>
-                                                    <CardContent>
-                                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                                                            <Typography variant="h6" sx={{ color: '#fff', fontWeight: 'bold', fontSize: '1rem' }}>
-                                                                {templateWorkout.title}
-                                                            </Typography>
-                                                            {templateWorkout.isAIPick && (
-                                                                <AIPick
-                                                                    icon={<MdAutoAwesome size={12} />}
-                                                                    label="AI Pick"
-                                                                    size="small"
-                                                                />
-                                                            )}
-                                                        </Box>
+                                                return (
+                                                    <Grid item xs={12} sm={6} key={dayWorkout.id}>
+                                                        <WorkoutCard onClick={() => handleWorkoutClick(dayWorkout)}>
+                                                            <CardContent>
+                                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                                                    <Typography variant="h6" sx={{ color: '#fff', fontWeight: 'bold', fontSize: '1rem' }}>
+                                                                        {dayWorkout.title}
+                                                                    </Typography>
+                                                                    {dayWorkout.isAIPick && (
+                                                                        <AIPick
+                                                                            icon={<MdAutoAwesome size={12} />}
+                                                                            label="AI Pick"
+                                                                            size="small"
+                                                                        />
+                                                                    )}
+                                                                </Box>
 
-                                                        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-                                                            {templateWorkout.category}
-                                                        </Typography>
-
-                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                                <MdTimer size={16} style={{ color: 'rgba(255, 255, 255, 0.7)' }} />
-                                                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                                                    {templateWorkout.duration}
+                                                                <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+                                                                    {dayWorkout.category}
                                                                 </Typography>
-                                                            </Box>
-                                                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                                                {templateWorkout.exercises} exercises
-                                                            </Typography>
-                                                            <Chip
-                                                                label={templateWorkout.difficulty}
-                                                                size="small"
-                                                                sx={{
-                                                                    backgroundColor: `${getDifficultyColor(templateWorkout.difficulty)}20`,
-                                                                    color: getDifficultyColor(templateWorkout.difficulty),
-                                                                    fontSize: '0.7rem',
-                                                                    height: '20px'
-                                                                }}
-                                                            />
-                                                        </Box>
 
-                                                        <Button
-                                                            variant="contained"
-                                                            startIcon={<MdPlayArrow />}
-                                                            fullWidth
-                                                            sx={{
-                                                                background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
-                                                                color: '#000',
-                                                                fontWeight: 'bold',
-                                                                '&:hover': {
-                                                                    background: 'linear-gradient(45deg, #e8f15d 30%, #dded00 90%)',
-                                                                },
-                                                            }}
-                                                        >
-                                                            Start Workout
-                                                        </Button>
-                                                    </CardContent>
-                                                </WorkoutCard>
-                                            </Grid>
-                                        );
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                                        <MdTimer size={16} style={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+                                                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                                                            {dayWorkout.duration}
+                                                                        </Typography>
+                                                                    </Box>
+                                                                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                                                        {dayWorkout.exercises} exercises
+                                                                    </Typography>
+                                                                    <Chip
+                                                                        label={dayWorkout.difficulty}
+                                                                        size="small"
+                                                                        sx={{
+                                                                            backgroundColor: `${getDifficultyColor(dayWorkout.difficulty)}20`,
+                                                                            color: getDifficultyColor(dayWorkout.difficulty),
+                                                                            fontSize: '0.7rem',
+                                                                            height: '20px'
+                                                                        }}
+                                                                    />
+                                                                </Box>
+
+                                                                <Button
+                                                                    variant="contained"
+                                                                    startIcon={<MdPlayArrow />}
+                                                                    fullWidth
+                                                                    sx={{
+                                                                        background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
+                                                                        color: '#000',
+                                                                        fontWeight: 'bold',
+                                                                        '&:hover': {
+                                                                            background: 'linear-gradient(45deg, #e8f15d 30%, #dded00 90%)',
+                                                                        },
+                                                                    }}
+                                                                >
+                                                                    Start Workout
+                                                                </Button>
+                                                            </CardContent>
+                                                        </WorkoutCard>
+                                                    </Grid>
+                                                );
+                                            });
+                                        } else {
+                                            // Template has no days defined, show the template itself as a single workout
+                                            const templateWorkout = {
+                                                id: template.id,
+                                                title: template.name,
+                                                category: 'Single Day',
+                                                duration: estimateTemplateDuration(template),
+                                                exercises: getTotalExercises(template),
+                                                difficulty: 'Intermediate',
+                                                progress: 0,
+                                                isAIPick: template.isAIGenerated || false,
+                                                templateId: template.id,
+                                                type: 'template'
+                                            };
+
+                                            return (
+                                                <Grid item xs={12} sm={6} key={template.id}>
+                                                    <WorkoutCard onClick={() => handleWorkoutClick(templateWorkout)}>
+                                                        <CardContent>
+                                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                                                <Typography variant="h6" sx={{ color: '#fff', fontWeight: 'bold', fontSize: '1rem' }}>
+                                                                    {templateWorkout.title}
+                                                                </Typography>
+                                                                {templateWorkout.isAIPick && (
+                                                                    <AIPick
+                                                                        icon={<MdAutoAwesome size={12} />}
+                                                                        label="AI Pick"
+                                                                        size="small"
+                                                                    />
+                                                                )}
+                                                            </Box>
+
+                                                            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+                                                                {templateWorkout.category}
+                                                            </Typography>
+
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                                    <MdTimer size={16} style={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+                                                                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                                                        {templateWorkout.duration}
+                                                                    </Typography>
+                                                                </Box>
+                                                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                                                    {templateWorkout.exercises} exercises
+                                                                </Typography>
+                                                                <Chip
+                                                                    label={templateWorkout.difficulty}
+                                                                    size="small"
+                                                                    sx={{
+                                                                        backgroundColor: `${getDifficultyColor(templateWorkout.difficulty)}20`,
+                                                                        color: getDifficultyColor(templateWorkout.difficulty),
+                                                                        fontSize: '0.7rem',
+                                                                        height: '20px'
+                                                                    }}
+                                                                />
+                                                            </Box>
+
+                                                            <Button
+                                                                variant="contained"
+                                                                startIcon={<MdPlayArrow />}
+                                                                fullWidth
+                                                                sx={{
+                                                                    background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
+                                                                    color: '#000',
+                                                                    fontWeight: 'bold',
+                                                                    '&:hover': {
+                                                                        background: 'linear-gradient(45deg, #e8f15d 30%, #dded00 90%)',
+                                                                    },
+                                                                }}
+                                                            >
+                                                                Start Workout
+                                                            </Button>
+                                                        </CardContent>
+                                                    </WorkoutCard>
+                                                </Grid>
+                                            );
+                                        }
                                     })
                                 ) : (
                                     <Grid item xs={12}>

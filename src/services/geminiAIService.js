@@ -6,6 +6,37 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import geminiConfig from "../config/geminiConfig";
+import { getGeminiApiKey } from "../config/geminiConfig";
+
+let geminiModel = null;
+
+const initializeGemini = () => {
+  const apiKey = getGeminiApiKey();
+  if (!apiKey) {
+    console.error(
+      "Gemini API key is missing. Please set it in the application settings."
+    );
+    return;
+  }
+  if (geminiModel) {
+    return;
+  }
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    geminiModel = genAI;
+  } catch (error) {
+    console.error("Error initializing Gemini AI:", error);
+  }
+};
+
+initializeGemini();
+
+export const getGeminiModel = () => {
+  if (!geminiModel) {
+    initializeGemini();
+  }
+  return geminiModel;
+};
 
 class GeminiAIService {
   constructor() {
@@ -64,7 +95,7 @@ class GeminiAIService {
     }
 
     try {
-      this.genAI = new GoogleGenerativeAI(this.config.apiKey);
+      this.genAI = getGeminiModel();
       this.model = this.genAI.getGenerativeModel({ model: this.config.model });
       this.maxRetries = this.config.maxRetries;
       this.requestTimeout = this.config.requestTimeout;
@@ -1251,3 +1282,97 @@ export default new GeminiAIService();
 
 // Export class for testing
 export { GeminiAIService };
+
+// ----------------- MOCK IMPLEMENTATION -----------------
+const mockGenerateWorkoutAnalysis = (exercise, completedSets) => {
+  console.log(" MOCK: Generating workout analysis for:", exercise.name);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const avgWeight =
+        completedSets.reduce(
+          (acc, set) => acc + parseFloat(set.weight || 0),
+          0
+        ) / completedSets.length;
+      const avgReps =
+        completedSets.reduce((acc, set) => acc + parseInt(set.reps || 0), 0) /
+        completedSets.length;
+
+      resolve({
+        avgWeight: `${avgWeight.toFixed(1)}lbs`,
+        avgReps: avgReps.toFixed(1),
+        formScore: "95%",
+        insight: `Mock Insight: Solid performance on ${
+          exercise.name
+        }. Your average weight of ${avgWeight.toFixed(
+          1
+        )}lbs is impressive. Keep up the great work!`,
+        quality: "Excellent",
+        confidence: "92%",
+      });
+    }, 1500);
+  });
+};
+
+export const generateWorkoutAnalysis = async (
+  exercise,
+  completedSets,
+  useMock = true
+) => {
+  if (useMock) {
+    return mockGenerateWorkoutAnalysis(exercise, completedSets);
+  }
+
+  const genAI = getGeminiModel();
+  if (!genAI) {
+    throw new Error("Gemini AI not initialized. Check API key.");
+  }
+
+  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+  const setsData = completedSets
+    .map(
+      (set, index) => `Set ${index + 1}: ${set.reps} reps at ${set.weight} lbs`
+    )
+    .join("; ");
+
+  const prompt = `
+        Analyze the following workout data for the exercise "${exercise.name}".
+        The user has a target of ${exercise.targetSets} sets and ${exercise.targetReps} reps.
+
+        Completed sets data: ${setsData}
+
+        Based on this data, provide a JSON object with the following fields:
+        - "avgWeight": The average weight lifted across all sets (string, e.g., "135.5lbs").
+        - "avgReps": The average number of reps per set (string, e.g., "9.5").
+        - "formScore": A hypothetical form score based on consistency (string, e.g., "95%"). Assume good form if reps and weight are consistent.
+        - "insight": A short, encouraging, and actionable insight for the user (string, max 30 words).
+        - "quality": A one-word quality assessment (e.g., "Excellent", "Good", "Average").
+        - "confidence": Your confidence in this analysis as a percentage (string, e.g., "92%").
+
+        Example output:
+        {
+          "avgWeight": "135.5lbs",
+          "avgReps": "9.5",
+          "formScore": "95%",
+          "insight": "Great consistency! Try to increase the weight slightly on your first two sets next time.",
+          "quality": "Excellent",
+          "confidence": "92%"
+        }
+    `;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    // Clean the response text to ensure it's valid JSON
+    const jsonText = text
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+    return JSON.parse(jsonText);
+  } catch (error) {
+    console.error("Error generating workout analysis from Gemini:", error);
+    throw new Error("Failed to get AI-powered workout analysis.");
+  }
+};

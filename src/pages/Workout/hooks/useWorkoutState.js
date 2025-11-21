@@ -7,6 +7,7 @@ export const useWorkoutState = () => {
   const [currentTemplate, setCurrentTemplate] = useState(null);
   const [selectedDay, setSelectedDay] = useState(null);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [workoutStartTime, setWorkoutStartTime] = useState(null);
 
   const { currentUser } = useAuth();
 
@@ -19,6 +20,7 @@ export const useWorkoutState = () => {
         currentTemplate,
         selectedDay,
         elapsedTime,
+        workoutStartTime,
         timestamp: Date.now(),
       };
       localStorage.setItem("workoutState", JSON.stringify(state));
@@ -29,6 +31,7 @@ export const useWorkoutState = () => {
     currentTemplate,
     selectedDay,
     elapsedTime,
+    workoutStartTime,
     currentUser,
   ]);
 
@@ -59,6 +62,7 @@ export const useWorkoutState = () => {
         setCurrentTemplate(state.currentTemplate || null);
         setSelectedDay(state.selectedDay || null);
         setElapsedTime(state.elapsedTime || 0);
+        setWorkoutStartTime(state.workoutStartTime || null);
 
         return true;
       } catch (error) {
@@ -77,6 +81,7 @@ export const useWorkoutState = () => {
     setCurrentTemplate(null);
     setSelectedDay(null);
     setElapsedTime(0);
+    setWorkoutStartTime(null);
   }, []);
 
   // Auto-save workout state when it changes
@@ -111,6 +116,8 @@ export const useWorkoutState = () => {
     setSelectedDay,
     elapsedTime,
     setElapsedTime,
+    workoutStartTime,
+    setWorkoutStartTime,
     saveWorkoutState,
     restoreWorkoutState,
     clearWorkoutState,
