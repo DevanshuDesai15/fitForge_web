@@ -19,35 +19,62 @@ import {
 } from '@mui/material';
 import { X, Save, User, Activity, Target, Bell } from 'lucide-react';
 
-const StyledDialog = styled(Dialog)(() => ({
+const StyledDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialog-paper': {
     backgroundColor: '#1a1a1a',
     borderRadius: '16px',
     border: '1px solid rgba(255, 255, 255, 0.1)',
     maxWidth: '600px',
     width: '100%',
+    margin: '16px',
+    overflowX: 'hidden',
+    [theme.breakpoints.down('sm')]: {
+      margin: '8px',
+      borderRadius: '12px',
+      maxHeight: 'calc(100vh - 16px)',
+    },
   },
 }));
 
-const StyledDialogTitle = styled(DialogTitle)(() => ({
+const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'flex-start',
   borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
   padding: '20px 24px 16px',
+  gap: '12px',
+  [theme.breakpoints.down('sm')]: {
+    padding: '16px 12px 12px',
+    gap: '8px',
+  },
 }));
 
-const TitleSection = styled(Box)({
+const TitleSection = styled(Box)(({ theme }) => ({
   flex: 1,
-});
+  minWidth: 0, // Allow flex item to shrink below content size
+  overflow: 'hidden',
+  [theme.breakpoints.down('sm')]: {
+    maxWidth: 'calc(100% - 48px)', // Account for close button and gap
+  },
+}));
 
-const ModalTabs = styled(Box)(() => ({
+const ModalTabs = styled(Box)(({ theme }) => ({
   display: 'flex',
   gap: '16px',
   marginTop: '16px',
+  overflowX: 'auto',
+  overflowY: 'hidden',
+  scrollbarWidth: 'none', // Firefox
+  '&::-webkit-scrollbar': {
+    display: 'none', // Chrome, Safari, Edge
+  },
+  [theme.breakpoints.down('sm')]: {
+    gap: '8px',
+    marginTop: '12px',
+  },
 }));
 
-const ModalTab = styled(Box)(({ active }) => ({
+const ModalTab = styled(Box)(({ theme, active }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: '8px',
@@ -60,6 +87,8 @@ const ModalTab = styled(Box)(({ active }) => ({
   borderRadius: '8px',
   cursor: 'pointer',
   transition: 'all 0.2s ease',
+  whiteSpace: 'nowrap',
+  flexShrink: 0,
 
   '&:hover': {
     color: '#dded00',
@@ -69,6 +98,25 @@ const ModalTab = styled(Box)(({ active }) => ({
   '& svg': {
     width: '16px',
     height: '16px',
+    flexShrink: 0,
+  },
+
+  [theme.breakpoints.down('sm')]: {
+    padding: '6px 10px',
+    fontSize: '12px',
+    gap: '6px',
+    borderRadius: '6px',
+
+    '& svg': {
+      width: '14px',
+      height: '14px',
+    },
+  },
+
+  [theme.breakpoints.down(400)]: {
+    padding: '6px 8px',
+    fontSize: '11px',
+    gap: '4px',
   },
 }));
 
@@ -320,10 +368,30 @@ const EditProfileModal = ({ open, onClose, userData, onSave, loading, preference
     <StyledDialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <StyledDialogTitle>
         <TitleSection>
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 0 }}>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 600,
+              mb: 0,
+              fontSize: { xs: '1.1rem', sm: '1.25rem' },
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
             Edit Profile
           </Typography>
-          <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', mt: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: 'rgba(255, 255, 255, 0.6)',
+              mt: 0.5,
+              fontSize: { xs: '0.75rem', sm: '0.875rem' },
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              display: { xs: 'none', sm: 'block' },
+            }}
+          >
             Update your personal information, fitness goals, and preferences.
           </Typography>
           <ModalTabs>
@@ -342,12 +410,23 @@ const EditProfileModal = ({ open, onClose, userData, onSave, loading, preference
             })}
           </ModalTabs>
         </TitleSection>
-        <IconButton onClick={onClose} sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-          <X size={20} />
+        <IconButton
+          onClick={onClose}
+          sx={{
+            color: 'rgba(255, 255, 255, 0.7)',
+            flexShrink: 0,
+            padding: { xs: '6px', sm: '8px' },
+            '& svg': {
+              width: { xs: '18px', sm: '20px' },
+              height: { xs: '18px', sm: '20px' },
+            },
+          }}
+        >
+          <X />
         </IconButton>
       </StyledDialogTitle>
 
-      <DialogContent sx={{ p: 3, minHeight: '400px' }}>
+      <DialogContent sx={{ p: { xs: 2, sm: 3 }, minHeight: { xs: '300px', sm: '400px' } }}>
         {/* Personal Tab */}
         {activeTab === 'personal' && (
           <Box>
@@ -601,7 +680,7 @@ const EditProfileModal = ({ open, onClose, userData, onSave, loading, preference
         )}
       </DialogContent>
 
-      <DialogActions sx={{ p: 3, borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+      <DialogActions sx={{ p: { xs: 2, sm: 3 }, borderTop: '1px solid rgba(255, 255, 255, 0.1)', gap: 1 }}>
         <CancelButton onClick={onClose}>
           Cancel
         </CancelButton>

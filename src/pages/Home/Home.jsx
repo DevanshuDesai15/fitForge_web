@@ -10,7 +10,8 @@ import {
     useTheme,
     useMediaQuery,
     Chip,
-    Skeleton
+    Skeleton,
+    Snackbar
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { collection, getDocs, query, where } from 'firebase/firestore';
@@ -30,6 +31,7 @@ import {
 import progressiveOverloadAI from '../../services/progressiveOverloadAI';
 import { logGeminiStats } from '../../utils/geminiMonitor';
 import { checkGeminiStatus } from '../../utils/geminiStatus';
+import QuickAddExerciseModal from '../../components/workout/QuickAddExerciseModal';
 
 
 // Welcome Hero Card
@@ -190,6 +192,8 @@ export default function Home() {
     const [aiRecommendations, setAiRecommendations] = useState([]);
     const [aiLoading, setAiLoading] = useState(false);
     const [aiError, setAiError] = useState('');
+    const [quickAddModalOpen, setQuickAddModalOpen] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
 
     const { currentUser } = useAuth();
     const navigate = useNavigate();
@@ -403,7 +407,7 @@ export default function Home() {
                                             backgroundColor: 'var(--primary-a10)',
                                         }
                                     }}
-                                    onClick={() => navigate('/workout/quick-add')}
+                                    onClick={() => setQuickAddModalOpen(true)}
                                 >
                                     Log Workout
                                 </Button>
@@ -425,7 +429,7 @@ export default function Home() {
                                             backgroundColor: 'rgba(221, 237, 0, 0.1)',
                                         }
                                     }}
-                                    onClick={() => navigate('/workout/start')}
+                                    onClick={() => navigate('/workout')}
                                 >
                                     Start Training
                                 </Button>
@@ -808,7 +812,7 @@ export default function Home() {
                                     </QuickActionCard>
                                 </Grid>
                                 <Grid item xs={4} sm={4}>
-                                    <QuickActionCard onClick={() => navigate('/workout/quick-add')}>
+                                    <QuickActionCard onClick={() => setQuickAddModalOpen(true)}>
                                         <CardContent sx={{
                                             p: 2,
                                             display: 'flex',
@@ -1022,6 +1026,38 @@ export default function Home() {
                     </Grid>
                 </Grid>
             </Box>
+
+            {/* Quick Add Exercise Modal */}
+            <QuickAddExerciseModal
+                open={quickAddModalOpen}
+                onClose={() => setQuickAddModalOpen(false)}
+                onSuccess={() => {
+                    setSuccessMessage('Exercise logged successfully!');
+                    // Optionally reload AI recommendations after adding exercise
+                    loadAIRecommendations();
+                }}
+            />
+
+            {/* Success Snackbar */}
+            <Snackbar
+                open={!!successMessage}
+                autoHideDuration={4000}
+                onClose={() => setSuccessMessage('')}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert
+                    onClose={() => setSuccessMessage('')}
+                    severity="success"
+                    sx={{
+                        backgroundColor: 'rgba(221, 237, 0, 0.15)',
+                        color: '#dded00',
+                        border: '1px solid rgba(221, 237, 0, 0.3)',
+                        borderRadius: '12px',
+                    }}
+                >
+                    {successMessage}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 } 

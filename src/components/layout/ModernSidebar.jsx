@@ -17,6 +17,7 @@ import appLogo from '../../assets/appLogo.svg';
 import {
     Home,
     Activity,
+    History,
     BarChart3,
     User,
     LogOut,
@@ -79,6 +80,7 @@ const NavListItemButton = styled(ListItemButton)(({ active }) => ({
         backgroundColor: active ? 'rgba(221, 237, 0, 0.2)' : 'rgba(255, 255, 255, 0.05)',
         border: '1px solid rgba(221, 237, 0, 0.2)',
     },
+    marginTop: '8px',
 }));
 
 const UserSection = styled(Box)(() => ({
@@ -110,6 +112,8 @@ export default function ModernSidebar() {
             return '/';
         } else if (pathname.startsWith('/workout')) {
             return '/workout';
+        } else if (pathname.startsWith('/history')) {
+            return '/history';
         } else if (pathname.startsWith('/progress')) {
             return '/progress';
         } else if (pathname.startsWith('/profile')) {
@@ -143,7 +147,7 @@ export default function ModernSidebar() {
 
     const navigationItems = [
         {
-            label: 'Dashboard',
+            label: 'Home',
             path: '/',
             icon: Home,
             isActive: activeTab === '/',
@@ -154,6 +158,12 @@ export default function ModernSidebar() {
             icon: Activity,
             // badge: 3,
             isActive: activeTab === '/workout',
+        },
+        {
+            label: 'History',
+            path: '/history',
+            icon: History,
+            isActive: activeTab === '/history',
         },
         {
             label: 'Progress',
@@ -187,12 +197,12 @@ export default function ModernSidebar() {
             </BrandSection>
 
             {/* Quick Add Exercise Button */}
-            <QuickAddButton
+            {/* <QuickAddButton
                 startIcon={<Plus size={20} />}
                 onClick={handleQuickAdd}
             >
                 Quick Add
-            </QuickAddButton>
+            </QuickAddButton> */}
 
             {/* Navigation */}
             <NavigationSection>

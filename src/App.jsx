@@ -1,18 +1,17 @@
 // App.jsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from '@mui/material';
 import { theme } from './theme/theme';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 import Layout from './components/layout/Layout';
 
 // Main components
-import Home from './pages/Home';
 import SignIn from './pages/Auth/SignIn';
 import SignUp from './pages/Auth/SignUp';
 import Profile from './pages/Profile';
 import Workout from './components/Workout';
-import History from './pages/History';
+import ExerciseHistory from './pages/History/ExerciseHistory';
 import Progress from './components/Progress';
 import ExerciseManager from './components/workout/ExerciseManager';
 
@@ -116,12 +115,12 @@ function App() {
                 </ProtectedRoute>
               } />
 
-              {/* History route */}
+              {/* History route - using new ExerciseHistory component */}
               <Route path="/history" element={
                 <ProtectedRoute>
                   <Layout>
                     <ErrorBoundary>
-                      <History />
+                      <ExerciseHistory />
                     </ErrorBoundary>
                   </Layout>
                 </ProtectedRoute>

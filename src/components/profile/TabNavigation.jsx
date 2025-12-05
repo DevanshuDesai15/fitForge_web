@@ -6,6 +6,16 @@ const TabsContainer = styled(Box)(({ theme }) => ({
   gap: '8px',
   marginBottom: '32px',
   borderBottom: `1px solid ${theme.palette.divider}`,
+  overflowX: 'auto',
+  overflowY: 'hidden',
+  scrollbarWidth: 'none', // Firefox
+  '&::-webkit-scrollbar': {
+    display: 'none', // Chrome, Safari, Edge
+  },
+  [theme.breakpoints.down('sm')]: {
+    gap: '4px',
+    marginBottom: '24px',
+  },
 }));
 
 const TabButton = styled(Box)(({ theme, active }) => ({
@@ -23,6 +33,9 @@ const TabButton = styled(Box)(({ theme, active }) => ({
   transition: 'all 0.2s ease',
   position: 'relative',
   bottom: '-1px',
+  whiteSpace: 'nowrap',
+  flex: '1',
+  justifyContent: 'center',
 
   '&:hover': {
     color: theme.palette.primary.main,
@@ -32,6 +45,20 @@ const TabButton = styled(Box)(({ theme, active }) => ({
   '& svg': {
     width: '20px',
     height: '20px',
+    flexShrink: 0,
+  },
+
+  [theme.breakpoints.down('sm')]: {
+    padding: '10px 12px',
+    fontSize: '13px',
+    gap: '6px',
+    minWidth: 'auto',
+  },
+
+  [theme.breakpoints.down(400)]: {
+    padding: '10px 8px',
+    fontSize: '12px',
+    gap: '4px',
   },
 }));
 
