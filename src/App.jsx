@@ -1,20 +1,20 @@
 // App.jsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContext';
+import { UnitsProvider } from './contexts/UnitsContext';
 import { ThemeProvider } from '@mui/material';
 import { theme } from './theme/theme';
-import ProtectedRoute from './components/ProtectedRoute';
-import Layout from './components/Layout';
+import ProtectedRoute from './components/layout/ProtectedRoute';
+import Layout from './components/layout/Layout';
 
 // Main components
-import Home from './components/Home';
-import SignIn from './components/SignIn';
-import SignUp from './components/SignUp';
-import Profile from './components/Profile';
+import SignIn from './pages/Auth/SignIn';
+import SignUp from './pages/Auth/SignUp';
+import Profile from './pages/Profile';
 import Workout from './components/Workout';
-import History from './components/History';
+import ExerciseHistory from './pages/History/ExerciseHistory';
 import Progress from './components/Progress';
-import ExerciseManager from './components/ExerciseManager';
+import ExerciseManager from './components/workout/ExerciseManager';
 
 // Workout sub-components
 import StartWorkout from './components/workout/StartWorkout';
@@ -24,9 +24,9 @@ import QuickAdd from './components/workout/QuickAdd';
 import ExerciseDetail from './components/workout/ExerciseDetail';
 import TimerTest from './components/test/TimerTest';
 import CalendarTest from './components/test/CalendarTest';
-import LandingPage from './components/LandingPage';
-import PublicRoute from './components/PublicRoute';
-import DefaultRoute from './components/DefaultRoute';
+import LandingPage from './pages/Landing/LandingPage';
+import PublicRoute from './components/layout/PublicRoute';
+import DefaultRoute from './components/layout/DefaultRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Wrapper component to handle conditional styling
@@ -52,8 +52,9 @@ function App() {
     <Router>
       <ThemeProvider theme={theme}>
         <AuthProvider>
-          <AppWrapper>
-            <Routes>
+          <UnitsProvider>
+            <AppWrapper>
+              <Routes>
               {/* Landing page - public route */}
               <Route path="/landing" element={<LandingPage />} />
 
@@ -116,12 +117,12 @@ function App() {
                 </ProtectedRoute>
               } />
 
-              {/* History route */}
+              {/* History route - using new ExerciseHistory component */}
               <Route path="/history" element={
                 <ProtectedRoute>
                   <Layout>
                     <ErrorBoundary>
-                      <History />
+                      <ExerciseHistory />
                     </ErrorBoundary>
                   </Layout>
                 </ProtectedRoute>
@@ -161,7 +162,8 @@ function App() {
               {/* Catch all route - redirect to home */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
-          </AppWrapper>
+            </AppWrapper>
+          </UnitsProvider>
         </AuthProvider>
       </ThemeProvider>
     </Router>

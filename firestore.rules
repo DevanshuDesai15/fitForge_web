@@ -25,6 +25,13 @@ service cloud.firestore {
       allow update, delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
     }
 
+    // Workout Programs collection rules
+    match /workoutPrograms/{programId} {
+      allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      allow create: if isAuthenticated() && isOwner();
+      allow update, delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
     // Exercises collection rules
     match /exercises/{exerciseId} {
       allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;

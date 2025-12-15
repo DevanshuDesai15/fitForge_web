@@ -33,5 +33,7 @@ export const formatWeight = (weight, unit = null) => {
 
 export const getWeightLabel = (unit = null) => {
   const currentUnit = unit || getWeightUnit();
-  return `Weight (${currentUnit})`;
+  // Normalize unit display
+  const displayUnit = currentUnit === 'lbs' || currentUnit === 'lb' ? 'lbs' : 'kg';
+  return `Weight (${displayUnit})`;
 };

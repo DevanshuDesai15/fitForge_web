@@ -23,8 +23,8 @@ import {
     MdAutoAwesome
 } from 'react-icons/md';
 import { useAuth } from '../../contexts/AuthContext';
+import { useUnits } from '../../contexts/UnitsContext';
 import progressiveOverloadAI from '../../services/progressiveOverloadAI';
-import { getWeightUnit } from '../../utils/weightUnit';
 import {
     getExerciseCache,
     setExerciseCache,
@@ -126,19 +126,19 @@ const AISuggestionCards = ({
     const [plateauAlerts, setPlateauAlerts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [weightUnit, setWeightUnit] = useState('kg');
     const [, setDismissedSuggestions] = useState(new Set());
 
     const { currentUser } = useAuth();
+    const { weightUnit } = useUnits();
 
     useEffect(() => {
         const loadData = async () => {
             if (currentUser && userId) {
                 await debouncedLoadSuggestions();
             }
-            setWeightUnit(getWeightUnit());
         };
         loadData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentUser?.uid]); // Only depend on userId, not workoutContext
 
     const loadAISuggestions = async () => {

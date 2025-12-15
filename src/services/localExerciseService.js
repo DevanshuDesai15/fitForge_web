@@ -4,7 +4,7 @@
  */
 
 // Import the exercise data
-import mergedData from '../../Merged Data.json' with { type: 'json' };
+import mergedData from '../../MergedData.json' with { type: 'json' };
 
 // Cache the exercises data for performance
 let cachedExercises = null;

@@ -40,12 +40,12 @@ export const geminiConfig = {
   model: "gemini-2.5-flash",
 
   // Feature Flags
-  useGeminiAI: getEnvVar("VITE_USE_GEMINI_AI", "false") === "true", // 🚨 DISABLED by default
+  useGeminiAI: getEnvVar("VITE_USE_GEMINI_AI", "true") === "true",
   hybridMode: getEnvVar("VITE_HYBRID_MODE", "true") === "true",
 
   // 🚨 Emergency kill switch - completely disable Gemini API
   emergencyDisable:
-    getEnvVar("VITE_GEMINI_EMERGENCY_DISABLE", "true") === "true",
+    getEnvVar("VITE_GEMINI_EMERGENCY_DISABLE", "false") === "true",
 
   // Performance Settings
   geminiPriority: parseFloat(getEnvVar("VITE_GEMINI_PRIORITY", "0.4")),
@@ -58,6 +58,10 @@ export const geminiConfig = {
   // Cost Management
   maxRequestsPerUser: parseInt(getEnvVar("VITE_MAX_REQUESTS_PER_USER", "100")),
   maxRequestsPerDay: parseInt(getEnvVar("VITE_MAX_REQUESTS_PER_DAY", "1000")),
+};
+
+export const getGeminiApiKey = () => {
+  return geminiConfig.apiKey;
 };
 
 export default geminiConfig;

@@ -23,8 +23,8 @@ import {
 import { collection, addDoc, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useAuth } from '../../contexts/AuthContext';
+import { useUnits } from '../../contexts/UnitsContext';
 import { useNavigate } from 'react-router-dom';
-import { getWeightUnit } from '../../utils/weightUnit';
 import ExerciseSelector from '../common/ExerciseSelector';
 
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -71,24 +71,16 @@ export default function QuickAdd() {
     const [success, setSuccess] = useState('');
     const [fillSuccess, setFillSuccess] = useState('');
     const [recentExercises, setRecentExercises] = useState([]);
-    const [weightUnit, setWeightUnitState] = useState('kg');
 
     const { currentUser } = useAuth();
+    const { weightUnit } = useUnits();
     const navigate = useNavigate();
     const theme = useTheme();
 
+    // Weight unit is now automatically provided by UnitsContext
     useEffect(() => {
-        setWeightUnitState(getWeightUnit());
         loadRecentExercises();
-
-        const handleStorageChange = (e) => {
-            if (e.key === 'weightUnit') {
-                setWeightUnitState(e.newValue || 'kg');
-            }
-        };
-
-        window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const loadRecentExercises = async () => {
@@ -128,12 +120,16 @@ export default function QuickAdd() {
             const setsArray = Array.from({ length: parseInt(sets) }, () => ({
                 reps: parseInt(reps),
                 weight: parseFloat(weight),
+                weightUnit: weightUnit, // Store unit for each set
                 completed: false
             }));
 
             const exerciseData = {
                 exerciseName,
+                weightUnit: weightUnit, // Store unit used
                 sets: setsArray,
+                weight: parseFloat(weight), // Store max weight
+                reps: parseInt(reps), // Store max reps
                 notes: notes.trim(),
                 timestamp: new Date().toISOString(),
                 userId: currentUser.uid,

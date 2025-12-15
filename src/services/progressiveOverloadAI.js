@@ -345,6 +345,325 @@ class ProgressiveOverloadAIService {
   }
 
   /**
+   * Suggest exercise substitutions based on similar muscle groups and user history
+   * @param {string} userId - User identifier
+   * @param {string} exerciseId - Original exercise identifier
+   * @param {string} reason - Reason for substitution ('plateau', 'equipment', 'preference')
+   * @returns {Promise<Array<ExerciseSubstitution>>}
+   */
+  async suggestExerciseSubstitutions(userId, exerciseId, reason = "plateau") {
+    try {
+      this._log("Suggesting exercise substitutions", {
+        userId,
+        exerciseId,
+        reason,
+      });
+
+      // Get the original exercise analysis
+      const originalAnalysis = await this._analyzeExerciseHistory(
+        userId,
+        exerciseId
+      );
+
+      // Get user profile for personalization
+      const userProfile = await this._getUserProgressionProfile(userId);
+
+      // Generate substitution suggestions based on reason
+      const substitutions = await this._generateExerciseSubstitutions(
+        originalAnalysis,
+        userProfile,
+        reason
+      );
+
+      this._log("Generated exercise substitutions", {
+        exerciseId,
+        substitutionCount: substitutions.length,
+      });
+
+      return substitutions;
+    } catch (error) {
+      this._logError("Error suggesting exercise substitutions", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Generate exercise substitutions based on analysis and reason
+   * @param {ProgressionAnalysis} originalAnalysis - Original exercise analysis
+   * @param {UserProgressionProfile} userProfile - User profile
+   * @param {string} reason - Reason for substitution
+   * @returns {Promise<Array<ExerciseSubstitution>>}
+   * @private
+   */
+  async _generateExerciseSubstitutions(originalAnalysis, userProfile, reason) {
+    const substitutions = [];
+
+    // Define exercise substitution mappings based on muscle groups
+    const substitutionMap = {
+      "bench-press": [
+        "incline-bench-press",
+        "dumbbell-press",
+        "push-ups",
+        "chest-fly",
+      ],
+      squat: ["leg-press", "goblet-squat", "lunges", "bulgarian-split-squat"],
+      deadlift: [
+        "romanian-deadlift",
+        "sumo-deadlift",
+        "trap-bar-deadlift",
+        "hip-thrust",
+      ],
+      "shoulder-press": [
+        "dumbbell-shoulder-press",
+        "arnold-press",
+        "pike-push-ups",
+        "lateral-raises",
+      ],
+      "pull-up": [
+        "lat-pulldown",
+        "assisted-pull-ups",
+        "inverted-rows",
+        "cable-rows",
+      ],
+      "bicep-curls": [
+        "hammer-curls",
+        "preacher-curls",
+        "cable-curls",
+        "chin-ups",
+      ],
+      "tricep-extensions": [
+        "close-grip-bench-press",
+        "dips",
+        "overhead-tricep-press",
+        "diamond-push-ups",
+      ],
+    };
+
+    const exerciseKey = originalAnalysis.exerciseId.toLowerCase();
+    const alternatives = substitutionMap[exerciseKey] || [];
+
+    // Generate substitutions with reasoning
+    for (const alternative of alternatives.slice(0, 3)) {
+      const substitution = {
+        exerciseId: alternative,
+        exerciseName: alternative.replace("-", " "),
+        originalExercise: originalAnalysis.exerciseId,
+        originalExerciseName: originalAnalysis.exerciseName,
+        reason: this._getSubstitutionReason(reason, alternative),
+        suggestedWeight: this._calculateSubstitutionWeight(
+          originalAnalysis,
+          alternative
+        ),
+        suggestedReps: originalAnalysis.currentReps,
+        suggestedSets: originalAnalysis.currentSets,
+        confidenceLevel: this._calculateSubstitutionConfidence(
+          originalAnalysis,
+          alternative
+        ),
+        benefits: this._getSubstitutionBenefits(alternative, reason),
+        difficulty: this._getExerciseDifficulty(alternative),
+        equipment: this._getExerciseEquipment(alternative),
+      };
+
+      substitutions.push(substitution);
+    }
+
+    return substitutions.sort((a, b) => b.confidenceLevel - a.confidenceLevel);
+  }
+
+  /**
+   * Calculate suggested weight for exercise substitution
+   * @param {ProgressionAnalysis} originalAnalysis - Original exercise analysis
+   * @param {string} alternativeExercise - Alternative exercise name
+   * @returns {number} Suggested weight
+   * @private
+   */
+  _calculateSubstitutionWeight(originalAnalysis, alternativeExercise) {
+    // Weight conversion factors for different exercises
+    const conversionFactors = {
+      "dumbbell-press": 0.4, // Each dumbbell is roughly 40% of barbell weight
+      "incline-bench-press": 0.85, // Typically 85% of flat bench
+      "push-ups": 0, // Bodyweight exercise
+      "leg-press": 1.5, // Can typically press more than squat
+      "goblet-squat": 0.3, // Much lighter weight
+      lunges: 0.6, // Per leg, so total is similar to squat
+      "romanian-deadlift": 0.8, // Slightly less than conventional deadlift
+      "sumo-deadlift": 1.0, // Similar to conventional
+      "dumbbell-shoulder-press": 0.35, // Each dumbbell
+      "lat-pulldown": 0.9, // Close to pull-up body weight equivalent
+      "hammer-curls": 0.8, // Slightly heavier than regular curls
+      "close-grip-bench-press": 0.9, // Close to regular bench
+      dips: 0, // Bodyweight exercise
+    };
+
+    const factor = conversionFactors[alternativeExercise] || 0.8;
+    return Math.round(originalAnalysis.currentWeight * factor);
+  }
+
+  /**
+   * Calculate confidence level for exercise substitution
+   * @param {ProgressionAnalysis} originalAnalysis - Original exercise analysis
+   * @param {string} alternativeExercise - Alternative exercise name
+   * @returns {number} Confidence level (0-1)
+   * @private
+   */
+  _calculateSubstitutionConfidence(originalAnalysis, alternativeExercise) {
+    // Base confidence on original exercise confidence and substitution quality
+    const baseConfidence = originalAnalysis.confidenceLevel * 0.8;
+
+    // High-quality substitutions (same movement pattern)
+    const highQualitySubstitutions = [
+      "incline-bench-press",
+      "dumbbell-press",
+      "sumo-deadlift",
+      "romanian-deadlift",
+      "dumbbell-shoulder-press",
+      "hammer-curls",
+    ];
+
+    if (highQualitySubstitutions.includes(alternativeExercise)) {
+      return Math.min(baseConfidence + 0.1, 0.95);
+    }
+
+    return baseConfidence;
+  }
+
+  /**
+   * Get substitution reason text
+   * @param {string} reason - Reason code
+   * @param {string} alternative - Alternative exercise
+   * @returns {string} Reason text
+   * @private
+   */
+  _getSubstitutionReason(reason, alternative) {
+    switch (reason) {
+      case "plateau":
+        return `Break through plateau with ${alternative.replace(
+          "-",
+          " "
+        )} - different angle/grip`;
+      case "equipment":
+        return `Equipment alternative: ${alternative.replace(
+          "-",
+          " "
+        )} targets same muscles`;
+      case "preference":
+        return `User preference: ${alternative.replace("-", " ")} for variety`;
+      case "injury":
+        return `Injury-friendly alternative: ${alternative.replace(
+          "-",
+          " "
+        )} with reduced stress`;
+      default:
+        return `Alternative exercise: ${alternative.replace("-", " ")}`;
+    }
+  }
+
+  /**
+   * Get substitution benefits
+   * @param {string} alternative - Alternative exercise
+   * @param {string} reason - Reason for substitution
+   * @returns {Array<string>} Benefits list
+   * @private
+   */
+  _getSubstitutionBenefits(alternative) {
+    const benefitMap = {
+      "incline-bench-press": [
+        "Upper chest focus",
+        "Shoulder-friendly angle",
+        "Strength variation",
+      ],
+      "dumbbell-press": [
+        "Unilateral training",
+        "Greater range of motion",
+        "Stabilizer activation",
+      ],
+      "push-ups": [
+        "Bodyweight convenience",
+        "Core engagement",
+        "Functional movement",
+      ],
+      "leg-press": [
+        "Reduced spinal load",
+        "Isolated leg strength",
+        "Safer for beginners",
+      ],
+      "goblet-squat": [
+        "Improved mobility",
+        "Core activation",
+        "Beginner-friendly",
+      ],
+      "romanian-deadlift": [
+        "Hamstring focus",
+        "Hip hinge pattern",
+        "Posterior chain",
+      ],
+      "lat-pulldown": [
+        "Controlled resistance",
+        "Beginner-friendly",
+        "Adjustable weight",
+      ],
+      "hammer-curls": [
+        "Forearm strength",
+        "Neutral grip",
+        "Reduced wrist stress",
+      ],
+    };
+
+    return (
+      benefitMap[alternative] || [
+        "Muscle variation",
+        "Movement diversity",
+        "Progression option",
+      ]
+    );
+  }
+
+  /**
+   * Get exercise difficulty level
+   * @param {string} exercise - Exercise name
+   * @returns {string} Difficulty level
+   * @private
+   */
+  _getExerciseDifficulty(exercise) {
+    const difficultyMap = {
+      "push-ups": "Beginner",
+      "goblet-squat": "Beginner",
+      "lat-pulldown": "Beginner",
+      "dumbbell-press": "Intermediate",
+      "incline-bench-press": "Intermediate",
+      "romanian-deadlift": "Intermediate",
+      "pull-ups": "Advanced",
+      dips: "Advanced",
+    };
+
+    return difficultyMap[exercise] || "Intermediate";
+  }
+
+  /**
+   * Get exercise equipment requirements
+   * @param {string} exercise - Exercise name
+   * @returns {string} Equipment type
+   * @private
+   */
+  _getExerciseEquipment(exercise) {
+    const equipmentMap = {
+      "push-ups": "Bodyweight",
+      "pull-ups": "Pull-up bar",
+      dips: "Dip bars",
+      "goblet-squat": "Dumbbell",
+      "dumbbell-press": "Dumbbells",
+      "hammer-curls": "Dumbbells",
+      "lat-pulldown": "Cable machine",
+      "leg-press": "Leg press machine",
+      "incline-bench-press": "Barbell + Incline bench",
+      "romanian-deadlift": "Barbell",
+    };
+
+    return equipmentMap[exercise] || "Standard gym equipment";
+  }
+
+  /**
    * Calculate progression for multiple exercises in a single batch request
    * This dramatically reduces API calls by processing all exercises together
    * @param {string} userId - User identifier
@@ -3399,43 +3718,34 @@ class ProgressiveOverloadAIService {
       const analyses = await this.analyzeWorkoutHistory(userId);
 
       // Use Gemini AI for intelligent workout planning
-      if (this.config.useGeminiAI) {
-        try {
-          const geminiWorkout =
-            await geminiAIService.generateWorkoutRecommendations(
-              workoutContext,
-              userProfile,
-              recentWorkouts
-            );
+      if (this.config.useGeminiAI && analyses.length > 0) {
+        this._log("Using Gemini AI for workout suggestions", {
+          analysisCount: analyses.length,
+        });
+        const geminiResult =
+          await geminiAIService.generateBatchProgressionSuggestions(
+            analyses,
+            userProfile,
+            recentWorkouts
+          );
 
-          // Convert Gemini workout to our format
-          return geminiWorkout.workoutPlan.exercises.map((exercise) => ({
-            exerciseId: exercise.exerciseId,
-            exerciseName: exercise.exerciseName,
-            suggestedWeight:
-              exercise.weight === "progressive"
-                ? this._calculateProgressiveWeight(
-                    exercise.exerciseId,
-                    analyses
-                  )
-                : exercise.weight,
-            suggestedReps: parseInt(exercise.reps.split("-")[1]) || 10,
-            suggestedSets: exercise.sets,
-            restTime: exercise.restTime,
-            priority: "high",
-            reasoning: geminiWorkout.reasoning,
-            aiGenerated: true,
-            personalizedNotes: exercise.notes,
-          }));
-        } catch (error) {
-          this._log("Gemini AI unavailable for workout suggestions", {
-            userId,
-            error: error.message,
-          });
-        }
+        // Transform Gemini suggestions to the required format
+        return geminiResult.suggestions.map((suggestion) => ({
+          ...suggestion,
+          confidenceLevel: suggestion.confidence,
+          suggestedWeight: suggestion.suggestedWeight || 0,
+          suggestedReps: suggestion.suggestedReps || 10,
+          suggestedSets: suggestion.suggestedSets || 3,
+        }));
       }
 
-      // Fallback to rule-based workout suggestions
+      // Fallback to rule-based suggestions if Gemini is disabled or no analysis
+      this._log("Using rule-based workout suggestions", {
+        geminiEnabled: this.config.useGeminiAI,
+        analysisCount: analyses.length,
+      });
+
+      // Use rule-based suggestions
       return this._generateRuleBasedWorkoutSuggestions(
         analyses,
         workoutContext
