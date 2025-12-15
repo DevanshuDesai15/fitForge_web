@@ -5,6 +5,7 @@ import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { collection, addDoc, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useAuth } from '../../contexts/AuthContext';
+import { useUnits } from '../../contexts/UnitsContext';
 
 // Components
 import TemplateSelector from './components/TemplateSelector';
@@ -14,6 +15,7 @@ import RestTimer from './components/RestTimer';
 import ExerciseOverview from './components/ExerciseOverview';
 import WorkoutTabs from './components/WorkoutTabs';
 import AICoachTab from './components/AICoachTab';
+import AddExerciseDialog from './components/AddExerciseDialog';
 
 // Hooks
 import { useWorkoutState } from './hooks/useWorkoutState';
@@ -23,9 +25,9 @@ import { useAISuggestions } from './hooks/useAISuggestions';
 const StartWorkout = () => {
     // State management
     const [currentStep, setCurrentStep] = useState('template'); // 'template', 'day', 'workout'
-    const [weightUnit, setWeightUnit] = useState('kg');
     const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
     const [finishDialog, setFinishDialog] = useState(false);
+    const [addExerciseDialog, setAddExerciseDialog] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -38,6 +40,7 @@ const StartWorkout = () => {
     const location = useLocation();
     const [searchParams] = useSearchParams();
     const { currentUser } = useAuth();
+    const { weightUnit } = useUnits();
 
     const {
         workoutStarted,
@@ -73,28 +76,7 @@ const StartWorkout = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Load weight unit preference from user's Firestore preferences
-    useEffect(() => {
-        const loadUserPreferences = async () => {
-            if (!currentUser) return;
-
-            try {
-                const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    const unitPreference = userData.preferences?.units || 'imperial';
-                    // Set weightUnit based on unit preference
-                    setWeightUnit(unitPreference === 'metric' ? 'kg' : 'lbs');
-                }
-            } catch (error) {
-                console.error('Error loading user preferences:', error);
-                // Default to lbs if error
-                setWeightUnit('lbs');
-            }
-        };
-
-        loadUserPreferences();
-    }, [currentUser]);
+    // Weight unit is now automatically provided by UnitsContext
 
     // Load AI suggestions when exercises are set
     useEffect(() => {
@@ -295,20 +277,41 @@ const StartWorkout = () => {
         // Mark set as completed
         currentSet.completed = true;
 
-        // If all existing sets are completed, add a new empty one
+        setExercises(updatedExercises);
+
+        // Check if all existing sets are completed
         const allSetsCompleted = updatedExercises[exerciseIndex].sets.every(set => set.completed);
-        if (allSetsCompleted) {
+        const targetSets = updatedExercises[exerciseIndex].targetSets || 3;
+        const completedCount = updatedExercises[exerciseIndex].sets.filter(set => set.completed).length;
+
+        // Only auto-add next set if we haven't reached target yet
+        if (allSetsCompleted && completedCount < targetSets) {
             updatedExercises[exerciseIndex].sets.push({
                 weight: currentSet.weight || '',
                 reps: '',
                 completed: false
             });
+            setExercises(updatedExercises);
         }
-
-        setExercises(updatedExercises);
+        // If target reached, don't add set automatically - user will click "Add Extra Set" button
 
         // Start rest timer
         setShowRestTimer(true);
+    };
+
+    // 🎯 NEW: Handle adding an extra set
+    const handleAddExtraSet = (exerciseIndex) => {
+        const updatedExercises = [...exercises];
+        const lastCompletedSet = updatedExercises[exerciseIndex].sets
+            .filter(set => set.completed)
+            .slice(-1)[0];
+
+        updatedExercises[exerciseIndex].sets.push({
+            weight: lastCompletedSet?.weight || '',
+            reps: '',
+            completed: false
+        });
+        setExercises(updatedExercises);
     };
 
     // 🎯 NEW: Handle rest timer completion
@@ -360,6 +363,18 @@ const StartWorkout = () => {
         }
     };
 
+    // 🎯 NEW: Open add exercise dialog
+    const handleOpenAddExercise = () => {
+        setAddExerciseDialog(true);
+    };
+
+    // 🎯 NEW: Add exercise to workout
+    const handleAddExerciseToWorkout = (exercise) => {
+        const updatedExercises = [...exercises, exercise];
+        setExercises(updatedExercises);
+        setAddExerciseDialog(false);
+    };
+
     const handleFinishWorkout = async () => {
         if (!currentUser) {
             setError('You must be logged in to save your workout.');
@@ -389,10 +404,12 @@ const StartWorkout = () => {
                 templateId: currentTemplate?.id || null,
                 templateName: currentTemplate?.name || 'Custom Workout',
                 dayName: selectedDay?.name || 'Workout Session',
+                weightUnit: weightUnit, // Store the unit used during workout
                 exercises: exercises.map(exercise => ({
                     name: exercise.name,
                     sets: (exercise.sets || []).filter(set => set.completed && set.reps).map(set => ({
                         weight: set.weight || '0',
+                        weightUnit: weightUnit, // Store unit for each set
                         reps: set.reps,
                         completed: true
                     })),
@@ -416,8 +433,10 @@ const StartWorkout = () => {
                     const exerciseRecord = {
                         userId: currentUser.uid,
                         exerciseName: exercise.name,
+                        weightUnit: weightUnit, // Store unit used
                         sets: completedSets.map(set => ({
                             weight: set.weight || '0',
+                            weightUnit: weightUnit, // Store unit for each set
                             reps: set.reps,
                             completed: true
                         })),
@@ -638,6 +657,7 @@ const StartWorkout = () => {
                                 onSetChange={handleSetChange}
                                 onCompleteSet={handleCompleteSet}
                                 onRemoveSet={handleRemoveCompletedSet}
+                                onAddExtraSet={handleAddExtraSet}
                                 weightUnit={weightUnit}
                                 aiTip="Solid set! Maintain or slightly increase weight."
                                 totalExercises={exercises.length}
@@ -658,6 +678,7 @@ const StartWorkout = () => {
                                     currentExerciseIndex={currentExerciseIndex}
                                     onExerciseClick={handleExerciseClick}
                                     onRemoveExercise={handleRemoveExercise}
+                                    onAddExercise={handleOpenAddExercise}
                                 />
                             </Box>
                         )}
@@ -708,14 +729,21 @@ const StartWorkout = () => {
                     </Box>
                 )}
 
+                {/* Add Exercise Dialog */}
+                <AddExerciseDialog
+                    open={addExerciseDialog}
+                    onClose={() => setAddExerciseDialog(false)}
+                    onAddExercise={handleAddExerciseToWorkout}
+                />
+
                 {/* Finish Workout Dialog */}
                 <Dialog
                     open={finishDialog}
                     onClose={() => !saving && setFinishDialog(false)}
                     maxWidth="sm"
                     fullWidth
-                    PaperProps={{
-                        sx: {
+                    sx={{
+                        '& .MuiDialog-paper': {
                             background: '#282828',
                             border: '1px solid rgba(221, 237, 0, 0.2)',
                         }

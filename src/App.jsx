@@ -1,6 +1,7 @@
 // App.jsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { UnitsProvider } from './contexts/UnitsContext';
 import { ThemeProvider } from '@mui/material';
 import { theme } from './theme/theme';
 import ProtectedRoute from './components/layout/ProtectedRoute';
@@ -51,8 +52,9 @@ function App() {
     <Router>
       <ThemeProvider theme={theme}>
         <AuthProvider>
-          <AppWrapper>
-            <Routes>
+          <UnitsProvider>
+            <AppWrapper>
+              <Routes>
               {/* Landing page - public route */}
               <Route path="/landing" element={<LandingPage />} />
 
@@ -160,7 +162,8 @@ function App() {
               {/* Catch all route - redirect to home */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
-          </AppWrapper>
+            </AppWrapper>
+          </UnitsProvider>
         </AuthProvider>
       </ThemeProvider>
     </Router>

@@ -33,7 +33,7 @@ import {
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useAuth } from '../../contexts/AuthContext';
-import { getWeightUnit } from '../../utils/weightUnit';
+import { useUnits } from '../../contexts/UnitsContext';
 import { format } from 'date-fns';
 
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -80,22 +80,23 @@ export default function ExerciseHistory() {
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [weightUnit, setWeightUnitState] = useState('kg');
     const { currentUser } = useAuth();
+    const { weightUnit, convertWeight } = useUnits();
     const theme = useTheme();
 
-    useEffect(() => {
-        setWeightUnitState(getWeightUnit());
+    // Helper function to convert and format weight for display
+    const displayWeight = (weight, storedUnit = null) => {
+        const numWeight = parseFloat(weight);
+        if (isNaN(numWeight) || numWeight === 0) return '0';
 
-        const handleStorageChange = (e) => {
-            if (e.key === 'weightUnit') {
-                setWeightUnitState(e.newValue || 'kg');
-            }
-        };
+        // If no stored unit, assume it's already in current display unit (for old data)
+        if (!storedUnit || storedUnit === weightUnit) {
+            return numWeight.toFixed(1);
+        }
 
-        window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
-    }, []);
+        // Convert from stored unit to current display unit
+        return convertWeight(numWeight, storedUnit, weightUnit);
+    };
 
     const loadWorkouts = useCallback(async () => {
         if (!currentUser) return;
@@ -154,15 +155,23 @@ export default function ExerciseHistory() {
                     date: workout.timestamp,
                     sets: exercise.sets || [],
                     workoutId: workout.id,
+                    weightUnit: exercise.sets?.[0]?.weightUnit || workout.weightUnit || 'lbs' // Fallback for old data
                 });
 
-                // Calculate max weight and reps
+                // Calculate max weight and reps (convert to current display unit)
                 if (Array.isArray(exercise.sets)) {
                     exercise.sets.forEach(set => {
-                        const weight = set.weightType === 'bodyweight' ? 0 : (parseFloat(set.weight) || 0);
+                        const rawWeight = set.weightType === 'bodyweight' ? 0 : (parseFloat(set.weight) || 0);
+                        const storedUnit = set.weightUnit || workout.weightUnit || 'lbs';
+
+                        // Convert to current display unit for comparison
+                        const weight = parseFloat(convertWeight(rawWeight, storedUnit, weightUnit)) || 0;
                         const reps = parseInt(set.reps) || 0;
 
-                        if (weight > stats.maxWeight) stats.maxWeight = weight;
+                        if (weight > stats.maxWeight) {
+                            stats.maxWeight = weight;
+                            stats.maxWeightUnit = storedUnit; // Keep track of original unit
+                        }
                         if (reps > stats.maxReps) stats.maxReps = reps;
                         stats.totalVolume += weight * reps;
                     });
@@ -236,10 +245,19 @@ export default function ExerciseHistory() {
             if (exercise.sessions.length < 2) return;
 
             const latest = exercise.sessions[0];
-            const latestMax = Math.max(...latest.sets.map(s => parseFloat(s.weight) || 0));
+            // Convert weights to current display unit before comparing
+            const latestMax = Math.max(...latest.sets.map(s => {
+                const weight = parseFloat(s.weight) || 0;
+                const storedUnit = s.weightUnit || latest.weightUnit || 'lbs';
+                return parseFloat(convertWeight(weight, storedUnit, weightUnit)) || 0;
+            }));
 
             const previousMax = Math.max(
-                ...exercise.sessions.slice(1).flatMap(s => s.sets.map(set => parseFloat(set.weight) || 0))
+                ...exercise.sessions.slice(1).flatMap(s => s.sets.map(set => {
+                    const weight = parseFloat(set.weight) || 0;
+                    const storedUnit = set.weightUnit || s.weightUnit || 'lbs';
+                    return parseFloat(convertWeight(weight, storedUnit, weightUnit)) || 0;
+                }))
             );
 
             if (latestMax > previousMax) {
@@ -270,6 +288,13 @@ export default function ExerciseHistory() {
         )
     );
 
+    const formatVolume = (volume) => {
+        if (volume >= 1000) {
+            return `${(volume / 1000).toFixed(1)}k`;
+        }
+        return volume.toFixed(0);
+    };
+
     const renderStatsTab = () => {
         return (
             <Box>
@@ -283,84 +308,77 @@ export default function ExerciseHistory() {
                     </Box>
                 ) : (
                     filteredExercises.map((exercise) => {
-                        const isExpanded = expandedExercises.has(exercise.name);
                         const trend = getTrendDirection(exercise.name);
+                        const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : () => (
+                            <Box component="span" sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: theme.palette.text.secondary }}>
+                                —
+                            </Box>
+                        );
 
                         return (
                             <StyledCard key={exercise.name} sx={{ mb: 2 }}>
-                                <CardContent>
-                                    <Box
-                                        sx={{
-                                            display: 'flex',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'center',
-                                            cursor: 'pointer',
-                                        }}
-                                        onClick={() => toggleExerciseExpanded(exercise.name)}
-                                    >
+                                <CardContent sx={{ p: 3 }}>
+                                    {/* Header with Exercise Name and Trend */}
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <Typography variant="h6" sx={{ color: theme.palette.primary.main }}>
+                                            <Typography variant="h6" sx={{ color: theme.palette.primary.main, fontWeight: '600' }}>
                                                 {exercise.name}
                                             </Typography>
                                             {trend === 'up' && <TrendingUp size={18} color={theme.palette.status.success} />}
                                             {trend === 'down' && <TrendingDown size={18} color={theme.palette.status.error} />}
+                                            {trend === 'neutral' && <TrendIcon />}
                                         </Box>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                            <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                                                {format(new Date(exercise.lastPerformed), 'MMM dd, yyyy')}
-                                            </Typography>
-                                            <IconButton size="small">
-                                                {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                                            </IconButton>
-                                        </Box>
+                                        <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontSize: '0.875rem' }}>
+                                            Last: {format(new Date(exercise.lastPerformed), 'MMM dd, yyyy')}
+                                        </Typography>
                                     </Box>
 
-                                    <Collapse in={isExpanded}>
-                                        <Box sx={{ mt: 2 }}>
-                                            <Grid container spacing={2}>
-                                                <Grid item xs={6} sm={3}>
-                                                    <Box sx={{ textAlign: 'center' }}>
-                                                        <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                                                            Sessions
-                                                        </Typography>
-                                                        <Typography variant="h6" sx={{ color: theme.palette.primary.main }}>
-                                                            {exercise.sessions.length}
-                                                        </Typography>
-                                                    </Box>
-                                                </Grid>
-                                                <Grid item xs={6} sm={3}>
-                                                    <Box sx={{ textAlign: 'center' }}>
-                                                        <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                                                            Max Weight
-                                                        </Typography>
-                                                        <Typography variant="h6" sx={{ color: theme.palette.primary.main }}>
-                                                            {exercise.maxWeight.toFixed(0)}{weightUnit}
-                                                        </Typography>
-                                                    </Box>
-                                                </Grid>
-                                                <Grid item xs={6} sm={3}>
-                                                    <Box sx={{ textAlign: 'center' }}>
-                                                        <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                                                            Max Reps
-                                                        </Typography>
-                                                        <Typography variant="h6" sx={{ color: theme.palette.primary.main }}>
-                                                            {exercise.maxReps}
-                                                        </Typography>
-                                                    </Box>
-                                                </Grid>
-                                                <Grid item xs={6} sm={3}>
-                                                    <Box sx={{ textAlign: 'center' }}>
-                                                        <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                                                            Total Volume
-                                                        </Typography>
-                                                        <Typography variant="h6" sx={{ color: theme.palette.primary.main }}>
-                                                            {exercise.totalVolume.toFixed(0)}
-                                                        </Typography>
-                                                    </Box>
-                                                </Grid>
-                                            </Grid>
+                                    {/* Stats Grid */}
+                                    <Box sx={{
+                                        display: 'grid',
+                                        gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' },
+                                        gap: 3,
+                                    }}>
+                                        {/* Sessions */}
+                                        <Box sx={{ textAlign: 'center' }}>
+                                            <Typography variant="h5" sx={{ color: theme.palette.text.primary, fontWeight: 'bold', mb: 0.5 }}>
+                                                {exercise.sessions.length}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontSize: '0.875rem' }}>
+                                                Sessions
+                                            </Typography>
                                         </Box>
-                                    </Collapse>
+
+                                        {/* Max Weight */}
+                                        <Box sx={{ textAlign: 'center' }}>
+                                            <Typography variant="h5" sx={{ color: theme.palette.text.primary, fontWeight: 'bold', mb: 0.5 }}>
+                                                {exercise.maxWeight.toFixed(0)}{weightUnit}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontSize: '0.875rem' }}>
+                                                Max Weight
+                                            </Typography>
+                                        </Box>
+
+                                        {/* Max Reps */}
+                                        <Box sx={{ textAlign: 'center' }}>
+                                            <Typography variant="h5" sx={{ color: theme.palette.text.primary, fontWeight: 'bold', mb: 0.5 }}>
+                                                {exercise.maxReps}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontSize: '0.875rem' }}>
+                                                Max Reps
+                                            </Typography>
+                                        </Box>
+
+                                        {/* Total Volume */}
+                                        <Box sx={{ textAlign: 'center' }}>
+                                            <Typography variant="h5" sx={{ color: theme.palette.text.primary, fontWeight: 'bold', mb: 0.5 }}>
+                                                {formatVolume(exercise.totalVolume)}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontSize: '0.875rem' }}>
+                                                Total Volume
+                                            </Typography>
+                                        </Box>
+                                    </Box>
                                 </CardContent>
                             </StyledCard>
                         );
@@ -371,9 +389,34 @@ export default function ExerciseHistory() {
     };
 
     const renderRecentTab = () => {
+        // Group exercises by exercise name and get the most recent workout for each
+        const exerciseMap = new Map();
+
+        workouts.forEach(workout => {
+            workout.exercises?.forEach(exercise => {
+                const name = exercise.name;
+                if (!exerciseMap.has(name) || workout.timestamp > exerciseMap.get(name).timestamp) {
+                    exerciseMap.set(name, {
+                        name,
+                        sets: exercise.sets || [],
+                        weightUnit: exercise.sets?.[0]?.weightUnit || workout.weightUnit || 'lbs', // Store weight unit
+                        notes: exercise.notes || '',
+                        timestamp: workout.timestamp,
+                        workoutId: workout.id,
+                    });
+                }
+            });
+        });
+
+        const recentExercises = Array.from(exerciseMap.values())
+            .filter(exercise =>
+                searchQuery ? exercise.name.toLowerCase().includes(searchQuery.toLowerCase()) : true
+            )
+            .sort((a, b) => b.timestamp - a.timestamp);
+
         return (
             <Box>
-                {filteredWorkouts.length === 0 ? (
+                {recentExercises.length === 0 ? (
                     <Box sx={{ textAlign: 'center', py: 6 }}>
                         <Calendar size={48} color={theme.palette.surface.hover} style={{ marginBottom: '16px' }} />
                         <Typography variant="h6" sx={{ color: theme.palette.text.primary, mb: 2 }}>
@@ -381,89 +424,98 @@ export default function ExerciseHistory() {
                         </Typography>
                     </Box>
                 ) : (
-                    filteredWorkouts.map((workout) => {
-                        const isExpanded = expandedWorkouts.has(workout.id);
+                    recentExercises.map((exercise) => {
+                        const trend = getTrendDirection(exercise.name);
+                        const isPR = trend === 'up';
+
+                        // Calculate total volume (convert weights to current display unit)
+                        const totalVolume = Array.isArray(exercise.sets)
+                            ? exercise.sets.reduce((sum, set) => {
+                                const rawWeight = set.weightType === 'bodyweight' ? 0 : (parseFloat(set.weight) || 0);
+                                const storedUnit = set.weightUnit || exercise.weightUnit || 'lbs';
+                                const weight = parseFloat(convertWeight(rawWeight, storedUnit, weightUnit)) || 0;
+                                const reps = parseInt(set.reps) || 0;
+                                return sum + (weight * reps);
+                            }, 0)
+                            : 0;
 
                         return (
-                            <StyledCard key={workout.id} sx={{ mb: 2 }}>
-                                <CardContent>
-                                    <Box
-                                        sx={{
-                                            display: 'flex',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'center',
-                                            cursor: 'pointer',
-                                        }}
-                                        onClick={() => toggleWorkoutExpanded(workout.id)}
-                                    >
-                                        <Typography variant="h6" sx={{ color: theme.palette.primary.main }}>
-                                            {format(new Date(workout.timestamp), 'MMM dd, yyyy')}
+                            <StyledCard key={exercise.name} sx={{ mb: 2 }}>
+                                <CardContent sx={{ p: 3 }}>
+                                    {/* Header with Exercise Name, PR Badge, Trend, and Date */}
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
+                                            <Typography variant="h6" sx={{ color: theme.palette.primary.main, fontWeight: '600' }}>
+                                                {exercise.name}
+                                            </Typography>
+                                            {isPR && (
+                                                <Chip
+                                                    label="PR"
+                                                    size="small"
+                                                    sx={{
+                                                        backgroundColor: theme.palette.primary.main,
+                                                        color: '#121212',
+                                                        fontWeight: 'bold',
+                                                        fontSize: '0.65rem',
+                                                        height: '22px',
+                                                        '& .MuiChip-label': {
+                                                            px: 1,
+                                                        }
+                                                    }}
+                                                />
+                                            )}
+                                            {trend === 'up' && <TrendingUp size={18} color={theme.palette.status.success} />}
+                                            {trend === 'down' && <TrendingDown size={18} color={theme.palette.status.error} />}
+                                        </Box>
+                                        <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
+                                            {format(new Date(exercise.timestamp), 'MMM dd, yyyy')}
                                         </Typography>
-                                        <IconButton size="small">
-                                            {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                                        </IconButton>
                                     </Box>
 
-                                    <Collapse in={isExpanded}>
-                                        <Box sx={{ mt: 2 }}>
-                                            {workout.exercises?.map((exercise, index) => {
-                                                const totalVolume = Array.isArray(exercise.sets)
-                                                    ? exercise.sets.reduce((sum, set) => {
-                                                        const weight = set.weightType === 'bodyweight' ? 0 : (parseFloat(set.weight) || 0);
-                                                        const reps = parseInt(set.reps) || 0;
-                                                        return sum + (weight * reps);
-                                                    }, 0)
-                                                    : 0;
+                                    {/* Sets Performed Label */}
+                                    <Typography variant="caption" sx={{ color: theme.palette.text.secondary, display: 'block', mb: 1.5, fontSize: '0.8rem', fontWeight: '500' }}>
+                                        Sets Performed:
+                                    </Typography>
 
-                                                return (
-                                                    <Box key={index} sx={{ mb: 2, p: 2, background: '#1e1e1e', borderRadius: '12px', border: `1px solid ${theme.palette.border.main}` }}>
-                                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                                                            <Typography variant="body1" sx={{ color: theme.palette.primary.main, fontWeight: '600' }}>
-                                                                {exercise.name}
-                                                            </Typography>
-                                                            {getTrendDirection(exercise.name) === 'up' && (
-                                                                <Chip
-                                                                    label="PR"
-                                                                    size="small"
-                                                                    sx={{
-                                                                        backgroundColor: theme.palette.primary.main,
-                                                                        color: '#121212',
-                                                                        fontWeight: 'bold',
-                                                                        fontSize: '0.7rem',
-                                                                    }}
-                                                                />
-                                                            )}
-                                                        </Box>
+                                    {/* Sets in Horizontal Grid Layout */}
+                                    <Box sx={{
+                                        display: 'grid',
+                                        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+                                        gap: 2,
+                                        mb: 2
+                                    }}>
+                                        {Array.isArray(exercise.sets) && exercise.sets.map((set, setIndex) => (
+                                            <Box
+                                                key={setIndex}
+                                                sx={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    gap: 0.5,
+                                                }}
+                                            >
+                                                <Typography variant="body2" sx={{ color: theme.palette.text.primary, fontWeight: '600', fontSize: '0.95rem' }}>
+                                                    {set.reps} reps × {set.weightType === 'bodyweight' ? '0' : displayWeight(set.weight, set.weightUnit)}{weightUnit}
+                                                </Typography>
+                                                <Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontSize: '0.75rem' }}>
+                                                    Set {setIndex + 1}
+                                                </Typography>
+                                            </Box>
+                                        ))}
+                                    </Box>
 
-                                                        <Typography variant="caption" sx={{ color: theme.palette.text.secondary, display: 'block', mb: 1, fontSize: '0.75rem' }}>
-                                                            Sets Performed:
-                                                        </Typography>
+                                    {/* Total Volume */}
+                                    <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontSize: '0.875rem', mb: exercise.notes ? 1.5 : 0 }}>
+                                        Total Volume: <Box component="span" sx={{ color: theme.palette.text.primary, fontWeight: '600' }}>{totalVolume.toFixed(0)}{weightUnit}</Box>
+                                    </Typography>
 
-                                                        {Array.isArray(exercise.sets) && exercise.sets.map((set, setIndex) => (
-                                                            <Typography key={setIndex} variant="body2" sx={{ color: theme.palette.text.primary, ml: 2, mb: 0.5, fontSize: '0.875rem' }}>
-                                                                {set.reps} reps × {set.weightType === 'bodyweight' ? 'Bodyweight' : `${set.weight}${set.weightUnit || weightUnit}`} - Set {setIndex + 1}
-                                                            </Typography>
-                                                        ))}
-
-                                                        <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mt: 1.5, fontSize: '0.875rem' }}>
-                                                            Total Volume: {totalVolume.toFixed(0)}{weightUnit}
-                                                        </Typography>
-
-                                                        {exercise.notes && (
-                                                            <Box sx={{ mt: 1.5, p: 1.5, background: '#121212', borderRadius: '8px', border: `1px solid ${theme.palette.border.main}` }}>
-                                                                <Typography variant="caption" sx={{ color: theme.palette.text.secondary, display: 'block', mb: 0.5, fontSize: '0.7rem' }}>
-                                                                    Notes:
-                                                                </Typography>
-                                                                <Typography variant="body2" sx={{ color: theme.palette.text.primary, fontSize: '0.875rem' }}>
-                                                                    {exercise.notes}
-                                                                </Typography>
-                                                            </Box>
-                                                        )}
-                                                    </Box>
-                                                );
-                                            })}
+                                    {/* Notes */}
+                                    {exercise.notes && (
+                                        <Box sx={{ mt: 2, p: 1.5, background: 'rgba(221, 237, 0, 0.05)', borderRadius: '8px', border: `1px solid ${theme.palette.border.main}` }}>
+                                            <Typography variant="body2" sx={{ color: theme.palette.text.primary, fontSize: '0.875rem', fontStyle: 'italic' }}>
+                                                {exercise.notes}
+                                            </Typography>
                                         </Box>
-                                    </Collapse>
+                                    )}
                                 </CardContent>
                             </StyledCard>
                         );
@@ -496,7 +548,9 @@ export default function ExerciseHistory() {
                         {personalRecords.map((record, index) => {
                             const latestSession = record.sessions[0];
                             const maxSet = latestSession.sets.reduce((max, set) => {
-                                const weight = parseFloat(set.weight) || 0;
+                                const rawWeight = parseFloat(set.weight) || 0;
+                                const storedUnit = set.weightUnit || latestSession.weightUnit || 'lbs';
+                                const weight = parseFloat(convertWeight(rawWeight, storedUnit, weightUnit)) || 0;
                                 const reps = parseInt(set.reps) || 0;
                                 return weight > max.weight ? { weight, reps } : max;
                             }, { weight: 0, reps: 0 });

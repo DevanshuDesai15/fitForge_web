@@ -3,7 +3,7 @@ import { MdCheckCircle, MdDelete } from 'react-icons/md';
 import { UserPlus, Shuffle } from 'lucide-react';
 import PropTypes from 'prop-types';
 
-const ExerciseOverview = ({ exercises, currentExerciseIndex, onExerciseClick, onRemoveExercise }) => {
+const ExerciseOverview = ({ exercises, currentExerciseIndex, onExerciseClick, onRemoveExercise, onAddExercise }) => {
     return (
         <Card sx={{
             background: 'rgba(40, 40, 40, 0.9)',
@@ -17,6 +17,7 @@ const ExerciseOverview = ({ exercises, currentExerciseIndex, onExerciseClick, on
                     </Typography>
                     <Typography
                         variant="caption"
+                        onClick={() => onAddExercise?.()}
                         sx={{
                             color: '#dded00',
                             display: 'flex',
@@ -143,7 +144,8 @@ ExerciseOverview.propTypes = {
     exercises: PropTypes.array.isRequired,
     currentExerciseIndex: PropTypes.number.isRequired,
     onExerciseClick: PropTypes.func,
-    onRemoveExercise: PropTypes.func
+    onRemoveExercise: PropTypes.func,
+    onAddExercise: PropTypes.func
 };
 
 export default ExerciseOverview;

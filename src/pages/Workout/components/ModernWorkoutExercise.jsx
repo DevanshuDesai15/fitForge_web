@@ -9,6 +9,7 @@ const ModernWorkoutExercise = ({
     onSetChange,
     onCompleteSet,
     onRemoveSet,
+    onAddExtraSet,
     weightUnit = 'kg',
     aiTip,
     totalExercises,
@@ -21,10 +22,8 @@ const ModernWorkoutExercise = ({
     const targetReps = exercise.targetReps || '8-10';
 
     const setsToShow = exercise.sets?.filter((_, index) => index < currentSetIndex) || [];
-    const isTargetCompleted = setsToShow.length >= targetSets;
-
-
-    if (!currentSet) return null;
+    const isTargetCompleted = completedSets.length >= targetSets;
+    const hasIncompleteSet = currentSet !== undefined;
 
     return (
         <Card sx={{
@@ -138,11 +137,51 @@ const ModernWorkoutExercise = ({
                     </Box>
                 )}
 
-                {/* Log Next Set */}
-                {currentSet && (
+                {/* Log Next Set or Add Extra Set Button */}
+                {!hasIncompleteSet && isTargetCompleted ? (
+                    <Box sx={{ mb: 3 }}>
+                        <Card sx={{
+                            background: 'rgba(76, 175, 80, 0.1)',
+                            border: '2px dashed rgba(76, 175, 80, 0.3)',
+                            borderRadius: '12px',
+                            p: 3,
+                            textAlign: 'center'
+                        }}>
+                            <MdCheckCircle style={{ color: '#4caf50', fontSize: '40px', marginBottom: '12px' }} />
+                            <Typography variant="h6" sx={{ color: '#4caf50', fontWeight: 'bold', mb: 1 }}>
+                                Target Sets Completed!
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+                                Great job! You've completed all {targetSets} target sets.
+                            </Typography>
+                            <Button
+                                variant="outlined"
+                                startIcon={<MdAdd />}
+                                onClick={() => onAddExtraSet(exerciseIndex)}
+                                sx={{
+                                    color: '#dded00',
+                                    borderColor: '#dded00',
+                                    borderWidth: '2px',
+                                    textTransform: 'none',
+                                    fontWeight: 'bold',
+                                    fontSize: '1rem',
+                                    padding: '12px 24px',
+                                    borderRadius: '12px',
+                                    '&:hover': {
+                                        borderWidth: '2px',
+                                        borderColor: '#dded00',
+                                        backgroundColor: 'rgba(221, 237, 0, 0.1)',
+                                    }
+                                }}
+                            >
+                                Add Extra Set
+                            </Button>
+                        </Card>
+                    </Box>
+                ) : currentSet && (
                     <Box sx={{ mb: 3 }}>
                         <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 1.5 }}>
-                            {isTargetCompleted ? `Log Extra Set (${setsToShow.length + 1})` : `Log Set ${setsToShow.length + 1}`}
+                            {isTargetCompleted ? `Log Extra Set (${completedSets.length + 1})` : `Log Set ${completedSets.length + 1}`}
                         </Typography>
 
                         {/* AI Tip */}
@@ -394,6 +433,7 @@ ModernWorkoutExercise.propTypes = {
     onSetChange: PropTypes.func.isRequired,
     onCompleteSet: PropTypes.func.isRequired,
     onRemoveSet: PropTypes.func.isRequired,
+    onAddExtraSet: PropTypes.func.isRequired,
     weightUnit: PropTypes.string,
     aiTip: PropTypes.string,
     totalExercises: PropTypes.number.isRequired,

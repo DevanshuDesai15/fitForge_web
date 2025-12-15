@@ -10,6 +10,7 @@ import {
     styled
 } from '@mui/material';
 import { useAuth } from '../../contexts/AuthContext';
+import { useUnits } from '../../contexts/UnitsContext';
 import { useNavigate } from 'react-router-dom';
 import { doc, getDoc, setDoc, collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { updateEmail } from 'firebase/auth';
@@ -62,6 +63,7 @@ const EditButton = styled(Button)(({ theme }) => ({
 
 export default function Profile() {
     const { currentUser, logout } = useAuth();
+    const { updateUnitPreference } = useUnits();
     const navigate = useNavigate();
 
     // State Management
@@ -302,6 +304,21 @@ export default function Profile() {
     };
 
     const handlePreferenceChange = async (key, value) => {
+        // Special handling for units - use UnitsContext
+        if (key === 'units') {
+            try {
+                await updateUnitPreference(value);
+                setPreferences({ ...preferences, units: value });
+                setSuccess('Units preference updated successfully!');
+                setTimeout(() => setSuccess(''), 3000);
+            } catch (error) {
+                console.error('Error updating units:', error);
+                setError('Failed to update units preference');
+            }
+            return;
+        }
+
+        // Handle other preferences normally
         const newPreferences = { ...preferences, [key]: value };
         setPreferences(newPreferences);
 

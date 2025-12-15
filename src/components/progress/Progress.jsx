@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Box, Typography, Tab, Tabs, Alert, CircularProgress, CardContent } from '@mui/material';
 import { MdPsychology, MdShowChart, MdTrackChanges, MdEmojiEvents } from 'react-icons/md';
-import { getWeightUnit } from '../../utils/weightUnit';
+import { useUnits } from '../../contexts/UnitsContext';
 import { StyledCard } from './components/shared/StyledComponents';
 import { useProgressData } from './hooks/useProgressData';
 import { useAIInsights } from './hooks/useAIInsights';
@@ -13,7 +13,7 @@ import AchievementsSection from './components/AchievementsSection';
 const Progress = () => {
     // Main navigation state
     const [activeMainTab, setActiveMainTab] = useState(0);
-    const [weightUnit, setWeightUnitState] = useState('kg');
+    const { weightUnit } = useUnits();
 
     // Progress data states
     const [selectedExercise, setSelectedExercise] = useState('');
@@ -48,19 +48,7 @@ const Progress = () => {
         handleAlertDismiss
     } = usePlateauDetection();
 
-    // Load weight unit preference
-    useEffect(() => {
-        setWeightUnitState(getWeightUnit());
-
-        const handleStorageChange = (e) => {
-            if (e.key === 'weightUnit') {
-                setWeightUnitState(e.newValue || 'kg');
-            }
-        };
-
-        window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
-    }, []);
+    // Weight unit is now automatically provided by UnitsContext
 
     // Load AI data when exercises are available
     useEffect(() => {
