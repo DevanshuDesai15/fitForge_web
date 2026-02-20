@@ -35,5 +35,11 @@ export default defineConfig(({ mode }) => {
         env.VITE_RAPIDAPI_HOST
       ),
     },
+    // Strip console.log/warn/error and debugger statements in production builds
+    ...(mode === "production" && {
+      esbuild: {
+        drop: ["console", "debugger"],
+      },
+    }),
   };
 });
