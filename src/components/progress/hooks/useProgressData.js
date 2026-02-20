@@ -106,20 +106,20 @@ export const useProgressData = (activeMainTab) => {
       ].sort();
       setAvailableExercises(uniqueExercises);
 
-      // Load data based on active main tab
+      // Load data based on active main tab (0=Overview, 1=Goals, 2=Achievements, 3=AI Dashboard)
       if (activeMainTab === 0) {
-        // AI Dashboard
-        processWeightProgress(exerciseData);
-      } else if (activeMainTab === 1) {
         // Overview
         processWeightProgress(exerciseData);
-        processPersonalRecords(exerciseData);
-      } else if (activeMainTab === 2) {
+      } else if (activeMainTab === 1) {
         // Goals
         await loadGoals();
         processWeightProgress(exerciseData);
-      } else if (activeMainTab === 3) {
+      } else if (activeMainTab === 2) {
         // Achievements
+        processWeightProgress(exerciseData);
+        processPersonalRecords(exerciseData);
+      } else if (activeMainTab === 3) {
+        // AI Dashboard
         processPersonalRecords(exerciseData);
       }
     } catch (err) {

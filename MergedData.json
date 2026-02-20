@@ -1298,29 +1298,50 @@
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_b2a7eb341d0d40ba9ac7e3319767701b/720p/mp4/file.mp4"
       },
-      "extracted_at": "2025-08-21T11:35:04.852425",
-      "muscle_groups": [
-        "Legs"
+      "description": "The Jumping Lunge is a dynamic and challenging variation of the traditional lunge that incorporates a plyometric jump to switch leg positions mid-air. This exercise targets the lower body muscles, including the quadriceps, hamstrings, and gluteus maximus, while also engaging the core for stability. It enhances explosive power, improves balance and coordination, and increases heart rate, making it an excellent addition to both strength and cardiovascular training routines. The Jumping Lunge is beneficial for athletes looking to improve their performance in sports that require lower body strength and agility.",
+      "difficulty": "Intermediate",
+      "primary_muscle": "Quadriceps",
+      "secondary_muscles": [
+        "Hamstrings",
+        "Gluteus Maximus",
+        "Calves",
+        "Core"
       ],
-      "exercise_types": [
-        "Cardio",
-        "Plyometrics"
-      ],
-      "description": "The bodyweight forward lunge is a unilateral lower body exercise that targets the quadriceps, hamstrings, gluteus maximus while challenging balance and stability. This exercise helps correct muscle imbalances, improves functional movement patterns, and builds single-leg strength essential for athletic performance.",
-      "steps": [
-        "Start in a lunge position with your right leg forward",
-        "Lower your body until both knees are bent at 90-degree angles",
-        "Keep your front knee directly over your ankle",
-        "Explosively jump straight up, switching leg positions in mid-air",
-        "Land softly with your left leg now forward in a lunge position",
-        "Immediately lower into the next lunge and prepare for the next jump",
-        "Focus on soft landings and quick, explosive transitions",
-        "Continue alternating legs with each jump for the prescribed repetitions"
-      ],
-      "equipment": [
+      "equipment_needed": [
         "Bodyweight"
       ],
-      "difficulty": "Intermediate"
+      "steps": [
+        "Start by standing tall with your feet hip-width apart.",
+        "Step forward with one foot and lower your hips to drop your back knee toward the ground in a lunge position. Ensure your front knee is directly over your ankle and your back knee is hovering just above the floor.",
+        "Engage your core and explosively push off the ground with both feet, jumping and switching your leg positions in mid-air.",
+        "Land softly in a lunge position with the opposite leg forward, absorbing the impact through your legs.",
+        "Immediately lower into the lunge, preparing for the next explosive jump.",
+        "Maintain a fast, but controlled pace, alternating legs with each jump.",
+        "Continue for the desired number of repetitions or time."
+      ],
+      "pro_tips": [
+        "Focus on maintaining good posture throughout the exercise, keeping your chest up and shoulders back.",
+        "Ensure you land softly with each jump to reduce the impact on your joints.",
+        "Use your arms for momentum, swinging them in coordination with your legs.",
+        "Engage your core throughout the exercise to help stabilize your body and protect your spine.",
+        "Start with a lower number of repetitions and gradually increase as your fitness level improves to avoid overtraining or injury."
+      ],
+      "common_mistakes": [
+        "Allowing the front knee to extend past the toes, which can put undue stress on the knee joint.",
+        "Landing with stiff legs, which can lead to joint discomfort and reduce the effectiveness of the exercise.",
+        "Not engaging the core, leading to a loss of balance and improper form.",
+        "Jumping too high or too fast without maintaining control, which can compromise form and lead to injury.",
+        "Neglecting to switch legs smoothly, which can disrupt the flow of the exercise and reduce its effectiveness."
+      ],
+      "variations": [],
+      "safety_considerations": [],
+      "quality_score": 100,
+      "tags": [
+        "intermediate",
+        "quadriceps",
+        "legs",
+        "bodyweight"
+      ]
     },
     {
       "id": "0033",
@@ -1330,29 +1351,48 @@
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_cc80f4cf4078442a8938ffdebca85896/720p/mp4/file.mp4"
       },
-      "extracted_at": "2025-08-21T11:35:08.866237",
-      "muscle_groups": [
-        "Legs",
-        "Hamstrings"
+      "description": "The Standing Straight-Leg Hamstring Stretch is a fundamental exercise aimed at enhancing flexibility and mobility in the lower body, with a particular focus on the hamstrings. This stretch is essential for individuals looking to improve their range of motion, reduce muscle tension, and prevent injuries associated with physical activities. By incorporating this stretch into your routine, you can also support better posture and alleviate lower back discomfort.",
+      "difficulty": "Beginner",
+      "primary_muscle": "Hamstrings",
+      "secondary_muscles": [
+        "Calves",
+        "Glutes",
+        "Lower Back"
       ],
-      "exercise_types": [
-        "Stretching"
+      "equipment_needed": [
+        "None"
       ],
-      "description": "This legs stretch is designed to improve flexibility and mobility in the quadriceps, hamstrings, gluteus maximus, biceps femoris. Regular stretching helps reduce muscle tension, improve range of motion, prevent injury, and enhance overall movement quality.",
       "steps": [
-        "Stand tall with feet hip-width apart",
-        "Step your right foot forward about 12 inches",
-        "Keep your right leg straight and flex your right foot upward",
-        "Hinge at your hips and lean forward slightly",
-        "Place your hands on your left thigh for support",
-        "Feel the stretch along the back of your right leg",
-        "Hold the stretch for 15-30 seconds, breathing deeply",
-        "Switch legs and repeat on the opposite side"
+        "Begin by standing tall with your feet hip-width apart.",
+        "Step your right foot approximately 12 inches in front of you, keeping the leg straight.",
+        "Flex your right foot so that your toes are pointing upwards.",
+        "Hinge at your hips, maintaining a straight back, and lean forward slightly towards your right leg.",
+        "Place your hands on your left thigh to offer support and maintain balance.",
+        "You should feel a stretch along the back of your right thigh.",
+        "Hold this position for 15-30 seconds, taking deep breaths to help deepen the stretch.",
+        "Gently come back to the starting position and repeat the stretch with your left leg."
       ],
-      "equipment": [
-        "Bodyweight"
+      "pro_tips": [
+        "Ensure your back is straight and not rounded to maximize the stretch and prevent injury.",
+        "Do not lock the knee of your standing leg; keep it slightly bent.",
+        "To increase the stretch, gently pull your toes closer to your body using your hands, if reachable without compromising form.",
+        "Engage your core throughout the stretch to maintain balance and stability."
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Rounding the back, which can put unnecessary stress on the lower back.",
+        "Locking the knees, which can strain the knee joint.",
+        "Leaning too far forward, which can lead to balance issues and reduce the effectiveness of the stretch.",
+        "Not breathing deeply, which can prevent you from relaxing into the stretch."
+      ],
+      "variations": [],
+      "safety_considerations": [],
+      "quality_score": 100,
+      "tags": [
+        "beginner",
+        "hamstrings",
+        "legs",
+        "none"
+      ]
     },
     {
       "id": "0034",
@@ -1362,30 +1402,48 @@
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_91180062d39045649c8372b858dd1691/720p/mp4/file.mp4"
       },
-      "extracted_at": "2025-08-21T11:35:12.188805",
-      "muscle_groups": [
-        "Hamstrings",
-        "Calves"
+      "description": "The Seated Single Leg Toe Touch Hamstring Stretch is a gentle yet effective exercise designed to increase flexibility in the hamstrings and improve range of motion. By isolating one leg at a time, it allows for focused stretching of the hamstring muscles, as well as engaging the calves and promoting lower back health. This stretch is particularly beneficial for individuals looking to alleviate tightness in the posterior chain, which can contribute to improved posture, reduced back pain, and enhanced athletic performance.",
+      "difficulty": "Beginner",
+      "primary_muscle": "Hamstrings",
+      "secondary_muscles": [
+        "Calves",
+        "Lower Back"
       ],
-      "exercise_types": [
-        "Stretching"
+      "equipment_needed": [
+        "Mat"
       ],
-      "description": "The seated single leg toe touch hamstring stretch targets the hamstrings, gastrocnemius, and lower back. This seated variation allows for controlled stretching while maintaining spinal alignment, helping to improve hamstring flexibility, reduce lower back tension, and enhance overall posterior chain mobility.",
       "steps": [
-        "Sit on the floor with your legs extended straight in front of you",
-        "Bend your left knee and bring your left foot to the inside of your right thigh",
-        "Keep your right leg straight with your foot flexed upward",
-        "Sit tall with your spine straight and shoulders back",
-        "Slowly hinge forward at your hips, reaching toward your right foot",
-        "Keep your back straight and avoid rounding your spine",
-        "Reach as far as comfortable, feeling the stretch in your right hamstring",
-        "Hold for 15-30 seconds, breathing deeply throughout",
-        "Return to starting position and repeat on the opposite side"
+        "Begin by sitting on a mat with both legs extended straight in front of you.",
+        "Bend your left knee and place the sole of your left foot against the inner thigh of your right leg, keeping your right leg straight.",
+        "Flex the foot of your straightened leg (right leg) to engage the calf muscles.",
+        "Inhale deeply and, as you exhale, hinge at the hips to lean forward, extending your arms towards the toes of your straightened leg.",
+        "Aim to keep your back as straight as possible, engaging your core to support your spine.",
+        "Reach forward with your hands towards your foot, going only as far as comfortable without rounding the back.",
+        "Hold the stretch for 15-30 seconds, focusing on deep, steady breaths to help deepen the stretch.",
+        "Slowly release the stretch and return to the starting position.",
+        "Repeat the stretch on the opposite leg by switching the position of your legs."
       ],
-      "equipment": [
-        "Bodyweight"
+      "pro_tips": [
+        "To increase the stretch, gently pull on the toes of your straightened leg towards you.",
+        "Ensure you are stretching from the hips and not rounding the back to reach farther.",
+        "Keep the non-stretching leg relaxed to avoid unnecessary tension.",
+        "Incorporate this stretch into your daily routine, especially after workouts, to promote flexibility."
       ],
-      "difficulty": "Intermediate"
+      "common_mistakes": [
+        "Rounding the back instead of hinging from the hips, which can reduce the effectiveness of the stretch and put unnecessary strain on the lower back.",
+        "Not keeping the foot of the straightened leg flexed, which decreases the engagement of the calf muscles.",
+        "Trying to reach the toes at the expense of form, which can lead to overstretching and potential injury.",
+        "Holding the breath during the stretch, which can create tension in the body and reduce the benefits of the stretch."
+      ],
+      "variations": [],
+      "safety_considerations": [],
+      "quality_score": 100,
+      "tags": [
+        "beginner",
+        "hamstrings",
+        "calves",
+        "mat"
+      ]
     },
     {
       "id": "0035",
@@ -1395,32 +1453,51 @@
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_822659030b0f4b20b83e05a23822513b/720p/mp4/file.mp4"
       },
-      "extracted_at": "2025-08-21T11:35:20.207250",
-      "muscle_groups": [
-        "Legs",
+      "description": "In and out squats are an engaging plyometric exercise that effectively targets the lower body, including the quadriceps, glutes, hamstrings, and calves, while also activating the core muscles for added stability. This exercise combines the traditional squat movement with a lateral jump, enhancing lower body strength, power, and agility. It's an excellent workout for improving cardiovascular health, promoting fat loss, and increasing athletic performance.",
+      "difficulty": "Intermediate",
+      "primary_muscle": "Quadriceps",
+      "secondary_muscles": [
         "Glutes",
-        "Abdominals"
+        "Hamstrings",
+        "Calves",
+        "Core"
       ],
-      "exercise_types": [
-        "Cardio",
-        "Plyometrics"
+      "equipment_needed": [
+        "None (bodyweight)"
       ],
-      "description": "In and out squats are a dynamic plyometric exercise that targets the quadriceps, glutes, hamstrings, and calves while engaging the core for stability. This explosive movement combines squat mechanics with lateral jumping, building lower body power, improving agility, and providing an excellent cardiovascular challenge.",
       "steps": [
-        "Start in a narrow squat position with feet close together",
-        "Lower into a squat keeping your chest up and weight in your heels",
-        "Explosively jump up while spreading your feet wide apart",
-        "Land in a wide squat position with feet wider than shoulder-width",
-        "Lower into the wide squat, keeping knees tracking over toes",
-        "Jump up explosively again, bringing your feet back together",
-        "Land in the narrow starting position and immediately lower into the next squat",
-        "Continue alternating between narrow and wide squat positions",
-        "Focus on soft landings and smooth transitions between positions"
+        "Begin in a standing position with your feet together, toes pointing forward.",
+        "Lower your body into a narrow squat by bending your knees and pushing your hips back, ensuring your chest remains lifted and your weight is in your heels.",
+        "Explosively jump upwards, using your arms for momentum, while simultaneously separating your feet mid-air to land in a wide squat stance.",
+        "Ensure your feet land wider than shoulder-width apart, toes slightly turned out.",
+        "Immediately lower into a deep squat in this wide stance, keeping your knees in line with your toes and your back straight.",
+        "Perform another explosive jump, this time bringing your feet back together to return to the narrow squat position.",
+        "Upon landing, smoothly transition into the next squat without pausing, maintaining a continuous flow between the narrow and wide positions.",
+        "Repeat the sequence for the desired number of repetitions or time, focusing on maintaining form and controlled movements throughout."
       ],
-      "equipment": [
-        "Bodyweight"
+      "pro_tips": [
+        "Engage your core throughout the exercise to maintain balance and stability.",
+        "Ensure you're performing soft landings to minimize impact on your joints.",
+        "Keep your movements fluid and controlled, focusing on the quality of each squat and jump rather than speed.",
+        "To increase the intensity, add a small weight or wear a weighted vest, ensuring you can still maintain proper form."
       ],
-      "difficulty": "Intermediate"
+      "common_mistakes": [
+        "Landing with stiff legs, which can increase the risk of injury.",
+        "Allowing the knees to collapse inward during the squat, which puts unnecessary stress on the knee joints.",
+        "Not squatting deep enough, which reduces the effectiveness of the exercise on the glutes and hamstrings.",
+        "Losing form during the jumps, such as rounding the back or letting the chest fall forward, which can lead to back strain."
+      ],
+      "variations": [],
+      "safety_considerations": [],
+      "quality_score": 100,
+      "tags": [
+        "intermediate",
+        "quadriceps",
+        "legs",
+        "glutes",
+        "abdominals",
+        "none-(bodyweight)"
+      ]
     },
     {
       "id": "0036",
@@ -1430,32 +1507,49 @@
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_417dc00c6f6a45a789414f71586d5761/720p/mp4/file.mp4"
       },
-      "extracted_at": "2025-08-21T11:35:26.479748",
-      "muscle_groups": [
-        "Shoulders",
-        "Arms",
-        "Abdominals"
+      "description": "The 'Hold the World Med Ball' exercise is an intermediate-level isometric hold that challenges and strengthens the deltoids, triceps, and core muscles. By simulating the act of holding the world overhead, it not only builds muscular endurance and stability in the shoulders but also enhances core strength and postural control. This exercise is perfect for improving functional strength and mental resilience, making it a valuable addition to any fitness routine.",
+      "difficulty": "Intermediate",
+      "primary_muscle": "Deltoids",
+      "secondary_muscles": [
+        "Triceps",
+        "Core",
+        "Upper Back"
       ],
-      "exercise_types": [
-        "Functional",
-        "Strength"
-      ],
-      "description": "The hold the world med ball is an isometric exercise that targets the deltoids, triceps, and core muscles. This challenging hold mimics carrying the weight of the world overhead, building shoulder stability, core strength, and mental toughness while improving postural endurance and functional strength.",
-      "steps": [
-        "Stand with feet shoulder-width apart, holding a medicine ball",
-        "Press the medicine ball overhead with both arms fully extended",
-        "Keep your arms straight and directly above your shoulders",
-        "Engage your core and maintain a neutral spine throughout",
-        "Keep your shoulders pulled down and back, away from your ears",
-        "Breathe steadily while maintaining the overhead position",
-        "Focus on keeping the medicine ball as still as possible",
-        "Hold for the prescribed time, maintaining perfect posture",
-        "Lower the medicine ball slowly and with control when complete"
-      ],
-      "equipment": [
+      "equipment_needed": [
         "Medicine Ball"
       ],
-      "difficulty": "Beginner"
+      "steps": [
+        "Begin by standing with your feet shoulder-width apart, engaging your core.",
+        "Grip the medicine ball firmly with both hands and prepare to lift.",
+        "Press the medicine ball overhead until both arms are fully extended, ensuring your arms align with your ears.",
+        "Actively engage your shoulder blades, pulling them down and back to stabilize your shoulders.",
+        "Maintain a straight, neutral spine and avoid arching your back as you hold the position.",
+        "Focus on breathing steadily and deeply, keeping your gaze forward and your body balanced.",
+        "Aim to keep the medicine ball as stationary as possible, using your core and shoulder muscles to control the movement.",
+        "Hold the position for the prescribed duration, challenging yourself to maintain perfect form throughout.",
+        "To conclude, carefully lower the medicine ball back to the starting position, controlling the movement to avoid any sudden drops."
+      ],
+      "pro_tips": [
+        "Imagine squeezing the ball to activate more muscle fibers in your arms and shoulders.",
+        "Incorporate slight movements, such as small circles or side-to-side motions, to intensify the exercise after mastering the static hold.",
+        "Visualize pushing the ball upwards towards the ceiling to maintain a strong, active posture throughout the hold."
+      ],
+      "common_mistakes": [
+        "Allowing the lower back to arch excessively, which can lead to strain and reduce the effectiveness of the core engagement.",
+        "Shrugging the shoulders up towards the ears, which can cause tension in the neck and reduce shoulder stability.",
+        "Locking the elbows completely, which can place undue stress on the joints instead of engaging the muscles effectively."
+      ],
+      "variations": [],
+      "safety_considerations": [],
+      "quality_score": 100,
+      "tags": [
+        "intermediate",
+        "deltoids",
+        "shoulders",
+        "arms",
+        "abdominals",
+        "medicine-ball"
+      ]
     },
     {
       "id": "0037",
@@ -2129,28 +2223,50 @@
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_80f323f80e8c4aae863fb741e5172855/720p/mp4/file.mp4"
       },
-      "extracted_at": "2025-08-21T11:38:45.540367",
-      "muscle_groups": [
-        "Arms"
+      "description": "The Gate Pose Variation with Arm Extended on Side is a gentle yet effective yoga pose designed to stretch and open the side body, specifically targeting the obliques, intercostal muscles, and improving lateral flexibility and spinal mobility. This variation enhances the traditional Gate Pose by extending one arm overhead, increasing the stretch along the side torso and engaging the arms. It's excellent for promoting better posture, increasing body awareness, and can serve as a calming movement to integrate into your yoga or stretching routine.",
+      "difficulty": "Beginner",
+      "primary_muscle": "Obliques",
+      "secondary_muscles": [
+        "Intercostal muscles",
+        "Shoulders",
+        "Arms",
+        "Hips"
       ],
-      "exercise_types": [
-        "Functional"
+      "equipment_needed": [
+        "Yoga mat"
       ],
-      "description": "Gate pose variation with arm extended is a yoga stretch that targets the side body, improving lateral flexibility and spinal mobility. This pose helps open the intercostal muscles, stretches the obliques, and enhances overall body awareness while promoting better posture.",
       "steps": [
-        "Begin in a kneeling position with both knees on the ground",
-        "Extend your right leg straight out to the side, keeping your foot flat on the floor",
-        "Place your right hand on your extended leg for support",
-        "Reach your left arm up and over your head, creating a side bend",
-        "Feel the stretch along the left side of your torso",
-        "Hold the pose while breathing deeply",
-        "Return to center and repeat on the opposite side",
-        "Keep your hips square and avoid rotating your torso"
+        "Start by kneeling on a yoga mat with your spine long and your shoulders relaxed.",
+        "Extend your right leg out to the side, keeping the foot flat and toes pointing forward, aligning it with your hip.",
+        "Place your right hand on your extended right leg for support, ensuring not to put pressure on your knee.",
+        "Inhale deeply and, as you exhale, reach your left arm up and over your head towards the right, creating a deep side bend in your torso.",
+        "Keep your gaze upwards, ensuring your neck is in a comfortable position.",
+        "Press firmly through your extended leg's foot to increase the stretch along your left side body.",
+        "Maintain the pose for several deep breaths, focusing on opening up the side of your body with each exhale.",
+        "To release, inhale and gently come back up to a kneeling position.",
+        "Repeat the stretch on the opposite side to ensure balance in the stretch."
       ],
-      "equipment": [
-        "Bodyweight"
+      "pro_tips": [
+        "Engage your core throughout the pose to support your spine.",
+        "Imagine reaching not just up but also out to maximize the stretch along your side body.",
+        "Keep your extended leg's foot flexed to engage the leg muscles and enhance stability.",
+        "If you experience any discomfort in your supporting hand, place it on a yoga block for extra height and support."
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Collapsing into the supporting side, which can strain the shoulder and neck.",
+        "Rotating the torso downwards, reducing the effectiveness of the side stretch.",
+        "Overextending the neck, which can lead to strain; keep your gaze natural and neck in a neutral position.",
+        "Not engaging the core, which can compromise the stability and effectiveness of the pose."
+      ],
+      "variations": [],
+      "safety_considerations": [],
+      "quality_score": 100,
+      "tags": [
+        "beginner",
+        "obliques",
+        "arms",
+        "yoga-mat"
+      ]
     },
     {
       "id": "0052",
@@ -2160,28 +2276,48 @@
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_e2baa5c4ab37435e8d8c3d46dab74fba/720p/mp4/file.mp4"
       },
-      "extracted_at": "2025-08-21T11:38:51.645144",
-      "muscle_groups": [
-        "Full Body"
+      "description": "The Gate Pose Rounding Spine Looking Up is a gentle, beginner-friendly yoga pose that focuses on spinal flexibility and neck extension. This exercise is excellent for those looking to improve their spinal mobility, release tension in the back, and stretch the front of the neck and throat. By combining spinal flexion with neck extension, it offers a dynamic stretch that can be particularly beneficial for individuals spending long hours at a desk or in front of a computer.",
+      "difficulty": "Beginner",
+      "primary_muscle": "Spinal Extensors",
+      "secondary_muscles": [
+        "Neck Flexors",
+        "Latissimus Dorsi",
+        "Obliques"
       ],
-      "exercise_types": [
-        "Functional"
+      "equipment_needed": [
+        "Yoga Mat"
       ],
-      "description": "This variation of gate pose combines spinal flexion with neck extension to create a dynamic stretch that improves spinal mobility and flexibility. The pose helps release tension in the back while gently stretching the front of the neck and throat.",
       "steps": [
-        "Start in a kneeling position with one leg extended to the side",
-        "Place your hand on your extended leg for support",
-        "Begin to round your spine, creating a gentle curve",
-        "Tilt your head back and look up toward the ceiling",
-        "Feel the stretch through your spine and the front of your neck",
-        "Breathe deeply while maintaining the position",
-        "Slowly return to neutral spine position",
-        "Repeat on the opposite side"
+        "Begin by kneeling on a yoga mat with your spine in a neutral position.",
+        "Extend your right leg out to the side, keeping your foot flat on the ground and your leg straight.",
+        "Place your right hand on your extended leg for support, slightly above the knee.",
+        "Inhale deeply, and as you exhale, gently begin to round your spine, creating a C-curve.",
+        "Simultaneously, gently tilt your head back to look up towards the ceiling, feeling the stretch through your spine and the front of your neck.",
+        "Hold this position for 3-5 breaths, focusing on deepening the stretch with each exhalation.",
+        "Slowly inhale and return to a neutral spine position, moving gently to avoid any sudden movements.",
+        "Repeat the stretch on the opposite side, extending your left leg and following the same steps."
       ],
-      "equipment": [
-        "Bodyweight"
+      "pro_tips": [
+        "Ensure your extended leg's foot remains flat on the ground to maintain balance.",
+        "Focus on a smooth transition between movements to maximize the stretch and prevent any strain.",
+        "Keep your extended leg's knee straight but not locked to avoid unnecessary pressure on the knee joint.",
+        "Engage your core throughout the pose to support your spine."
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Rounding the spine too quickly or forcefully, which can cause strain.",
+        "Not breathing deeply or holding the breath, which can limit the effectiveness of the stretch.",
+        "Looking up too far and straining the neck instead of allowing a gentle neck extension.",
+        "Placing too much weight on the extended leg's hand, which can lead to imbalance."
+      ],
+      "variations": [],
+      "safety_considerations": [],
+      "quality_score": 100,
+      "tags": [
+        "beginner",
+        "spinal-extensors",
+        "full-body",
+        "yoga-mat"
+      ]
     },
     {
       "id": "0053",
@@ -2191,28 +2327,49 @@
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_26b4a3004c0b4c5db1d5f457aa19ea20/720p/mp4/file.mp4"
       },
-      "extracted_at": "2025-08-21T11:38:57.577464",
-      "muscle_groups": [
-        "Shoulders"
+      "description": "The Front Lever Raise is a highly challenging bodyweight exercise that targets the core and back muscles, emphasizing the development of the front lever position. This exercise is renowned for its ability to enhance upper body strength, core stability, and overall body control. It is particularly beneficial for athletes and individuals looking to improve their performance in gymnastics and other sports requiring a high degree of body tension and control.",
+      "difficulty": "Advanced",
+      "primary_muscle": "Latissimus Dorsi",
+      "secondary_muscles": [
+        "Core",
+        "Shoulders",
+        "Glutes",
+        "Forearms"
       ],
-      "exercise_types": [
-        "Functional"
+      "equipment_needed": [
+        "Pull-up Bar"
       ],
-      "description": "The front lever raise is an advanced bodyweight exercise that builds tremendous core and back strength while developing the front lever position. This movement requires significant upper body strength and core stability, making it an excellent progression exercise for gymnastic movements.",
       "steps": [
-        "Hang from a pull-up bar with an overhand grip",
-        "Engage your core and keep your body in a straight line",
-        "Begin to raise your legs while keeping them straight",
-        "Simultaneously lean back to maintain horizontal body position",
-        "Focus on keeping your shoulders engaged and active",
-        "Raise as high as your strength allows while maintaining form",
-        "Lower back to the starting position with control",
-        "Build up gradually as this is an extremely challenging movement"
+        "Start by hanging from a pull-up bar with an overhand grip, ensuring your hands are slightly wider than shoulder-width apart.",
+        "Engage your core, squeeze your glutes, and keep your body in a straight line from head to heels.",
+        "Initiate the movement by raising your legs together while keeping them straight. Avoid bending at the knees.",
+        "As you raise your legs, simultaneously lean your torso back to maintain a horizontal body position relative to the ground.",
+        "Keep your shoulders engaged and active throughout the movement to stabilize your upper body.",
+        "Raise your body until it is as close to horizontal as possible, depending on your strength and flexibility, while maintaining a rigid form.",
+        "Hold the front lever position briefly, then lower your body back to the starting position with control and precision.",
+        "Repeat the movement, gradually increasing repetitions and hold times as your strength improves."
       ],
-      "equipment": [
-        "Bodyweight"
+      "pro_tips": [
+        "Focus on maintaining a rigid body line throughout the exercise to maximize engagement of the core and back muscles.",
+        "Practice scapular retractions and depressions on the pull-up bar to strengthen the shoulder girdle, which is crucial for stabilizing during the front lever raise.",
+        "Incorporate flexibility training for your hamstrings and lower back to improve your ability to maintain a straight body position.",
+        "Begin with easier progressions such as the tuck front lever or one-leg front lever to build up the necessary strength and technique."
       ],
-      "difficulty": "Advanced"
+      "common_mistakes": [
+        "Bending the knees or piking at the hips, which reduces the effectiveness of the exercise and can lead to improper form.",
+        "Losing shoulder engagement, which can compromise form and lead to potential shoulder injuries.",
+        "Rushing through the movements without maintaining control, which diminishes the exercise's benefits and increases the risk of injury.",
+        "Neglecting to warm up the shoulders and core adequately before attempting the front lever raise, increasing the risk of muscle strains."
+      ],
+      "variations": [],
+      "safety_considerations": [],
+      "quality_score": 100,
+      "tags": [
+        "advanced",
+        "latissimus-dorsi",
+        "shoulders",
+        "pull-up-bar"
+      ]
     },
     {
       "id": "0054",
@@ -2222,29 +2379,46 @@
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_7cec63bd3fd545c4be7a71d60b1e8017/720p/mp4/file.mp4"
       },
-      "extracted_at": "2025-08-21T11:39:01.631425",
-      "muscle_groups": [
-        "Arms",
-        "Forearms"
+      "description": "The Hands Clapped Forearms Stretch, often likened to a prayer position, is a simple yet effective stretch targeting the flexor muscles of the forearms and wrists. This stretch is particularly beneficial for individuals who engage in activities that involve extensive wrist and hand use, such as typing, playing musical instruments, or any repetitive hand motions. Regular practice can help in preventing wrist pain, improving mobility, and reducing the risk of repetitive strain injuries.",
+      "difficulty": "Beginner",
+      "primary_muscle": "Forearms",
+      "secondary_muscles": [
+        "Wrists"
       ],
-      "exercise_types": [
-        "Stretching"
+      "equipment_needed": [
+        "None"
       ],
-      "description": "The hands clapped forearms stretch is a prayer-style stretch that targets the flexor muscles of the forearms and wrists. This stretch is particularly beneficial for those who spend long hours typing or using their hands repetitively, helping to prevent and alleviate wrist pain.",
       "steps": [
-        "Bring your palms together in front of your chest in a prayer position",
-        "Keep your fingers pointing upward and palms pressed together",
-        "Slowly lower your hands while keeping palms connected",
-        "Feel the stretch in your forearms and wrists",
-        "Hold the stretch for 15-30 seconds",
-        "Gently release and shake out your hands",
-        "Repeat 2-3 times throughout the day",
-        "Avoid forcing the stretch if you feel sharp pain"
+        "Stand or sit upright and bring your palms together in front of your chest, just below your chin, in a prayer position.",
+        "Ensure your fingers are pointing upwards and your palms are pressed firmly together.",
+        "Gradually lower your hands towards your waist level while keeping your palms pressed together, going as low as comfortable to intensify the stretch.",
+        "Maintain a straight back and keep your shoulders relaxed to avoid tensing up.",
+        "Hold the position and feel a gentle, stretching sensation along your inner forearms and wrists.",
+        "Maintain the stretch for 15 to 30 seconds, focusing on deep, steady breaths.",
+        "Carefully release the position and gently shake out your hands and wrists to relax the muscles.",
+        "Repeat the stretch 2 to 3 times, or as needed throughout the day, especially if you've been doing extensive wrist and hand work."
       ],
-      "equipment": [
-        "Bodyweight"
+      "pro_tips": [
+        "To deepen the stretch, gently press down on your fingers with the opposite hand.",
+        "Ensure your elbows are not flaring out; keep them close to your body to maximize the stretch.",
+        "Incorporate wrist rotations before and after the stretch to enhance wrist mobility and circulation.",
+        "Practice this stretch regularly, especially after long periods of typing or hand use, to help prevent stiffness and improve flexibility."
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Overstretching or forcing the palms too low, which can lead to strain. The stretch should feel comfortable and not cause pain.",
+        "Raising the shoulders or tensing the neck during the stretch. Keep your shoulders down and relaxed.",
+        "Not keeping the palms pressed together firmly throughout the stretch, which reduces its effectiveness.",
+        "Holding the breath or breathing shallowly. Remember to breathe deeply to enhance the stretch and relaxation."
+      ],
+      "variations": [],
+      "safety_considerations": [],
+      "quality_score": 100,
+      "tags": [
+        "beginner",
+        "forearms",
+        "arms",
+        "none"
+      ]
     },
     {
       "id": "0055",
@@ -2254,28 +2428,48 @@
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_fc9e8427a21f4f818cd3e994fcf00441/720p/mp4/file.mp4"
       },
-      "extracted_at": "2025-08-21T11:39:07.914048",
-      "muscle_groups": [
-        "Shoulders"
+      "description": "The Front Lever Raise to Hold is a highly demanding bodyweight exercise that tests and enhances your core strength, back muscles, and overall body control. This exercise involves a dynamic phase of lifting your body into a horizontal position followed by an isometric hold, where the challenge of maintaining this posture works to develop not just physical strength but also mental fortitude and focus. It's an exceptional movement for those looking to improve their functional fitness, bodyweight manipulation skills, and muscular endurance.",
+      "difficulty": "Advanced",
+      "primary_muscle": "Latissimus Dorsi",
+      "secondary_muscles": [
+        "Core",
+        "Delts",
+        "Biceps",
+        "Forearms"
       ],
-      "exercise_types": [
-        "Functional"
+      "equipment_needed": [
+        "Pull-up bar"
       ],
-      "description": "The front lever raise to hold combines the dynamic movement of raising into position with an isometric hold. This advanced exercise builds exceptional core strength, back strength, and body control while developing the mental focus required for challenging bodyweight movements.",
       "steps": [
-        "Start hanging from a pull-up bar with an overhand grip",
-        "Engage your entire core and maintain body tension",
-        "Raise your body into the front lever position",
-        "Hold the horizontal position for as long as possible",
-        "Keep your body completely straight from head to toes",
-        "Maintain active shoulders and engaged lats",
-        "Breathe steadily while holding the position",
-        "Lower back to hanging position with control when form breaks"
+        "Begin by hanging from a pull-up bar with a pronated (overhand) grip, arms fully extended.",
+        "Tighten your core, squeeze your glutes, and engage your lats to prepare for the lift.",
+        "Smoothly raise your body, keeping it straight, until you reach a horizontal position. Your body should be parallel to the ground.",
+        "Hold this front lever position, ensuring your body remains straight and rigid, from your head to your heels.",
+        "Focus on breathing steadily while maintaining the hold to maximize tension and control.",
+        "After holding for your maximum possible time, carefully lower yourself back to the starting hanging position.",
+        "Ensure a controlled descent to avoid any sudden movements or loss of form."
       ],
-      "equipment": [
-        "Bodyweight"
+      "pro_tips": [
+        "Prioritize form over duration when starting. It's more beneficial to hold a perfect front lever for a shorter time than to hold a poor form for longer.",
+        "Progress to this exercise with preparatory movements like leg raises, planks, and back levers to build the necessary strength and control.",
+        "Incorporate scapular pulls and active hangs into your routine to strengthen your grip and shoulder stability, which are crucial for the front lever.",
+        "Visualize your body as a rigid board. This mental cue helps maintain the necessary body tension throughout the exercise."
       ],
-      "difficulty": "Advanced"
+      "common_mistakes": [
+        "Bending at the hips or knees, which reduces the effectiveness of the exercise and can lead to strain.",
+        "Rushing into the hold position without proper muscle engagement, leading to poor form and potential injury.",
+        "Neglecting to breathe properly while holding the lever, which can cause unnecessary tension and reduce hold time.",
+        "Losing shoulder engagement, which compromises form and reduces the exercise's benefits."
+      ],
+      "variations": [],
+      "safety_considerations": [],
+      "quality_score": 100,
+      "tags": [
+        "advanced",
+        "latissimus-dorsi",
+        "shoulders",
+        "pull-up-bar"
+      ]
     },
     {
       "id": "0056",
@@ -2285,29 +2479,51 @@
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_b44ed1c0b9ad4d2a95c7d2ffe64f1c63/720p/mp4/file.mp4"
       },
-      "extracted_at": "2025-08-21T11:39:12.475275",
-      "muscle_groups": [
-        "Full Body"
+      "description": "Frog jumps are a dynamic, plyometric exercise that effectively combines deep squatting with explosive jumps. This exercise is designed to enhance lower body strength, power, and endurance, while simultaneously offering cardiovascular benefits. By mimicking the motion of a frog's leap, it targets the legs and glutes, promoting muscle growth, improving athletic performance, and increasing heart rate for an effective cardio workout. Frog jumps are suitable for those looking to add intensity and fun to their workout regimen.",
+      "difficulty": "Intermediate",
+      "primary_muscle": "Quadriceps",
+      "secondary_muscles": [
+        "Glutes",
+        "Hamstrings",
+        "Calves",
+        "Core"
       ],
-      "exercise_types": [
-        "Cardio",
-        "Plyometrics"
+      "equipment_needed": [
+        "None"
       ],
-      "description": "Frog jumps are a plyometric exercise that combines squatting with explosive jumping to build lower body power and cardiovascular endurance. This full-body movement improves athletic performance, strengthens the legs and glutes, and provides an excellent cardio workout.",
       "steps": [
-        "Start in a deep squat position with hands on the ground",
-        "Keep your feet wider than shoulder-width apart",
-        "Place your hands between your legs, touching the ground",
-        "Explosively jump forward, bringing your knees toward your chest",
-        "Land softly back in the deep squat position",
-        "Immediately prepare for the next jump without standing up",
-        "Continue jumping forward in the frog-like motion",
-        "Focus on landing softly to protect your joints"
+        "Begin in a squat position with your feet wider than shoulder-width apart, toes slightly turned out.",
+        "Place your hands on the ground between your feet, keeping your spine neutral and head up.",
+        "Press down through your feet and explosively jump forward, propelling yourself with your legs and swinging your arms for momentum.",
+        "Bring your knees towards your chest mid-air to enhance the leap.",
+        "Land softly on the balls of your feet, returning to the deep squat position to absorb the impact.",
+        "Immediately leap forward again, maintaining a continuous, fluid motion without fully standing up between jumps.",
+        "Aim for distance and height with each jump, focusing on the quality of movement over speed.",
+        "Continue for the desired number of repetitions or time set."
       ],
-      "equipment": [
-        "Bodyweight"
+      "pro_tips": [
+        "Warm up thoroughly before performing frog jumps to prevent injury.",
+        "Maintain a tight core throughout the exercise to stabilize your body and protect your spine.",
+        "Focus on landing softly to minimize impact on your joints, particularly your knees and ankles.",
+        "Use your arms to help propel your body forward and maintain balance.",
+        "Gradually increase the intensity and volume of the jumps as your fitness level improves."
       ],
-      "difficulty": "Intermediate"
+      "common_mistakes": [
+        "Not squatting deeply enough at the start, which reduces the effectiveness of the exercise.",
+        "Landing with stiff legs, which can lead to joint strain.",
+        "Failing to use arm movements for momentum, which can limit the distance and height of the jump.",
+        "Rushing through the jumps without focusing on form, leading to decreased power and increased risk of injury.",
+        "Not engaging the core, which can result in a loss of balance and improper alignment."
+      ],
+      "variations": [],
+      "safety_considerations": [],
+      "quality_score": 100,
+      "tags": [
+        "intermediate",
+        "quadriceps",
+        "full-body",
+        "none"
+      ]
     },
     {
       "id": "0057",
@@ -2317,30 +2533,47 @@
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_1aa864268abd4f9a8c3a4314fe1f8a0c/720p/mp4/file.mp4"
       },
-      "extracted_at": "2025-08-21T11:39:19.024186",
-      "muscle_groups": [
-        "Arms",
-        "Forearms"
+      "description": "The Forearms Stretch on Wall with Fingers Facing Down is a simple yet effective exercise designed to stretch the extensor muscles located in the forearm. This stretch is particularly beneficial for individuals who engage in activities that involve extensive wrist and hand use, such as typing, writing, or any form of gripping. By performing this stretch, you can help alleviate tension, increase flexibility, and potentially reduce the risk of repetitive strain injuries. This exercise requires no equipment and can be done anywhere with a wall, making it highly accessible for everyone.",
+      "difficulty": "Beginner",
+      "primary_muscle": "Forearms",
+      "secondary_muscles": [
+        "Wrists"
       ],
-      "exercise_types": [
-        "Stretching",
-        "Home workout"
+      "equipment_needed": [
+        "Wall"
       ],
-      "description": "This wall stretch targets the extensor muscles of the forearm by placing the hand against the wall with fingers pointing downward. This position provides a deep stretch that helps relieve tension from activities like typing, gripping, and repetitive hand movements.",
       "steps": [
-        "Stand arm's length away from a wall",
-        "Place your palm flat against the wall with fingers pointing down",
-        "Keep your arm straight and step closer to the wall",
-        "Feel the stretch along the top of your forearm",
-        "Hold the position for 15-30 seconds",
-        "Gently lean into the stretch without forcing it",
-        "Switch to the other arm and repeat",
-        "Perform this stretch several times throughout the day"
+        "Begin by standing an arm's length away from a wall.",
+        "Extend your arm forward and place your palm against the wall with your fingers pointing downwards towards the floor.",
+        "Ensure your arm is straight and your hand is at shoulder height.",
+        "Gently step closer to the wall to increase the stretch along the top side of your forearm.",
+        "Maintain the stretch for 15-30 seconds, focusing on a deep, steady breath.",
+        "To intensify the stretch, gently lean your body forward without forcing your palm or fingers to move.",
+        "Release the stretch by stepping back and shaking out your arm.",
+        "Repeat the stretch with the other arm.",
+        "Perform this stretch 2-3 times per arm, several times throughout the day for best results."
       ],
-      "equipment": [
-        "Bodyweight"
+      "pro_tips": [
+        "To ensure a deeper stretch, keep your fingers fully extended and press the base of your palm firmly against the wall.",
+        "Focus on keeping your elbow locked to fully engage the extensor muscles along your forearm.",
+        "Incorporate wrist rotations after performing the stretch to enhance wrist mobility and reduce stiffness.",
+        "If you experience any pain or discomfort, ease off the stretch to prevent overstretching or injury."
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Bending the elbow during the stretch, which reduces the effectiveness of the forearm stretch.",
+        "Forcing the hand too far down the wall, which can lead to overstretching and potential injury.",
+        "Not maintaining a straight wrist, which decreases the stretch on the forearm extensors.",
+        "Holding the breath or breathing shallowly, which can increase tension and reduce the benefits of the stretch."
+      ],
+      "variations": [],
+      "safety_considerations": [],
+      "quality_score": 100,
+      "tags": [
+        "beginner",
+        "forearms",
+        "arms",
+        "wall"
+      ]
     },
     {
       "id": "0058",
@@ -2350,30 +2583,46 @@
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_6e30fa6825ae4663a653a4bc784ef0a4/720p/mp4/file.mp4"
       },
-      "extracted_at": "2025-08-21T11:39:24.890312",
-      "muscle_groups": [
-        "Arms",
-        "Forearms"
+      "description": "The Forearms Stretch on Wall is a simple yet highly effective exercise designed to stretch and relieve tension in the forearm muscles, particularly the flexors. By performing this stretch regularly, individuals can enhance their wrist and forearm flexibility, reduce the risk of repetitive strain injuries such as carpal tunnel syndrome, and alleviate muscle tightness resulting from prolonged typing, writing, or any repetitive hand and wrist movements. This exercise is especially beneficial for athletes, musicians, office workers, and anyone who engages in activities that exert the forearms and wrists.",
+      "difficulty": "Beginner",
+      "primary_muscle": "Forearms",
+      "secondary_muscles": [
+        "Wrist Flexors"
       ],
-      "exercise_types": [
-        "Stretching",
-        "Home workout"
+      "equipment_needed": [
+        "Wall"
       ],
-      "description": "The forearms stretch on wall with fingers pointing up targets the flexor muscles of the forearm and wrist. This stretch is essential for anyone who performs repetitive hand and wrist movements, helping to prevent carpal tunnel syndrome and reduce forearm tension.",
       "steps": [
-        "Stand facing a wall at arm's length",
-        "Place your palm flat against the wall with fingers pointing up",
-        "Keep your arm straight at shoulder height",
-        "Slowly step back or lean away from the wall",
-        "Feel the stretch in the underside of your forearm",
-        "Hold for 15-30 seconds while breathing normally",
-        "Release gently and repeat with the other arm",
-        "Avoid bouncing or forcing the stretch"
+        "Begin by standing an arm's length away from a wall, facing towards it.",
+        "Extend your arm forward and place your palm flat against the wall, with your fingers pointing upwards and your arm parallel to the ground at shoulder height.",
+        "Ensure your elbow is straight and not bent.",
+        "Gently lean your body away from the wall to increase the stretch along the underside of your forearm.",
+        "Maintain this position and feel a comfortable stretch in your forearm and wrist for 15 to 30 seconds, breathing normally throughout.",
+        "Carefully release the stretch and step forward to reduce the tension.",
+        "Repeat the stretch with your other arm to ensure both forearms receive equal attention.",
+        "Perform this stretch 2-3 times per arm, ideally as part of your warm-up or cool-down routine."
       ],
-      "equipment": [
-        "Bodyweight"
+      "pro_tips": [
+        "To enhance the stretch, gently rotate your wrist side to side while keeping your palm pressed against the wall.",
+        "Focus on keeping your shoulder relaxed and down away from your ear to prevent unnecessary tension.",
+        "Incorporate deep, controlled breathing to help relax your muscles further and increase the effectiveness of the stretch.",
+        "For an additional stretch, try bending your wrist so that your fingers point down and repeat the stretch."
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Bending the elbow instead of keeping the arm straight, which reduces the effectiveness of the stretch.",
+        "Forcing the palm too flat against the wall, which can strain the wrist. Adjust the pressure to a comfortable level.",
+        "Holding the breath, which can create tension in the muscles instead of allowing them to relax.",
+        "Overstretching or bouncing in the stretch, which can lead to muscle strain."
+      ],
+      "variations": [],
+      "safety_considerations": [],
+      "quality_score": 100,
+      "tags": [
+        "beginner",
+        "forearms",
+        "arms",
+        "wall"
+      ]
     },
     {
       "id": "0059",
@@ -2383,29 +2632,48 @@
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_52d693ffe0f3475f910fd0d46d733fba/720p/mp4/file.mp4"
       },
-      "extracted_at": "2025-08-21T11:39:32.166666",
-      "muscle_groups": [
-        "Arms",
-        "Forearms"
+      "description": "The Forearms Pull With Opposite Hand Stretch is a simple yet highly effective exercise designed to increase flexibility and relieve tension in the forearm muscles. By using the opposite hand to gently pull or push on the wrist, this stretch targets both the wrist flexors and extensors, making it an ideal choice for individuals who engage in repetitive wrist activities such as typing, playing musical instruments, or various sports. Regular practice of this stretch can help prevent wrist and forearm injuries by maintaining muscle elasticity and promoting blood circulation.",
+      "difficulty": "Beginner",
+      "primary_muscle": "Forearms",
+      "secondary_muscles": [
+        "Wrist Flexors",
+        "Wrist Extensors"
       ],
-      "exercise_types": [
-        "Stretching"
+      "equipment_needed": [
+        "None"
       ],
-      "description": "This forearm stretch uses the opposite hand to provide a deeper, more controlled stretch of the wrist flexors and extensors. It's an effective way to relieve tension and improve flexibility in the forearms, particularly beneficial for desk workers and athletes.",
       "steps": [
-        "Extend one arm straight out in front of you",
-        "Flex your wrist so your palm faces away from you",
-        "Use your opposite hand to gently pull your fingers back",
-        "Feel the stretch in your forearm and wrist",
-        "Hold the stretch for 15-30 seconds",
-        "Release and then flex your wrist in the opposite direction",
-        "Use your opposite hand to gently push your hand down",
-        "Switch arms and repeat the entire sequence"
+        "Stand or sit with your back straight and shoulders relaxed.",
+        "Extend one arm straight out in front of you, palm facing down.",
+        "Flex your wrist, directing your fingers towards the floor.",
+        "Use your opposite hand to gently press against the back of your extended hand, enhancing the stretch.",
+        "Hold this position for 15-30 seconds, focusing on feeling a gentle stretch along your forearm and wrist.",
+        "Release the stretch, then extend your arm again with your palm facing up.",
+        "Gently pull back on your fingers with the opposite hand, aiming to stretch the underside of your forearm.",
+        "Maintain this stretch for another 15-30 seconds.",
+        "Repeat the entire sequence with the other arm to ensure both forearms are equally stretched."
       ],
-      "equipment": [
-        "Bodyweight"
+      "pro_tips": [
+        "Ensure your arm is fully extended but not locked at the elbow to avoid strain.",
+        "Keep the stretch gentle; you should feel a stretch, not pain.",
+        "Incorporate this stretch into your daily routine, especially if you perform tasks that involve repetitive wrist movements.",
+        "Breathe deeply and steadily as you hold each stretch to help relax your muscles further."
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Pulling or pushing too hard, which can lead to overstretching and injury.",
+        "Not holding the stretch long enough to gain benefits.",
+        "Rushing through the stretches without focusing on form and muscle engagement.",
+        "Ignoring the stretch's bilateral aspect, leading to imbalances in flexibility and muscle tension."
+      ],
+      "variations": [],
+      "safety_considerations": [],
+      "quality_score": 100,
+      "tags": [
+        "beginner",
+        "forearms",
+        "arms",
+        "none"
+      ]
     },
     {
       "id": "0060",
@@ -2415,30 +2683,48 @@
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_07194140b4a04516b1b6931e9bea1540/720p/mp4/file.mp4"
       },
-      "extracted_at": "2025-08-21T11:39:42.819668",
-      "muscle_groups": [
-        "Arms",
-        "Triceps"
+      "description": "The Floor Tricep Dip is a fundamental bodyweight exercise that primarily targets the triceps brachii, the large muscle on the back of the upper arm. This exercise is particularly beneficial for those looking to increase arm strength and muscle tone without the need for any equipment. By performing this exercise on the floor, individuals can focus on mastering the technique and form with a reduced risk of injury. This variation not only strengthens the triceps but also engages the shoulders, chest, and core, offering a comprehensive upper body workout.",
+      "difficulty": "Beginner",
+      "primary_muscle": "Triceps",
+      "secondary_muscles": [
+        "Shoulders",
+        "Chest",
+        "Core"
       ],
-      "exercise_types": [
-        "Calisthenics",
-        "Home workout"
+      "equipment_needed": [
+        "None (Bodyweight)"
       ],
-      "description": "Floor tricep dips are a bodyweight exercise that targets the triceps muscles while also engaging the shoulders and chest. This variation is performed on the floor, making it accessible for beginners and providing a stable surface for learning proper form.",
       "steps": [
-        "Sit on the floor with your knees bent and feet flat",
-        "Place your hands behind you, fingers pointing toward your body",
-        "Lift your hips off the ground, supporting your weight on your hands",
-        "Lower your body by bending your elbows",
-        "Keep your elbows pointing backward, not out to the sides",
-        "Lower until your elbows reach about 90 degrees",
-        "Push through your hands to return to the starting position",
-        "Keep your core engaged throughout the movement"
+        "Begin by sitting on the floor with your legs extended in front of you.",
+        "Place your hands on the floor behind you, fingers pointing towards your feet.",
+        "Bend your knees and place your feet flat on the floor, hip-width apart.",
+        "Press into your hands to lift your hips off the floor, coming into a reverse tabletop position.",
+        "Slowly bend your elbows to lower your body towards the floor, keeping your elbows pointed straight back.",
+        "Lower down until your elbows form a 90-degree angle, ensuring they do not flare out to the sides.",
+        "Press through your palms to straighten your arms, lifting your body back to the starting position.",
+        "Maintain a tight core throughout the exercise to stabilize your body."
       ],
-      "equipment": [
-        "Bodyweight"
+      "pro_tips": [
+        "Keep your shoulders down and away from your ears to prevent strain.",
+        "Focus on moving slowly and with control to maximize muscle engagement.",
+        "Ensure your hands are placed directly under your shoulders to maintain proper alignment.",
+        "To increase the intensity, pause at the bottom of the movement before pushing back up."
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Allowing the elbows to flare out, which can put unnecessary stress on the shoulders.",
+        "Lifting the hips too high or letting them sag, which can reduce the effectiveness of the exercise.",
+        "Rushing through the repetitions, which can lead to poor form and reduced muscle engagement.",
+        "Not lowering the body enough, which decreases the range of motion and the exercise's effectiveness."
+      ],
+      "variations": [],
+      "safety_considerations": [],
+      "quality_score": 100,
+      "tags": [
+        "beginner",
+        "triceps",
+        "arms",
+        "none-(bodyweight)"
+      ]
     },
     {
       "id": "0061",
@@ -2448,29 +2734,47 @@
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_c6e9a15105454db7a8bd37c27cf27947/720p/mp4/file.mp4"
       },
-      "extracted_at": "2025-08-21T11:39:49.890067",
-      "muscle_groups": [
-        "Back",
-        "Shoulders"
+      "description": "The Flat Knee Raise is a foundational core exercise that emphasizes the lower abdominals and hip flexors. This movement is essential for building a strong core, which is vital for overall stability, balance, and power in both everyday activities and athletic performance. By engaging and strengthening the deep abdominal muscles, it also plays a role in preventing and alleviating lower back pain. This exercise is accessible to individuals at all fitness levels and can be performed anywhere, as it requires no equipment.",
+      "difficulty": "Beginner",
+      "primary_muscle": "Rectus Abdominis",
+      "secondary_muscles": [
+        "Hip Flexors",
+        "Obliques"
       ],
-      "exercise_types": [
-        "Functional"
+      "equipment_needed": [
+        "Mat (optional for comfort)"
       ],
-      "description": "The flat knee raise is a core strengthening exercise performed lying flat that targets the lower abdominals and hip flexors. This exercise helps improve core stability, strengthens the deep abdominal muscles, and can help alleviate lower back tension when performed correctly.",
       "steps": [
-        "Lie flat on your back with arms at your sides",
-        "Keep your knees bent at about 90 degrees",
-        "Place your feet flat on the floor",
-        "Engage your core and press your lower back into the floor",
-        "Lift your knees toward your chest",
-        "Keep the 90-degree angle in your knees throughout",
-        "Lower your feet back to the starting position with control",
-        "Avoid letting your back arch during the movement"
+        "Start by lying flat on your back on the floor or a mat, with your arms placed at your sides for stability.",
+        "Bend your knees at approximately a 90-degree angle, keeping your feet flat on the floor.",
+        "Engage your core muscles by drawing your belly button towards your spine and pressing your lower back firmly into the floor.",
+        "Exhale and lift your knees towards your chest, maintaining the 90-degree bend in your knees throughout the movement.",
+        "Pause briefly at the top of the movement with your knees close to your chest.",
+        "Inhale as you slowly lower your feet back to the starting position, ensuring a controlled movement without allowing your lower back to arch or lift off the floor.",
+        "Repeat the movement for the desired number of repetitions."
       ],
-      "equipment": [
-        "Bodyweight"
+      "pro_tips": [
+        "Focus on quality of movement rather than quantity. Ensure each rep is performed with proper form and control.",
+        "To increase the challenge, pause and hold your knees towards your chest for a few seconds before lowering them back down.",
+        "Ensure your lower back remains in contact with the floor throughout the exercise to maximize engagement of the core muscles and protect your spine.",
+        "Breathe consistently throughout the exercise, exhaling as you lift your knees and inhaling as you lower them."
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Arching the lower back off the floor, which can strain the back and reduce the effectiveness of the exercise on the targeted muscles.",
+        "Using momentum to swing the legs up and down, which decreases the engagement of the core muscles.",
+        "Not engaging the core sufficiently, which can lead to improper form and reduced benefits from the exercise.",
+        "Holding the breath, which can increase blood pressure and decrease oxygen flow to the muscles."
+      ],
+      "variations": [],
+      "safety_considerations": [],
+      "quality_score": 100,
+      "tags": [
+        "beginner",
+        "rectus-abdominis",
+        "back",
+        "shoulders",
+        "mat-(optional for comfort)"
+      ]
     },
     {
       "id": "0062",
@@ -2480,28 +2784,52 @@
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_bf6aea23f4f3480cbe9d292808b8db40/720p/mp4/file.mp4"
       },
-      "extracted_at": "2025-08-21T11:39:53.142384",
-      "muscle_groups": [
-        "Full Body"
+      "description": "The Extended Side Angle Pose, known in yoga as Utthita Parsvakonasana, is a dynamic standing yoga posture that emphasizes stretching the sides of the body and strengthening the legs. This pose is excellent for opening the hips, stretching the groins, spine, waist, chest, and shoulders, while also increasing stamina. By engaging the core and maintaining balance, this pose also aids in developing concentration and mental fortitude.",
+      "difficulty": "Beginner",
+      "primary_muscle": "Obliques",
+      "secondary_muscles": [
+        "Quadriceps",
+        "Hamstrings",
+        "Calves",
+        "Shoulders",
+        "Hip Flexors"
       ],
-      "exercise_types": [
-        "Functional"
+      "equipment_needed": [
+        "Yoga Mat"
       ],
-      "description": "Extended side angle pose is a fundamental yoga posture that combines a warrior II stance with a side bend. This pose strengthens the legs while stretching the side body, improving lateral flexibility, and enhancing overall body awareness and balance.",
       "steps": [
-        "Start in warrior II pose with your right leg forward",
-        "Ensure your front thigh is parallel to the floor",
-        "Place your right forearm on your right thigh",
-        "Extend your left arm over your head, creating a line from fingertips to back heel",
-        "Feel the stretch along the left side of your body",
-        "Keep your front knee tracking over your ankle",
-        "Breathe deeply while holding the pose",
-        "Switch sides and repeat with left leg forward"
+        "Begin in a standing position and step your feet about 4 to 5 feet apart.",
+        "Turn your right foot out 90 degrees and your left foot in slightly.",
+        "Bend your right knee over your right ankle, so your shin is perpendicular to the floor.",
+        "Extend your torso to the right, directly over the right leg, and place your right forearm on your right thigh.",
+        "Stretch your left arm overhead, reaching forward, so your bicep is by your ear, creating a straight line from your left heel through your left fingertips.",
+        "Turn your head to look up at your left hand, keeping your neck long and relaxed.",
+        "Press into the outer edge of your back foot and engage your thigh muscles.",
+        "Hold the pose for 30 seconds to 1 minute, breathing deeply.",
+        "To release, inhale and press into your back foot to come up to standing.",
+        "Reverse the feet and repeat on the opposite side."
       ],
-      "equipment": [
-        "Bodyweight"
+      "pro_tips": [
+        "Ensure your front knee does not extend beyond your toes to maintain proper alignment and protect the knee joint.",
+        "Engage your core throughout the pose to help with balance and stability.",
+        "Imagine lengthening your body from your back heel through your extended fingertips to maximize the stretch along your side body.",
+        "For a deeper stretch, place your front hand on the floor outside your front foot, or on a block, instead of on your thigh."
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Allowing the front knee to collapse inward, which can strain the knee joint.",
+        "Not engaging the back leg, which can reduce stability and effectiveness of the stretch.",
+        "Forgetting to breathe deeply, which helps to deepen the pose and maintain focus.",
+        "Overstretching the neck by looking up, which can strain it. Keep the neck in a neutral position if looking up causes discomfort."
+      ],
+      "variations": [],
+      "safety_considerations": [],
+      "quality_score": 100,
+      "tags": [
+        "beginner",
+        "obliques",
+        "full-body",
+        "yoga-mat"
+      ]
     },
     {
       "id": "0063",
@@ -2511,28 +2839,53 @@
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_9cb0f951df274d1ea4c4b74de4361b45/720p/mp4/file.mp4"
       },
-      "extracted_at": "2025-08-21T11:40:00.190332",
-      "muscle_groups": [
-        "Full Body"
+      "description": "The Extended Side Angle Pose with Block is a foundational yoga posture that integrates a yoga block to enhance accessibility and alignment for practitioners of all levels, particularly beginners or those with limited flexibility. This adaptation allows individuals to experience the full benefits of the Extended Side Angle Pose, including stretching the sides of the body, opening the hips and shoulders, and improving overall balance and concentration. The use of a block aids in maintaining proper form, reducing the risk of strain, and enabling the practitioner to hold the pose longer for increased benefit.",
+      "difficulty": "Beginner",
+      "primary_muscle": "Full Body",
+      "secondary_muscles": [
+        "Obliques",
+        "Quadriceps",
+        "Hamstrings",
+        "Shoulders",
+        "Calves"
       ],
-      "exercise_types": [
-        "Functional"
+      "equipment_needed": [
+        "Yoga Block",
+        "Yoga Mat"
       ],
-      "description": "This modified version of extended side angle pose uses a yoga block for support, making the pose more accessible for beginners or those with limited flexibility. The block helps maintain proper alignment while still providing the benefits of the traditional pose.",
       "steps": [
-        "Set up in warrior II position with a yoga block nearby",
-        "Place the block on the floor inside your front leg",
-        "Adjust the block height to high, medium, or low as needed",
-        "Rest your bottom hand on the block instead of your thigh",
-        "Extend your top arm over your head",
-        "Maintain the side body stretch while using the block for support",
-        "Keep your front knee aligned over your ankle",
-        "Hold the pose and repeat on the other side"
+        "Begin in Warrior II position, with your front foot pointing straight ahead and your back foot perpendicular to it, yoga block within reach.",
+        "Place the yoga block on the floor inside your front leg. Adjust the height of the block according to your flexibility and comfort level (high, medium, or low).",
+        "Bend your front knee, ensuring it is aligned directly over your ankle, forming a right angle with your leg.",
+        "Lean your torso to the side, resting your bottom hand on the yoga block. Ensure the block is positioned in a way that allows your arm to extend comfortably, supporting your balance without strain.",
+        "Extend your top arm over your head, creating a straight line from your back foot through your fingertips, enhancing the stretch along the side body.",
+        "Rotate your gaze upward, looking past your extended hand, if comfortable for your neck.",
+        "Engage your core muscles to maintain stability and support your posture.",
+        "Hold the pose for several breaths, focusing on maintaining a deep, steady breath.",
+        "To release, inhale as you press through your feet to rise back into Warrior II position.",
+        "Repeat on the opposite side to ensure balanced strength and flexibility."
       ],
-      "equipment": [
-        "Bodyweight"
+      "pro_tips": [
+        "Engage your core and leg muscles throughout the pose to support balance and stability.",
+        "If you experience any discomfort in your neck, keep your gaze downward or straight ahead instead of looking up.",
+        "Use the block to find the optimal height that allows you to maintain the integrity of the pose without compromising your alignment or breathing.",
+        "Imagine lengthening your body from your back heel through your extended fingertips to maximize the stretch along your side body."
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Placing the front knee ahead of the ankle, which can strain the knee joint.",
+        "Collapsing the torso onto the thigh, which reduces the effectiveness of the stretch and can compromise breathing.",
+        "Forgetting to engage the core, which is essential for stability and balance in the pose.",
+        "Holding the breath, which can create tension in the body instead of promoting relaxation and focus."
+      ],
+      "variations": [],
+      "safety_considerations": [],
+      "quality_score": 100,
+      "tags": [
+        "beginner",
+        "full-body",
+        "yoga-block",
+        "yoga-mat"
+      ]
     },
     {
       "id": "0064",
@@ -2542,29 +2895,50 @@
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_ec7ba09032f04687a33b58ef6b65d19c/720p/mp4/file.mp4"
       },
-      "extracted_at": "2025-08-21T11:40:06.082151",
-      "muscle_groups": [
-        "Trapezius",
-        "Shoulders"
+      "description": "The Elevated Pike Shoulder Shrug is an intermediate-level bodyweight exercise that emphasizes the trapezius muscles and shoulder stabilizers. By adopting an inverted position, similar to a downward dog but with feet elevated, this exercise enhances shoulder strength, stability, and prepares the body for advanced overhead movements, including handstands. It's particularly beneficial for improving scapular mobility and control, which are crucial for shoulder health and performance.",
+      "difficulty": "Intermediate",
+      "primary_muscle": "Trapezius",
+      "secondary_muscles": [
+        "Deltoids",
+        "Serratus Anterior",
+        "Core"
       ],
-      "exercise_types": [
-        "Functional"
+      "equipment_needed": [
+        "Box",
+        "Bench"
       ],
-      "description": "The elevated pike shoulder shrug is a bodyweight exercise that targets the trapezius and shoulder stabilizers from an inverted position. This exercise helps build shoulder strength and stability while preparing the body for more advanced movements like handstands.",
       "steps": [
-        "Start in a downward dog position with feet elevated on a box or bench",
-        "Walk your hands closer to the elevation to create a pike position",
-        "Keep your arms straight and core engaged",
-        "Lower your shoulders by allowing your shoulder blades to spread apart",
-        "Push through your hands to elevate your shoulders and squeeze your shoulder blades together",
-        "Focus on the movement coming from your shoulders, not your arms",
-        "Repeat the shrugging motion for the desired number of repetitions",
-        "Maintain the pike position throughout the entire movement"
+        "Begin in a downward dog position with your feet elevated on a box or bench to increase the inversion.",
+        "Walk your hands back towards the box or bench to deepen the pike position, aiming to create a V shape with your body.",
+        "Ensure your arms and legs remain straight, with your core engaged to maintain a stable torso.",
+        "Initiate the shrug by lowering your shoulders, allowing your shoulder blades to move apart, feeling a stretch in your trapezius muscles.",
+        "Press firmly through your hands, shrugging your shoulders upwards and squeezing your shoulder blades together at the top of the movement.",
+        "Concentrate on isolating the movement to your shoulders, minimizing arm bending or spine arching.",
+        "Perform the desired number of repetitions, maintaining a consistent pike position and controlled motion throughout.",
+        "Focus on smooth, controlled movements rather than speed to maximize engagement and effectiveness."
       ],
-      "equipment": [
-        "Bodyweight"
+      "pro_tips": [
+        "To increase the challenge, elevate your feet higher to shift more weight onto your shoulders.",
+        "Imagine pushing the floor away from you to fully activate the trapezius and serratus anterior muscles.",
+        "Keep your neck in a neutral position to avoid strain and ensure the focus remains on the shoulders.",
+        "For beginners, practice the movement on the floor without elevation to build strength and familiarity with the exercise."
       ],
-      "difficulty": "Intermediate"
+      "common_mistakes": [
+        "Bending the arms: Keep your arms straight throughout the exercise to ensure the shoulders are properly targeted.",
+        "Arching the back: Maintain a strong, engaged core to prevent arching, which can lead to lower back strain.",
+        "Rushing the movements: Perform each shrug with control to maximize muscle engagement and reduce the risk of injury.",
+        "Not maintaining the pike position: Consistency in the pike position ensures the correct muscles are targeted and engaged."
+      ],
+      "variations": [],
+      "safety_considerations": [],
+      "quality_score": 100,
+      "tags": [
+        "intermediate",
+        "trapezius",
+        "shoulders",
+        "box",
+        "bench"
+      ]
     },
     {
       "id": "0065",
@@ -2575,29 +2949,49 @@
         "720p": "https://video.wixstatic.com/video/3864fa_98b6ef8482884bc3952d90d1204fd1e4/720p/mp4/file.mp4",
         "480p": "https://video.wixstatic.com/video/3864fa_98b6ef8482884bc3952d90d1204fd1e4/480p/mp4/file.mp4"
       },
-      "extracted_at": "2025-08-21T11:40:18.627291",
-      "video_redone_at": "2025-08-21T12:33:15.465410",
-      "muscle_groups": [
-        "Full Body"
+      "description": "The Easy Seated Twist Pose, also known as Parivrtta Sukhasana in yoga, is a fundamental seated posture that promotes spinal flexibility and relieves tension in the back and hips. By gently rotating the spine, this pose encourages better circulation throughout the body, aids in digestion, and helps to alleviate stress. It's an ideal exercise for individuals of all ages and fitness levels, especially those looking to improve their posture and counteract the negative effects of sitting for extended periods.",
+      "difficulty": "Beginner",
+      "primary_muscle": "Spinal Rotators",
+      "secondary_muscles": [
+        "Glutes",
+        "Obliques",
+        "Shoulders"
       ],
-      "exercise_types": [
-        "Functional"
+      "equipment_needed": [
+        "Mat"
       ],
-      "description": "Easy seated twist pose is a gentle spinal rotation that helps improve spinal mobility and releases tension in the back and hips. This accessible pose can be performed by people of all flexibility levels and is excellent for counteracting the effects of prolonged sitting.",
       "steps": [
-        "Sit cross-legged on the floor or in a comfortable seated position",
-        "Place your right hand behind you for support",
-        "Rest your left hand on your right knee",
-        "Lengthen your spine by sitting tall",
-        "Gently twist your torso to the right, starting from your lower back",
-        "Keep your hips facing forward while your torso rotates",
-        "Hold the twist while breathing deeply",
-        "Return to center and repeat the twist to the left side"
+        "Begin by sitting on a mat with your legs crossed in a comfortable position. Ensure your sit bones are evenly grounded.",
+        "Place your right hand on the floor behind you, using it as a support. Your fingertips should barely touch the ground, acting more as a guide than a weight-bearing structure.",
+        "Place your left hand on your right knee. This will serve as the leverage for your twist.",
+        "Inhale deeply and lengthen your spine, imagining a string pulling you up from the crown of your head.",
+        "As you exhale, gently twist your torso to the right, initiating the movement from your lower back and allowing it to progress up the spine.",
+        "Keep your hips square and facing forward to ensure the twist is isolated to the upper body.",
+        "Hold the pose for 5-10 breaths, focusing on deepening the twist with each exhale without straining.",
+        "Inhale as you gently release the twist, returning to center.",
+        "Repeat the twist on the opposite side to maintain balance in your body."
       ],
-      "equipment": [
-        "Bodyweight"
+      "pro_tips": [
+        "Engage your core throughout the pose to support your spine.",
+        "Imagine you are lengthening your spine with each inhale and deepening the twist with each exhale.",
+        "Do not force the twist; respect your body's limits.",
+        "Keep your shoulders relaxed and away from your ears to avoid tension in the neck."
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Relying too much on arm strength to deepen the twist, which can lead to over-twisting.",
+        "Not keeping the hips square, which can reduce the effectiveness of the twist and put unnecessary strain on the back.",
+        "Forgetting to breathe deeply, which is essential for maximizing the benefits of the twist.",
+        "Compromising the length of the spine by slouching or rounding the back, which can lead to discomfort and reduce the benefits of the exercise."
+      ],
+      "variations": [],
+      "safety_considerations": [],
+      "quality_score": 100,
+      "tags": [
+        "beginner",
+        "spinal-rotators",
+        "full-body",
+        "mat"
+      ]
     },
     {
       "id": "0066",
@@ -2607,28 +3001,48 @@
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_f7d26bea70644a5ead601610c14be6c1/720p/mp4/file.mp4"
       },
-      "extracted_at": "2025-08-21T11:40:22.118403",
-      "muscle_groups": [
-        "Neck"
+      "description": "The Easy Pose Neck Stretch is a simple yet profoundly effective exercise designed to alleviate tension in the neck muscles. By adopting a seated meditation posture, this stretch not only targets the neck but also encourages a state of relaxation and mindfulness. It's particularly beneficial for individuals who spend long hours in front of a computer or have a tendency to hold stress in their neck and shoulders. Regular practice can improve posture, enhance flexibility, and reduce stress levels.",
+      "difficulty": "Beginner",
+      "primary_muscle": "Neck",
+      "secondary_muscles": [
+        "Shoulders",
+        "Upper Back"
       ],
-      "exercise_types": [
-        "Stretching"
+      "equipment_needed": [
+        "Mat (optional)"
       ],
-      "description": "Easy pose neck stretch combines the grounded stability of a seated meditation posture with gentle neck stretches. This combination helps relieve neck tension while promoting relaxation and mindfulness, making it perfect for stress relief and posture improvement.",
       "steps": [
-        "Sit in a comfortable cross-legged position",
-        "Rest your hands gently on your knees",
-        "Lengthen your spine and relax your shoulders",
-        "Slowly drop your right ear toward your right shoulder",
-        "Feel the gentle stretch along the left side of your neck",
-        "Hold for 15-30 seconds while breathing deeply",
-        "Return your head to center",
-        "Repeat the stretch on the left side"
+        "Begin by sitting on the floor in a comfortable cross-legged position. If you find this position uncomfortable, you may sit on a cushion or folded blanket for added support.",
+        "Place your hands gently on your knees with palms facing down. This helps in stabilizing your posture.",
+        "Consciously lengthen your spine upwards, reaching the crown of your head towards the ceiling. This alignment is crucial for an effective stretch.",
+        "Relax your shoulders, allowing them to move away from your ears, creating space in the neck area.",
+        "Gently tilt your head to the right, bringing your right ear closer to the right shoulder. Avoid lifting the shoulder to meet the ear.",
+        "Hold this position for 15-30 seconds, taking deep, slow breaths. You should feel a stretch along the left side of your neck.",
+        "Carefully bring your head back to the center position, realigning your spine.",
+        "Repeat the stretch on the opposite side, this time tilting your head towards the left shoulder.",
+        "For a deeper stretch, you can extend the opposite arm (from the direction you are tilting your head) to the side, palm facing down.",
+        "Repeat this sequence 2-3 times on each side, or as needed."
       ],
-      "equipment": [
-        "Bodyweight"
+      "pro_tips": [
+        "Focus on maintaining a straight spine throughout the stretch to maximize the benefits.",
+        "Breathe deeply and slowly during the stretch to help release tension.",
+        "Avoid straining or pushing your neck beyond its comfortable range of motion.",
+        "To enhance the stretch, gently place the same-side hand on your head to add a slight amount of pressure, but ensure it's not forcing the movement."
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Rounding the back or slouching, which can reduce the effectiveness of the stretch and put unnecessary strain on the spine.",
+        "Elevating the shoulder towards the ear, which can create tension instead of releasing it.",
+        "Holding the breath or breathing shallowly, which can prevent relaxation and limit the stretch's benefits.",
+        "Applying too much pressure with the hand or forcing the neck into an uncomfortable position."
+      ],
+      "variations": [],
+      "safety_considerations": [],
+      "quality_score": 100,
+      "tags": [
+        "beginner",
+        "neck",
+        "mat-(optional)"
+      ]
     },
     {
       "id": "0067",
@@ -2638,29 +3052,47 @@
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_c675219da95b4fe3b04216d404cbff9d/720p/mp4/file.mp4"
       },
-      "extracted_at": "2025-08-21T11:40:26.206894",
-      "muscle_groups": [
-        "Chest",
-        "Arms"
+      "description": "The Eagle Arms Chin Into Chest exercise is a gentle yet effective stretch aimed at alleviating tension and improving flexibility in the upper body. This exercise combines the intricate arm positioning of the eagle arms with a subtle forward head movement, targeting the upper back, shoulders, and neck. It's particularly beneficial for individuals who spend long hours at a desk or in front of a computer, as it helps to counteract the effects of forward head posture and shoulder stiffness.",
+      "difficulty": "Beginner",
+      "primary_muscle": "Upper Back",
+      "secondary_muscles": [
+        "Shoulders",
+        "Neck",
+        "Chest"
       ],
-      "exercise_types": [
-        "Functional"
+      "equipment_needed": [
+        "None"
       ],
-      "description": "Eagle arms chin into chest combines the shoulder stretch of eagle arms with a forward head position to create a comprehensive upper body stretch. This pose targets the upper back, shoulders, and neck while helping to counteract forward head posture from desk work.",
       "steps": [
-        "Wrap your arms around yourself in eagle arms position",
-        "Bring your right arm under your left, wrapping around",
-        "Try to press your palms together if possible",
-        "Lift your elbows while keeping shoulders away from ears",
-        "Gently tuck your chin toward your chest",
-        "Feel the stretch across your upper back and between your shoulder blades",
-        "Hold the position while breathing deeply",
-        "Release and repeat with the opposite arm on top"
+        "Begin by standing or sitting in a comfortable position with your spine straight.",
+        "Extend your arms out to the sides and then cross them, bringing your right arm underneath your left.",
+        "Bend your elbows and attempt to bring your palms to touch, or as close as possible.",
+        "Lift your elbows to shoulder height while simultaneously dropping your shoulders away from your ears to avoid tension.",
+        "Gently tuck your chin towards your chest, creating a gentle stretch in the back of your neck.",
+        "You should feel a stretch across your upper back, especially between the shoulder blades.",
+        "Maintain this position, breathing deeply and evenly for 15-30 seconds.",
+        "Slowly unwind your arms and neck, then repeat the exercise with the left arm under the right."
       ],
-      "equipment": [
-        "Bodyweight"
+      "pro_tips": [
+        "Focus on maintaining a straight spine throughout the exercise to maximize the stretch.",
+        "If you cannot touch your palms together, grasp your shoulders or use a towel to hold between your hands as you work on increasing your flexibility.",
+        "Incorporate this stretch into your daily routine, especially if you work at a desk, to help improve posture and reduce neck and shoulder tension."
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Raising the shoulders towards the ears, which can create tension in the neck and shoulders.",
+        "Not tucking the chin enough, which reduces the effectiveness of the neck stretch.",
+        "Forgetting to breathe deeply, which helps facilitate relaxation and a deeper stretch."
+      ],
+      "variations": [],
+      "safety_considerations": [],
+      "quality_score": 100,
+      "tags": [
+        "beginner",
+        "upper-back",
+        "chest",
+        "arms",
+        "none"
+      ]
     },
     {
       "id": "0068",
@@ -2670,28 +3102,48 @@
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_c22ba75b6a4a4fa4a9c2c0d6b8d584ba/720p/mp4/file.mp4"
       },
-      "extracted_at": "2025-08-21T11:40:33.052640",
-      "muscle_groups": [
-        "Full Body"
+      "description": "The Dumbbell Swing is a dynamic, compound exercise that emphasizes the hip hinge movement, crucial for developing power in the posterior chain muscles such as the glutes, hamstrings, and lower back. It also engages the core for stability throughout the movement. This exercise not only enhances muscular strength and power but also improves cardiovascular endurance, making it an excellent addition to both strength and conditioning routines. Its functional nature translates well into improved performance in sports and daily activities, promoting overall mobility and injury prevention.",
+      "difficulty": "Intermediate",
+      "primary_muscle": "Glutes",
+      "secondary_muscles": [
+        "Hamstrings",
+        "Lower Back",
+        "Core",
+        "Shoulders"
       ],
-      "exercise_types": [
-        "Strength"
-      ],
-      "description": "The dumbbell swing is a dynamic hip-hinge movement that targets the posterior chain muscles including the glutes, hamstrings, and core. This explosive exercise builds power, improves cardiovascular fitness, and develops functional strength for everyday movements.",
-      "steps": [
-        "Hold a dumbbell with both hands, arms extended",
-        "Stand with feet slightly wider than shoulder-width apart",
-        "Hinge at the hips and lower the dumbbell between your legs",
-        "Keep your back straight and chest up",
-        "Explosively drive your hips forward to swing the dumbbell up",
-        "Let the momentum carry the dumbbell to chest height",
-        "Control the descent by hinging at the hips again",
-        "Maintain a fluid, rhythmic swinging motion"
-      ],
-      "equipment": [
+      "equipment_needed": [
         "Dumbbell"
       ],
-      "difficulty": "Intermediate"
+      "steps": [
+        "Start by standing with your feet slightly wider than shoulder-width apart, toes pointed slightly outwards.",
+        "Grip the dumbbell with both hands, arms extended, and hold it in front of your waist.",
+        "Initiate the movement by pushing your hips back, bending slightly at the knees, and lowering the dumbbell between your legs. Keep your spine neutral and chest up.",
+        "Drive through your heels and hips to explosively thrust the dumbbell upward and forward. Extend your hips and knees fully at the top of the swing.",
+        "Allow the dumbbell to reach chest height, leading with your elbows, and let the momentum carry it through the apex of the swing.",
+        "As the dumbbell begins to descend, hinge at the hips again, returning to the starting position and preparing for the next swing.",
+        "Maintain a fluid and continuous swinging motion throughout the set, keeping the movement powered by your hips and glutes."
+      ],
+      "pro_tips": [
+        "Ensure your core is braced throughout the entire movement to protect your lower back.",
+        "Focus on using your hips to generate the power for the swing, rather than pulling up with your arms.",
+        "Keep your neck in a neutral position by focusing your gaze on a fixed point on the ground a few feet in front of you.",
+        "Practice the hip hinge movement without the dumbbell first to perfect your form and ensure safety."
+      ],
+      "common_mistakes": [
+        "Bending the knees too much, turning the swing into a squat. Remember, it's a hinge movement.",
+        "Lifting the dumbbell with the arms instead of propelling it with the hips.",
+        "Rounding the back during the swing, which can lead to injury.",
+        "Losing control of the dumbbell at the top of the swing, which can strain the shoulders."
+      ],
+      "variations": [],
+      "safety_considerations": [],
+      "quality_score": 100,
+      "tags": [
+        "intermediate",
+        "glutes",
+        "full-body",
+        "dumbbell"
+      ]
     },
     {
       "id": "0069",
@@ -2701,28 +3153,46 @@
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_848a7c691db640cc8a7bfde08b9c31bf/720p/mp4/file.mp4"
       },
-      "extracted_at": "2025-08-21T11:40:41.354685",
-      "muscle_groups": [
-        "Abdominals"
+      "description": "The Dumbbell Suitcase Crunch is an innovative core-strengthening exercise that mimics the action of closing a suitcase, incorporating a dumbbell to add resistance. This exercise primarily targets the rectus abdominis, also known as the 'six-pack' muscles, while effectively engaging the hip flexors. By adding weight with the dumbbell, it increases the intensity of the workout, promoting the development of a stronger, more defined core. The movement not only enhances muscular endurance but also improves core stability, which is vital for overall athletic performance and daily activities.",
+      "difficulty": "Intermediate",
+      "primary_muscle": "Rectus Abdominis",
+      "secondary_muscles": [
+        "Obliques",
+        "Hip Flexors"
       ],
-      "exercise_types": [
-        "Strength"
-      ],
-      "description": "The dumbbell suitcase crunch is a core exercise that simulates the motion of closing a suitcase while holding weight. This movement targets the rectus abdominis and hip flexors while adding resistance to increase the challenge and build stronger abdominal muscles.",
-      "steps": [
-        "Lie on your back holding a dumbbell with both hands",
-        "Extend your arms overhead and legs straight out",
-        "Simultaneously bring your knees toward your chest",
-        "Crunch your upper body up, bringing the dumbbell toward your knees",
-        "Squeeze your abs at the top of the movement",
-        "Slowly return to the starting position with control",
-        "Keep your lower back pressed into the floor",
-        "Focus on using your core muscles to initiate the movement"
-      ],
-      "equipment": [
+      "equipment_needed": [
         "Dumbbell"
       ],
-      "difficulty": "Intermediate"
+      "steps": [
+        "Start by lying flat on your back on a comfortable surface, holding a dumbbell with both hands directly above your chest.",
+        "Extend your arms fully, holding the dumbbell overhead, while simultaneously extending your legs straight out in front of you, hovering above the ground.",
+        "Engage your core and simultaneously bring your knees toward your chest and crunch your upper body up, aiming to bring the dumbbell toward your knees.",
+        "Ensure a tight squeeze of your abdominal muscles at the peak of the crunch, maximizing muscle engagement.",
+        "With control, slowly reverse the motion, extending your legs and lowering your upper body back to the starting position, while still keeping your lower back pressed firmly into the floor.",
+        "Maintain a controlled breathing pattern throughout the exercise, exhaling as you crunch and inhaling as you return to the starting position.",
+        "Repeat the movement for the desired number of repetitions, ensuring to keep the movements controlled and deliberate."
+      ],
+      "pro_tips": [
+        "To maximize effectiveness, ensure that the movement is initiated from the core, rather than pulling with the arms or neck.",
+        "Keep the movement slow and controlled to increase time under tension for the abdominal muscles, enhancing muscle growth and strength.",
+        "Adjust the weight of the dumbbell according to your fitness level; start light and gradually increase as you become more comfortable with the exercise.",
+        "Focus on maintaining a flat lower back against the floor throughout the exercise to prevent strain on the lower back."
+      ],
+      "common_mistakes": [
+        "Using momentum rather than muscle engagement to perform the crunch, which can reduce effectiveness and increase the risk of injury.",
+        "Lifting the lower back off the ground, which can strain the back and reduce the engagement of the core muscles.",
+        "Holding the breath, which can increase blood pressure and decrease oxygen flow to the muscles.",
+        "Using a weight that is too heavy, leading to poor form and potential injury."
+      ],
+      "variations": [],
+      "safety_considerations": [],
+      "quality_score": 100,
+      "tags": [
+        "intermediate",
+        "rectus-abdominis",
+        "abdominals",
+        "dumbbell"
+      ]
     },
     {
       "id": "0070",
@@ -2732,28 +3202,52 @@
       "video_urls": {
         "720p": "https://video.wixstatic.com/video/3864fa_f42bb240ab254d19b491823820c999a9/720p/mp4/file.mp4"
       },
-      "extracted_at": "2025-08-21T11:40:47.636576",
-      "muscle_groups": [
-        "Full Body"
+      "description": "The Dumbbell Standing Hip Abduction is a focused resistance training exercise aimed at isolating and strengthening the gluteus medius and the surrounding hip abductor muscles. This exercise is pivotal for enhancing hip stability, correcting muscular imbalances, and fortifying the muscles that facilitate lateral leg movements and maintain pelvic stability. By incorporating a dumbbell, it adds an extra level of resistance, further challenging the muscles and promoting strength gains.",
+      "difficulty": "Intermediate",
+      "primary_muscle": "Gluteus Medius",
+      "secondary_muscles": [
+        "Gluteus Maximus",
+        "Tensor Fasciae Latae",
+        "Core"
       ],
-      "exercise_types": [
-        "Strength"
+      "equipment_needed": [
+        "Dumbbell",
+        "Ankle Strap (optional for attaching dumbbell)",
+        "Stable Surface for Support"
       ],
-      "description": "Dumbbell standing hip abduction is a unilateral exercise that targets the gluteus medius and other hip abductor muscles. This exercise helps improve hip stability, correct muscle imbalances, and strengthen the muscles responsible for lateral leg movement and pelvic stability.",
       "steps": [
-        "Stand upright holding a dumbbell in one hand",
-        "Hold onto a stable surface with your free hand for balance",
-        "Attach the dumbbell to your ankle or hold it against your outer thigh",
-        "Keep your standing leg straight and core engaged",
-        "Lift your weighted leg out to the side as high as comfortable",
-        "Focus on using your hip muscles, not momentum",
-        "Lower your leg back to the starting position with control",
-        "Complete all repetitions before switching to the other leg"
+        "Begin by standing upright with your feet hip-width apart, holding a dumbbell in one hand.",
+        "Use your free hand to hold onto a stable surface such as a wall or a sturdy chair for balance.",
+        "If available, attach the dumbbell to your ankle using a strap for a more secure fit, or simply hold it against your outer thigh.",
+        "Engage your core and keep the leg that is not being worked straight and firmly planted on the ground.",
+        "Slowly lift your weighted leg out to the side, keeping the movement controlled and focused. Lift as high as comfortably possible without compromising form.",
+        "Pause briefly at the top of the movement, ensuring that you are activating your hip muscles to perform the lift, rather than relying on momentum.",
+        "Carefully lower your leg back to the starting position, maintaining control and resistance against the weight.",
+        "Complete the desired number of repetitions before switching to the other leg and repeating the process."
       ],
-      "equipment": [
-        "Dumbbell"
+      "pro_tips": [
+        "Ensure your body is upright throughout the exercise to maximize engagement of the target muscles.",
+        "Avoid leaning too far to the opposite side; maintain a slight bend in your supporting leg for better stability.",
+        "Increase the weight gradually as you become more comfortable with the exercise to continue challenging your muscles.",
+        "Focus on slow, controlled movements to enhance muscle activation and reduce the risk of injury."
       ],
-      "difficulty": "Beginner"
+      "common_mistakes": [
+        "Using too much weight too soon, which can lead to poor form and potential injury.",
+        "Relying on momentum to lift the leg instead of engaging the hip abductors.",
+        "Not maintaining a straight posture, which can reduce the effectiveness of the exercise and put unnecessary strain on the lower back.",
+        "Lifting the leg either too high or not high enough, which can either strain the muscles or minimize the effectiveness of the workout."
+      ],
+      "variations": [],
+      "safety_considerations": [],
+      "quality_score": 100,
+      "tags": [
+        "intermediate",
+        "gluteus-medius",
+        "full-body",
+        "dumbbell",
+        "ankle-strap (optional for attaching dumbbell)",
+        "stable-surface for support"
+      ]
     },
     {
       "id": "0071",

@@ -119,7 +119,7 @@ const ModernWorkoutExercise = ({
                                         </Typography>
                                         <IconButton
                                             size="small"
-                                            onClick={() => onRemoveSet(exerciseIndex, completedSets.findIndex(s => s === set))}
+                                            onClick={() => onRemoveSet(exerciseIndex, exercise.sets.findIndex(s => s === set))}
                                             sx={{
                                                 color: '#f44336',
                                                 padding: '4px',

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Box, Typography, Tabs, Tab, Chip } from '@mui/material';
 import { MdPsychology, MdWarning, MdShowChart, MdTimeline, MdEmojiEvents } from 'react-icons/md';
+import { Brain } from 'lucide-react';
 import AIInsights from './components/AIInsights';
 import PlateauAlerts from './components/PlateauAlerts';
 import PerformanceCharts from './components/PerformanceCharts';
@@ -143,9 +144,9 @@ const AIDashboard = ({
                 justifyContent: 'space-between'
             }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <MdPsychology style={{ color: '#dded00', fontSize: '32px' }} />
+                    <Brain style={{ color: '#dded00', fontSize: '32px' }} />
                     <Box>
-                        <Typography variant="h5" sx={{ color: '#dded00', fontWeight: 'bold' }}>
+                        <Typography variant="h5" sx={{ color: '#ffffff'}}>
                             AI-Powered Progress Dashboard
                         </Typography>
                         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -158,18 +159,16 @@ const AIDashboard = ({
                         label="Real-time Analysis"
                         size="small"
                         sx={{
-                            backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                            backgroundColor: 'rgba(76, 175, 79, 0.132)',
                             color: '#4caf50',
-                            fontWeight: 'bold'
                         }}
                     />
                     <Chip
                         label="AI Enhanced"
                         size="small"
                         sx={{
-                            backgroundColor: 'rgba(221, 237, 0, 0.2)',
+                            backgroundColor: 'rgba(221, 237, 0, 0.159)',
                             color: '#dded00',
-                            fontWeight: 'bold'
                         }}
                     />
                 </Box>

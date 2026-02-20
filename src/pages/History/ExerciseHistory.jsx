@@ -8,7 +8,6 @@ import {
     Tab,
     Tabs,
     IconButton,
-    Collapse,
     TextField,
     InputAdornment,
     Chip,
@@ -19,8 +18,13 @@ import { styled, useTheme } from '@mui/material/styles';
 import {
     Search,
     Filter,
+    Flame,
     ChevronDown,
-    ChevronUp,
+    MoveDown,
+    Weight,
+    Trophy,
+    Minus,
+    MoveUp,
     TrendingUp,
     TrendingDown,
     Award,
@@ -224,18 +228,40 @@ export default function ExerciseHistory() {
     const getOverallStats = () => {
         const totalSessions = workouts.length;
         const maxWeight = Math.max(...exerciseStats.map(e => e.maxWeight), 0);
-        const totalPRs = exerciseStats.filter(e => e.sessions.length > 0 &&
-            e.sessions[0].sets[0]?.weight === e.maxWeight).length;
         const totalVolume = exerciseStats.reduce((sum, e) => sum + e.totalVolume, 0);
 
-        return { totalSessions, maxWeight, totalPRs, totalVolume };
+        // Calculate longest workout streak (consecutive days)
+        const workoutDays = [...new Set(
+            workouts.map(w => {
+                const d = new Date(w.date?.toDate ? w.date.toDate() : w.date);
+                return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+            })
+        )].sort();
+
+        let longestStreak = 0;
+        let currentStreak = 1;
+        for (let i = 1; i < workoutDays.length; i++) {
+            const prev = new Date(workoutDays[i - 1].replace(/-/g, '/'));
+            const curr = new Date(workoutDays[i].replace(/-/g, '/'));
+            const diffDays = Math.round((curr - prev) / (1000 * 60 * 60 * 24));
+            if (diffDays === 1) {
+                currentStreak++;
+                longestStreak = Math.max(longestStreak, currentStreak);
+            } else {
+                currentStreak = 1;
+            }
+        }
+        if (workoutDays.length > 0) longestStreak = Math.max(longestStreak, 1);
+
+        const uniqueExercises = exerciseStats.length;
+        return { totalSessions, maxWeight, totalVolume, longestStreak, uniqueExercises };
     };
 
     const getPersonalRecords = () => {
         return exerciseStats
             .filter(e => e.maxWeight > 0)
             .sort((a, b) => b.maxWeight - a.maxWeight)
-            .slice(0, 5);
+            .slice(0, 3);
     };
 
     const getRecentAchievements = () => {
@@ -309,7 +335,7 @@ export default function ExerciseHistory() {
                 ) : (
                     filteredExercises.map((exercise) => {
                         const trend = getTrendDirection(exercise.name);
-                        const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : () => (
+                        const TrendIcon = trend === 'up' ? MoveUp : trend === 'down' ? TrendingDown : () => (
                             <Box component="span" sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: theme.palette.text.secondary }}>
                                 —
                             </Box>
@@ -324,7 +350,7 @@ export default function ExerciseHistory() {
                                             <Typography variant="h6" sx={{ color: theme.palette.primary.main, fontWeight: '600' }}>
                                                 {exercise.name}
                                             </Typography>
-                                            {trend === 'up' && <TrendingUp size={18} color={theme.palette.status.success} />}
+                                            {trend === 'up' && <TrendingUp size={18} color="#368739" />}
                                             {trend === 'down' && <TrendingDown size={18} color={theme.palette.status.error} />}
                                             {trend === 'neutral' && <TrendIcon />}
                                         </Box>
@@ -450,22 +476,32 @@ export default function ExerciseHistory() {
                                             </Typography>
                                             {isPR && (
                                                 <Chip
-                                                    label="PR"
+                                                    label={
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                                            <Trophy size={11} />
+                                                            <span>PR</span>
+                                                        </Box>
+                                                    }
                                                     size="small"
                                                     sx={{
-                                                        backgroundColor: theme.palette.primary.main,
-                                                        color: '#121212',
-                                                        fontWeight: 'bold',
+                                                        backgroundColor: '#695a24a6',
+                                                        color: '#ffc800',
+                                                        border: '1px solid #ffc800',
+                                                        borderRadius: '8px',
+                                                        padding: '0 4px',
                                                         fontSize: '0.65rem',
                                                         height: '22px',
                                                         '& .MuiChip-label': {
                                                             px: 1,
+                                                            display: 'flex',
+                                                            alignItems: 'center',
                                                         }
                                                     }}
                                                 />
                                             )}
-                                            {trend === 'up' && <TrendingUp size={18} color={theme.palette.status.success} />}
-                                            {trend === 'down' && <TrendingDown size={18} color={theme.palette.status.error} />}
+                                            {trend === 'up' && <MoveUp size={18} color='#368739' />}
+                                            {trend === 'neutral' && <Minus size={18} color='#a8a8a8' />}
+                                            {trend === 'down' && <MoveDown size={18} color='#ff4444' />}
                                         </Box>
                                         <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
                                             {format(new Date(exercise.timestamp), 'MMM dd, yyyy')}
@@ -507,6 +543,11 @@ export default function ExerciseHistory() {
                                     <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontSize: '0.875rem', mb: exercise.notes ? 1.5 : 0 }}>
                                         Total Volume: <Box component="span" sx={{ color: theme.palette.text.primary, fontWeight: '600' }}>{totalVolume.toFixed(0)}{weightUnit}</Box>
                                     </Typography>
+                                    {isPR && (
+                                        <Typography variant="body2" sx={{ color: theme.palette.text.secondary, background: '#a7ea091c', borderRadius: '8px', padding: '8px 8px', fontSize: '0.875rem', mb: exercise.notes ? 1.5 : 0, display: 'inline-block' }}>
+                                            New PR! Felt strong today! 💪
+                                        </Typography>
+                                    )}
 
                                     {/* Notes */}
                                     {exercise.notes && (
@@ -531,21 +572,24 @@ export default function ExerciseHistory() {
 
         return (
             <Box>
-                {/* Personal Records Section */}
-                <Typography variant="h6" sx={{ color: theme.palette.primary.main, mb: 2, fontWeight: 'bold' }}>
-                    Personal Records
-                </Typography>
-
-                {personalRecords.length === 0 ? (
-                    <Box sx={{ textAlign: 'center', py: 4, mb: 4 }}>
-                        <Award size={48} color={theme.palette.surface.hover} style={{ marginBottom: '16px' }} />
-                        <Typography variant="body1" sx={{ color: theme.palette.text.secondary }}>
-                            No personal records yet. Keep training!
+                {/* Personal Records Card */}
+                <Box sx={{ background: '#1e1e1e', borderRadius: '16px', p: 3, mb: 3 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+                        <Trophy size={20} color="#ffc800" />
+                        <Typography variant="h6" sx={{ color: 'white', fontWeight: '700' }}>
+                            Personal Records
                         </Typography>
                     </Box>
-                ) : (
-                    <Box sx={{ mb: 4 }}>
-                        {personalRecords.map((record, index) => {
+
+                    {personalRecords.length === 0 ? (
+                        <Box sx={{ textAlign: 'center', py: 4 }}>
+                            <Award size={48} color="#444" style={{ marginBottom: '12px' }} />
+                            <Typography variant="body1" sx={{ color: theme.palette.text.secondary }}>
+                                No personal records yet. Keep training!
+                            </Typography>
+                        </Box>
+                    ) : (
+                        personalRecords.map((record, index) => {
                             const latestSession = record.sessions[0];
                             const maxSet = latestSession.sets.reduce((max, set) => {
                                 const rawWeight = parseFloat(set.weight) || 0;
@@ -556,76 +600,88 @@ export default function ExerciseHistory() {
                             }, { weight: 0, reps: 0 });
 
                             return (
-                                <StyledCard key={index} sx={{ mb: 2 }}>
-                                    <CardContent>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <Box>
-                                                <Typography variant="h6" sx={{ color: theme.palette.primary.main }}>
-                                                    {record.name}
-                                                </Typography>
-                                                <Typography variant="body1" sx={{ color: theme.palette.text.primary }}>
-                                                    Max: {maxSet.weight}{weightUnit} × {maxSet.reps} reps
-                                                </Typography>
-                                            </Box>
-                                            <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+                                <Box key={index}>
+                                    {index > 0 && (
+                                        <Divider sx={{ borderColor: 'rgba(255,255,255,0.07)', my: 2 }} />
+                                    )}
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Box>
+                                            <Typography variant="body1" sx={{ color: 'white', mb: 0.25 }}>
+                                                {record.name}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.82rem' }}>
+                                                Max: {maxSet.weight}{weightUnit} × {maxSet.reps} reps
+                                            </Typography>
+                                        </Box>
+                                        <Box sx={{ textAlign: 'right' }}>
+                                            <Typography sx={{ color: theme.palette.primary.main, fontWeight: '700', fontSize: '1.1rem', lineHeight: 1.2 }}>
+                                                {maxSet.weight}{weightUnit}
+                                            </Typography>
+                                            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.78rem' }}>
                                                 {format(new Date(record.lastPerformed), 'MMM dd, yyyy')}
                                             </Typography>
                                         </Box>
-                                    </CardContent>
-                                </StyledCard>
-                            );
-                        })}
-                    </Box>
-                )}
-
-                <Divider sx={{ my: 3, bgcolor: theme.palette.border.main }} />
-
-                {/* Recent Achievements Section */}
-                <Typography variant="h6" sx={{ color: theme.palette.primary.main, mb: 2, fontWeight: 'bold' }}>
-                    Recent Achievements
-                </Typography>
-
-                {recentAchievements.length === 0 ? (
-                    <Box sx={{ textAlign: 'center', py: 4 }}>
-                        <Target size={48} color={theme.palette.surface.hover} style={{ marginBottom: '16px' }} />
-                        <Typography variant="body1" sx={{ color: theme.palette.text.secondary }}>
-                            No recent achievements. Keep pushing!
-                        </Typography>
-                    </Box>
-                ) : (
-                    recentAchievements.map((achievement, index) => (
-                        <StyledCard key={index} sx={{ mb: 2 }}>
-                            <CardContent>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                    <Box
-                                        sx={{
-                                            width: 40,
-                                            height: 40,
-                                            borderRadius: '50%',
-                                            background: theme.palette.primary.main,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                        }}
-                                    >
-                                        <Award size={20} color="#121212" />
-                                    </Box>
-                                    <Box sx={{ flex: 1 }}>
-                                        <Typography variant="body1" sx={{ color: theme.palette.primary.main, fontWeight: 'bold' }}>
-                                            New {achievement.exercise} PR
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ color: theme.palette.text.primary }}>
-                                            {achievement.weight}{weightUnit} (+{achievement.improvement.toFixed(1)}{weightUnit})
-                                        </Typography>
-                                        <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
-                                            {format(new Date(achievement.date), 'MMM dd, yyyy')}
-                                        </Typography>
                                     </Box>
                                 </Box>
-                            </CardContent>
-                        </StyledCard>
-                    ))
-                )}
+                            );
+                        })
+                    )}
+                </Box>
+
+                {/* Recent Achievements Card */}
+                <Box sx={{ background: '#1e1e1e', borderRadius: '16px', p: 3 }}>
+                    <Typography variant="h6" sx={{ color: 'white', fontWeight: '700', mb: 3 }}>
+                        Recent Achievements
+                    </Typography>
+
+                    {recentAchievements.length === 0 ? (
+                        <Box sx={{ textAlign: 'center', py: 4 }}>
+                            <Target size={48} color="#444" style={{ marginBottom: '12px' }} />
+                            <Typography variant="body1" sx={{ color: theme.palette.text.secondary }}>
+                                No recent achievements. Keep pushing!
+                            </Typography>
+                        </Box>
+                    ) : (
+                        recentAchievements.map((achievement, index) => (
+                            <Box
+                                key={index}
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 2,
+                                    background: '#a7ea091c',
+                                    borderRadius: '12px',
+                                    px: 2,
+                                    py: 1.5,
+                                    mb: 1.5,
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        width: 44,
+                                        height: 44,
+                                        borderRadius: '50%',
+                                        background: `${theme.palette.primary.main}`,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        flexShrink: 0,
+                                    }}
+                                >
+                                    <Trophy size={20} color="#000000" />
+                                </Box>
+                                <Box>
+                                    <Typography variant="body2" sx={{ color: 'white', fontWeight: '700', mb: 0.25 }}>
+                                        New {achievement.exercise} PR!
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.78rem' }}>
+                                        {achievement.weight}{weightUnit} - {format(new Date(achievement.date), 'MMM dd, yyyy')}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        ))
+                    )}
+                </Box>
             </Box>
         );
     };
@@ -686,7 +742,7 @@ export default function ExerciseHistory() {
                         <Grid item xs={6} md={3}>
                             <SummaryCard>
                                 <IconContainer>
-                                    <TrendingUp size={24} color={theme.palette.primary.main} />
+                                    <Weight size={24} color={theme.palette.primary.main} />
                                 </IconContainer>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
                                     <Typography variant="h5" sx={{ color: theme.palette.text.primary, fontWeight: 'bold', lineHeight: 1.2 }}>
@@ -701,14 +757,14 @@ export default function ExerciseHistory() {
                         <Grid item xs={6} md={3}>
                             <SummaryCard>
                                 <IconContainer>
-                                    <Award size={24} color={theme.palette.primary.main} />
+                                    <Flame size={24} color={theme.palette.primary.main} />
                                 </IconContainer>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
                                     <Typography variant="h5" sx={{ color: theme.palette.text.primary, fontWeight: 'bold', lineHeight: 1.2 }}>
-                                        {stats.totalPRs}
+                                        {stats.longestStreak}
                                     </Typography>
                                     <Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontSize: '0.75rem' }}>
-                                        Personal Records
+                                        Longest Streak
                                     </Typography>
                                 </Box>
                             </SummaryCard>
@@ -716,14 +772,14 @@ export default function ExerciseHistory() {
                         <Grid item xs={6} md={3}>
                             <SummaryCard>
                                 <IconContainer>
-                                    <Target size={24} color={theme.palette.primary.main} />
+                                    <BarChart3 size={24} color={theme.palette.primary.main} />
                                 </IconContainer>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
                                     <Typography variant="h5" sx={{ color: theme.palette.text.primary, fontWeight: 'bold', lineHeight: 1.2 }}>
-                                        {stats.totalVolume.toFixed(0)}
+                                        {stats.uniqueExercises}
                                     </Typography>
                                     <Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontSize: '0.75rem' }}>
-                                        Total Volume
+                                        Exercises Tracked
                                     </Typography>
                                 </Box>
                             </SummaryCard>
@@ -779,56 +835,61 @@ export default function ExerciseHistory() {
                 </Box>
 
                 {/* Tabs with Icons */}
-                <Box sx={{ mb: 4 }}>
+                <Box sx={{ mb: 4, display: 'flex' }}>
                     <Tabs
                         value={activeTab}
                         onChange={handleTabChange}
-                        variant="fullWidth"
+                        variant="scrollable"
+                        scrollButtons={false}
+                        TabIndicatorProps={{ style: { display: 'none' } }}
                         sx={{
-                            background: '#2a2a2a',
-                            borderRadius: '16px',
+                            background: '#1e1e1e',
+                            borderRadius: '50px',
                             padding: '4px',
-                            minHeight: '56px',
+                            minHeight: '48px',
+                            '& .MuiTabs-flexContainer': {
+                                alignItems: 'center',
+                                height: '100%',
+                            },
                             '& .MuiTab-root': {
-                                color: theme.palette.text.muted,
+                                color: 'rgba(255,255,255,0.45)',
                                 fontWeight: '600',
                                 textTransform: 'none',
-                                fontSize: '0.95rem',
-                                minHeight: '48px',
-                                borderRadius: '12px',
-                                transition: 'all 0.3s ease',
+                                fontSize: '0.9rem',
+                                minHeight: '40px',
+                                height: '40px',
+                                borderRadius: '50px',
+                                transition: 'all 0.2s ease',
+                                zIndex: 1,
+                                padding: '0 16px',
+                                alignItems: 'center',
                                 '&:hover': {
-                                    background: 'rgba(255, 255, 255, 0.05)',
+                                    color: 'rgba(255,255,255,0.7)',
                                 },
                             },
                             '& .Mui-selected': {
-                                color: `${theme.palette.primary.main} !important`,
-                                background: 'rgba(221, 237, 0, 0.1)',
-                            },
-                            '& .MuiTabs-indicator': {
-                                backgroundColor: theme.palette.primary.main,
-                                height: '3px',
-                                borderRadius: '3px 3px 0 0',
+                                color: '#ffffff !important',
+                                background: '#3a3a3a',
                             },
                         }}
                     >
                         <Tab
                             label="Recent"
-                            icon={<Clock size={20} />}
+                            icon={<Clock size={17} />}
                             iconPosition="start"
-                            sx={{ gap: 1 }}
+                            sx={{ gap: 0.75 }}
                         />
                         <Tab
                             label="Records"
-                            icon={<Award size={20} />}
+                            icon={<Trophy size={17} />}
                             iconPosition="start"
-                            sx={{ gap: 1 }}
+                            sx={{ gap: 0.75 }}
                         />
                         <Tab
                             label="Stats"
-                            icon={<BarChart3 size={20} />}
+                            icon={<BarChart3 size={17} />}
                             iconPosition="start"
-                            sx={{ gap: 1 }}
+                            sx={{ gap: 0.75 }}
                         />
                     </Tabs>
                 </Box>
