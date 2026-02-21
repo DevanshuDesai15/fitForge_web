@@ -52,10 +52,12 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-    // Strip console.log/warn/error and debugger statements in production builds
+    // Strip console.log/debug and debugger statements in production builds
+    // Keep console.error and console.warn so real issues are still visible
     ...(mode === "production" && {
       esbuild: {
-        drop: ["console", "debugger"],
+        drop: ["debugger"],
+        pure: ["console.log", "console.debug"],
       },
     }),
   };

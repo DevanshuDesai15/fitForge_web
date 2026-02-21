@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
     Card,
     CardContent,
@@ -31,19 +31,6 @@ import {
     invalidateExerciseCache,
     clearExpiredCache
 } from '../../utils/aiSuggestionCache';
-
-// Debounce utility function
-const debounce = (func, wait) => {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-};
 
 const AISuggestionCard = styled(Card)(({ priority }) => ({
     background: priority === 'high'
@@ -130,132 +117,118 @@ const AISuggestionCards = ({
 
     const { currentUser } = useAuth();
     const { weightUnit } = useUnits();
+    const debounceTimerRef = useRef(null);
 
     useEffect(() => {
-        const loadData = async () => {
-            if (currentUser && userId) {
-                await debouncedLoadSuggestions();
-            }
-        };
-        loadData();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentUser?.uid]); // Only depend on userId, not workoutContext
+        if (!currentUser || !userId) return;
 
-    const loadAISuggestions = async () => {
-        // Clean expired cache first
-        clearExpiredCache();
+        // Debounce with useRef to prevent timer loss across re-renders
+        if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current);
+        }
 
-        setLoading(true);
-        setError('');
+        debounceTimerRef.current = setTimeout(async () => {
+            // Clean expired cache first
+            clearExpiredCache();
 
-        try {
-            // Load workout suggestions based on context
-            let workoutSuggestions = [];
+            setLoading(true);
+            setError('');
 
-            if (workoutContext === 'start-workout') {
-                workoutSuggestions = await progressiveOverloadAI.generateWorkoutSuggestions(
-                    userId,
-                    { workoutType: 'strength', targetMuscleGroups: [], availableTime: 60 }
-                );
-            } else {
-                // For home screen, get general progression suggestions
-                const analyses = await progressiveOverloadAI.analyzeWorkoutHistory(userId);
-                console.log('AI Suggestions Debug - Analyses:', analyses);
+            try {
+                // Load workout suggestions based on context
+                let workoutSuggestions = [];
 
-                if (analyses.length > 0) {
-                    const selectedAnalyses = analyses.slice(0, maxSuggestions);
+                if (workoutContext === 'start-workout') {
+                    workoutSuggestions = await progressiveOverloadAI.generateWorkoutSuggestions(
+                        userId,
+                        { workoutType: 'strength', targetMuscleGroups: [], availableTime: 60 }
+                    );
+                } else {
+                    // For home screen, get general progression suggestions
+                    const analyses = await progressiveOverloadAI.analyzeWorkoutHistory(userId);
+                    console.log('AI Suggestions Debug - Analyses:', analyses);
 
-                    // 🚀 SMART CACHING: Check which exercises are already cached
-                    const cachedSuggestions = [];
-                    const uncachedExerciseIds = [];
-                    const uncachedAnalyses = [];
+                    if (analyses.length > 0) {
+                        const selectedAnalyses = analyses.slice(0, maxSuggestions);
 
-                    selectedAnalyses.forEach(analysis => {
-                        const cached = getExerciseCache(userId, analysis.exerciseId);
-                        if (cached) {
-                            // Use cached suggestion
-                            cachedSuggestions.push({
-                                ...cached,
-                                priority: cached.confidenceLevel >= 0.8 ? 'high' :
-                                    cached.confidenceLevel >= 0.6 ? 'medium' : 'low',
-                                type: cached.progressionType,
-                                aiGenerated: true,
-                                fromCache: true
-                            });
-                        } else {
-                            // Need fresh API call
-                            uncachedExerciseIds.push(analysis.exerciseId);
-                            uncachedAnalyses.push(analysis);
-                        }
-                    });
+                        // SMART CACHING: Check which exercises are already cached
+                        const cachedSuggestions = [];
+                        const uncachedExerciseIds = [];
+                        const uncachedAnalyses = [];
 
-                    console.log(`📊 Cache Status: ${cachedSuggestions.length} cached, ${uncachedExerciseIds.length} need API calls`);
-
-                    // Only make API calls for uncached exercises
-                    let freshSuggestions = [];
-                    if (uncachedExerciseIds.length > 0) {
-                        console.log('🔄 Making API call for uncached exercises:', uncachedExerciseIds);
-
-                        const batchProgressions = await progressiveOverloadAI.calculateBatchProgressions(
-                            userId,
-                            uncachedExerciseIds
-                        );
-
-                        freshSuggestions = batchProgressions.map((progression, index) => {
-                            const suggestion = {
-                                ...progression,
-                                priority: progression.confidenceLevel >= 0.8 ? 'high' :
-                                    progression.confidenceLevel >= 0.6 ? 'medium' : 'low',
-                                type: progression.progressionType,
-                                aiGenerated: true,
-                                fromCache: false
-                            };
-
-                            // Cache the fresh suggestion for 1 hour
-                            setExerciseCache(userId, uncachedExerciseIds[index], suggestion);
-
-                            return suggestion;
+                        selectedAnalyses.forEach(analysis => {
+                            const cached = getExerciseCache(userId, analysis.exerciseId);
+                            if (cached) {
+                                cachedSuggestions.push({
+                                    ...cached,
+                                    priority: cached.confidenceLevel >= 0.8 ? 'high' :
+                                        cached.confidenceLevel >= 0.6 ? 'medium' : 'low',
+                                    type: cached.progressionType,
+                                    aiGenerated: true,
+                                    fromCache: true
+                                });
+                            } else {
+                                uncachedExerciseIds.push(analysis.exerciseId);
+                                uncachedAnalyses.push(analysis);
+                            }
                         });
 
-                        console.log('✅ Fresh suggestions generated and cached:', freshSuggestions.length);
-                    } else {
-                        console.log('🎉 ALL suggestions from cache - ZERO API calls needed!');
+                        console.log(`Cache Status: ${cachedSuggestions.length} cached, ${uncachedExerciseIds.length} need API calls`);
+
+                        // Only make API calls for uncached exercises
+                        let freshSuggestions = [];
+                        if (uncachedExerciseIds.length > 0) {
+                            const batchProgressions = await progressiveOverloadAI.calculateBatchProgressions(
+                                userId,
+                                uncachedExerciseIds
+                            );
+
+                            freshSuggestions = batchProgressions.map((progression, index) => {
+                                const suggestion = {
+                                    ...progression,
+                                    priority: progression.confidenceLevel >= 0.8 ? 'high' :
+                                        progression.confidenceLevel >= 0.6 ? 'medium' : 'low',
+                                    type: progression.progressionType,
+                                    aiGenerated: true,
+                                    fromCache: false
+                                };
+
+                                setExerciseCache(userId, uncachedExerciseIds[index], suggestion);
+                                return suggestion;
+                            });
+                        }
+
+                        workoutSuggestions = [...cachedSuggestions, ...freshSuggestions];
                     }
-
-                    // Combine cached + fresh suggestions
-                    workoutSuggestions = [...cachedSuggestions, ...freshSuggestions];
-
-                    console.log(`✅ Total suggestions: ${workoutSuggestions.length} (${cachedSuggestions.length} from cache, ${freshSuggestions.length} from API)`);
-                } else {
-                    console.log('No workout history found for suggestions');
                 }
+
+                // Load plateau alerts if enabled
+                let plateauData = [];
+                if (showPlateauWarnings) {
+                    plateauData = await progressiveOverloadAI.detectPlateaus(userId);
+                }
+
+                const filteredSuggestions = workoutSuggestions.filter(s => s.confidenceLevel > 0.5);
+                const filteredPlateaus = plateauData.filter(p => p.severity !== 'mild');
+
+                setSuggestions(filteredSuggestions);
+                setPlateauAlerts(filteredPlateaus);
+
+            } catch (err) {
+                console.error('Error loading AI suggestions:', err);
+                setError('Unable to load AI suggestions. Please try again.');
+            } finally {
+                setLoading(false);
             }
+        }, 500);
 
-            // Load plateau alerts if enabled (these are quick, no need to cache)
-            let plateauData = [];
-            if (showPlateauWarnings) {
-                plateauData = await progressiveOverloadAI.detectPlateaus(userId);
+        return () => {
+            if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current);
             }
-
-            const filteredSuggestions = workoutSuggestions.filter(s => s.confidenceLevel > 0.5);
-            const filteredPlateaus = plateauData.filter(p => p.severity !== 'mild');
-
-            setSuggestions(filteredSuggestions);
-            setPlateauAlerts(filteredPlateaus);
-
-        } catch (error) {
-            console.error('❌ Error loading AI suggestions:', error);
-            setError('Unable to load AI suggestions. Please try again.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Debounced version to prevent rapid successive calls
-    const debouncedLoadSuggestions = useCallback(
-        debounce(loadAISuggestions, 1000),
-        [userId, workoutContext, maxSuggestions, showPlateauWarnings]
-    );
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentUser?.uid, userId]);
 
     const handleAcceptSuggestion = async (suggestion) => {
         try {
