@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Box,
     Typography,
@@ -17,7 +17,6 @@ import {
     MdInfo
 } from 'react-icons/md';
 import { Activity, Target, Weight, BarChart3, Search } from 'lucide-react';
-import exerciseData from '../../../../MergedData.json';
 
 const ViewDetailsChip = styled(Chip)(({ theme }) => ({
     backgroundColor: 'rgba(221, 237, 0, 0.118)',
@@ -83,6 +82,17 @@ const CategoryChip = styled(Chip)(({ active }) => ({
 const ExerciseLibraryTab = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
+    const [exerciseData, setExerciseData] = useState(null);
+
+    // Dynamically load exercise data on mount
+    useEffect(() => {
+        import('../../../../MergedData.json').then(module => {
+            setExerciseData(module.default);
+        });
+    }, []);
+
+    // Show nothing while data is loading
+    if (!exerciseData) return null;
 
     // Simulate user's workout history - in a real app, this would come from the database
     const userWorkoutHistory = {

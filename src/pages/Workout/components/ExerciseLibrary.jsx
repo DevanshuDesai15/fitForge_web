@@ -1,9 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Typography, TextField, InputAdornment, Grid2, Card, CardContent, Chip } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { MdSearch, MdFilterList, MdFitnessCenter } from 'react-icons/md';
 import { Dumbbell, Target, Activity, Zap } from 'lucide-react';
-import exerciseData from '../../../../MergedData.json';
 
 const ExerciseCard = styled(Card)(() => ({
     background: 'rgba(40, 40, 40, 0.8)',
@@ -31,6 +30,14 @@ const CategoryChip = styled(Chip)(({ active }) => ({
 const ExerciseLibrary = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
+    const [exerciseData, setExerciseData] = useState([]);
+
+    // Dynamically load exercise data on mount
+    useEffect(() => {
+        import('../../../../MergedData.json').then(module => {
+            setExerciseData(module.default || []);
+        });
+    }, []);
 
     // Get unique categories from exercise data
     const categories = ['All', ...new Set(exerciseData.map(ex => ex.bodyPart))];

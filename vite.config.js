@@ -35,6 +35,18 @@ export default defineConfig(({ mode }) => {
         env.VITE_RAPIDAPI_HOST
       ),
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+            'vendor-mui': ['@mui/material', '@mui/system'],
+            'vendor-recharts': ['recharts'],
+            'vendor-ai': ['@google/generative-ai'],
+          },
+        },
+      },
+    },
     // Strip console.log/warn/error and debugger statements in production builds
     ...(mode === "production" && {
       esbuild: {

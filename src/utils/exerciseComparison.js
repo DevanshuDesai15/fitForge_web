@@ -1,6 +1,5 @@
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase/config";
-import mergedData from '../../MergedData.json' with { type: 'json' };
 
 /**
  * Exercise Database Comparison Tool
@@ -10,10 +9,11 @@ import mergedData from '../../MergedData.json' with { type: 'json' };
 /**
  * Get all exercises from the JSON file
  */
-export const getJSONExercises = () => {
+export const getJSONExercises = async () => {
   try {
     console.log('📊 Loading exercises from JSON file...');
     
+    const mergedData = (await import('../../MergedData.json')).default;
     const exercises = mergedData.products.map((exercise) => ({
       id: exercise.id,
       name: exercise.title.trim(),

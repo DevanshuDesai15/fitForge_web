@@ -3,8 +3,8 @@
  * Uses local JSON data instead of external API for better performance and reliability
  */
 
-// Import the exercise data
-import mergedData from '../../MergedData.json' with { type: 'json' };
+// MergedData.json is loaded dynamically on first use to avoid bundling 1.4MB into the initial JS
+let mergedDataCache = null;
 
 // Cache the exercises data for performance
 let cachedExercises = null;
@@ -13,10 +13,22 @@ let equipmentTypes = null;
 let muscleGroups = null;
 
 /**
+ * Load the merged exercise data JSON dynamically (cached after first load)
+ */
+const loadMergedData = async () => {
+  if (mergedDataCache) return mergedDataCache;
+  const module = await import('../../MergedData.json');
+  mergedDataCache = module.default;
+  return mergedDataCache;
+};
+
+/**
  * Initialize and cache exercise data with processed categories
  */
-const initializeData = () => {
+const initializeData = async () => {
   if (cachedExercises) return cachedExercises;
+  
+  const mergedData = await loadMergedData();
   
   console.log('📊 Initializing local exercise data...');
   
@@ -64,7 +76,7 @@ const initializeData = () => {
  */
 export const fetchExercises = async (limit = 20, offset = 0) => {
   try {
-    const exercises = initializeData();
+    const exercises = await initializeData();
     const paginatedExercises = exercises.slice(offset, offset + limit);
     
     console.log(`📄 Fetched ${paginatedExercises.length} exercises (offset: ${offset}, limit: ${limit})`);
@@ -80,7 +92,7 @@ export const fetchExercises = async (limit = 20, offset = 0) => {
  */
 export const fetchAllExercises = async () => {
   try {
-    const exercises = initializeData();
+    const exercises = await initializeData();
     console.log(`🚀 Fetched all ${exercises.length} exercises from local data`);
     return exercises;
   } catch (error) {
@@ -94,7 +106,7 @@ export const fetchAllExercises = async () => {
  */
 export const getExerciseCount = async () => {
   try {
-    const exercises = initializeData();
+    const exercises = await initializeData();
     return exercises.length;
   } catch (error) {
     console.error('Error getting exercise count:', error);
@@ -109,7 +121,7 @@ export const fetchExercisesByName = async (searchTerm, limit = 50) => {
   try {
     console.log(`🔍 Searching exercises by name: "${searchTerm}"`);
     
-    const exercises = initializeData();
+    const exercises = await initializeData();
     const searchLower = searchTerm.toLowerCase();
     
     // Filter exercises by name (case insensitive)
@@ -152,7 +164,7 @@ export const fetchExercisesByBodyPart = async (bodyPart, limit = 20, offset = 0)
   try {
     console.log(`🎯 Fetching exercises for body part: ${bodyPart}`);
     
-    const exercises = initializeData();
+    const exercises = await initializeData();
     
     // Filter exercises by muscle groups (case insensitive)
     const filteredExercises = exercises.filter((exercise) =>
@@ -176,7 +188,7 @@ export const fetchExercisesByTarget = async (targetMuscle) => {
   try {
     console.log(`🎯 Fetching exercises for target muscle: ${targetMuscle}`);
     
-    const exercises = initializeData();
+    const exercises = await initializeData();
     
     // Filter exercises by target muscle (case insensitive)
     const filteredExercises = exercises.filter((exercise) =>
@@ -198,7 +210,7 @@ export const fetchExercisesByTarget = async (targetMuscle) => {
  */
 export const fetchTargetList = async () => {
   try {
-    initializeData();
+    await initializeData();
     return muscleGroups;
   } catch (error) {
     console.error('Error fetching target list:', error);
@@ -211,7 +223,7 @@ export const fetchTargetList = async () => {
  */
 export const fetchEquipmentList = async () => {
   try {
-    initializeData();
+    await initializeData();
     return equipmentTypes;
   } catch (error) {
     console.error('Error fetching equipment list:', error);
@@ -224,7 +236,7 @@ export const fetchEquipmentList = async () => {
  */
 export const fetchCategoryList = async () => {
   try {
-    initializeData();
+    await initializeData();
     return exerciseCategories;
   } catch (error) {
     console.error('Error fetching category list:', error);
@@ -237,7 +249,7 @@ export const fetchCategoryList = async () => {
  */
 export const fetchExerciseById = async (exerciseId) => {
   try {
-    const exercises = initializeData();
+    const exercises = await initializeData();
     const exercise = exercises.find(ex => ex.id === exerciseId);
     
     if (!exercise) {
@@ -257,7 +269,7 @@ export const fetchExerciseById = async (exerciseId) => {
  */
 export const fetchExercisesByFilter = async (filters = {}) => {
   try {
-    const exercises = initializeData();
+    const exercises = await initializeData();
     const { 
       bodyPart, 
       equipment, 
