@@ -144,59 +144,62 @@ export default function Navigation() {
                     />
                 </Box>
 
-                <List sx={{ px: 2, py: 3 }}>
-                    {navigationItems.map((item) => {
-                        const isActive = value === item.value;
-                        return (
-                            <ListItem key={item.value} disablePadding sx={{ mb: 1 }}>
-                                <ListItemButton
-                                    onClick={() => handleSidebarItemClick(item.value)}
-                                    sx={{
-                                        borderRadius: 2,
-                                        py: 1.5,
-                                        px: 2,
-                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                        backgroundColor: isActive
-                                            ? `${theme.palette.primary.main}15`
-                                            : 'transparent',
-                                        '&:hover': {
-                                            backgroundColor: isActive
-                                                ? `${theme.palette.primary.main}20`
-                                                : `${theme.palette.primary.main}08`,
-                                            transform: 'translateX(4px)',
-                                        },
-                                        '&.Mui-selected': {
-                                            backgroundColor: `${theme.palette.primary.main}15`,
-                                        },
-                                    }}
-                                >
-                                    <ListItemIcon sx={{
-                                        minWidth: 40,
-                                        color: isActive
-                                            ? theme.palette.primary.main
-                                            : 'rgba(255, 255, 255, 0.7)',
-                                        transition: 'all 0.3s ease',
-                                    }}>
-                                        <item.icon size={24} />
-                                    </ListItemIcon>
-                                    <ListItemText
-                                        primary={item.label}
+                <Box component="nav" aria-label="Main navigation">
+                    <List sx={{ px: 2, py: 3 }}>
+                        {navigationItems.map((item) => {
+                            const isActive = value === item.value;
+                            return (
+                                <ListItem key={item.value} disablePadding sx={{ mb: 1 }}>
+                                    <ListItemButton
+                                        onClick={() => handleSidebarItemClick(item.value)}
+                                        aria-current={isActive ? 'page' : undefined}
                                         sx={{
-                                            '& .MuiListItemText-primary': {
-                                                fontSize: '0.95rem',
-                                                fontWeight: isActive ? 700 : 500,
-                                                color: isActive
-                                                    ? theme.palette.primary.main
-                                                    : 'rgba(255, 255, 255, 0.8)',
-                                                transition: 'all 0.3s ease',
-                                            }
+                                            borderRadius: 2,
+                                            py: 1.5,
+                                            px: 2,
+                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                            backgroundColor: isActive
+                                                ? `${theme.palette.primary.main}15`
+                                                : 'transparent',
+                                            '&:hover': {
+                                                backgroundColor: isActive
+                                                    ? `${theme.palette.primary.main}20`
+                                                    : `${theme.palette.primary.main}08`,
+                                                transform: 'translateX(4px)',
+                                            },
+                                            '&.Mui-selected': {
+                                                backgroundColor: `${theme.palette.primary.main}15`,
+                                            },
                                         }}
-                                    />
-                                </ListItemButton>
-                            </ListItem>
-                        );
-                    })}
-                </List>
+                                    >
+                                        <ListItemIcon sx={{
+                                            minWidth: 40,
+                                            color: isActive
+                                                ? theme.palette.primary.main
+                                                : 'rgba(255, 255, 255, 0.7)',
+                                            transition: 'all 0.3s ease',
+                                        }}>
+                                            <item.icon size={24} />
+                                        </ListItemIcon>
+                                        <ListItemText
+                                            primary={item.label}
+                                            sx={{
+                                                '& .MuiListItemText-primary': {
+                                                    fontSize: '0.95rem',
+                                                    fontWeight: isActive ? 700 : 500,
+                                                    color: isActive
+                                                        ? theme.palette.primary.main
+                                                        : 'rgba(255, 255, 255, 0.8)',
+                                                    transition: 'all 0.3s ease',
+                                                }
+                                            }}
+                                        />
+                                    </ListItemButton>
+                                </ListItem>
+                            );
+                        })}
+                    </List>
+                </Box>
             </Drawer>
         );
     }
@@ -204,6 +207,8 @@ export default function Navigation() {
     // Mobile Bottom Navigation
     return (
         <Paper
+            component="nav"
+            aria-label="Main navigation"
             sx={{
                 position: 'fixed',
                 bottom: 0,
@@ -287,6 +292,7 @@ export default function Navigation() {
                         key={item.value}
                         label={item.label}
                         value={item.value}
+                        aria-current={value === item.value ? 'page' : undefined}
                         icon={
                             <Box className="navigation-icon" sx={{
                                 transition: 'all 0.3s ease',

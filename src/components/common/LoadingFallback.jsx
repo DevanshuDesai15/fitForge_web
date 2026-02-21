@@ -7,6 +7,8 @@ import { Box, CircularProgress } from '@mui/material';
 export default function LoadingFallback() {
     return (
         <Box
+            role="status"
+            aria-label="Loading content"
             sx={{
                 display: 'flex',
                 justifyContent: 'center',

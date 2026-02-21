@@ -420,6 +420,7 @@ const AISuggestionCards = ({
                                     size="small"
                                     onClick={() => handleDismissSuggestion(plateau, 'plateau_dismissed')}
                                     sx={{ color: 'text.secondary' }}
+                                    aria-label="Dismiss plateau alert"
                                 >
                                     <MdClose size={16} />
                                 </IconButton>
@@ -473,6 +474,7 @@ const AISuggestionCards = ({
                                     size="small"
                                     onClick={() => handleDismissSuggestion(suggestion)}
                                     sx={{ color: 'text.secondary' }}
+                                    aria-label="Dismiss suggestion"
                                 >
                                     <MdClose size={16} />
                                 </IconButton>

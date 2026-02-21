@@ -180,7 +180,7 @@ export default function ModernSidebar() {
     ];
 
     return (
-        <SidebarContainer>
+        <SidebarContainer component="aside" role="navigation" aria-label="Sidebar navigation">
             {/* Brand Section */}
             <BrandSection>
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2, mb: 1 }}>
@@ -214,6 +214,7 @@ export default function ModernSidebar() {
                                 <NavListItemButton
                                     active={item.isActive}
                                     onClick={() => handleNavigation(item.path)}
+                                    aria-current={item.isActive ? 'page' : undefined}
                                 >
                                     <ListItemIcon
                                         sx={{
@@ -334,6 +335,7 @@ export default function ModernSidebar() {
                 <Button
                     startIcon={<LogOut size={18} />}
                     onClick={handleSignOut}
+                    aria-label="Sign out"
                     sx={{
                         width: '100%',
                         justifyContent: 'flex-start',

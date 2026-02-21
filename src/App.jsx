@@ -11,6 +11,7 @@ import DefaultRoute from './components/layout/DefaultRoute';
 import Layout from './components/layout/Layout';
 import ErrorBoundary from './components/ErrorBoundary';
 import LoadingFallback from './components/common/LoadingFallback';
+import SkipNavLink from './components/common/SkipNavLink';
 
 // Lazy-loaded route components
 const LandingPage = lazy(() => import('./pages/Landing/LandingPage'));
@@ -55,6 +56,7 @@ function App() {
         <AuthProvider>
           <UnitsProvider>
             <AppWrapper>
+              <SkipNavLink />
               <ErrorBoundary>
                 <Suspense fallback={<LoadingFallback />}>
                   <Routes>

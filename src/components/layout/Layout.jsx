@@ -23,7 +23,10 @@ export default function Layout({ children }) {
 
             {/* Main content area */}
             <Box
+                id="main-content"
                 component="main"
+                aria-label="Main content"
+                tabIndex={-1}
                 sx={{
                     flexGrow: 1,
                     width: isDesktop ? `calc(100% - ${sidebarWidth}px)` : '100%',

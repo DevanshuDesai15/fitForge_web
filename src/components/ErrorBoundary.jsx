@@ -23,13 +23,16 @@ class ErrorBoundary extends React.Component {
     render() {
         if (this.state.hasError) {
             return (
-                <Box sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    minHeight: '50vh',
-                    p: 3
-                }}>
+                <Box
+                    role="alert"
+                    aria-live="assertive"
+                    sx={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        minHeight: '50vh',
+                        p: 3
+                    }}>
                     <Card sx={{
                         maxWidth: 500,
                         background: '#282828',
