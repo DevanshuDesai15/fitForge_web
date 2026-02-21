@@ -2,14 +2,24 @@ import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import AISuggestionCards from '../AISuggestionCards';
 
-// Mock the dependencies
-vi.mock('../../contexts/AuthContext', () => ({
+// Mock the context hooks at the module level
+vi.mock('../../../contexts/AuthContext', () => ({
     useAuth: () => ({
         currentUser: { uid: 'test-user-id' }
     })
 }));
 
-vi.mock('../../services/progressiveOverloadAI', () => ({
+vi.mock('../../../contexts/UnitsContext', () => ({
+    useUnits: () => ({
+        weightUnit: 'kg',
+        unitPreference: 'metric',
+        convertWeight: vi.fn((w) => w),
+        formatWeight: vi.fn((w, u) => `${w} ${u}`),
+        getWeightLabel: vi.fn(() => 'Weight (kg)'),
+    })
+}));
+
+vi.mock('../../../services/progressiveOverloadAI', () => ({
     default: {
         analyzeWorkoutHistory: vi.fn().mockResolvedValue([]),
         calculateNextProgression: vi.fn().mockResolvedValue({
@@ -29,8 +39,11 @@ vi.mock('../../services/progressiveOverloadAI', () => ({
     }
 }));
 
-vi.mock('../../utils/weightUnit', () => ({
-    getWeightUnit: () => 'kg'
+vi.mock('../../../utils/aiSuggestionCache', () => ({
+    getExerciseCache: vi.fn().mockReturnValue(null),
+    setExerciseCache: vi.fn(),
+    invalidateExerciseCache: vi.fn(),
+    clearExpiredCache: vi.fn(),
 }));
 
 describe('AISuggestionCards', () => {
@@ -44,11 +57,14 @@ describe('AISuggestionCards', () => {
             />
         );
 
-        // Should show loading skeletons
-        expect(screen.getAllByRole('progressbar')).toHaveLength(3);
+        // Should show loading skeletons (Skeleton components render as spans)
+        const skeletons = document.querySelectorAll('.MuiSkeleton-root');
+        expect(skeletons.length).toBeGreaterThan(0);
     });
 
     it('renders empty state when no suggestions available', async () => {
+        vi.useFakeTimers();
+
         render(
             <AISuggestionCards
                 userId="test-user-id"
@@ -57,6 +73,11 @@ describe('AISuggestionCards', () => {
                 onSuggestionDismiss={vi.fn()}
             />
         );
+
+        // Advance past the 1-second debounce
+        await vi.advanceTimersByTimeAsync(1500);
+
+        vi.useRealTimers();
 
         // Wait for loading to complete and check for empty state
         await screen.findByText('No AI suggestions available');

@@ -3,6 +3,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from './AuthContext';
 import PropTypes from 'prop-types';
+import { convertWeight as convertWeightUtil, formatWeight as formatWeightUtil, getWeightLabel as getWeightLabelUtil } from '../utils/unitConversions';
 
 const UnitsContext = createContext();
 
@@ -98,30 +99,18 @@ export const UnitsProvider = ({ children }) => {
         }
     };
 
-    // Conversion utilities
-    const convertWeight = (weight, fromUnit, toUnit) => {
-        if (fromUnit === toUnit) return weight;
-
-        const numWeight = parseFloat(weight);
-        if (isNaN(numWeight)) return weight;
-
-        if (fromUnit === 'kg' && toUnit === 'lbs') {
-            return (numWeight * 2.20462).toFixed(1);
-        } else if (fromUnit === 'lbs' && toUnit === 'kg') {
-            return (numWeight / 2.20462).toFixed(1);
-        }
-        return weight;
+    // Conversion utilities (from extracted pure functions)
+    const _convertWeight = (weight, fromUnit, toUnit) => {
+        return convertWeightUtil(weight, fromUnit, toUnit);
     };
 
-    const formatWeight = (weight, displayUnit = null) => {
+    const _formatWeight = (weight, displayUnit = null) => {
         const unit = displayUnit || weightUnit;
-        const numWeight = parseFloat(weight);
-        if (isNaN(numWeight)) return `${weight} ${unit}`;
-        return `${numWeight.toFixed(1)} ${unit}`;
+        return formatWeightUtil(weight, unit);
     };
 
-    const getWeightLabel = (label = 'Weight') => {
-        return `${label} (${weightUnit})`;
+    const _getWeightLabel = (label = 'Weight') => {
+        return getWeightLabelUtil(weightUnit, label);
     };
 
     const value = {
@@ -129,9 +118,9 @@ export const UnitsProvider = ({ children }) => {
         weightUnit,
         heightUnit,
         updateUnitPreference,
-        convertWeight,
-        formatWeight,
-        getWeightLabel,
+        convertWeight: _convertWeight,
+        formatWeight: _formatWeight,
+        getWeightLabel: _getWeightLabel,
         loading
     };
 

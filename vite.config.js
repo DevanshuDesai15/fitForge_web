@@ -8,6 +8,11 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    test: {
+      environment: 'jsdom',
+      setupFiles: './src/test/setup.js',
+      globals: true,
+    },
     // Explicitly expose environment variables that start with VITE_
     define: {
       "import.meta.env.VITE_FIREBASE_API_KEY": JSON.stringify(
