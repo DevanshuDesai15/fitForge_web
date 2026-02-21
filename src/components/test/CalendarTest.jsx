@@ -1,18 +1,20 @@
 import { useState } from 'react';
 import { Box, Typography, Card, CardContent, Button } from '@mui/material';
 import { format } from 'date-fns';
-import { getCurrentDate, resetToCurrentMonth, debugDate, testDateHandling, getCorrectCurrentDate } from '../../utils/dateUtils';
+import { getCurrentDate, resetToCurrentMonth, debugDate } from '../../utils/dateUtils';
 
 export default function CalendarTest() {
     const [testResults, setTestResults] = useState(null);
 
     const runTests = () => {
-        const results = testDateHandling();
-        setTestResults(results);
+        const now = getCurrentDate();
+        const currentMonth = resetToCurrentMonth();
+        debugDate(now, 'Current Date');
+        debugDate(currentMonth, 'Current Month Start');
+        setTestResults({ current: now, currentMonth });
     };
 
     const currentDate = getCurrentDate();
-    const correctedDate = getCorrectCurrentDate();
 
     return (
         <Box sx={{ p: 3, maxWidth: 600, mx: 'auto' }}>
@@ -26,22 +28,11 @@ export default function CalendarTest() {
                         <Typography variant="body1" sx={{ color: 'white' }}>
                             System Date: {format(currentDate, 'MMMM dd, yyyy')}
                         </Typography>
-                        <Typography variant="body1" sx={{ color: '#dded00' }}>
-                            Corrected Date: {format(correctedDate, 'MMMM dd, yyyy')}
-                        </Typography>
                         <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                            System ISO: {currentDate.toISOString()}
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                            Corrected ISO: {correctedDate.toISOString()}
+                            ISO: {currentDate.toISOString()}
                         </Typography>
                         <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                             Timezone: {Intl.DateTimeFormat().resolvedOptions().timeZone}
-                        </Typography>
-                        <Typography variant="body2" sx={{
-                            color: currentDate.getFullYear() > 2024 ? '#f44336' : '#4caf50'
-                        }}>
-                            Date Status: {currentDate.getFullYear() > 2024 ? '⚠️ Future date detected' : '✅ Date looks correct'}
                         </Typography>
                     </Box>
 
@@ -64,30 +55,11 @@ export default function CalendarTest() {
                             <Typography variant="body2" sx={{ color: 'white' }}>
                                 Current Month: {format(testResults.currentMonth, 'MMMM yyyy')}
                             </Typography>
-                            <Typography variant="body2" sx={{
-                                color: testResults.isCorrect ? '#4caf50' : '#f44336'
-                            }}>
-                                Date Correct: {testResults.isCorrect ? '✅ Yes' : '❌ No'}
-                            </Typography>
                         </Box>
                     )}
 
                     <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)', mt: 2, display: 'block' }}>
                         💡 Check browser console for detailed date debugging info
-                    </Typography>
-                </CardContent>
-            </Card>
-
-            <Card sx={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}>
-                <CardContent>
-                    <Typography variant="h6" sx={{ color: '#dded00', mb: 2 }}>
-                        Expected vs Actual
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: 'white' }}>
-                        If calendar shows August 2025, that's correct for the current date.
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: 'white' }}>
-                        If it shows a different month/year, there's a date handling issue.
                     </Typography>
                 </CardContent>
             </Card>

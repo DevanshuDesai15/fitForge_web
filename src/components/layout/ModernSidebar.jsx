@@ -20,8 +20,7 @@ import {
     History,
     BarChart3,
     User,
-    LogOut,
-    Plus
+    LogOut
 } from 'lucide-react';
 
 const SidebarContainer = styled(Box)(() => ({
@@ -83,15 +82,7 @@ const NavListItemButton = styled(ListItemButton)(({ active }) => ({
     marginTop: '8px',
 }));
 
-const UserSection = styled(Box)(() => ({
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    padding: '16px',
-    borderRadius: '12px',
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    marginBottom: '16px',
-}));
+
 
 export default function ModernSidebar() {
     const navigate = useNavigate();
@@ -132,9 +123,7 @@ export default function ModernSidebar() {
         navigate(path);
     };
 
-    const handleQuickAdd = () => {
-        navigate('/workout/quick-add');
-    };
+
 
     const handleSignOut = async () => {
         try {
@@ -196,14 +185,6 @@ export default function ModernSidebar() {
                 </Box>
             </BrandSection>
 
-            {/* Quick Add Exercise Button */}
-            {/* <QuickAddButton
-                startIcon={<Plus size={20} />}
-                onClick={handleQuickAdd}
-            >
-                Quick Add
-            </QuickAddButton> */}
-
             {/* Navigation */}
             <NavigationSection>
                 <List sx={{ padding: 0 }}>
@@ -262,76 +243,6 @@ export default function ModernSidebar() {
 
             {/* Bottom Section */}
             <BottomSection>
-                {/* Settings */}
-                {/* <List sx={{ padding: 0, mb: 2 }}>
-                    <NavListItem disablePadding>
-                        <NavListItemButton
-                            active={false}
-                            onClick={() => handleNavigation('/profile')}
-                        >
-                            <ListItemIcon
-                                sx={{
-                                    minWidth: 40,
-                                    color: 'rgba(255, 255, 255, 0.7)',
-                                }}
-                            >
-                                <Settings size={20} />
-                            </ListItemIcon>
-                            <ListItemText
-                                primary="Settings"
-                                sx={{
-                                    '& .MuiListItemText-primary': {
-                                        fontSize: '0.95rem',
-                                        fontWeight: 400,
-                                        color: 'rgba(255, 255, 255, 0.7)',
-                                    },
-                                }}
-                            />
-                        </NavListItemButton>
-                    </NavListItem>
-                </List> */}
-
-                {/* User Profile */}
-                {/* <UserSection>
-                    <Avatar
-                        sx={{
-                            width: 36,
-                            height: 36,
-                            backgroundColor: 'var(--primary-a0)',
-                            color: '#121212',
-                            fontSize: '1rem',
-                            fontWeight: 'bold',
-                        }}
-                    >
-                        {getUserName().charAt(0).toUpperCase()}
-                    </Avatar>
-                    <Box sx={{ flex: 1 }}>
-                        <Typography
-                            variant="subtitle2"
-                            sx={{
-                                color: 'white',
-                                fontWeight: 600,
-                                fontSize: '0.9rem',
-                                lineHeight: 1,
-                                mb: 0.5,
-                            }}
-                        >
-                            {getUserName()}
-                        </Typography>
-                        <Typography
-                            variant="caption"
-                            sx={{
-                                color: 'rgba(255, 255, 255, 0.6)',
-                                fontSize: '0.75rem',
-                                lineHeight: 1,
-                            }}
-                        >
-                            Free Plan
-                        </Typography>
-                    </Box>
-                </UserSection> */}
-
-                {/* Sign Out */}
                 <Button
                     startIcon={<LogOut size={18} />}
                     onClick={handleSignOut}
@@ -354,6 +265,6 @@ export default function ModernSidebar() {
                     Sign Out
                 </Button>
             </BottomSection>
-        </SidebarContainer>
+        </SidebarContainer >
     );
 }

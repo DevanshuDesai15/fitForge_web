@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getCurrentDate, resetToCurrentMonth, debugDate, testDateHandling, getCorrectCurrentDate } from '../dateUtils';
+import { getCurrentDate, resetToCurrentMonth, debugDate } from '../dateUtils';
 
 describe('dateUtils', () => {
     describe('getCurrentDate', () => {
@@ -8,7 +8,7 @@ describe('dateUtils', () => {
             expect(result).toBeInstanceOf(Date);
         });
 
-        it('returns a date close to now', () => {
+        it('returns current time (within 1 second)', () => {
             const before = Date.now();
             const result = getCurrentDate();
             const after = Date.now();
@@ -23,38 +23,25 @@ describe('dateUtils', () => {
             expect(result.getDate()).toBe(1);
         });
 
-        it('returns same month and year as today', () => {
-            const today = new Date();
+        it('preserves current month and year', () => {
+            const now = new Date();
             const result = resetToCurrentMonth();
-            expect(result.getMonth()).toBe(today.getMonth());
-            expect(result.getFullYear()).toBe(today.getFullYear());
+            expect(result.getMonth()).toBe(now.getMonth());
+            expect(result.getFullYear()).toBe(now.getFullYear());
         });
     });
 
     describe('debugDate', () => {
-        it('returns the same date it receives', () => {
-            const date = new Date(2025, 7, 15);
+        it('returns the same date object passed in', () => {
+            const date = new Date(2025, 0, 15);
             const result = debugDate(date, 'Test');
             expect(result).toBe(date);
         });
-    });
 
-    describe('getCorrectCurrentDate', () => {
-        it('returns a Date instance', () => {
-            const result = getCorrectCurrentDate();
-            expect(result).toBeInstanceOf(Date);
-        });
-    });
-
-    describe('testDateHandling', () => {
-        it('returns an object with expected shape', () => {
-            const result = testDateHandling();
-            expect(result).toHaveProperty('current');
-            expect(result).toHaveProperty('currentMonth');
-            expect(result).toHaveProperty('isCorrect');
-            expect(result.current).toBeInstanceOf(Date);
-            expect(result.currentMonth).toBeInstanceOf(Date);
-            expect(typeof result.isCorrect).toBe('boolean');
+        it('works with default label', () => {
+            const date = new Date();
+            const result = debugDate(date);
+            expect(result).toBe(date);
         });
     });
 });

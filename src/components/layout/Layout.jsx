@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import { Box, useTheme, useMediaQuery } from '@mui/material';
 import Navigation from './Navigation';
 import ModernSidebar from './ModernSidebar';
@@ -44,3 +45,7 @@ export default function Layout({ children }) {
         </Box>
     );
 }
+
+Layout.propTypes = {
+    children: PropTypes.node.isRequired,
+};

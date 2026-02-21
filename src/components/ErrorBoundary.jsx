@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Box, Typography, Button, Card, CardContent } from '@mui/material';
 import { MdError, MdRefresh } from 'react-icons/md';
 
@@ -75,7 +76,7 @@ class ErrorBoundary extends React.Component {
                                 Reload Page
                             </Button>
 
-                            {process.env.NODE_ENV === 'development' && (
+                            {import.meta.env.DEV && (
                                 <Box sx={{
                                     mt: 3,
                                     p: 2,
@@ -101,5 +102,9 @@ class ErrorBoundary extends React.Component {
         return this.props.children;
     }
 }
+
+ErrorBoundary.propTypes = {
+    children: PropTypes.node.isRequired,
+};
 
 export default ErrorBoundary;
