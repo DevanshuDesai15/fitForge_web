@@ -240,65 +240,59 @@ export default function Home() {
 
         try {
             setAiLoading(true);
-            console.log('Loading AI recommendations for user:', currentUser.uid);
 
-            // 🔍 Monitor API usage in development
+            // Monitor API usage in development
             if (import.meta.env?.MODE === 'development') {
                 logGeminiStats();
                 checkGeminiStatus();
             }
 
-            // Get workout history analysis
-            const analyses = await progressiveOverloadAI.analyzeWorkoutHistory(currentUser.uid);
-            console.log('Workout history analyses:', analyses);
+            // Timeout safety net — if AI service hangs, resolve after 15 seconds
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('AI recommendations timed out')), 15000)
+            );
 
-            if (analyses && analyses.length > 0) {
-                // Get top 3 suggestions
-                const topAnalyses = analyses.slice(0, 3);
-                const exerciseIds = topAnalyses.map(analysis => analysis.exerciseId);
+            const loadPromise = (async () => {
+                // Get workout history analysis
+                const analyses = await progressiveOverloadAI.analyzeWorkoutHistory(currentUser.uid);
 
-                console.log('🚀 Using BATCH API call for exercises:', exerciseIds);
+                if (analyses && analyses.length > 0) {
+                    const topAnalyses = analyses.slice(0, 3);
+                    const exerciseIds = topAnalyses.map(analysis => analysis.exerciseId);
 
-                // 🔥 FIX: Use batch API call instead of individual calls
-                // This reduces API calls from 3 to 1, preventing rate limits
-                const batchProgressions = await progressiveOverloadAI.calculateBatchProgressions(
-                    currentUser.uid,
-                    exerciseIds
-                );
+                    const batchProgressions = await progressiveOverloadAI.calculateBatchProgressions(
+                        currentUser.uid,
+                        exerciseIds
+                    );
 
-                console.log('✅ Batch progressions result:', batchProgressions);
+                    const suggestions = batchProgressions.map((progression, index) => {
+                        const analysis = topAnalyses[index];
 
-                // Map batch results back to suggestions
-                const suggestions = batchProgressions.map((progression, index) => {
-                    const analysis = topAnalyses[index];
+                        if (!progression) {
+                            return null;
+                        }
 
-                    if (!progression) {
-                        console.warn('No progression returned for exercise:', analysis.exerciseId);
-                        return null;
-                    }
+                        return {
+                            ...progression,
+                            ...analysis,
+                            priority: (progression.confidenceLevel || 0) >= 0.8 ? 'high' :
+                                (progression.confidenceLevel || 0) >= 0.6 ? 'medium' : 'low',
+                            icon: progression.progressionType === 'weight' ? TrendingUp :
+                                progression.progressionType === 'deload' ? Clock : Brain
+                        };
+                    }).filter(s => s !== null);
 
-                    return {
-                        ...progression,
-                        ...analysis,
-                        priority: (progression.confidenceLevel || 0) >= 0.8 ? 'high' :
-                            (progression.confidenceLevel || 0) >= 0.6 ? 'medium' : 'low',
-                        icon: progression.progressionType === 'weight' ? TrendingUp :
-                            progression.progressionType === 'deload' ? Clock : Brain
-                    };
-                }).filter(s => s !== null);
+                    return suggestions;
+                }
+                return [];
+            })();
 
-                setAiRecommendations(suggestions);
-                console.log('✅ Loaded AI recommendations via batch:', suggestions.length);
-            } else {
-                // No workout history, set empty recommendations
-                console.log('No workout history found for AI recommendations');
-                setAiRecommendations([]);
-            }
+            const suggestions = await Promise.race([loadPromise, timeoutPromise]);
+            setAiRecommendations(suggestions);
         } catch (error) {
             console.error('Error loading AI recommendations:', error);
             setAiRecommendations([]);
 
-            // Set user-friendly error message
             if (error.message?.includes('429') || error.message?.includes('Rate limit')) {
                 setAiError('AI suggestions temporarily unavailable due to high usage. Using smart fallbacks.');
             } else {
@@ -315,9 +309,7 @@ export default function Home() {
             loadUserData();
             loadAIRecommendations();
         }
-        // 🔥 FIX: Remove loadAIRecommendations from dependencies to prevent infinite loop
-        // Only depend on currentUser change, not the callback itself
-    }, [currentUser?.uid, loadDashboardData, loadUserData]);
+    }, [currentUser?.uid, loadDashboardData, loadUserData, loadAIRecommendations]);
 
     // Update greeting every minute to keep it current
     useEffect(() => {

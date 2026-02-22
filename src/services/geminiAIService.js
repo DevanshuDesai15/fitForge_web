@@ -41,6 +41,7 @@ export const getGeminiModel = () => {
 class GeminiAIService {
   constructor() {
     this.config = geminiConfig;
+    this.disabled = false;
 
     // 🔥 Rate limiting to prevent 429 errors
     this.requestQueue = [];
@@ -79,19 +80,11 @@ class GeminiAIService {
       this.config.apiKey === "your-gemini-api-key-here" ||
       this.config.apiKey === "YOUR_ACTUAL_API_KEY"
     ) {
-      console.error("❌ Gemini API key not configured!");
-      console.error("📋 Please follow these steps:");
-      console.error(
-        "   1. Get API key: https://aistudio.google.com/app/apikey"
+      console.warn(
+        "Gemini API key not configured. AI features will use rule-based fallbacks."
       );
-      console.error(
-        "   2. Create .env file with: VITE_GEMINI_API_KEY=your_actual_key"
-      );
-      console.error("   3. Restart dev server: npm run dev");
-      console.error("📖 Full guide: see GEMINI_API_SETUP.md");
-      throw new Error(
-        "Gemini API key not configured. Please set VITE_GEMINI_API_KEY in .env file."
-      );
+      this.disabled = true;
+      return;
     }
 
     try {
@@ -100,20 +93,13 @@ class GeminiAIService {
       this.maxRetries = this.config.maxRetries;
       this.requestTimeout = this.config.requestTimeout;
 
-      console.log(
-        `✅ Gemini AI Service initialized with model: ${this.config.model}`
-      );
-      console.log(
-        `🔑 API Key configured: ${this.config.apiKey.substring(0, 10)}...`
-      );
-
       // 🔥 Set up automatic cleanup every 5 minutes
       if (typeof window !== "undefined") {
         setInterval(() => this.cleanup(), 5 * 60 * 1000);
       }
     } catch (error) {
-      console.error("❌ Failed to initialize Gemini AI Service:", error);
-      throw error;
+      console.error("Failed to initialize Gemini AI Service:", error);
+      this.disabled = true;
     }
   }
 
@@ -178,11 +164,13 @@ class GeminiAIService {
    * @private
    */
   async _executeProgressionRequest(analysisData, userProfile, workoutHistory) {
+    // Check if service is disabled (no API key or initialization failure)
+    if (this.disabled) {
+      return this._generateFallbackSuggestion(analysisData);
+    }
+
     // 🚨 Global kill switch: check if Gemini is completely disabled
     if (this.config.emergencyDisable || !this.config.useGeminiAI) {
-      console.log(
-        "🚨 GEMINI API GLOBALLY DISABLED - using rule-based fallback"
-      );
       return this._generateFallbackSuggestion(analysisData);
     }
 
@@ -422,9 +410,13 @@ class GeminiAIService {
     userProfile,
     workoutHistory
   ) {
+    // Check if service is disabled (no API key or initialization failure)
+    if (this.disabled) {
+      return this._generateBatchFallbackSuggestions(analysesData);
+    }
+
     // 🚨 Global kill switch: check if Gemini is completely disabled
     if (this.config.emergencyDisable || !this.config.useGeminiAI) {
-      console.log("🚨 GEMINI API GLOBALLY DISABLED - using batch fallback");
       return this._generateBatchFallbackSuggestions(analysesData);
     }
 
