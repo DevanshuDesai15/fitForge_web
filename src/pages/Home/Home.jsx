@@ -247,9 +247,9 @@ export default function Home() {
                 checkGeminiStatus();
             }
 
-            // Timeout safety net — if AI service hangs, resolve after 15 seconds
+            // Timeout safety net — if AI service hangs, resolve after 30 seconds
             const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('AI recommendations timed out')), 15000)
+                setTimeout(() => reject(new Error('AI recommendations timed out')), 30000)
             );
 
             const loadPromise = (async () => {

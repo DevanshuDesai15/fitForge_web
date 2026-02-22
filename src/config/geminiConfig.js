@@ -49,8 +49,8 @@ export const geminiConfig = {
 
   // Performance Settings
   geminiPriority: parseFloat(getEnvVar("VITE_GEMINI_PRIORITY", "0.4")),
-  requestTimeout: parseInt(getEnvVar("VITE_GEMINI_TIMEOUT", "10000")),
-  maxRetries: parseInt(getEnvVar("VITE_GEMINI_MAX_RETRIES", "1")), // Reduced from 3 to 1
+  requestTimeout: parseInt(getEnvVar("VITE_GEMINI_TIMEOUT", "8000")),
+  maxRetries: parseInt(getEnvVar("VITE_GEMINI_MAX_RETRIES", "0")), // No retries — fail fast to rule-based fallback
 
   // Development Settings
   enableLogging: getEnvVar("NODE_ENV", "production") === "development",
