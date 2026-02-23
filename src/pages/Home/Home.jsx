@@ -248,9 +248,10 @@ export default function Home() {
             }
 
             // Timeout safety net — if AI service hangs, resolve after 30 seconds
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('AI recommendations timed out')), 30000)
-            );
+            let timeoutId;
+            const timeoutPromise = new Promise((_, reject) => {
+                timeoutId = setTimeout(() => reject(new Error('AI recommendations timed out')), 30000);
+            });
 
             const loadPromise = (async () => {
                 // Get workout history analysis
@@ -288,6 +289,7 @@ export default function Home() {
             })();
 
             const suggestions = await Promise.race([loadPromise, timeoutPromise]);
+            clearTimeout(timeoutId);
             setAiRecommendations(suggestions);
         } catch (error) {
             console.error('Error loading AI recommendations:', error);

@@ -104,6 +104,34 @@ class GeminiAIService {
   }
 
   /**
+   * Check if we are in a 429 cooldown period (persisted across page reloads)
+   * @private
+   */
+  _is429Cooldown() {
+    try {
+      const stored = localStorage.getItem('gemini_429_cooldown');
+      if (!stored) return false;
+      const { timestamp, cooldownMs } = JSON.parse(stored);
+      return Date.now() - timestamp < cooldownMs;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Record a 429 rate limit hit in localStorage so it persists across page reloads
+   * @private
+   */
+  _record429Hit() {
+    try {
+      localStorage.setItem('gemini_429_cooldown', JSON.stringify({
+        timestamp: Date.now(),
+        cooldownMs: 90 * 1000, // 90-second cooldown
+      }));
+    } catch { /* localStorage might be unavailable */ }
+  }
+
+  /**
    * Analyze workout data and generate intelligent progression suggestions
    * @param {Object} analysisData - Data from rule-based analysis
    * @param {Object} userProfile - User progression profile
@@ -642,8 +670,14 @@ Exercise ${index + 1}: ${analysis.exerciseName}
   )
   .join("\n")}
 
-RECENT WORKOUT HISTORY:
-${JSON.stringify(workoutHistory.slice(0, 3), null, 2)}
+RECENT WORKOUT HISTORY (last 3 sessions):
+${workoutHistory.slice(0, 3).map(w => {
+  const date = w.timestamp?.toDate ? w.timestamp.toDate().toLocaleDateString() : 'unknown date';
+  const exercises = (w.exercises || []).slice(0, 5).map(e =>
+    `  - ${e.name || e.exerciseName || 'exercise'}: ${e.weight || 0}kg x ${e.reps || 0} reps`
+  ).join('\n');
+  return `Session (${date}, ${(w.exercises || []).length} exercises):\n${exercises}`;
+}).join('\n\n') || 'No recent workouts available'}
 
 TASK: Provide progression suggestions for ALL exercises in a single response. Consider:
 1. Exercise interactions and recovery between sessions
@@ -921,51 +955,58 @@ Respond in JSON format:
    * Make request to Gemini API with retry logic and rate limiting
    * @private
    */
-  async _makeGeminiRequest(prompt, retryCount = 0) {
+  async _makeGeminiRequest(prompt) {
+    // Check persistent 429 cooldown before even queuing the request
+    if (this._is429Cooldown()) {
+      console.warn('Gemini API: in 429 cooldown period, using rule-based fallback');
+      throw new Error('Rate limit cooldown active — skipping Gemini call');
+    }
+
     const requestFn = async () => {
-      try {
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(
-            () => reject(new Error("Request timeout")),
-            this.requestTimeout
-          )
-        );
-
-        const requestPromise = this.model.generateContent(prompt);
-        const result = await Promise.race([requestPromise, timeoutPromise]);
-
-        console.log("✅ Gemini API request successful");
-        return result;
-      } catch (error) {
-        // Handle specific 429 error
-        if (
-          error.message?.includes("429") ||
-          error.message?.includes("quota") ||
-          error.message?.includes("Too Many Requests")
-        ) {
-          console.error("🚨 429 Too Many Requests - Rate limit hit!");
-          console.error("📊 Current stats:", this.getUsageStats());
-          console.error("⏰ Implementing exponential backoff...");
-
-          // Exponential backoff for rate limits: 5s, 10s, 20s
-          const backoffDelay = 5000 * Math.pow(2, retryCount);
-          await this._delay(backoffDelay);
-
-          throw new Error(
-            `Rate limit exceeded (429) - backing off for ${
-              backoffDelay / 1000
-            }s`
+      let currentRetry = 0;
+      
+      while (currentRetry <= this.maxRetries) {
+        try {
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(
+              () => reject(new Error("Request timeout")),
+              this.requestTimeout
+            )
           );
-        }
 
-        if (retryCount < this.maxRetries) {
-          console.log(
-            `🔄 Gemini API retry ${retryCount + 1}/${this.maxRetries}`
-          );
-          await this._delay(2000 * (retryCount + 1)); // Longer exponential backoff
-          return this._makeGeminiRequest(prompt, retryCount + 1);
+          const requestPromise = this.model.generateContent(prompt);
+          const result = await Promise.race([requestPromise, timeoutPromise]);
+
+          console.log("✅ Gemini API request successful");
+          return result;
+        } catch (error) {
+          // Handle specific 429 error
+          if (
+            error.message?.includes("429") ||
+            error.message?.includes("quota") ||
+            error.message?.includes("Too Many Requests")
+          ) {
+            console.error("🚨 429 Too Many Requests - Rate limit hit! Cooling down for 90s.");
+            console.error("📊 Current stats:", this.getUsageStats());
+
+            // Persist cooldown to localStorage so it survives page reloads
+            this._record429Hit();
+
+            throw new Error(
+              `Rate limit exceeded (429) — cooling down for 90s. Rule-based suggestions will be used.`
+            );
+          }
+
+          if (currentRetry < this.maxRetries) {
+            console.log(
+              `🔄 Gemini API retry ${currentRetry + 1}/${this.maxRetries}`
+            );
+            await this._delay(2000 * (currentRetry + 1)); // Longer exponential backoff
+            currentRetry++;
+            continue; // Loop instead of recurse
+          }
+          throw error;
         }
-        throw error;
       }
     };
 
