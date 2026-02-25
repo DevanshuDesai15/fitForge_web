@@ -41,18 +41,18 @@ const AIPick = styled(Chip)(() => ({
     },
 }));
 
-const TabButton = styled(Button)(({ active, theme }) => ({
-    background: active
+const TabButton = styled(Button)(({ $active, theme }) => ({
+    background: $active
         ? 'rgba(40, 40, 40, 0.9)'
         : 'transparent',
-    color: active ? '#fff' : 'rgba(255, 255, 255, 0.6)',
+    color: $active ? '#fff' : 'rgba(255, 255, 255, 0.6)',
     borderRadius: '15px',
     padding: '10px 20px',
     textTransform: 'none',
     fontSize: '0.9rem',
-    fontWeight: active ? 'bold' : 'medium',
-    border: active ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid transparent',
-    backdropFilter: active ? 'blur(10px)' : 'none',
+    fontWeight: $active ? 'bold' : 'medium',
+    border: $active ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid transparent',
+    backdropFilter: $active ? 'blur(10px)' : 'none',
     transition: 'all 0.3s ease',
     display: 'flex',
     alignItems: 'center',
@@ -64,10 +64,10 @@ const TabButton = styled(Button)(({ active, theme }) => ({
         gap: '4px',
     },
     '&:hover': {
-        background: active
+        background: $active
             ? 'rgba(40, 40, 40, 0.9)'
             : 'rgba(255, 255, 255, 0.05)',
-        color: active ? '#fff' : 'rgba(255, 255, 255, 0.8)',
+        color: $active ? '#fff' : 'rgba(255, 255, 255, 0.8)',
     },
 }));
 
@@ -137,8 +137,12 @@ const WorkoutsTab = () => {
         // Navigate to workout with program/day data
         navigate('/workout/start', {
             state: {
+                templateId: program.id,
+                dayId: day.id,
                 workout: {
                     name: `${program.name} - ${day.name}`,
+                    programName: program.name,
+                    dayName: day.name,
                     exercises: day.exercises || []
                 }
             }
@@ -495,14 +499,14 @@ const WorkoutsTab = () => {
                     maxWidth: { xs: '100%', sm: 'none' }
                 }}>
                     <TabButton
-                        active={activeSubTab === 0}
+                        $active={activeSubTab === 0}
                         onClick={() => handleSubTabChange(0)}
                         startIcon={<MdFlashOn />}
                     >
                         Quick Start
                     </TabButton>
                     <TabButton
-                        active={activeSubTab === 1}
+                        $active={activeSubTab === 1}
                         onClick={() => handleSubTabChange(1)}
                         startIcon={<MdFolderOpen />}
                     >

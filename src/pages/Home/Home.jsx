@@ -14,7 +14,7 @@ import {
     Snackbar
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -190,6 +190,8 @@ export default function Home() {
         activeMinutes: 187
     });
     const [aiRecommendations, setAiRecommendations] = useState([]);
+    const [nextWorkout, setNextWorkout] = useState(null);
+    const [isTomorrowFocus, setIsTomorrowFocus] = useState(false);
     const [aiLoading, setAiLoading] = useState(false);
     const [aiError, setAiError] = useState('');
     const [quickAddModalOpen, setQuickAddModalOpen] = useState(false);
@@ -226,9 +228,91 @@ export default function Home() {
         if (!currentUser?.uid) return;
 
         try {
-            // Load dashboard data (currently using mock data)
-            // Future: Load actual workout stats from Firebase
+            // Load dashboard data (currently using mock data for weekly stats)
+            // Future: Load actual weekly stats from Firebase
             console.log('Dashboard loaded for user:', currentUser.uid);
+
+            // Fetch user's active programs (using same logic as useWorkoutPrograms)
+            const programsQuery = query(
+                collection(db, "workoutPrograms"),
+                where("userId", "==", currentUser.uid)
+            );
+            const programsSnapshot = await getDocs(programsQuery);
+            const userPrograms = programsSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+
+            // Fetch user's recently completed workouts to determine progress
+            const workoutsQuery = query(
+                collection(db, 'workouts'),
+                where('userId', '==', currentUser.uid),
+                where('completed', '==', true),
+                orderBy('timestamp', 'desc'),
+                limit(50)
+            );
+            const workoutsSnapshot = await getDocs(workoutsQuery);
+            const completedWorkouts = workoutsSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+
+            // Check if a workout was completed today
+            let completedWorkoutToday = false;
+            if (completedWorkouts.length > 0) {
+                const lastWorkout = completedWorkouts[0]; // Already ordered descending by timestamp
+                let workoutDate = null;
+                if (lastWorkout.timestamp?.toDate) {
+                    workoutDate = lastWorkout.timestamp.toDate();
+                } else if (lastWorkout.timestamp) {
+                    workoutDate = new Date(lastWorkout.timestamp);
+                }
+
+                if (workoutDate) {
+                    const today = new Date();
+                    if (
+                        workoutDate.getDate() === today.getDate() &&
+                        workoutDate.getMonth() === today.getMonth() &&
+                        workoutDate.getFullYear() === today.getFullYear()
+                    ) {
+                        completedWorkoutToday = true;
+                    }
+                }
+            }
+            setIsTomorrowFocus(completedWorkoutToday);
+
+            // Find the next day in the first active multi-day program
+            let foundNextWorkout = null;
+            for (const program of userPrograms) {
+                if (program.days && program.days.length > 1) {
+                    const programWorkouts = completedWorkouts.filter(w => w.templateId === program.id);
+
+                    if (programWorkouts.length === 0) {
+                        foundNextWorkout = { ...program.days[0], programName: program.name, programId: program.id };
+                        break;
+                    }
+
+                    const completedDayNames = programWorkouts.map(w => w.dayName);
+                    const sortedDays = [...program.days].sort((a, b) => a.id - b.id);
+
+                    for (let i = 0; i < sortedDays.length; i++) {
+                        const day = sortedDays[i];
+                        if (!completedDayNames.includes(day.name)) {
+                            foundNextWorkout = { ...day, programName: program.name, programId: program.id };
+                            break;
+                        }
+                    }
+
+                    if (foundNextWorkout) break;
+
+                    // If all days completed in this program, suggest starting over
+                    foundNextWorkout = { ...sortedDays[0], programName: program.name, programId: program.id };
+                    break;
+                }
+            }
+
+            setNextWorkout(foundNextWorkout);
+
         } catch (error) {
             console.error('Error loading dashboard data:', error);
             setError('Failed to load dashboard data');
@@ -432,7 +516,7 @@ export default function Home() {
                     </CardContent>
                 </WelcomeCard>
 
-                {/* Today's Focus */}
+                {/* Today's / Tomorrow's Focus */}
                 <Box sx={{ mb: 4 }}>
                     <Typography variant="h4" sx={{
                         color: 'text.primary',
@@ -440,7 +524,7 @@ export default function Home() {
                         mb: 3,
                         fontSize: { xs: '1.5rem', md: '2rem' }
                     }}>
-                        Today&rsquo;s Focus
+                        {isTomorrowFocus ? "Tomorrow's Workout" : "Today's Focus"}
                     </Typography>
                     <FeaturedWorkoutCard>
                         <CardContent sx={{ p: 4 }}>
@@ -475,7 +559,7 @@ export default function Home() {
                                         mb: 2,
                                         fontSize: { xs: '1.75rem', md: '2.25rem' }
                                     }}>
-                                        Upper Body Strength
+                                        {nextWorkout ? `${nextWorkout.programName}: ${nextWorkout.name}` : 'Upper Body Strength'}
                                     </Typography>
                                     <Typography variant="body1" sx={{
                                         color: 'text.secondary',
@@ -483,19 +567,21 @@ export default function Home() {
                                         lineHeight: 1.6,
                                         fontSize: '1rem'
                                     }}>
-                                        Perfect for building muscle and increasing your bench press PR. You&rsquo;ve completed this workout 3 times with great results.
+                                        {nextWorkout
+                                            ? `Up next in your program! Focus: ${nextWorkout.focus || 'General Training'}.`
+                                            : 'Perfect for building muscle and increasing your bench press PR. You’ve completed this workout 3 times with great results.'}
                                     </Typography>
                                     <Box sx={{ display: 'flex', gap: 3, mb: 3, flexWrap: 'wrap' }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                             <Clock size={16} style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
                                             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                                45 minutes
+                                                {nextWorkout ? `${(nextWorkout.exercises?.length || 0) * 5 + 10} minutes` : '45 minutes'}
                                             </Typography>
                                         </Box>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                             <Target size={16} style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
                                             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                                8 exercises
+                                                {nextWorkout ? `${nextWorkout.exercises?.length || 0} exercises` : '8 exercises'}
                                             </Typography>
                                         </Box>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -529,7 +615,24 @@ export default function Home() {
                                                 backgroundColor: 'var(--primary-a10)',
                                             }
                                         }}
-                                        onClick={() => navigate('/workout/start')}
+                                        onClick={() => {
+                                            if (nextWorkout) {
+                                                navigate('/workout/start', {
+                                                    state: {
+                                                        templateId: nextWorkout.programId,
+                                                        dayId: nextWorkout.id,
+                                                        workout: {
+                                                            name: `${nextWorkout.programName} - ${nextWorkout.name}`,
+                                                            programName: nextWorkout.programName,
+                                                            dayName: nextWorkout.name,
+                                                            exercises: nextWorkout.exercises || []
+                                                        }
+                                                    }
+                                                });
+                                            } else {
+                                                navigate('/workout/start');
+                                            }
+                                        }}
                                     >
                                         Start Workout
                                     </Button>

@@ -123,9 +123,43 @@ const StartWorkout = () => {
                 const stateDayId = location.state?.dayId;
 
                 const templateId = templateIdFromUrl || stateTemplateId;
+                const passedWorkout = location.state?.workout;
 
-                if (templateId && currentUser) {
-                    console.log('🚀 Auto-loading workout:', { templateId, dayId: stateDayId });
+                if (passedWorkout) {
+                    console.log('🚀 Auto-loading workout from state:', passedWorkout);
+
+                    if (passedWorkout.exercises) {
+                        const workoutExercises = passedWorkout.exercises.map(exercise => ({
+                            ...exercise,
+                            targetSets: exercise.sets?.length || 3,
+                            sets: Array.isArray(exercise.sets) && exercise.sets.length > 0
+                                ? exercise.sets
+                                : [
+                                    { weight: '', reps: '', completed: false },
+                                    { weight: '', reps: '', completed: false },
+                                    { weight: '', reps: '', completed: false }
+                                ]
+                        }));
+                        setExercises(workoutExercises);
+                        setSelectedDay({
+                            name: passedWorkout.dayName || passedWorkout.name?.split(' - ')[1] || 'Workout',
+                            id: stateDayId
+                        });
+
+                        if (templateId) {
+                            setCurrentTemplate({
+                                id: templateId,
+                                name: passedWorkout.programName || passedWorkout.name?.split(' - ')[0] || 'Program'
+                            });
+                        }
+
+                        setTimeout(() => {
+                            setWorkoutStartTime(new Date().toISOString());
+                            setWorkoutStarted(true);
+                        }, 100);
+                    }
+                } else if (templateId && currentUser) {
+                    console.log('🚀 Auto-loading template from DB:', { templateId, dayId: stateDayId });
 
                     // Load template from Firestore
                     const templateRef = doc(db, 'workoutTemplates', templateId);
@@ -176,31 +210,46 @@ const StartWorkout = () => {
                             setError('This workout template has no exercises configured.');
                         }
                     } else {
-                        setError('Workout template not found.');
-                    }
-                } else if (location.state?.workout) {
-                    // Handle direct workout data from navigation state
-                    const workoutData = location.state.workout;
-                    console.log('🚀 Auto-loading workout from state:', workoutData);
+                        // Try falling back to workoutPrograms if not in templates
+                        const programRef = doc(db, 'workoutPrograms', templateId);
+                        const programSnap = await getDoc(programRef);
 
-                    if (workoutData.exercises) {
-                        const workoutExercises = workoutData.exercises.map(exercise => ({
-                            ...exercise,
-                            targetSets: exercise.sets?.length || 3,
-                            sets: Array.isArray(exercise.sets) && exercise.sets.length > 0
-                                ? exercise.sets
-                                : [
-                                    { weight: '', reps: '', completed: false },
-                                    { weight: '', reps: '', completed: false },
-                                    { weight: '', reps: '', completed: false }
-                                ]
-                        }));
-                        setExercises(workoutExercises);
-                        setSelectedDay({ name: workoutData.name || 'Workout' });
-                        setTimeout(() => {
-                            setWorkoutStartTime(new Date().toISOString());
-                            setWorkoutStarted(true);
-                        }, 100);
+                        if (programSnap.exists()) {
+                            const programData = { id: programSnap.id, ...programSnap.data() };
+                            setCurrentTemplate(programData);
+
+                            let dayToSelect = null;
+                            if (stateDayId) {
+                                dayToSelect = programData.days?.find(d => d.id === stateDayId);
+                            } else if (programData.days && programData.days.length > 0) {
+                                dayToSelect = programData.days[0];
+                            }
+
+                            if (dayToSelect && dayToSelect.exercises) {
+                                setSelectedDay(dayToSelect);
+                                const workoutExercises = dayToSelect.exercises.map(exercise => ({
+                                    ...exercise,
+                                    targetSets: exercise.sets?.length || 3,
+                                    sets: Array.isArray(exercise.sets) && exercise.sets.length > 0
+                                        ? exercise.sets
+                                        : [
+                                            { weight: '', reps: '', completed: false },
+                                            { weight: '', reps: '', completed: false },
+                                            { weight: '', reps: '', completed: false }
+                                        ]
+                                }));
+                                setExercises(workoutExercises);
+
+                                setTimeout(() => {
+                                    setWorkoutStartTime(new Date().toISOString());
+                                    setWorkoutStarted(true);
+                                }, 100);
+                            } else {
+                                setError('This program has no exercises configured.');
+                            }
+                        } else {
+                            setError('Workout template or program not found.');
+                        }
                     }
                 }
             } catch (err) {
