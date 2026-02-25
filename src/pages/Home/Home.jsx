@@ -22,7 +22,6 @@ import {
     Brain,
     Plus,
     TrendingUp,
-    Flame,
     Target,
     Clock,
     Zap,
@@ -180,15 +179,16 @@ export default function Home() {
     const [error, setError] = useState('');
     const [userData, setUserData] = useState({ username: '', fullName: '', gender: 'male' });
     const [greeting, setGreeting] = useState(getDynamicGreeting());
-    const [weeklyStats] = useState({
-        caloriesBurned: 2340,
-        caloriesChange: '+12%',
-        goalProgress: 80,
-        goalText: '4/5',
-        streakDays: 12,
-        workoutsDone: 4,
-        activeMinutes: 187
+    const [weeklyStats, setWeeklyStats] = useState({
+        totalVolume: 0,
+        volumeUnit: 'kg', // Default; will update based on data or context
+        goalProgress: 0,
+        goalText: '0/4',
+        streakDays: 0,
+        workoutsDone: 0,
+        activeMinutes: 0
     });
+    const [recentAchievements, setRecentAchievements] = useState([]);
     const [aiRecommendations, setAiRecommendations] = useState([]);
     const [nextWorkout, setNextWorkout] = useState(null);
     const [isTomorrowFocus, setIsTomorrowFocus] = useState(false);
@@ -312,6 +312,139 @@ export default function Home() {
             }
 
             setNextWorkout(foundNextWorkout);
+
+            // Calculate "This Week" Stats from the fetched workouts (trailing 7 days)
+            const todayForStats = new Date();
+            const sevenDaysAgo = new Date(todayForStats);
+            sevenDaysAgo.setDate(todayForStats.getDate() - 7);
+
+            let recentWorkouts = 0;
+            let recentMinutes = 0;
+            let recentVolume = 0;
+            let streakCount = 0; // Simplified streak check based on completedWorkouts
+            const preferredUnit = 'lbs'; // Default to lbs; can extract from user data later if available
+
+            // Filter workouts completed within the last 7 days
+            const weekWorkouts = completedWorkouts.filter(workout => {
+                let wDate = null;
+                if (workout.timestamp?.toDate) {
+                    wDate = workout.timestamp.toDate();
+                } else if (workout.timestamp) {
+                    wDate = new Date(workout.timestamp);
+                }
+                return wDate && wDate >= sevenDaysAgo;
+            });
+
+            weekWorkouts.forEach(workout => {
+                recentWorkouts += 1;
+                recentMinutes += (workout.duration || 0);
+
+                // Calculate volume: sum of (weight * reps) for all sets across all exercises
+                if (workout.exercises && Array.isArray(workout.exercises)) {
+                    workout.exercises.forEach(exercise => {
+                        if (exercise.sets && Array.isArray(exercise.sets)) {
+                            exercise.sets.forEach(set => {
+                                if (set.completed && set.weight && set.reps) {
+                                    // Optionally handle kg vs lbs conversion here if needed. 
+                                    const weight = parseFloat(set.weight) || 0;
+                                    const reps = parseInt(set.reps) || 0;
+                                    recentVolume += (weight * reps);
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+
+            // Calculate a simplified streak (days in a row with at least 1 workout, working backwards)
+            const uniqueDates = new Set(completedWorkouts.map(w => {
+                const d = w.timestamp?.toDate ? w.timestamp.toDate() : new Date(w.timestamp);
+                return d ? d.toDateString() : null;
+            }).filter(Boolean));
+
+            let tempDate = new Date();
+            let checkStreak = true;
+            // Check today first
+            if (!uniqueDates.has(tempDate.toDateString())) {
+                // if no workout today, check yesterday to keep streak alive
+                tempDate.setDate(tempDate.getDate() - 1);
+                if (!uniqueDates.has(tempDate.toDateString())) {
+                    checkStreak = false;
+                }
+            }
+            while (checkStreak) {
+                streakCount++;
+                tempDate.setDate(tempDate.getDate() - 1);
+                if (!uniqueDates.has(tempDate.toDateString())) {
+                    checkStreak = false;
+                }
+            }
+
+            // Goal metrics
+            const targetGoal = 4;
+            let progressPercentage = (recentWorkouts / targetGoal) * 100;
+            if (progressPercentage > 100) progressPercentage = 100;
+
+            setWeeklyStats({
+                totalVolume: Math.round(recentVolume),
+                volumeUnit: preferredUnit,
+                goalProgress: progressPercentage,
+                goalText: `${recentWorkouts}/${targetGoal}`,
+                streakDays: streakCount,
+                workoutsDone: recentWorkouts,
+                activeMinutes: Math.round(recentMinutes / 60) // convert seconds to minutes if duration is in seconds
+            });
+
+            // Calculate Dynamic Achievements
+            const newAchievements = [];
+            const totalWorkoutsCount = completedWorkouts.length;
+
+            // 1. Weekly Goal Smashed
+            if (recentWorkouts >= targetGoal) {
+                newAchievements.push({
+                    id: 'weekly-goal',
+                    title: 'Weekly Goal Smashed! 🎯',
+                    description: `Completed ${recentWorkouts} workouts this week`,
+                    timeAgo: 'Recently',
+                    variant: 'primary',
+                    icon: 'target'
+                });
+            }
+
+            // 2. Streak Master
+            if (streakCount >= 3) {
+                newAchievements.push({
+                    id: 'streak-master',
+                    title: 'Streak Master! ⚡️',
+                    description: `${streakCount} day active workout streak`,
+                    timeAgo: 'Ongoing',
+                    variant: 'warning', // Uses default dark grey card
+                    icon: 'zap'
+                });
+            }
+
+            // 3. Consistency Key
+            if (totalWorkoutsCount >= 50) {
+                newAchievements.push({ id: 'milestone-50', title: 'Consistency Key! 🗝️', description: 'Completed 50 total workouts', timeAgo: 'Milestone', variant: 'success', icon: 'trending-up' });
+            } else if (totalWorkoutsCount >= 25) {
+                newAchievements.push({ id: 'milestone-25', title: 'Consistency Key! 🗝️', description: 'Completed 25 total workouts', timeAgo: 'Milestone', variant: 'success', icon: 'trending-up' });
+            } else if (totalWorkoutsCount >= 10) {
+                newAchievements.push({ id: 'milestone-10', title: 'Consistency Key! 🗝️', description: 'Completed 10 total workouts', timeAgo: 'Milestone', variant: 'success', icon: 'trending-up' });
+            }
+
+            // 4. First Step
+            if (totalWorkoutsCount === 1) {
+                newAchievements.push({
+                    id: 'first-step',
+                    title: 'First Step! 🚀',
+                    description: 'Completed your very first workout',
+                    timeAgo: 'Just now',
+                    variant: 'primary',
+                    icon: 'activity'
+                });
+            }
+
+            setRecentAchievements(newAchievements);
 
         } catch (error) {
             console.error('Error loading dashboard data:', error);
@@ -672,13 +805,13 @@ export default function Home() {
                             <StatsCard>
                                 <CardContent sx={{ p: 3 }}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                                        <Flame size={24} style={{ color: '#ff6b35' }} />
+                                        <TrendingUp size={24} style={{ color: '#ff6b35' }} />
                                         <Typography variant="caption" sx={{
-                                            color: '#4caf50',
+                                            color: '#ff6b35',
                                             fontWeight: 'bold',
                                             fontSize: '0.75rem'
                                         }}>
-                                            {weeklyStats.caloriesChange}
+                                            {weeklyStats.volumeUnit}
                                         </Typography>
                                     </Box>
                                     <Typography variant="h4" sx={{
@@ -687,13 +820,13 @@ export default function Home() {
                                         mb: 1,
                                         fontSize: { xs: '1.5rem', md: '2rem' }
                                     }}>
-                                        {weeklyStats.caloriesBurned.toLocaleString()}
+                                        {weeklyStats.totalVolume.toLocaleString()}
                                     </Typography>
                                     <Typography variant="body2" sx={{
                                         color: 'text.secondary',
                                         fontSize: '0.75rem'
                                     }}>
-                                        Calories burned
+                                        Total volume lifted
                                     </Typography>
                                 </CardContent>
                             </StatsCard>
@@ -806,73 +939,54 @@ export default function Home() {
                                 Recent Achievements
                             </Typography>
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                <AchievementCard variant="primary">
-                                    <CardContent sx={{ p: 3 }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                                            <Box sx={{
-                                                width: 48,
-                                                height: 48,
-                                                backgroundColor: 'var(--primary-a0)',
-                                                borderRadius: '50%',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                flexShrink: 0
-                                            }}>
-                                                <Target size={24} style={{ color: '#121212' }} />
-                                            </Box>
-                                            <Box sx={{ flex: 1 }}>
-                                                <Typography variant="h6" sx={{
-                                                    color: 'text.primary',
-                                                    fontWeight: 'bold',
-                                                    mb: 0.5
-                                                }}>
-                                                    Weekly Goal Smashed! 🎯
-                                                </Typography>
-                                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                                    Completed 5 workouts this week
-                                                </Typography>
-                                            </Box>
-                                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                                2 days ago
+                                {recentAchievements.length > 0 ? (
+                                    recentAchievements.slice(0, 3).map(achievement => (
+                                        <AchievementCard key={achievement.id} variant={achievement.variant}>
+                                            <CardContent sx={{ p: 3 }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                                                    <Box sx={{
+                                                        width: 48,
+                                                        height: 48,
+                                                        backgroundColor: achievement.variant === 'primary' ? 'var(--primary-a0)' : achievement.variant === 'success' ? '#4caf50' : 'rgba(255, 193, 7, 0.2)',
+                                                        borderRadius: '50%',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        flexShrink: 0
+                                                    }}>
+                                                        {achievement.icon === 'target' && <Target size={24} style={{ color: achievement.variant === 'primary' ? '#121212' : 'white' }} />}
+                                                        {achievement.icon === 'trending-up' && <TrendingUp size={24} style={{ color: achievement.variant === 'primary' ? '#121212' : 'white' }} />}
+                                                        {achievement.icon === 'zap' && <Zap size={24} style={{ color: achievement.variant === 'primary' ? '#121212' : '#ffc107' }} />}
+                                                        {achievement.icon === 'activity' && <Activity size={24} style={{ color: achievement.variant === 'primary' ? '#121212' : 'white' }} />}
+                                                    </Box>
+                                                    <Box sx={{ flex: 1 }}>
+                                                        <Typography variant="h6" sx={{
+                                                            color: 'text.primary',
+                                                            fontWeight: 'bold',
+                                                            mb: 0.5
+                                                        }}>
+                                                            {achievement.title}
+                                                        </Typography>
+                                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                                            {achievement.description}
+                                                        </Typography>
+                                                    </Box>
+                                                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                                        {achievement.timeAgo}
+                                                    </Typography>
+                                                </Box>
+                                            </CardContent>
+                                        </AchievementCard>
+                                    ))
+                                ) : (
+                                    <AchievementCard variant="default">
+                                        <CardContent sx={{ p: 3, textAlign: 'center' }}>
+                                            <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                                                Complete workouts to unlock achievements!
                                             </Typography>
-                                        </Box>
-                                    </CardContent>
-                                </AchievementCard>
-
-                                <AchievementCard variant="success">
-                                    <CardContent sx={{ p: 3 }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                                            <Box sx={{
-                                                width: 48,
-                                                height: 48,
-                                                backgroundColor: '#4caf50',
-                                                borderRadius: '50%',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                flexShrink: 0
-                                            }}>
-                                                <TrendingUp size={24} style={{ color: 'white' }} />
-                                            </Box>
-                                            <Box sx={{ flex: 1 }}>
-                                                <Typography variant="h6" sx={{
-                                                    color: 'text.primary',
-                                                    fontWeight: 'bold',
-                                                    mb: 0.5
-                                                }}>
-                                                    New Personal Record! 💪
-                                                </Typography>
-                                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                                    Bench Press: 185 lbs (+10 lbs)
-                                                </Typography>
-                                            </Box>
-                                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                                4 days ago
-                                            </Typography>
-                                        </Box>
-                                    </CardContent>
-                                </AchievementCard>
+                                        </CardContent>
+                                    </AchievementCard>
+                                )}
                             </Box>
                         </Box>
 
