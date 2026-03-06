@@ -126,7 +126,7 @@ class GeminiAIService {
     try {
       localStorage.setItem('gemini_429_cooldown', JSON.stringify({
         timestamp: Date.now(),
-        cooldownMs: 90 * 1000, // 90-second cooldown
+        cooldownMs: import.meta.env?.MODE === 'development' ? 5000 : 90 * 1000, // 5-second cooldown in dev, 90s in prod
       }));
     } catch { /* localStorage might be unavailable */ }
   }
