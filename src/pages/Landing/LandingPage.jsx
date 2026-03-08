@@ -29,6 +29,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import appLogo from '../../assets/appLogo.svg';
+import appScreenshot from '../../assets/appScreenshot.png';
 
 const HeroSection = styled(Box)(({ theme }) => ({
     minHeight: '100vh',
@@ -78,7 +79,7 @@ const HeroSection = styled(Box)(({ theme }) => ({
 const PhoneMock = styled('div')(({ theme }) => ({
     width: 320,
     maxWidth: '80vw',
-    height: 620,
+    height: 720,
     borderRadius: 36,
     padding: 14,
     background:
@@ -92,20 +93,6 @@ const PhoneMock = styled('div')(({ theme }) => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-}));
-
-const PhoneScreen = styled('div')(({ theme }) => ({
-    width: '100%',
-    height: '100%',
-    borderRadius: 28,
-    background: 'linear-gradient(160deg, #0e1015 0%, #141925 70%)',
-    border: `1px solid ${theme.palette.border.light}`,
-    position: 'relative',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
 }));
 
 const FeatureCard = styled(Card)(({ theme }) => ({
@@ -260,7 +247,7 @@ export default function LandingPage() {
                                 src={appLogo}
                                 alt="FitForge Logo"
                                 sx={{
-                                    height: 120,
+                                    height: 48,
                                     width: 'auto'
                                 }}
                             />
@@ -308,7 +295,7 @@ export default function LandingPage() {
 
                     {/* Hero Content */}
                     <Grid2 container spacing={4} sx={{ alignItems: 'center', py: { xs: 4, md: 8 } }}>
-                        <Grid2 xs={12} md={7}>
+                        <Grid2 size={{ xs: 12, md: 7 }}>
                             <Box sx={{ position: 'relative', zIndex: 2 }}>
                                 <Box sx={{
                                     display: 'inline-flex',
@@ -418,6 +405,78 @@ export default function LandingPage() {
                                 </Box>
                             </Box>
                         </Grid2>
+                        <Grid2 size={{ xs: 12, md: 5 }} sx={{ display: { xs: 'none', md: 'flex' }, justifyContent: 'center' }}>
+                            <Box sx={{ position: 'relative' }}>
+                                {/* Floating elements behind the phone */}
+                                <Box sx={{
+                                    position: 'absolute',
+                                    top: '10%',
+                                    right: '-45%',
+                                    background: `linear-gradient(135deg, ${theme.palette.secondary.main}20, transparent)`,
+                                    border: `1px solid ${theme.palette.secondary.main}40`,
+                                    backdropFilter: 'blur(10px)',
+                                    borderRadius: '16px',
+                                    padding: '12px 20px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1.5,
+                                    animation: 'float 6s ease-in-out infinite',
+                                    zIndex: 2,
+                                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+                                    '@keyframes float': {
+                                        '0%, 100%': { transform: 'translateY(0)' },
+                                        '50%': { transform: 'translateY(-20px)' }
+                                    }
+                                }}>
+                                    <MdEmojiEvents style={{ color: theme.palette.secondary.main, fontSize: '1.5rem' }} />
+                                    <Box>
+                                        <Typography variant="caption" sx={{ color: theme.palette.text.muted, display: 'block', lineHeight: 1 }}>New PR!</Typography>
+                                        <Typography variant="body2" sx={{ color: 'white', fontWeight: 'bold' }}>Bench Press: 225 lbs</Typography>
+                                    </Box>
+                                </Box>
+
+                                <Box sx={{
+                                    position: 'absolute',
+                                    bottom: '15%',
+                                    left: '-25%',
+                                    background: `linear-gradient(135deg, ${theme.palette.primary.main}20, transparent)`,
+                                    border: `1px solid ${theme.palette.primary.main}40`,
+                                    backdropFilter: 'blur(10px)',
+                                    borderRadius: '16px',
+                                    padding: '12px 20px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1.5,
+                                    animation: 'floatDelayed 7s ease-in-out infinite',
+                                    zIndex: 2,
+                                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+                                    '@keyframes floatDelayed': {
+                                        '0%, 100%': { transform: 'translateY(0)' },
+                                        '50%': { transform: 'translateY(15px)' }
+                                    }
+                                }}>
+                                    <MdTrendingUp style={{ color: theme.palette.primary.main, fontSize: '1.5rem' }} />
+                                    <Box>
+                                        <Typography variant="caption" sx={{ color: theme.palette.text.muted, display: 'block', lineHeight: 1 }}>Volume up</Typography>
+                                        <Typography variant="body2" sx={{ color: 'white', fontWeight: 'bold' }}>+15% this week</Typography>
+                                    </Box>
+                                </Box>
+
+                                <PhoneMock sx={{ zIndex: 1, p: 0, overflow: 'hidden' }}>
+                                    <Box
+                                        component="img"
+                                        src={appScreenshot}
+                                        alt="FitForge App Screenshot"
+                                        sx={{
+                                            width: '100%',
+                                            height: '100%',
+                                            objectFit: 'cover',
+                                            borderRadius: '28px',
+                                        }}
+                                    />
+                                </PhoneMock>
+                            </Box>
+                        </Grid2>
                     </Grid2>
 
                     {/* Problem Statement */}
@@ -518,7 +577,7 @@ export default function LandingPage() {
 
                 <Grid2 container spacing={4}>
                     {features.map((feature, index) => (
-                        <Grid2 xs={12} md={6} lg={4} key={index}>
+                        <Grid2 size={{ xs: 12, md: 6, lg: 4 }} key={index}>
                             <FeatureCard>
                                 <CardContent sx={{ p: 4 }}>
                                     <Avatar sx={{
@@ -559,7 +618,7 @@ export default function LandingPage() {
             }}>
                 <Container maxWidth="lg">
                     <Grid2 container spacing={8} alignItems="center">
-                        <Grid2 xs={12} md={6}>
+                        <Grid2 size={{ xs: 12, md: 6 }}>
                             <Typography variant="h2" sx={{
                                 color: theme.palette.text.primary,
                                 fontWeight: 'bold',
@@ -595,7 +654,7 @@ export default function LandingPage() {
                             </GlowingButton>
                         </Grid2>
 
-                        <Grid2 xs={12} md={6}>
+                        <Grid2 size={{ xs: 12, md: 6 }}>
                             <Box sx={{
                                 display: 'grid',
                                 gridTemplateColumns: '1fr 1fr',
@@ -646,22 +705,30 @@ export default function LandingPage() {
                     background: `linear-gradient(135deg, ${theme.palette.primary.main}10 0%, ${theme.palette.primary.main}05 100%)`,
                     borderRadius: '24px',
                     border: `1px solid ${theme.palette.primary.main}20`,
-                    p: 8
+                    p: { xs: 4, md: 8 }
                 }}>
-                    <Typography variant="h2" sx={{
-                        color: theme.palette.text.primary,
-                        fontWeight: 'bold',
-                        mb: 2
-                    }}>
+                    <Typography
+                        variant="h2"
+                        sx={{
+                            color: theme.palette.text.primary,
+                            fontWeight: 'bold',
+                            mb: 2,
+                            fontSize: { xs: '2.5rem', md: '3.75rem' } // added responsive font sizing
+                        }}
+                    >
                         Ready to Get Stronger?
                     </Typography>
 
-                    <Typography variant="h6" sx={{
-                        color: theme.palette.text.muted,
-                        mb: 4,
-                        maxWidth: '600px',
-                        mx: 'auto'
-                    }}>
+                    <Typography
+                        variant="h6"
+                        sx={{
+                            color: theme.palette.text.muted,
+                            mb: 4,
+                            maxWidth: '600px',
+                            mx: 'auto',
+                            fontSize: { xs: '1rem', md: '1.25rem' } // added responsive font sizing
+                        }}
+                    >
                         Join serious lifters who track their progressive overload intelligently.
                         Build muscle faster with FitForge&apos;s smart tracking system.
                     </Typography>
@@ -670,7 +737,12 @@ export default function LandingPage() {
                         size="large"
                         endIcon={<MdArrowForward />}
                         onClick={handleGetStarted}
-                        sx={{ fontSize: '1.2rem', py: 2, px: 4 }}
+                        sx={{
+                            fontSize: { xs: '1rem', md: '1.2rem' },
+                            py: { xs: 1.5, md: 2 },
+                            px: { xs: 3, md: 4 },
+                            width: { xs: '100%', sm: 'auto' } // prevent weird text wrapping on small phones
+                        }}
                     >
                         {currentUser ? 'Open FitForge' : 'Start Free Today'}
                     </GlowingButton>

@@ -15,6 +15,7 @@ import RestTimer from './components/RestTimer';
 import ExerciseOverview from './components/ExerciseOverview';
 import WorkoutTabs from './components/WorkoutTabs';
 import AICoachTab from './components/AICoachTab';
+import ExerciseNotesTab from './components/ExerciseNotesTab';
 import AddExerciseDialog from './components/AddExerciseDialog';
 
 // Hooks
@@ -424,6 +425,16 @@ const StartWorkout = () => {
         setAddExerciseDialog(false);
     };
 
+    // 🎯 NEW: Handle notes change for current exercise
+    const handleNotesChange = (noteText) => {
+        const updatedExercises = [...exercises];
+        updatedExercises[currentExerciseIndex] = {
+            ...updatedExercises[currentExerciseIndex],
+            notes: noteText
+        };
+        setExercises(updatedExercises);
+    };
+
     const handleFinishWorkout = async () => {
         if (!currentUser) {
             setError('You must be logged in to save your workout.');
@@ -774,6 +785,13 @@ const StartWorkout = () => {
                                     </Typography>
                                 </Card>
                             </Box>
+                        )}
+
+                        {bottomTab === 'notes' && (
+                            <ExerciseNotesTab
+                                exercise={exercises[currentExerciseIndex]}
+                                onNotesChange={handleNotesChange}
+                            />
                         )}
                     </Box>
                 )}

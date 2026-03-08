@@ -1,12 +1,13 @@
 import PropTypes from 'prop-types';
 import { Box, Button, Typography } from '@mui/material';
-import { Brain, Target, Sparkles, Shuffle } from 'lucide-react';
+import { Brain, Target, Sparkles, Shuffle, StickyNote } from 'lucide-react';
 
 const tabs = [
     { id: 'overview', label: 'Overview', icon: <Target size={20} /> },
     { id: 'ai-coach', label: 'AI Coach', icon: <Brain size={20} /> },           
     { id: 'suggestions', label: 'Suggestions', icon: <Sparkles size={20} /> },
     { id: 'variations', label: 'Variations', icon: <Shuffle size={20} /> },
+    { id: 'notes', label: 'Notes', icon: <StickyNote size={20} /> },
 ];
 
 const WorkoutTabs = ({ activeTab, onChange }) => {

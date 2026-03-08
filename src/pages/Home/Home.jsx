@@ -21,7 +21,8 @@ import { useNavigate } from 'react-router-dom';
 import {
     Brain,
     TrendingUp,
-    Clock
+    Clock,
+    Target
 } from "lucide-react";
 import progressiveOverloadAI from '../../services/progressiveOverloadAI';
 import { logGeminiStats } from '../../utils/geminiMonitor';
@@ -520,23 +521,34 @@ export default function Home() {
         <Box sx={{
             minHeight: '100vh',
             background: '#121212',
-            padding: isDesktop ? '2rem 3rem' : '1rem',
         }}>
-            <Box sx={{ maxWidth: '1400px', margin: '0 auto' }}>
+            {/* Welcome Hero Section Banner */}
+            <WelcomeHeader
+                greeting={greeting}
+                displayName={displayName}
+                streakDays={weeklyStats.streakDays}
+                onLogWorkout={() => setQuickAddModalOpen(true)}
+                onStartTraining={() => navigate('/workout')}
+            />
+
+            <Box sx={{
+                maxWidth: '1400px',
+                margin: '0 auto',
+                padding: isDesktop ? '0 3rem 2rem 3rem' : '0 1rem 1rem 1rem',
+            }}>
                 {error && (
                     <Alert severity="error" sx={{ mb: 3, backgroundColor: 'rgba(211, 47, 47, 0.1)', color: (theme) => theme.palette.status.error }}>
                         {error}
                     </Alert>
                 )}
 
-                {/* Welcome Hero Section */}
-                <WelcomeHeader
-                    greeting={greeting}
-                    displayName={displayName}
-                    streakDays={weeklyStats.streakDays}
-                    onLogWorkout={() => setQuickAddModalOpen(true)}
-                    onStartTraining={() => navigate('/workout')}
-                />
+                {/* Weekly Targets (Prominently displayed) */}
+                <Box sx={{ mb: 4, mt: { xs: 8, md: 5 } }}>
+                    <Typography variant="h5" sx={{ color: 'text.primary', fontWeight: 'bold', mb: 2 }}>
+                        Weekly Targets
+                    </Typography>
+                    <WeeklyTargetsGrid weeklyStats={weeklyStats} />
+                </Box>
 
                 {/* Today's / Tomorrow's Focus */}
                 <TodaysFocusCard
@@ -545,20 +557,15 @@ export default function Home() {
                 />
 
                 {/* This Week Stats */}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 2, mt: 4 }}>
+                    <Typography variant="h5" sx={{ color: 'text.primary', fontWeight: 'bold' }}>
+                        This Week
+                    </Typography>
+                </Box>
                 <WeeklyStatsGrid weeklyStats={weeklyStats} />
 
-                {/* Weekly Targets */}
-                <Box sx={{ mb: 4, mt: 4 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 2 }}>
-                        <Typography variant="h5" sx={{ color: 'text.primary', fontWeight: 'bold' }}>
-                            Weekly Targets
-                        </Typography>
-                    </Box>
-                    <WeeklyTargetsGrid weeklyStats={weeklyStats} />
-                </Box>
-
                 {/* Main Content Grid - Achievements and AI Recommendations */}
-                <Grid container spacing={4}>
+                <Grid container spacing={4} sx={{ mt: 1 }}>
                     {/* Left Column - Recent Achievements */}
                     <Grid item xs={12} lg={8}>
                         <RecentAchievementsList achievements={recentAchievements} />
