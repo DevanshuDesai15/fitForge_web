@@ -1,88 +1,160 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
-import CircularProgress, { circularProgressClasses } from '@mui/material/CircularProgress';
 
-// Nested circular component customized to match the provided dashboard aesthetic
+// Custom SVG circular progress ring with gradient stroke and glow
 const CircularTarget = ({
     current,
     target,
     label,
-    color,
+    colorStart,
+    colorEnd,
+    glowColor,
     size = 120,
-    thickness = 4
+    strokeWidth = 8
 }) => {
-    // Cap progress at 100%
+    const [animatedProgress, setAnimatedProgress] = useState(0);
     const progressPercentage = Math.min((current / target) * 100, 100);
     const targetLeft = Math.max(target - current, 0);
     const isComplete = current >= target;
 
-    return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 2 }}>
-            <Box sx={{ position: 'relative', display: 'inline-flex', mb: 2 }}>
-                {/* Background Ring */}
-                <CircularProgress
-                    variant="determinate"
-                    value={100}
-                    size={size}
-                    thickness={thickness}
-                    sx={{
-                        color: 'rgba(255, 255, 255, 0.1)', // dark gray background track
-                    }}
-                />
-                {/* Foreground Ring */}
-                <CircularProgress
-                    variant="determinate"
-                    value={progressPercentage}
-                    size={size}
-                    thickness={thickness}
-                    sx={{
-                        color: color,
-                        position: 'absolute',
-                        left: 0,
-                        [`& .${circularProgressClasses.circle}`]: {
-                            strokeLinecap: 'round',
-                        },
-                        filter: `drop-shadow(0 0 6px ${color}60)`, // subtle glow
-                    }}
-                />
+    // Animate on mount
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setAnimatedProgress(progressPercentage);
+        }, 100);
+        return () => clearTimeout(timer);
+    }, [progressPercentage]);
 
-                {/* Center Text */}
-                <Box
-                    sx={{
-                        top: 0,
-                        left: 0,
-                        bottom: 0,
-                        right: 0,
-                        position: 'absolute',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                    }}
+    const radius = (size - strokeWidth) / 2;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDashoffset = circumference - (animatedProgress / 100) * circumference;
+    const gradientId = `gradient-${label.replace(/\s+/g, '-').toLowerCase()}`;
+    const glowId = `glow-${label.replace(/\s+/g, '-').toLowerCase()}`;
+
+    return (
+        <Box sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            p: { xs: 1, md: 2 },
+        }}>
+            <Box sx={{
+                position: 'relative',
+                width: size,
+                height: size,
+                mb: 2,
+            }}>
+                <svg
+                    width={size}
+                    height={size}
+                    viewBox={`0 0 ${size} ${size}`}
+                    style={{ transform: 'rotate(-90deg)' }}
                 >
-                    <Typography variant="h4" sx={{
-                        color: 'text.primary',
-                        fontWeight: 'bold',
-                        fontSize: size > 140 ? '2.5rem' : '1.75rem',
-                        lineHeight: 1
+                    <defs>
+                        {/* Gradient for the progress arc */}
+                        <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor={colorStart} />
+                            <stop offset="100%" stopColor={colorEnd} />
+                        </linearGradient>
+                        {/* Glow filter */}
+                        <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+                            <feFlood floodColor={glowColor} floodOpacity="0.6" result="color" />
+                            <feComposite in="color" in2="blur" operator="in" result="glow" />
+                            <feMerge>
+                                <feMergeNode in="glow" />
+                                <feMergeNode in="SourceGraphic" />
+                            </feMerge>
+                        </filter>
+                    </defs>
+
+                    {/* Background track */}
+                    <circle
+                        cx={size / 2}
+                        cy={size / 2}
+                        r={radius}
+                        fill="none"
+                        stroke="rgba(255, 255, 255, 0.06)"
+                        strokeWidth={strokeWidth}
+                    />
+
+                    {/* Inner subtle ring for depth */}
+                    <circle
+                        cx={size / 2}
+                        cy={size / 2}
+                        r={radius - strokeWidth * 0.8}
+                        fill="none"
+                        stroke="rgba(255, 255, 255, 0.02)"
+                        strokeWidth={1}
+                    />
+
+                    {/* Progress arc */}
+                    {animatedProgress > 0 && (
+                        <circle
+                            cx={size / 2}
+                            cy={size / 2}
+                            r={radius}
+                            fill="none"
+                            stroke={`url(#${gradientId})`}
+                            strokeWidth={strokeWidth}
+                            strokeLinecap="round"
+                            strokeDasharray={circumference}
+                            strokeDashoffset={strokeDashoffset}
+                            filter={`url(#${glowId})`}
+                            style={{
+                                transition: 'stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                            }}
+                        />
+                    )}
+                </svg>
+
+                {/* Center content */}
+                <Box sx={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                }}>
+                    <Typography sx={{
+                        color: '#fff',
+                        fontWeight: 800,
+                        fontSize: size > 160 ? '2.75rem' : size > 120 ? '2rem' : '1.5rem',
+                        lineHeight: 1,
+                        letterSpacing: '-0.02em',
                     }}>
                         {current}
                     </Typography>
-                    <Typography variant="caption" sx={{
-                        color: 'text.secondary',
-                        fontSize: size > 140 ? '0.875rem' : '0.75rem',
-                        mt: 0.5
+                    <Typography sx={{
+                        color: isComplete ? '#4caf50' : 'rgba(255, 255, 255, 0.4)',
+                        fontSize: size > 160 ? '0.85rem' : '0.7rem',
+                        fontWeight: 500,
+                        mt: 0.5,
                     }}>
-                        {isComplete ? 'Goal met!' : `${targetLeft} left`}
+                        {isComplete ? '✓ Complete' : `${targetLeft} left`}
                     </Typography>
                 </Box>
             </Box>
 
-            {/* Bottom Labels */}
-            <Typography variant="h6" sx={{ color: 'text.primary', fontWeight: 600, fontSize: '1rem', letterSpacing: '0.02em' }}>
+            {/* Labels */}
+            <Typography sx={{
+                color: '#fff',
+                fontWeight: 700,
+                fontSize: size > 160 ? '1.05rem' : '0.9rem',
+                letterSpacing: '0.02em',
+            }}>
                 {label}
             </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            <Typography sx={{
+                color: 'rgba(255, 255, 255, 0.35)',
+                fontSize: '0.75rem',
+                fontWeight: 500,
+                mt: 0.25,
+            }}>
                 {target} target
             </Typography>
         </Box>
@@ -90,7 +162,6 @@ const CircularTarget = ({
 };
 
 export default function WeeklyTargetsGrid({ weeklyStats }) {
-    // Default safe fallbacks if the component renders before data initializes
     const {
         targetedMuscles = { current: 0, target: 11 },
         weeklySets = { current: 0, target: 60 },
@@ -102,43 +173,60 @@ export default function WeeklyTargetsGrid({ weeklyStats }) {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            gap: { xs: 2, md: 8 },
-            flexDirection: { xs: 'column', md: 'row' },
-            py: 6,
-            px: 2,
-            bgcolor: 'background.paper',
-            borderRadius: 4,
-            border: '1px solid rgba(255,255,255,0.03)',
-            // Removing shadow to mimic the flat, dark-mode integration of the screenshot
+            gap: { xs: 1, sm: 3, md: 6 },
+            flexDirection: { xs: 'column', sm: 'row' },
+            py: { xs: 4, md: 5 },
+            px: { xs: 2, md: 4 },
+            background: 'linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.98) 100%)',
+            borderRadius: '20px',
+            border: '1px solid rgba(255, 255, 255, 0.06)',
+            position: 'relative',
+            overflow: 'hidden',
+            '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.03) 0%, transparent 60%)',
+                pointerEvents: 'none',
+            },
         }}>
-            {/* Left Ring: Muscles Trained */}
+            {/* Left: Muscles */}
             <CircularTarget
                 current={targetedMuscles.current}
                 target={targetedMuscles.target}
                 label="Muscles"
-                color="#5c9cf6" // Solid Blue matching screenshot
-                size={150}
-                thickness={3.5}
+                colorStart="#4a8af5"
+                colorEnd="#7bb8ff"
+                glowColor="#5c9cf6"
+                size={140}
+                strokeWidth={7}
             />
 
-            {/* Center Ring: Sets Completed (Largest) */}
+            {/* Center: Sets (largest) */}
             <CircularTarget
                 current={weeklySets.current}
                 target={weeklySets.target}
                 label="Sets"
-                color="#f67c5c" // Vibrant Orange/Salmon matching screenshot
-                size={220}
-                thickness={2.5}  // Slightly thinner stroke on the big one looks elegant
+                colorStart="#f5734a"
+                colorEnd="#ffab76"
+                glowColor="#f67c5c"
+                size={200}
+                strokeWidth={9}
             />
 
-            {/* Right Ring: Exercises Done */}
+            {/* Right: Exercises */}
             <CircularTarget
                 current={uniqueExercises.current}
                 target={uniqueExercises.target}
                 label="Exercises"
-                color="#78dce8" // Soft Cyan matching screenshot
-                size={150}
-                thickness={3.5}
+                colorStart="#5cd8e8"
+                colorEnd="#a0f0ff"
+                glowColor="#78dce8"
+                size={140}
+                strokeWidth={7}
             />
         </Box>
     );

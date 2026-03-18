@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
     Box,
     Typography,
@@ -79,10 +79,14 @@ const CategoryChip = styled(Chip)(({ active }) => ({
     },
 }));
 
+import ExerciseDetailDialog from './ExerciseDetailDialog';
+
 const ExerciseLibraryTab = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [exerciseData, setExerciseData] = useState(null);
+    const [selectedExercise, setSelectedExercise] = useState(null);
+    const [detailOpen, setDetailOpen] = useState(false);
 
     // Dynamically load exercise data on mount
     useEffect(() => {
@@ -90,6 +94,16 @@ const ExerciseLibraryTab = () => {
             setExerciseData(module.default);
         });
     }, []);
+
+    // Build a lookup from exercise id to raw exercise data (for the detail dialog)
+    // Must be before the early return to avoid React hooks violation
+    const rawExerciseLookup = useMemo(() => {
+        const lookup = {};
+        if (exerciseData?.products) {
+            exerciseData.products.forEach(ex => { lookup[ex.id] = ex; });
+        }
+        return lookup;
+    }, [exerciseData]);
 
     // Show nothing while data is loading
     if (!exerciseData) return null;
@@ -133,56 +147,29 @@ const ExerciseLibraryTab = () => {
         }
     };
 
+    // Map primary muscle to category
+    const getCategoryFromMuscle = (primaryMuscle) => {
+        if (!primaryMuscle || typeof primaryMuscle !== 'string') return 'Other';
+        const muscleToCategory = {
+            'Latissimus Dorsi': 'Back', 'Rhomboids': 'Back', 'Trapezius': 'Back', 'Erector Spinae': 'Back',
+            'Quadriceps': 'Legs', 'Hamstrings': 'Legs', 'Glutes': 'Legs', 'Calves': 'Legs', 'Gastrocnemius': 'Legs', 'Soleus': 'Legs',
+            'Pectorals': 'Chest',
+            'Anterior Deltoids': 'Shoulders', 'Posterior Deltoids': 'Shoulders', 'Lateral Deltoids': 'Shoulders', 'Deltoids': 'Shoulders',
+            'Biceps': 'Arms', 'Triceps': 'Arms', 'Forearms': 'Arms',
+            'Abdominals': 'Core', 'Obliques': 'Core', 'Hip Flexors': 'Core'
+        };
+        for (const [muscle, category] of Object.entries(muscleToCategory)) {
+            if (primaryMuscle.includes(muscle)) return category;
+        }
+        return 'Other';
+    };
+
+
+
     // Transform exercise data from JSON to match our component structure
     const exerciseStats = exerciseData.products.map((exercise) => {
-        // Map primary muscle to category
-        const getCategoryFromMuscle = (primaryMuscle) => {
-            // Handle null, undefined, or non-string values
-            if (!primaryMuscle || typeof primaryMuscle !== 'string') {
-                return 'Other';
-            }
-
-            const muscleToCategory = {
-                'Latissimus Dorsi': 'Back',
-                'Rhomboids': 'Back',
-                'Trapezius': 'Back',
-                'Erector Spinae': 'Back',
-                'Quadriceps': 'Legs',
-                'Hamstrings': 'Legs',
-                'Glutes': 'Legs',
-                'Calves': 'Legs',
-                'Gastrocnemius': 'Legs',
-                'Soleus': 'Legs',
-                'Pectorals': 'Chest',
-                'Anterior Deltoids': 'Shoulders',
-                'Posterior Deltoids': 'Shoulders',
-                'Lateral Deltoids': 'Shoulders',
-                'Deltoids': 'Shoulders',
-                'Biceps': 'Arms',
-                'Triceps': 'Arms',
-                'Forearms': 'Arms',
-                'Abdominals': 'Core',
-                'Obliques': 'Core',
-                'Hip Flexors': 'Core'
-            };
-
-            // Find matching category or default to 'Other'
-            for (const [muscle, category] of Object.entries(muscleToCategory)) {
-                if (primaryMuscle.includes(muscle)) {
-                    return category;
-                }
-            }
-            return 'Other';
-        };
-
-        // Get user's performance data for this exercise (if any)
         const userStats = userWorkoutHistory[exercise.id] || {
-            setsCompleted: 0,
-            totalReps: 0,
-            volume: null,
-            lastPerformed: null,
-            isNew: true,
-            hasData: false
+            setsCompleted: 0, totalReps: 0, volume: null, lastPerformed: null, isNew: true, hasData: false
         };
 
         return {
@@ -198,6 +185,14 @@ const ExerciseLibraryTab = () => {
             ...userStats
         };
     });
+
+    const handleExerciseClick = (exerciseId) => {
+        const rawExercise = rawExerciseLookup[exerciseId];
+        if (rawExercise) {
+            setSelectedExercise(rawExercise);
+            setDetailOpen(true);
+        }
+    };
 
     // Get unique categories from the actual data
     const uniqueCategories = [...new Set(exerciseStats.map(ex => ex.category))].sort();
@@ -476,7 +471,7 @@ const ExerciseLibraryTab = () => {
             {/* Exercise List */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 {filteredExercises.map((exercise, index) => (
-                    <ExerciseCard key={index}>
+                    <ExerciseCard key={index} onClick={() => handleExerciseClick(exercise.id)}>
                         <CardContent sx={{ py: 2, px: 3 }}>
                             {/* Top Row: Exercise Name and Category */}
                             <Box sx={{
@@ -688,6 +683,13 @@ const ExerciseLibraryTab = () => {
                     Load More Exercises
                 </Button>
             </Box>
+
+            {/* Exercise Detail Dialog */}
+            <ExerciseDetailDialog
+                open={detailOpen}
+                onClose={() => { setDetailOpen(false); setSelectedExercise(null); }}
+                exercise={selectedExercise}
+            />
         </Box>
     );
 };
