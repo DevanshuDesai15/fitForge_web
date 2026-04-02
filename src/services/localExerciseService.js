@@ -338,6 +338,35 @@ export const fetchExerciseImages = async (exerciseId) => {
   }
 };
 
+/**
+ * Fetch succinct exercise metadata tailored for LLM RAG prompts
+ * Keeps output small to save tokens while providing exact mechanics.
+ */
+export const fetchExerciseForRAG = async (exerciseId) => {
+  try {
+    const exercises = await initializeData();
+    const exercise = exercises.find((ex) => ex.id === exerciseId);
+    
+    if (!exercise) return null;
+
+    // Filter out bulky arrays or urls to save tokens
+    const ragData = {
+      name: exercise.name,
+      description: exercise.description,
+      difficulty: exercise.difficulty,
+      target: exercise.target,
+      equipment: exercise.equipment,
+      steps: exercise.steps || [],
+      muscle_groups: exercise.muscle_groups || []
+    };
+
+    return JSON.stringify(ragData);
+  } catch (error) {
+    console.error(`Error fetching RAG data for exercise ${exerciseId}:`, error);
+    return null;
+  }
+};
+
 // Test function to verify the service works
 export const testLocalService = async () => {
   try {
@@ -355,6 +384,9 @@ export const testLocalService = async () => {
     const categories = await fetchCategoryList();
     console.log(`✅ Categories: ${categories.length}`);
     
+    const ragData = await fetchExerciseForRAG(allExercises[0]?.id);
+    console.log(`✅ RAG Data sample size: ${ragData?.length || 0} chars`);
+
     console.log('🎉 Local exercise service test completed!');
     return true;
   } catch (error) {

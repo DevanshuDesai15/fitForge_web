@@ -1,13 +1,5 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import {
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    signOut,
-    onAuthStateChanged,
-    signInWithPopup,
-    GoogleAuthProvider
-} from 'firebase/auth';
-import { auth } from '../firebase/config';
+import { createContext, useContext, useMemo } from 'react';
+import { useUser, useAuth as useClerkAuth, useClerk } from '@clerk/clerk-react';
 
 const AuthContext = createContext();
 
@@ -16,51 +8,33 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }) {
-    const [currentUser, setCurrentUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const { user, isLoaded: isUserLoaded } = useUser();
+    const { isLoaded: isAuthLoaded } = useClerkAuth();
+    const { signOut, openSignIn, openSignUp } = useClerk();
 
-    function signup(email, password) {
-        return createUserWithEmailAndPassword(auth, email, password);
-    }
+    const loading = !isUserLoaded || !isAuthLoaded;
 
-    function login(email, password) {
-        return signInWithEmailAndPassword(auth, email, password);
-    }
-
-    function loginWithGoogle() {
-        const provider = new GoogleAuthProvider();
-        // Optional: Add additional scopes
-        provider.addScope('profile');
-        provider.addScope('email');
-
-        // Optional: Set custom parameters
-        provider.setCustomParameters({
-            prompt: 'select_account'
-        });
-
-        return signInWithPopup(auth, provider);
-    }
-
-    function logout() {
-        return signOut(auth);
-    }
-
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            setCurrentUser(user);
-            setLoading(false);
-        });
-
-        return unsubscribe;
-    }, []);
+    // Map Clerk's user object to a format similar to what Firebase provided
+    // so downstream components do not crash.
+    const currentUser = useMemo(() => {
+        if (!user) return null;
+        return {
+            uid: user.id,
+            email: user.primaryEmailAddress?.emailAddress,
+            displayName: user.fullName || user.firstName,
+            photoURL: user.imageUrl,
+            ...user
+        };
+    }, [user]);
 
     const value = {
         currentUser,
         loading,
-        signup,
-        login,
-        loginWithGoogle,
-        logout
+        // Methods that replace Firebase's raw signIn/signUp with Clerk's highly secure managed modals
+        signup: () => openSignUp(),
+        login: () => openSignIn(),
+        loginWithGoogle: () => openSignIn(),
+        logout: () => signOut()
     };
 
     return (
@@ -68,4 +42,4 @@ export function AuthProvider({ children }) {
             {!loading && children}
         </AuthContext.Provider>
     );
-} 
+}

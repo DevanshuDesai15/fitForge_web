@@ -19,7 +19,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase/config";
 import aiFirestoreService from "./aiFirestoreService";
-import geminiAIService from "./geminiAIService";
+import huggingFaceService from "./huggingFaceService";
 
 /**
  * @typedef {Object} ProgressionAnalysis
@@ -314,7 +314,7 @@ class ProgressiveOverloadAIService {
         try {
           const workoutHistory = await this._getRecentWorkoutHistory(userId, 5);
           const geminiSuggestion =
-            await geminiAIService.generateProgressionSuggestions(
+            await huggingFaceService.generateProgressionSuggestions(
               analysis,
               userProfile,
               workoutHistory
@@ -697,7 +697,7 @@ class ProgressiveOverloadAIService {
         try {
           const workoutHistory = await this._getRecentWorkoutHistory(userId, 5);
           const batchGeminiSuggestion =
-            await geminiAIService.generateBatchProgressionSuggestions(
+            await huggingFaceService.generateBatchProgressionSuggestions(
               analyses,
               userProfile,
               workoutHistory
