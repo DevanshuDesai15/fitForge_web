@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import {
     Card,
-    CardContent,
     Typography,
     Box,
     Grid,
@@ -13,16 +12,15 @@ import {
     Skeleton,
     Snackbar
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
-import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
-import { db } from '../../firebase/config';
 import { useAuth } from '../../contexts/AuthContext';
+import { useSupabase } from '../../hooks/useSupabase';
+import { useProfile } from '../../hooks/useProfile';
+import { useDashboardStats } from '../../hooks/useDashboardStats';
 import { useNavigate } from 'react-router-dom';
 import {
     Brain,
     TrendingUp,
-    Clock,
-    Target
+    Clock
 } from "lucide-react";
 import progressiveOverloadAI from '../../services/progressiveOverloadAI';
 import { logGeminiStats } from '../../utils/geminiMonitor';
@@ -120,313 +118,59 @@ const getDynamicGreeting = () => {
     }
 };
 
+const DEFAULT_WEEKLY_STATS = {
+    totalVolume: 0,
+    volumeUnit: 'kg',
+    goalProgress: 0,
+    goalText: '0/4',
+    streakDays: 0,
+    workoutsDone: 0,
+    activeMinutes: 0,
+    targetedMuscles: { current: 0, target: 11 },
+    weeklySets: { current: 0, target: 60 },
+    uniqueExercises: { current: 0, target: 20 }
+};
+
 export default function Home() {
-    const [error, setError] = useState('');
-    const [userData, setUserData] = useState({ username: '', fullName: '', gender: 'male' });
-    const [greeting, setGreeting] = useState(getDynamicGreeting());
-    const [weeklyStats, setWeeklyStats] = useState({
-        totalVolume: 0,
-        volumeUnit: 'kg', // Default; will update based on data or context
-        goalProgress: 0,
-        goalText: '0/4',
-        streakDays: 0,
-        workoutsDone: 0,
-        activeMinutes: 0,
-        // New targets
-        targetedMuscles: { current: 0, target: 11 },
-        weeklySets: { current: 0, target: 60 },
-        uniqueExercises: { current: 0, target: 20 }
-    });
-    const [recentAchievements, setRecentAchievements] = useState([]);
+    const [successMessage, setSuccessMessage] = useState('');
     const [aiRecommendations, setAiRecommendations] = useState([]);
-    const [nextWorkout, setNextWorkout] = useState(null);
-    const [isTomorrowFocus, setIsTomorrowFocus] = useState(false);
     const [aiLoading, setAiLoading] = useState(false);
     const [aiError, setAiError] = useState('');
     const [quickAddModalOpen, setQuickAddModalOpen] = useState(false);
-    const [successMessage, setSuccessMessage] = useState('');
 
     const { currentUser } = useAuth();
+    const supabase = useSupabase();
     const navigate = useNavigate();
     const theme = useTheme();
     const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
+    const userId = currentUser?.uid;
 
-    const loadUserData = useCallback(async () => {
-        if (!currentUser?.uid) return;
+    // React Query Hooks (Supabase)
+    const { profile, isLoading: profileLoading } = useProfile();
+    const { 
+        stats: weeklyStats, 
+        recentAchievements, 
+        nextWorkout, 
+        isTomorrowFocus, 
+        isLoading: statsLoading,
+        error: statsError,
+        refetch: refetchStats
+    } = useDashboardStats();
+    const safeWeeklyStats = weeklyStats ?? DEFAULT_WEEKLY_STATS;
 
-        try {
-            const userDoc = await getDocs(query(
-                collection(db, 'users'),
-                where('__name__', '==', currentUser.uid)
-            ));
+    // Set greeting state
+    const [greeting, setGreeting] = useState(getDynamicGreeting());
 
-            if (!userDoc.empty) {
-                const data = userDoc.docs[0].data();
-                setUserData({
-                    username: data.username || 'Fitness Enthusiast',
-                    fullName: data.fullName || currentUser.email?.split('@')[0] || 'User',
-                    gender: data.gender || 'male'
-                });
-            }
-        } catch (error) {
-            console.error('Error loading user data:', error);
-        }
-    }, [currentUser?.uid, currentUser?.email]);
 
-    const loadDashboardData = useCallback(async () => {
-        if (!currentUser?.uid) return;
-
-        try {
-            // Load dashboard data (currently using mock data for weekly stats)
-            // Future: Load actual weekly stats from Firebase
-            console.log('Dashboard loaded for user:', currentUser.uid);
-
-            // Fetch user's active programs (using same logic as useWorkoutPrograms)
-            const programsQuery = query(
-                collection(db, "workoutPrograms"),
-                where("userId", "==", currentUser.uid)
-            );
-            const programsSnapshot = await getDocs(programsQuery);
-            const userPrograms = programsSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-
-            // Fetch user's recently completed workouts to determine progress
-            const workoutsQuery = query(
-                collection(db, 'workouts'),
-                where('userId', '==', currentUser.uid),
-                where('completed', '==', true),
-                orderBy('timestamp', 'desc'),
-                limit(50)
-            );
-            const workoutsSnapshot = await getDocs(workoutsQuery);
-            const completedWorkouts = workoutsSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-
-            console.log(`Fetched ${completedWorkouts.length} completed workouts for user ${currentUser.uid}`);
-
-            // Check if a workout was completed today
-            let completedWorkoutToday = false;
-            if (completedWorkouts.length > 0) {
-                const lastWorkout = completedWorkouts[0]; // Already ordered descending by timestamp
-                let workoutDate = null;
-                if (lastWorkout.timestamp?.toDate) {
-                    workoutDate = lastWorkout.timestamp.toDate();
-                } else if (lastWorkout.timestamp) {
-                    workoutDate = new Date(lastWorkout.timestamp);
-                }
-
-                if (workoutDate) {
-                    const today = new Date();
-                    if (
-                        workoutDate.getDate() === today.getDate() &&
-                        workoutDate.getMonth() === today.getMonth() &&
-                        workoutDate.getFullYear() === today.getFullYear()
-                    ) {
-                        completedWorkoutToday = true;
-                    }
-                }
-            }
-            setIsTomorrowFocus(completedWorkoutToday);
-
-            // Find the next day in the first active multi-day program
-            let foundNextWorkout = null;
-            for (const program of userPrograms) {
-                if (program.days && program.days.length > 1) {
-                    const programWorkouts = completedWorkouts.filter(w => w.templateId === program.id);
-
-                    if (programWorkouts.length === 0) {
-                        foundNextWorkout = { ...program.days[0], programName: program.name, programId: program.id };
-                        break;
-                    }
-
-                    const completedDayNames = programWorkouts.map(w => w.dayName);
-                    const sortedDays = [...program.days].sort((a, b) => a.id - b.id);
-
-                    for (let i = 0; i < sortedDays.length; i++) {
-                        const day = sortedDays[i];
-                        if (!completedDayNames.includes(day.name)) {
-                            foundNextWorkout = { ...day, programName: program.name, programId: program.id };
-                            break;
-                        }
-                    }
-
-                    if (foundNextWorkout) break;
-
-                    // If all days completed in this program, suggest starting over
-                    foundNextWorkout = { ...sortedDays[0], programName: program.name, programId: program.id };
-                    break;
-                }
-            }
-
-            setNextWorkout(foundNextWorkout);
-
-            // Calculate "This Week" Stats from the fetched workouts (trailing 7 days)
-            const todayForStats = new Date();
-            const sevenDaysAgo = new Date(todayForStats);
-            sevenDaysAgo.setDate(todayForStats.getDate() - 7);
-
-            let recentWorkouts = 0;
-            let recentMinutes = 0;
-            let recentVolume = 0;
-            let streakCount = 0; // Simplified streak check based on completedWorkouts
-
-            let totalSets = 0;
-            const uniqueExercisesSet = new Set();
-            const targetedMusclesSet = new Set();
-
-            const preferredUnit = 'lbs'; // Default to lbs; can extract from user data later if available
-
-            // Filter workouts completed within the last 7 days
-            const weekWorkouts = completedWorkouts.filter(workout => {
-                let wDate = null;
-                if (workout.timestamp?.toDate) {
-                    wDate = workout.timestamp.toDate();
-                } else if (workout.timestamp) {
-                    wDate = new Date(workout.timestamp);
-                }
-                return wDate && wDate >= sevenDaysAgo;
-            });
-
-            weekWorkouts.forEach(workout => {
-                recentWorkouts += 1;
-                recentMinutes += (workout.duration || 0);
-
-                // Calculate volume: sum of (weight * reps) for all sets across all exercises
-                if (workout.exercises && Array.isArray(workout.exercises)) {
-                    workout.exercises.forEach(exercise => {
-                        let exerciseHasSets = false;
-                        if (exercise.name) uniqueExercisesSet.add(exercise.name.toLowerCase());
-
-                        // Extract target muscles (either from 'target', 'bodyPart', or 'muscles')
-                        if (exercise.target) targetedMusclesSet.add(exercise.target.toLowerCase());
-                        else if (exercise.bodyPart) targetedMusclesSet.add(exercise.bodyPart.toLowerCase());
-                        else if (exercise.muscles && Array.isArray(exercise.muscles)) {
-                            exercise.muscles.forEach(m => targetedMusclesSet.add(m.toLowerCase()));
-                        }
-
-                        if (exercise.sets && Array.isArray(exercise.sets)) {
-                            exercise.sets.forEach(set => {
-                                if (set.completed && set.weight && set.reps) {
-                                    totalSets += 1;
-                                    // Optionally handle kg vs lbs conversion here if needed. 
-                                    const weight = parseFloat(set.weight) || 0;
-                                    const reps = parseInt(set.reps) || 0;
-                                    recentVolume += (weight * reps);
-                                }
-                            });
-                        }
-                    });
-                }
-            });
-
-            // Calculate a simplified streak (days in a row with at least 1 workout, working backwards)
-            const uniqueDates = new Set(completedWorkouts.map(w => {
-                const d = w.timestamp?.toDate ? w.timestamp.toDate() : new Date(w.timestamp);
-                return d ? d.toDateString() : null;
-            }).filter(Boolean));
-
-            let tempDate = new Date();
-            let checkStreak = true;
-            // Check today first
-            if (!uniqueDates.has(tempDate.toDateString())) {
-                // if no workout today, check yesterday to keep streak alive
-                tempDate.setDate(tempDate.getDate() - 1);
-                if (!uniqueDates.has(tempDate.toDateString())) {
-                    checkStreak = false;
-                }
-            }
-            while (checkStreak) {
-                streakCount++;
-                tempDate.setDate(tempDate.getDate() - 1);
-                if (!uniqueDates.has(tempDate.toDateString())) {
-                    checkStreak = false;
-                }
-            }
-
-            // Goal metrics
-            const targetGoal = 4;
-            let progressPercentage = (recentWorkouts / targetGoal) * 100;
-            if (progressPercentage > 100) progressPercentage = 100;
-
-            setWeeklyStats({
-                totalVolume: Math.round(recentVolume),
-                volumeUnit: preferredUnit,
-                goalProgress: progressPercentage,
-                goalText: `${recentWorkouts}/${targetGoal}`,
-                streakDays: streakCount,
-                workoutsDone: recentWorkouts,
-                activeMinutes: Math.round(recentMinutes / 60), // convert seconds to minutes if duration is in seconds
-                targetedMuscles: { current: targetedMusclesSet.size, target: 11 },
-                weeklySets: { current: totalSets, target: 60 },
-                uniqueExercises: { current: uniqueExercisesSet.size, target: 20 }
-            });
-
-            // Calculate Dynamic Achievements
-            const newAchievements = [];
-            const totalWorkoutsCount = completedWorkouts.length;
-
-            // 1. Weekly Goal Smashed
-            if (recentWorkouts >= targetGoal) {
-                newAchievements.push({
-                    id: 'weekly-goal',
-                    title: 'Weekly Goal Smashed! 🎯',
-                    description: `Completed ${recentWorkouts} workouts this week`,
-                    timeAgo: 'Recently',
-                    variant: 'primary',
-                    icon: 'target'
-                });
-            }
-
-            // 2. Streak Master
-            if (streakCount >= 3) {
-                newAchievements.push({
-                    id: 'streak-master',
-                    title: 'Streak Master! ⚡️',
-                    description: `${streakCount} day active workout streak`,
-                    timeAgo: 'Ongoing',
-                    variant: 'warning', // Uses default dark grey card
-                    icon: 'zap'
-                });
-            }
-
-            // 3. Consistency Key
-            if (totalWorkoutsCount >= 50) {
-                newAchievements.push({ id: 'milestone-50', title: 'Consistency Key! 🗝️', description: 'Completed 50 total workouts', timeAgo: 'Milestone', variant: 'success', icon: 'trending-up' });
-            } else if (totalWorkoutsCount >= 25) {
-                newAchievements.push({ id: 'milestone-25', title: 'Consistency Key! 🗝️', description: 'Completed 25 total workouts', timeAgo: 'Milestone', variant: 'success', icon: 'trending-up' });
-            } else if (totalWorkoutsCount >= 10) {
-                newAchievements.push({ id: 'milestone-10', title: 'Consistency Key! 🗝️', description: 'Completed 10 total workouts', timeAgo: 'Milestone', variant: 'success', icon: 'trending-up' });
-            }
-
-            // 4. First Step
-            if (totalWorkoutsCount === 1) {
-                newAchievements.push({
-                    id: 'first-step',
-                    title: 'First Step! 🚀',
-                    description: 'Completed your very first workout',
-                    timeAgo: 'Just now',
-                    variant: 'primary',
-                    icon: 'activity'
-                });
-            }
-
-            setRecentAchievements(newAchievements);
-
-        } catch (error) {
-            console.error('Error loading dashboard data:', error);
-            setError('Failed to load dashboard data');
-        }
-    }, [currentUser?.uid]);
 
     const loadAIRecommendations = useCallback(async () => {
-        if (!currentUser?.uid) return;
+        if (!userId || !supabase) return;
 
         try {
             setAiLoading(true);
+
+            // Initialize AI Service with Supabase client
+            progressiveOverloadAI.setSupabase(supabase);
 
             // Monitor API usage in development
             if (import.meta.env?.MODE === 'development') {
@@ -442,14 +186,14 @@ export default function Home() {
 
             const loadPromise = (async () => {
                 // Get workout history analysis
-                const analyses = await progressiveOverloadAI.analyzeWorkoutHistory(currentUser.uid);
+                const analyses = await progressiveOverloadAI.analyzeWorkoutHistory(userId);
 
                 if (analyses && analyses.length > 0) {
                     const topAnalyses = analyses.slice(0, 3);
                     const exerciseIds = topAnalyses.map(analysis => analysis.exerciseId);
 
                     const batchProgressions = await progressiveOverloadAI.calculateBatchProgressions(
-                        currentUser.uid,
+                        userId,
                         exerciseIds
                     );
 
@@ -490,15 +234,13 @@ export default function Home() {
         } finally {
             setAiLoading(false);
         }
-    }, [currentUser?.uid]);
+    }, [supabase, userId]);
 
     useEffect(() => {
-        if (currentUser) {
-            loadDashboardData();
-            loadUserData();
+        if (userId && supabase && !statsLoading && !profileLoading) {
             loadAIRecommendations();
         }
-    }, [currentUser?.uid, loadDashboardData, loadUserData, loadAIRecommendations]);
+    }, [userId, supabase, statsLoading, profileLoading, loadAIRecommendations]);
 
     // Update greeting every minute to keep it current
     useEffect(() => {
@@ -515,7 +257,9 @@ export default function Home() {
         return () => clearInterval(interval);
     }, []);
 
-    const displayName = userData.username || userData.fullName || currentUser?.email?.split('@')[0] || 'John';
+    const displayName = profile?.username || profile?.full_name || currentUser?.email?.split('@')[0] || 'Member';
+
+    const isLoading = statsLoading || profileLoading;
 
     return (
         <Box sx={{
@@ -526,7 +270,7 @@ export default function Home() {
             <WelcomeHeader
                 greeting={greeting}
                 displayName={displayName}
-                streakDays={weeklyStats.streakDays}
+                streakDays={safeWeeklyStats.streakDays}
                 onLogWorkout={() => setQuickAddModalOpen(true)}
                 onStartTraining={() => navigate('/workout')}
             />
@@ -536,9 +280,9 @@ export default function Home() {
                 margin: '0 auto',
                 padding: isDesktop ? '0 3rem 2rem 3rem' : '0 1rem 1rem 1rem',
             }}>
-                {error && (
+                {statsError && (
                     <Alert severity="error" sx={{ mb: 3, backgroundColor: 'rgba(211, 47, 47, 0.1)', color: (theme) => theme.palette.status.error }}>
-                        {error}
+                        {statsError}
                     </Alert>
                 )}
 
@@ -547,14 +291,28 @@ export default function Home() {
                     <Typography variant="h5" sx={{ color: 'text.primary', fontWeight: 'bold', mb: 2 }}>
                         Weekly Targets
                     </Typography>
-                    <WeeklyTargetsGrid weeklyStats={weeklyStats} />
+                    {isLoading ? (
+                        <Grid container spacing={2}>
+                            {[1, 2, 3].map(i => (
+                                <Grid item xs={12} md={4} key={i}>
+                                    <Skeleton variant="rectangular" height={100} sx={{ borderRadius: '16px' }} />
+                                </Grid>
+                            ))}
+                        </Grid>
+                    ) : (
+                        <WeeklyTargetsGrid weeklyStats={safeWeeklyStats} />
+                    )}
                 </Box>
 
                 {/* Today's / Tomorrow's Focus */}
-                <TodaysFocusCard
-                    nextWorkout={nextWorkout}
-                    isTomorrowFocus={isTomorrowFocus}
-                />
+                {isLoading ? (
+                    <Skeleton variant="rectangular" height={200} sx={{ borderRadius: '24px', mb: 4 }} />
+                ) : (
+                    <TodaysFocusCard
+                        nextWorkout={nextWorkout}
+                        isTomorrowFocus={isTomorrowFocus}
+                    />
+                )}
 
                 {/* This Week Stats */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 2, mt: 4 }}>
@@ -562,13 +320,27 @@ export default function Home() {
                         This Week
                     </Typography>
                 </Box>
-                <WeeklyStatsGrid weeklyStats={weeklyStats} />
+                {isLoading ? (
+                    <Grid container spacing={2}>
+                        {[1, 2, 3, 4].map(i => (
+                            <Grid item xs={12} sm={6} md={3} key={i}>
+                                <Skeleton variant="rectangular" height={120} sx={{ borderRadius: '16px' }} />
+                            </Grid>
+                        ))}
+                    </Grid>
+                ) : (
+                    <WeeklyStatsGrid weeklyStats={safeWeeklyStats} />
+                )}
 
                 {/* Main Content Grid - Achievements and AI Recommendations */}
                 <Grid container spacing={4} sx={{ mt: 1 }}>
                     {/* Left Column - Recent Achievements */}
                     <Grid item xs={12} lg={8}>
-                        <RecentAchievementsList achievements={recentAchievements} />
+                        {isLoading ? (
+                            <Skeleton variant="rectangular" height={400} sx={{ borderRadius: '16px', mb: 4 }} />
+                        ) : (
+                            <RecentAchievementsList achievements={recentAchievements} />
+                        )}
                         <QuickActionsGrid onLogActivity={() => setQuickAddModalOpen(true)} />
                     </Grid>
 
@@ -748,7 +520,7 @@ export default function Home() {
                 onClose={() => setQuickAddModalOpen(false)}
                 onSuccess={() => {
                     setSuccessMessage('Exercise logged successfully!');
-                    // Optionally reload AI recommendations after adding exercise
+                    refetchStats();
                     loadAIRecommendations();
                 }}
             />

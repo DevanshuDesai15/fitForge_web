@@ -1,114 +1,95 @@
-import { useState, useEffect } from "react";
-import { db } from "../../../firebase/config";
-import {
-  collection,
-  query,
-  where,
-  onSnapshot,
-  orderBy,
-  addDoc,
-  serverTimestamp,
-  getDocs,
-} from "firebase/firestore";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../../contexts/AuthContext";
-import { programTemplates } from "../components/programTemplates";
+import { useSupabase } from "../../../hooks/useSupabase";
+import { programTemplates } from "../components/programTemplates"; 
 
 export const useWorkoutPrograms = () => {
   const { currentUser } = useAuth();
-  const [programs, setPrograms] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const supabase = useSupabase();
+  const queryClient = useQueryClient();
 
-  // Function to save template programs to user's account
-  const saveTemplatesToUser = async (userId) => {
-    try {
+  const { data: programs = [], isLoading: loading } = useQuery({
+    queryKey: ['workoutPrograms', currentUser?.uid],
+    queryFn: async () => {
+      if (!currentUser) {
+        return programTemplates.map((p) => ({
+          ...p,
+          isTemplate: true,
+        }));
+      }
+
       // Check if user already has any programs
-      const existingQuery = query(
-        collection(db, "workoutPrograms"),
-        where("userId", "==", userId)
-      );
-      const existingPrograms = await getDocs(existingQuery);
+      const { data: existingPrograms, error: checkErr } = await supabase
+        .from("workout_programs")
+        .select("id")
+        .eq("user_id", currentUser.uid)
+        .limit(1);
+
+      if (checkErr) throw checkErr;
 
       // Only save templates if user has no programs yet (new user)
-      if (existingPrograms.empty) {
+      if (existingPrograms && existingPrograms.length === 0) {
         console.log("New user detected, saving template programs...");
+        
+        const programsToInsert = programTemplates.map(template => ({
+            user_id: currentUser.uid,
+            name: template.name,
+            description: template.description || "",
+            schedule: template.schedule || [],
+        }));
 
-        for (const template of programTemplates) {
-          const userProgram = {
-            ...template,
-            userId: userId,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-            isTemplate: false, // Convert to user program
-            isFromTemplate: true, // Mark as originally from template
-            templateId: template.id, // Keep reference to original template
-          };
+        const { error: insertErr } = await supabase
+          .from("workout_programs")
+          .insert(programsToInsert);
 
-          // Remove the template id to create a new document
-          delete userProgram.id;
-
-          await addDoc(collection(db, "workoutPrograms"), userProgram);
-        }
-
-        console.log("Template programs saved successfully for new user");
+        if (insertErr) throw insertErr;
       }
-    } catch (error) {
-      console.error("Error saving template programs:", error);
-    }
-  };
+
+      // Fetch
+      const { data, error } = await supabase
+        .from("workout_programs")
+        .select("*")
+        .eq("user_id", currentUser.uid)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      return data.map(doc => ({
+        id: doc.id,
+        name: doc.name,
+        description: doc.description,
+        schedule: doc.schedule,
+        userId: doc.user_id,
+        createdAt: doc.created_at,
+      }));
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
   useEffect(() => {
-    if (!currentUser) {
-      // Show default templates for non-authenticated users
-      const defaultPrograms = programTemplates.map((p) => ({
-        ...p,
-        isTemplate: true,
-      }));
-      setPrograms(defaultPrograms);
-      setLoading(false);
-      return;
-    }
+    if (!currentUser) return;
 
-    // Save templates to new user's account
-    saveTemplatesToUser(currentUser.uid);
+    const subscription = supabase
+      .channel('workout_programs_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'workout_programs',
+          filter: `user_id=eq.${currentUser.uid}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['workoutPrograms', currentUser.uid] });
+        }
+      )
+      .subscribe();
 
-    const q = query(
-      collection(db, "workoutPrograms"),
-      where("userId", "==", currentUser.uid)
-    );
-
-    const unsubscribe = onSnapshot(
-      q,
-      (querySnapshot) => {
-        const userPrograms = [];
-        querySnapshot.forEach((doc) => {
-          userPrograms.push({ id: doc.id, ...doc.data() });
-        });
-
-        // Sort user programs by createdAt (newest first), but prioritize templates
-        userPrograms.sort((a, b) => {
-          // Put template-originated programs first
-          if (a.isFromTemplate && !b.isFromTemplate) return -1;
-          if (!a.isFromTemplate && b.isFromTemplate) return 1;
-
-          // Then sort by creation date
-          if (a.createdAt && b.createdAt) {
-            return b.createdAt.toMillis() - a.createdAt.toMillis();
-          }
-          return 0;
-        });
-
-        setPrograms(userPrograms); // Only show user programs (including converted templates)
-        setLoading(false);
-      },
-      (error) => {
-        console.error("Error fetching workout programs: ", error);
-        setPrograms([]);
-        setLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [currentUser]);
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, [currentUser, supabase, queryClient]);
 
   return { programs, loading };
 };

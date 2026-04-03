@@ -1,49 +1,47 @@
-import { useState, useEffect, useCallback } from "react";
-import { collection, getDocs, query, where } from "firebase/firestore";
-import { db } from "../../../firebase/config";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useSupabase } from "../../../hooks/useSupabase";
 
 export const useWorkoutTemplates = () => {
-  const [templates, setTemplates] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
   const { currentUser } = useAuth();
+  const supabase = useSupabase();
+  const queryClient = useQueryClient();
 
-  const loadTemplates = useCallback(async () => {
-    if (!currentUser) return;
+  const {
+    data: templates = [],
+    isLoading: loading,
+    error,
+    refetch: loadTemplates
+  } = useQuery({
+    queryKey: ['workoutTemplates', currentUser?.uid],
+    queryFn: async () => {
+      if (!currentUser) return [];
+      
+      const { data, error: err } = await supabase
+        .from("workout_templates")
+        .select("*")
+        .eq("user_id", currentUser.uid)
+        .order("created_at", { ascending: false });
 
-    setLoading(true);
-    setError("");
+      if (err) throw err;
 
-    try {
-      const templatesQuery = query(
-        collection(db, "workoutTemplates"),
-        where("userId", "==", currentUser.uid)
-      );
-      const templateDocs = await getDocs(templatesQuery);
-      const templateData = templateDocs.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
+      // Map back to camelCase for backwards-compatible frontend components
+      return (data || []).map(tmpl => ({
+        ...tmpl,
+        userId: tmpl.user_id,
+        estimatedDurationMinutes: tmpl.estimated_duration_minutes,
+        isCustom: tmpl.is_custom,
+        createdAt: tmpl.created_at,
       }));
-
-      setTemplates(templateData);
-    } catch (err) {
-      console.error("Error loading templates:", err);
-      setError("Failed to load workout templates");
-    } finally {
-      setLoading(false);
-    }
-  }, [currentUser]);
-
-  useEffect(() => {
-    loadTemplates();
-  }, [loadTemplates]);
+    },
+    enabled: !!currentUser,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
   return {
     templates,
     loading,
-    error,
+    error: error ? error.message : "",
     loadTemplates,
   };
 };

@@ -4,21 +4,7 @@
  * and adaptive training suggestions based on user workout history and performance patterns.
  */
 
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  setDoc,
-  updateDoc,
-  query,
-  where,
-  orderBy,
-  limit,
-  serverTimestamp,
-} from "firebase/firestore";
-import { db } from "../firebase/config";
-import aiFirestoreService from "./aiFirestoreService";
+import aiDatabaseService from "./aiDatabaseService";
 import huggingFaceService from "./huggingFaceService";
 
 /**
@@ -145,6 +131,10 @@ import huggingFaceService from "./huggingFaceService";
  * Core service for intelligent workout progression and training optimization
  */
 class ProgressiveOverloadAIService {
+  setSupabase(supabaseClient) {
+    this.supabase = supabaseClient;
+  }
+
   /**
    * Initialize the AI service
    * @param {Object} config - Service configuration
@@ -208,19 +198,28 @@ class ProgressiveOverloadAIService {
         return await this._analyzeExerciseHistory(userId, exerciseId);
       }
 
-      // Load exercises from the exercises collection (your app's data structure)
-      const exercisesQuery = query(
-        collection(db, "exercises"),
-        where("userId", "==", userId),
-        orderBy("timestamp", "desc"),
-        limit(50) // Get more exercises to have enough data for analysis
-      );
+      // Fetch workouts to extract flattened exercises in Postgres
+      const { data: workouts, error } = await this.supabase
+        .from("workouts")
+        .select("id, timestamp, exercises")
+        .eq("user_id", userId)
+        .order("timestamp", { ascending: false })
+        .limit(20);
 
-      const exercisesSnapshot = await getDocs(exercisesQuery);
-      const exercises = exercisesSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      if (error) throw error;
+
+      const exercises = [];
+      workouts.forEach(workout => {
+        if (workout.exercises && Array.isArray(workout.exercises)) {
+          workout.exercises.forEach((ex, idx) => {
+             exercises.push({
+               ...ex,
+               id: `${workout.id}_${idx}`,
+               timestamp: workout.timestamp
+             });
+          });
+        }
+      });
 
       this._log("Exercises found for analysis", {
         userId,
@@ -747,7 +746,7 @@ class ProgressiveOverloadAIService {
    */
   async _getUserProgressionProfile(userId) {
     try {
-      let profile = await aiFirestoreService.getUserProgressionProfile(userId);
+      let profile = await aiDatabaseService.getUserProgressionProfile(this.supabase, userId);
 
       if (profile) {
         // Convert to expected format
@@ -776,7 +775,8 @@ class ProgressiveOverloadAIService {
         plateauTolerance: 3,
       };
 
-      await aiFirestoreService.saveUserProgressionProfile(
+      await aiDatabaseService.saveUserProgressionProfile(
+        this.supabase,
         userId,
         defaultProfileData
       );
@@ -800,20 +800,29 @@ class ProgressiveOverloadAIService {
    * @private
    */
   async _analyzeExerciseHistory(userId, exerciseId) {
-    // Get all recent exercises and filter client-side to avoid index requirements
-    const exercisesQuery = query(
-      collection(db, "exercises"),
-      where("userId", "==", userId),
-      orderBy("timestamp", "desc"),
-      limit(50) // Get more to ensure we have enough for the specific exercise
-    );
+    // Fetch recent workouts from Supabase to extract exercises
+    const { data: workouts, error } = await this.supabase
+        .from("workouts")
+        .select("id, timestamp, exercises")
+        .eq("user_id", userId)
+        .order("timestamp", { ascending: false })
+        .limit(20);
 
-    const exercisesSnapshot = await getDocs(exercisesQuery);
-    const allExercises = exercisesSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      date: doc.data().timestamp,
-      ...doc.data(),
-    }));
+    if (error) throw error;
+
+    const allExercises = [];
+    workouts.forEach(workout => {
+      if (workout.exercises && Array.isArray(workout.exercises)) {
+        workout.exercises.forEach((ex, idx) => {
+           allExercises.push({
+             ...ex,
+             id: `${workout.id}_${idx}`,
+             date: workout.timestamp,
+             timestamp: workout.timestamp
+           });
+        });
+      }
+    });
 
     // Filter for the specific exercise and limit to 10 most recent
     const exerciseSessions = allExercises
@@ -1825,19 +1834,15 @@ class ProgressiveOverloadAIService {
       this._log("Analyzing comprehensive workout history", { userId });
 
       // Get last 16 workouts as per requirements
-      const workoutsQuery = query(
-        collection(db, "workouts"),
-        where("userId", "==", userId),
-        where("completed", "==", true),
-        orderBy("timestamp", "desc"),
-        limit(16)
-      );
+      const { data: workoutsData, error } = await this.supabase
+        .from("workouts")
+        .select("*")
+        .eq("user_id", userId)
+        .order("timestamp", { ascending: false })
+        .limit(16);
 
-      const workoutsSnapshot = await getDocs(workoutsQuery);
-      const workouts = workoutsSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      if (error) throw error;
+      const workouts = workoutsData.map(w => ({ ...w, userId: w.user_id }));
 
       if (workouts.length === 0) {
         return this._getEmptyAnalysis();
@@ -2357,19 +2362,15 @@ class ProgressiveOverloadAIService {
       this._log("Running advanced plateau detection", { userId });
 
       // Get recent workout history for detailed analysis
-      const workoutsQuery = query(
-        collection(db, "workouts"),
-        where("userId", "==", userId),
-        where("completed", "==", true),
-        orderBy("timestamp", "desc"),
-        limit(20) // Analyze more sessions for accurate plateau detection
-      );
+      const { data: workoutsData, error } = await this.supabase
+        .from("workouts")
+        .select("*")
+        .eq("user_id", userId)
+        .order("timestamp", { ascending: false })
+        .limit(20);
 
-      const workoutsSnapshot = await getDocs(workoutsQuery);
-      const workouts = workoutsSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      if (error) throw error;
+      const workouts = workoutsData.map(w => ({ ...w, userId: w.user_id }));
 
       if (workouts.length < 3) {
         this._log("Insufficient workout data for plateau detection");
@@ -2988,7 +2989,8 @@ class ProgressiveOverloadAIService {
    */
   async _getNotificationSettings(userId) {
     try {
-      const profileData = await aiFirestoreService.getUserProgressionProfile(
+      const profileData = await aiDatabaseService.getUserProgressionProfile(
+        this.supabase,
         userId
       );
 
@@ -3235,7 +3237,8 @@ class ProgressiveOverloadAIService {
       };
 
       // Save to AI suggestions collection for tracking
-      await aiFirestoreService.trackSuggestionInteraction(
+      await aiDatabaseService.trackSuggestionInteraction(
+        this.supabase,
         userId,
         interactionData
       );
@@ -3307,7 +3310,7 @@ class ProgressiveOverloadAIService {
         suggestionStats,
       };
 
-      await aiFirestoreService.updatePerformanceMetrics(userId, updatedMetrics);
+      await aiDatabaseService.updatePerformanceMetrics(this.supabase, userId, updatedMetrics);
 
       this._log("Suggestion effectiveness updated", {
         userId,
@@ -3450,19 +3453,15 @@ class ProgressiveOverloadAIService {
         limitCount = 5;
       }
 
-      const workoutsQuery = query(
-        collection(db, "workouts"),
-        where("userId", "==", userId),
-        where("completed", "==", true),
-        orderBy("timestamp", "desc"),
-        limit(limitCount)
-      );
+      const { data: workoutsData, error } = await this.supabase
+        .from("workouts")
+        .select("*")
+        .eq("user_id", userId)
+        .order("timestamp", { ascending: false })
+        .limit(limitCount);
 
-      const workoutsSnapshot = await getDocs(workoutsQuery);
-      const workouts = workoutsSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      if (error) throw error;
+      const workouts = workoutsData.map(w => ({ ...w, userId: w.user_id }));
 
       this._log("Retrieved workout history", {
         userId,
@@ -3626,7 +3625,7 @@ class ProgressiveOverloadAIService {
    */
   async _getPastInterventions(userId, exerciseId) {
     try {
-      const suggestions = await aiFirestoreService.getAISuggestions(userId);
+      const suggestions = await aiDatabaseService.getAISuggestions(this.supabase, userId);
       if (!suggestions || !suggestions.interactions) {
         return [];
       }
