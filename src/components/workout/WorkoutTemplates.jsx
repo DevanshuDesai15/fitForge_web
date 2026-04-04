@@ -244,7 +244,11 @@ export default function WorkoutTemplates() {
             setDialogOpen(false);
         } catch (error) {
             if (syncResult && !programSaved) {
-                await syncResult.rollback();
+                try {
+                    await syncResult.rollback();
+                } catch (rollbackError) {
+                    console.error('Error rolling back template changes:', rollbackError);
+                }
             }
             console.error('Error saving template:', error);
             setError('Failed to save template');
@@ -364,8 +368,8 @@ export default function WorkoutTemplates() {
 
                                 navigate('/workout/start', {
                                     state: {
-                                        templateId: firstDay.templateId || firstDay.id || template.id,
-                                        dayId: firstDay.templateId || firstDay.id || template.id,
+                                        templateId: firstDay.templateId || firstDay.id || null,
+                                        dayId: firstDay.templateId || firstDay.id || null,
                                         workout: {
                                             name: `${template.name} - ${firstDay.name}`,
                                             programName: template.name,

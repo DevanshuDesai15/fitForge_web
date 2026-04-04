@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Card, CardContent } from '@mui/material';
 import { MdCheckCircle, MdTimer, MdArrowBack, MdLightbulb, MdSwapHoriz } from 'react-icons/md';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { collection, addDoc, doc, getDoc } from 'firebase/firestore';
-import { db } from '../../firebase/config';
 import { useAuth } from '../../contexts/AuthContext';
+import { useSupabase } from '../../hooks/useSupabase';
+import { useWorkoutMutations } from './hooks/useWorkoutMutations';
 import { useUnits } from '../../contexts/UnitsContext';
 
 // Components
@@ -41,6 +41,8 @@ const StartWorkout = () => {
     const location = useLocation();
     const [searchParams] = useSearchParams();
     const { currentUser } = useAuth();
+    const supabase = useSupabase();
+    const { createWorkout } = useWorkoutMutations();
     const { weightUnit } = useUnits();
 
     const {
@@ -162,85 +164,59 @@ const StartWorkout = () => {
                 } else if (templateId && currentUser) {
                     console.log('🚀 Auto-loading template from DB:', { templateId, dayId: stateDayId });
 
-                    // Load template from Firestore
-                    const templateRef = doc(db, 'workoutTemplates', templateId);
-                    const templateSnap = await getDoc(templateRef);
+                    const buildExercises = (exerciseList) =>
+                        (exerciseList || []).map(exercise => ({
+                            ...exercise,
+                            targetSets: exercise.sets?.length || 3,
+                            sets: Array.isArray(exercise.sets) && exercise.sets.length > 0
+                                ? exercise.sets
+                                : [
+                                    { weight: '', reps: '', completed: false },
+                                    { weight: '', reps: '', completed: false },
+                                    { weight: '', reps: '', completed: false }
+                                ]
+                        }));
 
-                    if (templateSnap.exists()) {
-                        const templateData = { id: templateSnap.id, ...templateSnap.data() };
+                    // Try workout_templates first
+                    const { data: templateData, error: templateError } = await supabase
+                        .from('workout_templates')
+                        .select('*')
+                        .eq('id', templateId)
+                        .eq('user_id', currentUser.uid)
+                        .single();
+
+                    if (!templateError && templateData) {
                         setCurrentTemplate(templateData);
-
-                        // Auto-select day
-                        let dayToSelect = null;
-
-                        if (stateDayId) {
-                            // Find specific day from navigation state
-                            dayToSelect = templateData.workoutDays?.find(d => d.id === stateDayId);
-                        } else if (templateData.workoutDays && templateData.workoutDays.length === 1) {
-                            // Auto-select if only one day
-                            dayToSelect = templateData.workoutDays[0];
-                        } else if (templateData.workoutDays && templateData.workoutDays.length > 0) {
-                            // Default to first day
-                            dayToSelect = templateData.workoutDays[0];
-                        }
-
-                        if (dayToSelect && dayToSelect.exercises) {
-                            console.log('✅ Auto-selected day:', dayToSelect.name);
-                            // Set exercises directly (inline handleSelectDay logic)
-                            setSelectedDay(dayToSelect);
-                            const workoutExercises = dayToSelect.exercises.map(exercise => ({
-                                ...exercise,
-                                targetSets: exercise.sets?.length || 3,
-                                sets: Array.isArray(exercise.sets) && exercise.sets.length > 0
-                                    ? exercise.sets
-                                    : [
-                                        { weight: '', reps: '', completed: false },
-                                        { weight: '', reps: '', completed: false },
-                                        { weight: '', reps: '', completed: false }
-                                    ]
-                            }));
-                            setExercises(workoutExercises);
-
-                            // Auto-start the workout after a brief moment
+                        const exercises = templateData.exercises || [];
+                        if (exercises.length > 0) {
+                            setSelectedDay({ name: templateData.name, exercises });
+                            setExercises(buildExercises(exercises));
                             setTimeout(() => {
                                 setWorkoutStartTime(new Date().toISOString());
                                 setWorkoutStarted(true);
                             }, 100);
                         } else {
-                            // No days available, show error
                             setError('This workout template has no exercises configured.');
                         }
                     } else {
-                        // Try falling back to workoutPrograms if not in templates
-                        const programRef = doc(db, 'workoutPrograms', templateId);
-                        const programSnap = await getDoc(programRef);
+                        // Fall back to workout_programs
+                        const { data: programData, error: programError } = await supabase
+                            .from('workout_programs')
+                            .select('*')
+                            .eq('id', templateId)
+                            .eq('user_id', currentUser.uid)
+                            .single();
 
-                        if (programSnap.exists()) {
-                            const programData = { id: programSnap.id, ...programSnap.data() };
+                        if (!programError && programData) {
                             setCurrentTemplate(programData);
-
-                            let dayToSelect = null;
-                            if (stateDayId) {
-                                dayToSelect = programData.days?.find(d => d.id === stateDayId);
-                            } else if (programData.days && programData.days.length > 0) {
-                                dayToSelect = programData.days[0];
-                            }
+                            const days = programData.days || [];
+                            const dayToSelect = stateDayId
+                                ? days.find(d => d.id === stateDayId)
+                                : days[0];
 
                             if (dayToSelect && dayToSelect.exercises) {
                                 setSelectedDay(dayToSelect);
-                                const workoutExercises = dayToSelect.exercises.map(exercise => ({
-                                    ...exercise,
-                                    targetSets: exercise.sets?.length || 3,
-                                    sets: Array.isArray(exercise.sets) && exercise.sets.length > 0
-                                        ? exercise.sets
-                                        : [
-                                            { weight: '', reps: '', completed: false },
-                                            { weight: '', reps: '', completed: false },
-                                            { weight: '', reps: '', completed: false }
-                                        ]
-                                }));
-                                setExercises(workoutExercises);
-
+                                setExercises(buildExercises(dayToSelect.exercises));
                                 setTimeout(() => {
                                     setWorkoutStartTime(new Date().toISOString());
                                     setWorkoutStarted(true);
@@ -459,57 +435,31 @@ const StartWorkout = () => {
             console.log('💪 Has completed sets:', hasCompletedSets);
 
             // Save workout to database
+            const completedAt = new Date().toISOString();
             const workoutData = {
-                userId: currentUser.uid,
                 templateId: currentTemplate?.id || null,
                 templateName: currentTemplate?.name || 'Custom Workout',
                 dayName: selectedDay?.name || 'Workout Session',
-                weightUnit: weightUnit, // Store the unit used during workout
+                weightUnit,
                 exercises: exercises.map(exercise => ({
                     name: exercise.name,
                     sets: (exercise.sets || []).filter(set => set.completed && set.reps).map(set => ({
                         weight: set.weight || '0',
-                        weightUnit: weightUnit, // Store unit for each set
+                        weightUnit,
                         reps: set.reps,
                         completed: true
                     })),
                     notes: exercise.notes || ''
-                })).filter(ex => ex.sets.length > 0), // Only include exercises with completed sets
+                })).filter(ex => ex.sets.length > 0),
                 duration: elapsedTime,
                 completed: true,
-                completedAt: new Date().toISOString(),
-                timestamp: Date.now()
+                completedAt,
+                timestamp: completedAt,
             };
 
             console.log('💾 Saving workout data:', workoutData);
-            const workoutDocRef = await addDoc(collection(db, 'workouts'), workoutData);
-            console.log('✅ Workout saved with ID:', workoutDocRef.id);
-
-            // Save individual exercise records
-            for (const exercise of exercises) {
-                const completedSets = (exercise.sets || []).filter(set => set.completed && set.reps);
-
-                if (completedSets.length > 0) {
-                    const exerciseRecord = {
-                        userId: currentUser.uid,
-                        exerciseName: exercise.name,
-                        weightUnit: weightUnit, // Store unit used
-                        sets: completedSets.map(set => ({
-                            weight: set.weight || '0',
-                            weightUnit: weightUnit, // Store unit for each set
-                            reps: set.reps,
-                            completed: true
-                        })),
-                        weight: Math.max(...completedSets.map(set => parseFloat(set.weight) || 0)),
-                        reps: Math.max(...completedSets.map(set => parseInt(set.reps) || 0)),
-                        timestamp: new Date().toISOString(),
-                        workoutId: workoutDocRef.id
-                    };
-
-                    await addDoc(collection(db, 'exercises'), exerciseRecord);
-                    console.log('✅ Saved exercise record:', exercise.name);
-                }
-            }
+            const savedWorkout = await createWorkout(workoutData);
+            console.log('✅ Workout saved with ID:', savedWorkout.id);
 
             console.log('🎉 Workout save complete! Navigating to progress...');
 
@@ -522,7 +472,7 @@ const StartWorkout = () => {
             navigate('/progress', {
                 state: {
                     workoutCompleted: true,
-                    workoutId: workoutDocRef.id
+                    workoutId: savedWorkout.id
                 }
             });
         } catch (err) {

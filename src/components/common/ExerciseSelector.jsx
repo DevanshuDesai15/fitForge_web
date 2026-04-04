@@ -26,9 +26,8 @@ import {
     MdArrowDropDown,
     MdLightbulb
 } from 'react-icons/md';
-import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
-import { db } from '../../firebase/config';
 import { useAuth } from '../../contexts/AuthContext';
+import { useSupabase } from '../../hooks/useSupabase';
 import { fetchExercisesByName } from '../../services/localExerciseService';
 import progressiveOverloadAI from '../../services/progressiveOverloadAI';
 
@@ -138,29 +137,37 @@ export default function ExerciseSelector({
     const [showVariations, setShowVariations] = useState(false);
 
     const { currentUser } = useAuth();
+    const supabase = useSupabase();
     const theme = useTheme();
 
     const loadRecentExercises = useCallback(async () => {
         if (!currentUser) return;
 
         try {
-            const q = query(
-                collection(db, 'exercises'),
-                where('userId', '==', currentUser.uid),
-                orderBy('timestamp', 'desc'),
-                limit(5)
-            );
-            const snapshot = await getDocs(q);
-            const exercises = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-                type: 'recent'
-            }));
+            const { data: recentWorkouts, error } = await supabase
+                .from('workouts')
+                .select('exercises, created_at')
+                .eq('user_id', currentUser.uid)
+                .order('created_at', { ascending: false })
+                .limit(10);
+
+            if (error) throw error;
+
+            const seen = new Set();
+            const exercises = [];
+            for (const workout of recentWorkouts || []) {
+                for (const exercise of workout.exercises || []) {
+                    if (!seen.has(exercise.name) && exercises.length < 5) {
+                        seen.add(exercise.name);
+                        exercises.push({ ...exercise, type: 'recent' });
+                    }
+                }
+            }
             setRecentExercises(exercises);
         } catch (error) {
             console.error('Error loading recent exercises:', error);
         }
-    }, [currentUser]);
+    }, [currentUser, supabase]);
 
     useEffect(() => {
         if (includeHistory && currentUser) {

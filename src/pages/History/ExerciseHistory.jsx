@@ -34,9 +34,8 @@ import {
     Clock,
     BarChart3,
 } from 'lucide-react';
-import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
-import { db } from '../../firebase/config';
 import { useAuth } from '../../contexts/AuthContext';
+import { useSupabase } from '../../hooks/useSupabase';
 import { useUnits } from '../../contexts/UnitsContext';
 import { format } from 'date-fns';
 
@@ -85,6 +84,7 @@ export default function ExerciseHistory() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const { currentUser } = useAuth();
+    const supabase = useSupabase();
     const { weightUnit, convertWeight } = useUnits();
     const theme = useTheme();
 
@@ -108,28 +108,22 @@ export default function ExerciseHistory() {
         setLoading(true);
         setError('');
         try {
-            const workoutsQuery = query(
-                collection(db, 'workouts'),
-                where('userId', '==', currentUser.uid),
-                where('completed', '==', true),
-                orderBy('timestamp', 'desc')
-            );
-            const workoutDocs = await getDocs(workoutsQuery);
-            const workoutData = workoutDocs.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            setWorkouts(workoutData);
+            const { data: workoutData, error: queryError } = await supabase
+                .from('workouts')
+                .select('*')
+                .eq('user_id', currentUser.uid)
+                .order('timestamp', { ascending: false });
 
-            // Process exercise statistics
-            processExerciseStats(workoutData);
+            if (queryError) throw queryError;
+            setWorkouts(workoutData || []);
+            processExerciseStats(workoutData || []);
         } catch (err) {
             console.error('Error loading workouts:', err);
             setError('Error loading history: ' + err.message);
         } finally {
             setLoading(false);
         }
-    }, [currentUser]);
+    }, [currentUser, supabase]);
 
     useEffect(() => {
         if (currentUser) {

@@ -277,7 +277,11 @@ const CreateProgramModal = ({ open, onClose, onProgramCreated, editData }) => {
             handleClose();
         } catch (error) {
             if (syncResult && !programSaved) {
-                await syncResult.rollback();
+                try {
+                    await syncResult.rollback();
+                } catch (rollbackError) {
+                    console.error('Error rolling back template changes:', rollbackError);
+                }
             }
             console.error('Error saving program:', error);
             alert(`Failed to ${editData ? 'update' : 'create'} program. Please try again.`);

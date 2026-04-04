@@ -12,7 +12,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { useUnits } from '../../contexts/UnitsContext';
 import { useNavigate } from 'react-router-dom';
-import { useProfile, useUpdateProfile } from '../../hooks/useProfile';
+import { useProfile } from '../../hooks/useProfile';
 import { useDashboardStats } from '../../hooks/useDashboardStats';
 import { useSupabase } from '../../hooks/useSupabase';
 import { Edit3 } from "lucide-react";
@@ -68,9 +68,8 @@ export default function Profile() {
 
     // State Management
     // User Data State (Supabase Hooks)
-    const { profile, isLoading: profileLoading, error: profileError } = useProfile();
-    const updateProfileMutation = useUpdateProfile();
-    const { stats: dashboardStats, isLoading: statsLoading } = useDashboardStats();
+    const { profile, isLoading: profileLoading, error: profileError, updateProfile, isUpdating } = useProfile();
+    const { data: dashboardData, isLoading: statsLoading } = useDashboardStats();
 
     const [activeTab, setActiveTab] = useState('profile');
     const [editModalOpen, setEditModalOpen] = useState(false);
@@ -111,15 +110,16 @@ export default function Profile() {
         aiRecommendations: true,
     };
 
+    const weeklyStats = dashboardData?.weeklyStats;
     const stats = {
-        totalWorkouts: dashboardStats.workoutsDone || 0,
-        currentStreak: dashboardStats.streakDays || 0,
-        caloriesBurned: (dashboardStats.workoutsDone || 0) * 350,
-        personalRecords: dashboardStats.recentAchievements?.length || 0,
+        totalWorkouts: weeklyStats?.workoutsDone || 0,
+        currentStreak: weeklyStats?.streakDays || 0,
+        caloriesBurned: (weeklyStats?.workoutsDone || 0) * 350,
+        personalRecords: 0,
     };
 
     const [storageUsed, setStorageUsed] = useState(2.4 * 1024 * 1024);
-    const { supabase } = useSupabase();
+    const supabase = useSupabase();
 
     useEffect(() => {
         if (profileError) {
@@ -154,7 +154,7 @@ export default function Profile() {
                 notifications: formData.notifications || notifications,
             };
 
-            await updateProfileMutation.mutateAsync(profileUpdate);
+            await updateProfile(profileUpdate);
 
             setSuccess('Profile updated successfully!');
             setEditModalOpen(false);
@@ -170,7 +170,7 @@ export default function Profile() {
                 await updateUnitPreference(value);
                 // Also update in Supabase profile
                 const newPreferences = { ...preferences, units: value };
-                await updateProfileMutation.mutateAsync({ preferences: newPreferences });
+                await updateProfile({ preferences: newPreferences });
                 setSuccess('Units preference updated successfully!');
                 setTimeout(() => setSuccess(''), 3000);
             } catch (error) {
@@ -184,7 +184,7 @@ export default function Profile() {
         const newPreferences = { ...preferences, [key]: value };
 
         try {
-            await updateProfileMutation.mutateAsync({ preferences: newPreferences });
+            await updateProfile({ preferences: newPreferences });
         } catch (error) {
             console.error('Error saving preference:', error);
         }
@@ -194,7 +194,7 @@ export default function Profile() {
         const newNotifications = { ...notifications, [key]: value };
 
         try {
-            await updateProfileMutation.mutateAsync({ notifications: newNotifications });
+            await updateProfile({ notifications: newNotifications });
         } catch (error) {
             console.error('Error saving notification preference:', error);
         }
@@ -367,7 +367,7 @@ export default function Profile() {
                     onClose={() => setEditModalOpen(false)}
                     userData={userData}
                     onSave={handleSaveProfile}
-                    loading={updateProfileMutation.isPending}
+                    loading={isUpdating}
                     preferences={preferences}
                 />
             </Container>

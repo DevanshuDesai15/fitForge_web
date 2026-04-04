@@ -8,12 +8,6 @@ import {
   testLocalService,
 } from "../services/localExerciseService";
 
-import {
-  printComparisonReport,
-  compareExercises,
-  getMissingExercisesDetailed,
-  testComparison,
-} from "./exerciseComparison";
 
 export const testAPI = async () => {
   console.log("🧪 Starting Local Exercise Data Tests...");
@@ -140,104 +134,12 @@ export const testPagination = async (maxPages = 5) => {
   }
 };
 
-// Test Exercise Database Comparison
-export const testExerciseComparison = async () => {
-  console.log("🔍 Starting Exercise Database Comparison Test...");
-
-  try {
-    console.log("\n=".repeat(60));
-    console.log("📊 COMPARING JSON EXERCISES WITH FIREBASE DATABASE");
-    console.log("=".repeat(60));
-
-    const report = await printComparisonReport();
-
-    console.log("\n🎯 COMPARISON TEST RESULTS:");
-    console.log(`✅ Test completed successfully!`);
-    console.log(`📋 JSON has ${report.summary.jsonTotal} exercises`);
-    console.log(`🔥 Firebase has ${report.summary.firebaseTotal} exercises`);
-    console.log(`🎯 Match rate: ${report.summary.completionPercentage}%`);
-
-    if (report.summary.missingInFirebase > 0) {
-      console.log(
-        `❌ ${report.summary.missingInFirebase} exercises are missing in Firebase`
-      );
-      console.log(
-        "💡 Consider running exercise initialization to sync the data"
-      );
-    } else {
-      console.log("🎉 All JSON exercises are present in Firebase!");
-    }
-
-    return report;
-  } catch (error) {
-    console.error("❌ Exercise comparison test failed:", error);
-    return { error: error.message };
-  }
-};
-
-// Quick Firebase vs JSON comparison
-export const quickCompareExercises = async () => {
-  console.log("⚡ Quick Exercise Database Comparison...");
-
-  try {
-    const report = await compareExercises();
-
-    console.log("\n📊 QUICK COMPARISON RESULTS:");
-    console.log(`📋 JSON: ${report.summary.jsonTotal} exercises`);
-    console.log(`🔥 Firebase: ${report.summary.firebaseTotal} exercises`);
-    console.log(`✅ Matches: ${report.summary.matches}`);
-    console.log(`❌ Missing in Firebase: ${report.summary.missingInFirebase}`);
-    console.log(`❓ Extra in Firebase: ${report.summary.missingInJSON}`);
-    console.log(`📈 Completion: ${report.summary.completionPercentage}%`);
-
-    return report.summary;
-  } catch (error) {
-    console.error("❌ Quick comparison failed:", error);
-    return { error: error.message };
-  }
-};
-
-// Get missing exercises summary
-export const getMissingExercises = async () => {
-  console.log("📋 Getting exercises missing in Firebase...");
-
-  try {
-    const missing = await getMissingExercisesDetailed();
-
-    console.log(`\n❌ ${missing.total} exercises missing in Firebase:`);
-
-    if (missing.total > 0) {
-      console.log("\n📊 Missing exercises by body part:");
-      Object.entries(missing.byBodyPart).forEach(([bodyPart, exercises]) => {
-        console.log(`💪 ${bodyPart}: ${exercises.length} exercises`);
-        exercises.slice(0, 3).forEach((ex) => {
-          console.log(`  - ${ex.name} (${ex.equipment})`);
-        });
-        if (exercises.length > 3) {
-          console.log(`  ... and ${exercises.length - 3} more`);
-        }
-      });
-    }
-
-    return missing;
-  } catch (error) {
-    console.error("❌ Failed to get missing exercises:", error);
-    return { error: error.message };
-  }
-};
-
 // Export for global access in browser console
 window.testAPI = testAPI;
 window.checkPlanType = checkPlanType;
 window.testPagination = testPagination;
-window.compareExercises = testExerciseComparison;
-window.quickCompare = quickCompareExercises;
-window.getMissing = getMissingExercises;
 
 console.log("🔧 API Testing utilities loaded. Available functions:");
 console.log("  📊 testAPI() - Test local exercise service");
 console.log("  🔍 checkPlanType() - Check API plan type");
 console.log("  📄 testPagination(maxPages) - Test pagination");
-console.log("  🔥 compareExercises() - Compare JSON vs Firebase exercises");
-console.log("  ⚡ quickCompare() - Quick exercise comparison");
-console.log("  📋 getMissing() - Get exercises missing in Firebase");

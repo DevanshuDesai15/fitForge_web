@@ -140,8 +140,8 @@ function getPersistedTemplateId(day, fallbackTemplateId) {
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function buildWorkoutStartState(program, day) {
-    const templateId = getPersistedTemplateId(day, program?.id);
-    const dayId = day?.templateId || day?.id || templateId;
+    const templateId = day?.templateId || day?.id || null;
+    const dayId = templateId;
 
     return {
         templateId,
@@ -175,7 +175,7 @@ export function findNextDayInProgram(program, completedWorkouts) {
     );
 
     for (const day of days) {
-        const dayTemplateId = getPersistedTemplateId(day, program?.id);
+        const dayTemplateId = day?.templateId || day?.id || null;
 
         if (dayTemplateId && !completedTemplateIds.has(dayTemplateId)) {
             return day;
