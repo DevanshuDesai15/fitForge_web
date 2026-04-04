@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
     Box,
     Card,
@@ -27,11 +27,13 @@ import {
     MdLibraryBooks,
     MdClose
 } from 'react-icons/md';
-import { collection, doc, addDoc, updateDoc, deleteDoc, getDocs, query, where } from 'firebase/firestore';
-import { db } from '../../firebase/config';
-import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import ExerciseSelector from '../common/ExerciseSelector';
+import { useWorkoutPrograms } from '../../pages/Workout/hooks/useWorkoutPrograms';
+import {
+    syncProgramTemplateIds,
+    useWorkoutMutations,
+} from '../../pages/Workout/hooks/useWorkoutMutations';
 
 const StyledCard = styled(Card)(({ theme }) => ({
     background: '#282828',
@@ -98,8 +100,6 @@ const MuscleGroupChip = styled(Chip)(({ theme, selected }) => ({
 }));
 
 export default function WorkoutTemplates() {
-    const [templates, setTemplates] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingTemplate, setEditingTemplate] = useState(null);
@@ -108,10 +108,17 @@ export default function WorkoutTemplates() {
         { id: 1, name: 'Day 1', muscleGroups: [], exercises: [] }
     ]);
 
-
-    const { currentUser } = useAuth();
     const navigate = useNavigate();
     const theme = useTheme();
+    const { programs: templates, loading, loadPrograms } = useWorkoutPrograms();
+    const {
+        createTemplate,
+        updateTemplate,
+        deleteTemplate,
+        createProgram,
+        updateProgram,
+        deleteProgram,
+    } = useWorkoutMutations();
 
     // Muscle groups with better organization and colors
     const muscleGroups = [
@@ -126,46 +133,21 @@ export default function WorkoutTemplates() {
         { id: 'cardio', name: 'Cardio', icon: '❤️', color: theme.palette.status.error },
     ];
 
-    useEffect(() => {
-        if (currentUser) {
-            loadTemplates();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentUser]);
-
-    const loadTemplates = async () => {
-        try {
-            setLoading(true);
-            const templatesQuery = query(
-                collection(db, 'workoutTemplates'),
-                where('userId', '==', currentUser.uid)
-            );
-            const snapshot = await getDocs(templatesQuery);
-            const templatesData = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            setTemplates(templatesData);
-        } catch (error) {
-            console.error('Error loading templates:', error);
-            setError('Failed to load templates');
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const handleEditTemplate = (template) => {
         setEditingTemplate(template);
         setTemplateName(template.name);
-        setWorkoutDays(template.workoutDays || [{ id: 1, name: 'Day 1', muscleGroups: [], exercises: [] }]);
+        setWorkoutDays(template.days || [{ id: 1, name: 'Day 1', muscleGroups: [], exercises: [] }]);
         setDialogOpen(true);
     };
 
-    const handleDeleteTemplate = async (templateId) => {
+    const handleDeleteTemplate = async (template) => {
         if (window.confirm('Are you sure you want to delete this template?')) {
             try {
-                await deleteDoc(doc(db, 'workoutTemplates', templateId));
-                loadTemplates();
+                await deleteProgram(template.id);
+                for (const templateId of template.templateIds || []) {
+                    await deleteTemplate(templateId);
+                }
+                loadPrograms();
             } catch (error) {
                 console.error('Error deleting template:', error);
                 setError('Failed to delete template');
@@ -218,43 +200,54 @@ export default function WorkoutTemplates() {
 
 
     const handleSaveTemplate = async () => {
+        let syncResult;
+        let programSaved = false;
         try {
-            setLoading(true);
-
             if (!templateName.trim()) {
                 setError('Template name is required');
-                setLoading(false);
                 return;
             }
 
-            const templateData = {
+            syncResult = await syncProgramTemplateIds({
+                days: workoutDays,
+                existingTemplateIds: editingTemplate?.templateIds || [],
+                createTemplate,
+                updateTemplate,
+                deleteTemplate,
+                defaults: {
+                    isCustom: true,
+                },
+                removeMissing: Boolean(editingTemplate),
+            });
+
+            const programPayload = {
                 name: templateName,
                 description: '',
-                workoutDays: workoutDays.map(day => ({
-                    id: day.id,
-                    name: day.name,
-                    muscleGroups: day.muscleGroups,
-                    exercises: day.exercises
-                })),
-                updatedAt: new Date().toISOString()
+                templateIds: syncResult.templateIds,
             };
 
             if (editingTemplate) {
-                await updateDoc(doc(db, 'workoutTemplates', editingTemplate.id), templateData);
+                await updateProgram(editingTemplate.id, programPayload);
             } else {
-                templateData.userId = currentUser.uid;
-                templateData.createdAt = new Date().toISOString();
-                await addDoc(collection(db, 'workoutTemplates'), templateData);
+                await createProgram(programPayload);
+            }
+            programSaved = true;
+
+            try {
+                await syncResult.commitRemovals();
+            } catch (cleanupError) {
+                console.error('Error deleting removed workout template days:', cleanupError);
             }
 
             resetForm();
-            loadTemplates();
+            loadPrograms();
             setDialogOpen(false);
         } catch (error) {
+            if (syncResult && !programSaved) {
+                await syncResult.rollback();
+            }
             console.error('Error saving template:', error);
             setError('Failed to save template');
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -265,9 +258,15 @@ export default function WorkoutTemplates() {
         setError('');
     };
 
+    const getMuscleGroupColor = (muscleGroup) => {
+        const knownMuscleGroup = muscleGroups.find(group => group.id === muscleGroup.id);
+        return muscleGroup.color || knownMuscleGroup?.color || theme.palette.primary.main;
+    };
+
     const renderTemplateCard = (template) => {
-        const totalExercises = template.workoutDays ?
-            template.workoutDays.reduce((sum, day) => sum + (day.exercises?.length || 0), 0) : 0;
+        const days = template.days || [];
+        const totalExercises = days.reduce((sum, day) => sum + (day.exercises?.length || 0), 0);
+        const firstDay = days[0];
 
         return (
             <TemplateCard key={template.id} sx={{ mb: 2 }}>
@@ -291,7 +290,7 @@ export default function WorkoutTemplates() {
                                 size="small"
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    handleDeleteTemplate(template.id);
+                                    handleDeleteTemplate(template);
                                 }}
                                 sx={{ color: theme.palette.status.error }}
                             >
@@ -301,29 +300,32 @@ export default function WorkoutTemplates() {
                     </Box>
 
                     <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 2 }}>
-                        {template.workoutDays?.length || 0} days • {totalExercises} total exercises
+                        {days.length || 0} days • {totalExercises} total exercises
                     </Typography>
 
                     {/* Display workout days */}
-                    {template.workoutDays?.slice(0, 2).map((day) => (
+                    {days.slice(0, 2).map((day) => (
                         <Box key={day.id} sx={{ mb: 1 }}>
                             <Typography variant="body2" sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}>
                                 {day.name}
                             </Typography>
                             <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
-                                {day.muscleGroups?.slice(0, 4).map((mg) => (
+                                {day.muscleGroups?.slice(0, 4).map((mg) => {
+                                    const muscleGroupColor = getMuscleGroupColor(mg);
+                                    return (
                                     <Chip
                                         key={mg.id}
                                         label={mg.name}
                                         size="small"
                                         sx={{
-                                            backgroundColor: `${mg.color}20`,
-                                            color: mg.color,
+                                            backgroundColor: `${muscleGroupColor}20`,
+                                            color: muscleGroupColor,
                                             fontSize: '0.7rem',
                                             height: '20px'
                                         }}
                                     />
-                                ))}
+                                    );
+                                })}
                                 {day.muscleGroups?.length > 4 && (
                                     <Chip
                                         label={`+${day.muscleGroups.length - 4}`}
@@ -343,9 +345,9 @@ export default function WorkoutTemplates() {
                         </Box>
                     ))}
 
-                    {template.workoutDays?.length > 2 && (
+                    {days.length > 2 && (
                         <Typography variant="caption" sx={{ color: theme.palette.text.muted }}>
-                            +{template.workoutDays.length - 2} more days
+                            +{days.length - 2} more days
                         </Typography>
                     )}
 
@@ -354,7 +356,25 @@ export default function WorkoutTemplates() {
                             variant="primary"
                             size="small"
                             startIcon={<MdPlayArrow />}
-                            onClick={() => navigate(`/workout/start?template=${template.id}`)}
+                            onClick={() => {
+                                if (!firstDay) {
+                                    navigate('/workout/start');
+                                    return;
+                                }
+
+                                navigate('/workout/start', {
+                                    state: {
+                                        templateId: firstDay.templateId || firstDay.id || template.id,
+                                        dayId: firstDay.templateId || firstDay.id || template.id,
+                                        workout: {
+                                            name: `${template.name} - ${firstDay.name}`,
+                                            programName: template.name,
+                                            dayName: firstDay.name,
+                                            exercises: firstDay.exercises || [],
+                                        },
+                                    },
+                                });
+                            }}
                         >
                             Start Workout
                         </ActionButton>

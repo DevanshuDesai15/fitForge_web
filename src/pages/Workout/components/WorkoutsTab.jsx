@@ -4,10 +4,10 @@ import { styled } from '@mui/material/styles';
 import { MdPlayArrow, MdTimer, MdAutoAwesome, MdFlashOn, MdFolderOpen, MdAdd, MdSearch, MdArrowDropDown, MdExpandMore, MdMoreVert, MdEdit, MdContentCopy, MdDelete } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useSupabase } from '../../../hooks/useSupabase';
 import { useWorkoutTemplates } from '../hooks/useWorkoutTemplates';
 import { useWorkoutPrograms } from '../hooks/useWorkoutPrograms';
-import { collection, query, where, orderBy, limit, getDocs, doc, deleteDoc, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../../firebase/config';
+import { mapWorkoutDayToTemplateInput, useWorkoutMutations } from '../hooks/useWorkoutMutations';
 import AISuggestionCards from '../../../components/common/AISuggestionCards';
 import CreateWorkoutModal from './CreateWorkoutModal';
 import CreateProgramModal from './CreateProgramModal';
@@ -103,11 +103,99 @@ CustomTooltip.propTypes = {
     label: PropTypes.string
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
+export async function loadCompletedWorkoutsFromSupabase({ supabase, userId }) {
+    if (!userId) {
+        return [];
+    }
+
+    const { data, error } = await supabase
+        .from('workouts')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('completed', true)
+        .order('timestamp', { ascending: false })
+        .limit(50);
+
+    if (error) {
+        throw error;
+    }
+
+    return (data || []).map(workout => ({
+        ...workout,
+        userId: workout.user_id,
+        templateId: workout.template_id,
+        templateName: workout.template_name,
+        dayName: workout.day_name,
+        weightUnit: workout.weight_unit,
+        completedAt: workout.completed_at,
+        createdAt: workout.created_at,
+        updatedAt: workout.updated_at,
+    }));
+}
+
+function getPersistedTemplateId(day, fallbackTemplateId) {
+    return day?.templateId || day?.id || fallbackTemplateId || null;
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function buildWorkoutStartState(program, day) {
+    const templateId = getPersistedTemplateId(day, program?.id);
+    const dayId = day?.templateId || day?.id || templateId;
+
+    return {
+        templateId,
+        dayId,
+        workout: {
+            name: `${program?.name || 'Program'} - ${day?.name || 'Workout'}`,
+            programName: program?.name || 'Program',
+            dayName: day?.name || 'Workout',
+            exercises: day?.exercises || [],
+        },
+    };
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function findNextDayInProgram(program, completedWorkouts) {
+    const days = Array.isArray(program?.days) ? [...program.days] : [];
+
+    if (days.length <= 1) {
+        return null;
+    }
+
+    const completedTemplateIds = new Set(
+        completedWorkouts
+            .map(workout => workout.templateId)
+            .filter(Boolean)
+    );
+    const completedDayNames = new Set(
+        completedWorkouts
+            .map(workout => workout.dayName)
+            .filter(Boolean)
+    );
+
+    for (const day of days) {
+        const dayTemplateId = getPersistedTemplateId(day, program?.id);
+
+        if (dayTemplateId && !completedTemplateIds.has(dayTemplateId)) {
+            return day;
+        }
+
+        if (!dayTemplateId && day?.name && !completedDayNames.has(day.name)) {
+            return day;
+        }
+    }
+
+    return days[0] || null;
+}
+
 const WorkoutsTab = () => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
-    const { templates, loading: templatesLoading } = useWorkoutTemplates();
-    const { programs, loading: programsLoading } = useWorkoutPrograms();
+    const supabase = useSupabase();
+    const { templates, loading: templatesLoading, loadTemplates } = useWorkoutTemplates();
+    const { programs, loading: programsLoading, loadPrograms } = useWorkoutPrograms();
+    const { createTemplate, createProgram, deleteTemplate, deleteProgram } = useWorkoutMutations();
     const { workoutStarted, exercises } = useWorkoutState();
 
     const [activeSubTab, setActiveSubTab] = useState(0); // 0 = Quick Start, 1 = Programs
@@ -134,18 +222,8 @@ const WorkoutsTab = () => {
 
     const handleStartWorkout = (program, day) => {
         console.log('🚀 Starting workout:', { program: program.name, day: day.name });
-        // Navigate to workout with program/day data
         navigate('/workout/start', {
-            state: {
-                templateId: program.id,
-                dayId: day.id,
-                workout: {
-                    name: `${program.name} - ${day.name}`,
-                    programName: program.name,
-                    dayName: day.name,
-                    exercises: day.exercises || []
-                }
-            }
+            state: buildWorkoutStartState(program, day),
         });
     };
 
@@ -200,28 +278,30 @@ const WorkoutsTab = () => {
         }
     }, [workoutStarted, exercises]);
 
-    const calculateRecommendations = useCallback((userTemplates, completedWorkouts) => {
+    const calculateRecommendations = useCallback((userPrograms, completedWorkouts) => {
         const recommendations = [];
 
-        // Find next day in multi-day templates
-        for (const template of userTemplates) {
-            if (template.workoutDays && template.workoutDays.length > 1) {
-                const nextDay = findNextDayInTemplate(template, completedWorkouts);
+        for (const program of userPrograms) {
+            if (program.days && program.days.length > 1) {
+                const nextDay = findNextDayInProgram(program, completedWorkouts);
                 if (nextDay) {
                     recommendations.push({
-                        id: `template-${template.id}-${nextDay.id}`,
-                        title: `${template.name} - ${nextDay.name}`,
+                        id: `program-${program.id}-${nextDay.id}`,
+                        title: `${program.name} - ${nextDay.name}`,
                         category: getTemplateCategory(nextDay),
                         duration: estimateDuration(nextDay),
                         exercises: nextDay.exercises?.length || 0,
-                        difficulty: 'Intermediate',
+                        difficulty: nextDay.difficulty || program.difficulty || 'Intermediate',
                         progress: 0,
                         isAIPick: false,
-                        templateId: template.id,
-                        dayId: nextDay.id,
-                        type: 'nextDay'
+                        templateId: getPersistedTemplateId(nextDay, program.id),
+                        dayId: nextDay.id || getPersistedTemplateId(nextDay, program.id),
+                        dayData: nextDay,
+                        programId: program.id,
+                        programName: program.name,
+                        type: 'nextDay',
                     });
-                    break; // Only show one next day recommendation
+                    break;
                 }
             }
         }
@@ -249,24 +329,13 @@ const WorkoutsTab = () => {
         const loadWorkoutData = async () => {
             try {
                 setLoading(true);
-
-                // Get user's completed workouts
-                const workoutsQuery = query(
-                    collection(db, 'workouts'),
-                    where('userId', '==', currentUser.uid),
-                    where('completed', '==', true),
-                    orderBy('timestamp', 'desc'),
-                    limit(50)
-                );
-
-                const workoutsSnapshot = await getDocs(workoutsQuery);
-                const workouts = workoutsSnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
+                const workouts = await loadCompletedWorkoutsFromSupabase({
+                    supabase,
+                    userId: currentUser.uid,
+                });
 
                 // Calculate recommendations based on templates and progress
-                const recommendations = calculateRecommendations(templates, workouts);
+                const recommendations = calculateRecommendations(programs, workouts);
                 setRecommendedWorkouts(recommendations);
 
             } catch (error) {
@@ -276,36 +345,10 @@ const WorkoutsTab = () => {
             }
         };
 
-        if (currentUser && templates.length > 0) {
+        if (currentUser && !programsLoading) {
             loadWorkoutData();
         }
-    }, [currentUser, templates, calculateRecommendations]);
-
-    const findNextDayInTemplate = (template, completedWorkouts) => {
-        if (!template.workoutDays || template.workoutDays.length <= 1) return null;
-
-        // Find the last completed day for this template
-        const templateWorkouts = completedWorkouts.filter(w => w.templateId === template.id);
-
-        if (templateWorkouts.length === 0) {
-            // No workouts completed, return first day
-            return template.workoutDays[0];
-        }
-
-        // Find the highest day number completed
-        const completedDayNames = templateWorkouts.map(w => w.dayName);
-        const sortedDays = template.workoutDays.sort((a, b) => a.id - b.id);
-
-        for (let i = 0; i < sortedDays.length; i++) {
-            const day = sortedDays[i];
-            if (!completedDayNames.includes(day.name)) {
-                return day;
-            }
-        }
-
-        // All days completed, start over
-        return sortedDays[0];
-    };
+    }, [currentUser, programs, programsLoading, calculateRecommendations, supabase]);
 
     const getTemplateCategory = (day) => {
         if (!day.muscleGroups || day.muscleGroups.length === 0) return 'General';
@@ -359,25 +402,35 @@ const WorkoutsTab = () => {
 
     const handleWorkoutClick = (workout) => {
         if (workout.type === 'day') {
-            // Navigate to start workout with specific day data
             console.log('🚀 Starting day workout:', workout);
             navigate('/workout/start', {
-                state: {
-                    templateId: workout.templateId,
-                    dayId: workout.dayId,
-                    workout: {
-                        name: workout.title,
-                        exercises: workout.dayData?.exercises || []
+                state: buildWorkoutStartState(
+                    {
+                        id: workout.programId || workout.templateId,
+                        name: workout.programName || workout.title.split(' - ')[0] || 'Workout',
+                    },
+                    {
+                        id: workout.dayId,
+                        templateId: workout.templateId,
+                        name: workout.dayData?.name || workout.title.split(' - ')[1] || 'Workout',
+                        exercises: workout.dayData?.exercises || [],
                     }
-                }
+                ),
             });
         } else if (workout.type === 'nextDay') {
-            // Navigate to start workout with specific template and day
             navigate('/workout/start', {
-                state: {
-                    templateId: workout.templateId,
-                    dayId: workout.dayId
-                }
+                state: buildWorkoutStartState(
+                    {
+                        id: workout.programId || workout.templateId,
+                        name: workout.programName || workout.title.split(' - ')[0] || 'Program',
+                    },
+                    workout.dayData || {
+                        id: workout.dayId,
+                        templateId: workout.templateId,
+                        name: workout.title.split(' - ')[1] || 'Workout',
+                        exercises: [],
+                    }
+                ),
             });
         } else if (workout.type === 'template') {
             // Navigate to template selection
@@ -394,11 +447,8 @@ const WorkoutsTab = () => {
 
 
     const handleWorkoutCreated = () => {
-        // Reload templates after creating a new one
-        if (templates) {
-            // Trigger a reload of templates
-            window.location.reload(); // Simple reload for now
-        }
+        setCreateModalOpen(false);
+        loadTemplates();
     };
 
     const handleCreateProgram = () => {
@@ -406,8 +456,9 @@ const WorkoutsTab = () => {
     };
 
     const handleProgramCreated = () => {
-        // Reload programs after creating a new one
-        window.location.reload();
+        setCreateProgramModalOpen(false);
+        setEditProgramData(null);
+        loadPrograms();
     };
 
     const handleMenuOpen = (event, program) => {
@@ -430,21 +481,31 @@ const WorkoutsTab = () => {
     };
 
     const handleDuplicateProgram = async () => {
-        if (!selectedProgram) return;
+        if (!selectedProgram || !currentUser?.uid) return;
 
         try {
-            const duplicatedProgram = {
-                ...selectedProgram,
-                name: `${selectedProgram.name} (Copy)`,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-                userId: currentUser.uid,
-                isFromTemplate: false, // Duplicated programs are not from templates
-            };
-            delete duplicatedProgram.id; // Remove the original ID
+            const duplicatedTemplateIds = [];
 
-            await addDoc(collection(db, 'workoutPrograms'), duplicatedProgram);
-            console.log('Program duplicated successfully');
+            for (const day of selectedProgram.days || []) {
+                const createdTemplate = await createTemplate(
+                    mapWorkoutDayToTemplateInput(day, {
+                        category: selectedProgram.category,
+                        difficulty: selectedProgram.difficulty,
+                        isCustom: true,
+                    })
+                );
+                duplicatedTemplateIds.push(createdTemplate.id);
+            }
+
+            await createProgram({
+                name: `${selectedProgram.name} (Copy)`,
+                description: selectedProgram.description,
+                category: selectedProgram.category,
+                difficulty: selectedProgram.difficulty,
+                frequency: selectedProgram.frequency,
+                duration: selectedProgram.duration,
+                templateIds: duplicatedTemplateIds,
+            });
         } catch (error) {
             console.error('Error duplicating program:', error);
         }
@@ -460,8 +521,10 @@ const WorkoutsTab = () => {
 
         if (window.confirm(confirmMessage)) {
             try {
-                await deleteDoc(doc(db, 'workoutPrograms', selectedProgram.id));
-                console.log('Program deleted successfully');
+                await deleteProgram(selectedProgram.id);
+                for (const templateId of selectedProgram.templateIds || []) {
+                    await deleteTemplate(templateId);
+                }
             } catch (error) {
                 console.error('Error deleting program:', error);
             }
@@ -814,8 +877,8 @@ const WorkoutsTab = () => {
                                                     difficulty: day.difficulty || template.difficulty || 'Intermediate',
                                                     progress: 0,
                                                     isAIPick: template.isAIGenerated || false,
-                                                    templateId: template.id,
-                                                    dayId: day.id || `day-${dayIndex}`,
+                                                    templateId: getPersistedTemplateId(day, template.id),
+                                                    dayId: day.templateId || day.id || getPersistedTemplateId(day, template.id) || `day-${dayIndex}`,
                                                     dayData: day,
                                                     type: 'day'
                                                 };

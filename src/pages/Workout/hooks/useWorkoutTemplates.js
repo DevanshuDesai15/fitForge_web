@@ -1,11 +1,45 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "../../../contexts/AuthContext";
-import { useSupabase } from "../../../hooks/useSupabase";
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useSupabase } from '../../../hooks/useSupabase';
+
+const toArray = (value) => (Array.isArray(value) ? value : []);
+
+function deriveMuscleGroups(exercises = []) {
+  const groups = new Map();
+
+  for (const exercise of toArray(exercises)) {
+    const rawName = exercise.muscleGroup || exercise.target || exercise.bodyPart;
+    if (!rawName) continue;
+
+    const name = String(rawName).trim();
+    const id = name.toLowerCase();
+
+    if (!groups.has(id)) {
+      groups.set(id, { id, name });
+    }
+  }
+
+  return Array.from(groups.values());
+}
+
+function mapTemplateRowToWorkoutDay(template) {
+  const exercises = toArray(template.exercises);
+
+  return {
+    id: template.id,
+    templateId: template.id,
+    name: template.name || 'Workout Day',
+    focus: template.description || '',
+    exercises,
+    muscleGroups: deriveMuscleGroups(exercises),
+    category: template.category || 'Strength Training',
+    difficulty: template.difficulty || 'Intermediate',
+  };
+}
 
 export const useWorkoutTemplates = () => {
   const { currentUser } = useAuth();
   const supabase = useSupabase();
-  const queryClient = useQueryClient();
 
   const {
     data: templates = [],
@@ -25,17 +59,21 @@ export const useWorkoutTemplates = () => {
 
       if (err) throw err;
 
-      // Map back to camelCase for backwards-compatible frontend components
-      return (data || []).map(tmpl => ({
+      return (data || []).map((tmpl) => ({
         ...tmpl,
         userId: tmpl.user_id,
         estimatedDurationMinutes: tmpl.estimated_duration_minutes,
         isCustom: tmpl.is_custom,
         createdAt: tmpl.created_at,
+        updatedAt: tmpl.updated_at,
+        workoutDays:
+          Array.isArray(tmpl.workoutDays) && tmpl.workoutDays.length > 0
+            ? tmpl.workoutDays
+            : [mapTemplateRowToWorkoutDay(tmpl)],
       }));
     },
     enabled: !!currentUser,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
   return {

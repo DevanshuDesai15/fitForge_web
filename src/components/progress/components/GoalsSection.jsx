@@ -32,10 +32,8 @@ import {
     Info,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { addDoc, updateDoc, deleteDoc, doc, collection } from 'firebase/firestore';
-import { db } from '../../../firebase/config';
-import { useAuth } from '../../../contexts/AuthContext';
 import { calculateGoalProgress } from '../utils/progressUtils';
+import { useGoalMutations } from '../hooks/useGoalMutations';
 import PropTypes from 'prop-types';
 
 // ---------------------------------------------------------------------------
@@ -413,8 +411,7 @@ const GoalsSection = ({
     const [customExerciseName, setCustomExerciseName] = useState('');
     const [menuAnchor, setMenuAnchor] = useState(null);
     const [menuGoal, setMenuGoal] = useState(null);
-
-    const { currentUser } = useAuth();
+    const { createGoal, updateGoal, deleteGoal } = useGoalMutations();
 
     // -----------------------------------------------------------------------
     // Icon helper
@@ -502,12 +499,14 @@ const GoalsSection = ({
                 title: newGoal.title,
                 exerciseName: newGoal.exerciseName || newGoal.title,
                 targetValue: newGoal.targetValue,
+                currentValue: editingGoal?.currentValue ?? editingGoal?.current_value ?? 0,
                 unit: newGoal.unit,
                 category: newGoal.category,
                 type: newGoal.type,
                 description: newGoal.description,
                 priority: newGoal.priority,
                 deadline: newGoal.deadline,
+                completed: editingGoal?.completed ?? false,
                 // backward compatibility fields
                 targetWeight: ['lbs', 'kg'].includes(newGoal.unit) ? newGoal.targetValue : '',
                 targetReps: '',
@@ -515,17 +514,9 @@ const GoalsSection = ({
             };
 
             if (editingGoal) {
-                await updateDoc(doc(db, 'goals', editingGoal.id), {
-                    ...payload,
-                    updatedAt: new Date().toISOString(),
-                });
+                await updateGoal(editingGoal.id, payload);
             } else {
-                await addDoc(collection(db, 'goals'), {
-                    ...payload,
-                    userId: currentUser.uid,
-                    createdAt: new Date().toISOString(),
-                    completed: false,
-                });
+                await createGoal(payload);
             }
             closeDialog();
             onGoalsUpdate();
@@ -536,7 +527,7 @@ const GoalsSection = ({
 
     const handleGoalDelete = async (goalId) => {
         try {
-            await deleteDoc(doc(db, 'goals', goalId));
+            await deleteGoal(goalId);
             setMenuAnchor(null);
             setMenuGoal(null);
             onGoalsUpdate();
@@ -547,9 +538,8 @@ const GoalsSection = ({
 
     const handleMarkComplete = async (goal) => {
         try {
-            await updateDoc(doc(db, 'goals', goal.id), {
+            await updateGoal(goal.id, {
                 completed: true,
-                updatedAt: new Date().toISOString(),
             });
             setMenuAnchor(null);
             setMenuGoal(null);

@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useSupabase } from "../../../hooks/useSupabase";
 
-export const useProgressData = (activeMainTab) => {
+export const useProgressData = () => {
   const { currentUser } = useAuth();
   const supabase = useSupabase();
 
@@ -27,10 +27,20 @@ export const useProgressData = (activeMainTab) => {
       return data.map(d => ({
         ...d,
         userId: d.user_id,
+        title: d.title,
+        description: d.description,
+        category: d.category,
         targetValue: d.target_value,
         currentValue: d.current_value,
+        unit: d.unit,
         exerciseName: d.exercise_name,
-        createdAt: d.created_at
+        priority: d.priority,
+        completed: d.completed,
+        targetWeight: d.target_weight,
+        targetReps: d.target_reps,
+        targetSets: d.target_sets,
+        createdAt: d.created_at,
+        updatedAt: d.updated_at
       }));
     },
     enabled: !!currentUser,

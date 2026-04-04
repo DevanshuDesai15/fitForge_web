@@ -25,9 +25,8 @@ import {
 import { styled } from '@mui/material/styles';
 import { MdClose, MdAdd, MdTimer, MdFitnessCenter, MdRemove } from 'react-icons/md';
 import { useAuth } from '../../../contexts/AuthContext';
-import { collection, addDoc } from 'firebase/firestore';
-import { db } from '../../../firebase/config';
 import { fetchAllExercises } from '../../../services/localExerciseService';
+import { useWorkoutMutations } from '../hooks/useWorkoutMutations';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
     '& .MuiDialog-paper': {
@@ -105,6 +104,7 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated }) => {
     const [exercisesLoading, setExercisesLoading] = useState(true);
 
     const { currentUser } = useAuth();
+    const { createTemplate } = useWorkoutMutations();
 
     const steps = ['Details', 'Exercises'];
 
@@ -333,38 +333,34 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated }) => {
         try {
             setLoading(true);
 
+            if (!currentUser?.uid) {
+                throw new Error('You must be logged in to create a workout');
+            }
+
             const templateData = {
                 name: workoutData.name,
                 description: workoutData.description,
                 category: workoutData.category,
                 difficulty: workoutData.difficulty,
-                duration: workoutData.duration,
-                workoutDays: [{
-                    id: 1,
-                    name: 'Day 1',
-                    exercises: selectedExercises.map(ex => ({
-                        name: ex.name,
-                        muscleGroup: ex.muscleGroup,
-                        equipment: ex.equipment,
-                        sets: Array.isArray(ex.sets) ? ex.sets : [{
-                            setNumber: 1,
-                            reps: 12,
-                            weight: 0,
-                            restTime: 60
-                        }],
-                        notes: ''
-                    })),
-                    muscleGroups: [...new Set(selectedExercises.map(ex => ({
-                        id: ex.muscleGroup.toLowerCase(),
-                        name: ex.muscleGroup
-                    })))]
-                }],
-                userId: currentUser.uid,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
+                estimatedDurationMinutes: Number.parseInt(workoutData.duration, 10) || null,
+                isCustom: true,
+                exercises: selectedExercises.map(ex => ({
+                    name: ex.name,
+                    muscleGroup: ex.muscleGroup,
+                    equipment: ex.equipment,
+                    description: ex.description || '',
+                    target: ex.target || ex.muscleGroup,
+                    sets: Array.isArray(ex.sets) ? ex.sets : [{
+                        setNumber: 1,
+                        reps: 12,
+                        weight: 0,
+                        restTime: 60
+                    }],
+                    notes: '',
+                })),
             };
 
-            await addDoc(collection(db, 'workoutTemplates'), templateData);
+            await createTemplate(templateData);
 
             if (onWorkoutCreated) {
                 onWorkoutCreated();
