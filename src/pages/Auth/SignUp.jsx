@@ -1,5 +1,7 @@
 import { Box, Typography } from '@mui/material';
 import { SignUp as ClerkSignUp } from '@clerk/clerk-react';
+import logo from '../../../public/logo.svg';
+import signUpHero from '../../assets/image/Signup.png';
 
 export default function SignUp() {
     return (
@@ -19,15 +21,16 @@ export default function SignUp() {
             >
                 {/* Subtle top-left branding */}
                 <Box sx={{ position: 'absolute', top: 40, left: 40, display: { xs: 'none', md: 'block' } }}>
-                    <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: '-0.5px', color: '#dded00' }}>
-                        FitForge <span style={{ color: '#fff', opacity: 0.5 }}>//</span>
+                    <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', fontWeight: 800, letterSpacing: '-0.5px', color: '#dded00' }}>
+                        <img src={logo} alt="FitForge Logo" style={{ width: 40, height: 40, marginRight: 8 }} />
+                        FitForge    
                     </Typography>
                 </Box>
 
                 <Box sx={{ width: '100%', maxWidth: 440 }}>
                     <Box sx={{ mb: 4, textAlign: 'center' }}>
                         <Typography variant="h4" sx={{ fontWeight: 800, color: '#fff', mb: 1, letterSpacing: '-0.5px' }}>
-                            Join the forge
+                            Join the Forge
                         </Typography>
                         <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.6)' }}>
                             Create an account to start building your ultimate self.
@@ -201,18 +204,44 @@ export default function SignUp() {
                     }}
                 />
 
-                <Box sx={{ position: 'relative', zIndex: 1, maxWidth: 480, textAlign: 'center', px: 4 }}>
-                    <Typography 
-                        variant="h2" 
-                        sx={{ 
-                            fontWeight: 900, 
-                            color: '#fff', 
-                            fontSize: '3.5rem',
-                            lineHeight: 1.1,
-                            letterSpacing: '-1.5px',
-                            mb: 2 
-                        }}
-                    >
+                <Box sx={{ position: 'relative', zIndex: 1, maxWidth: 480, textAlign: 'center', px: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <Box
+                                        component="img"
+                                        src={signUpHero}
+                                        alt="FitForge Interface"
+                                        sx={{
+                                            width: '100%',
+                                            maxWidth: '380px',
+                                            borderRadius: '24px',
+                                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 20px rgba(221, 237, 0, 0.05)',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            mb: 3,
+                                            perspective: '2000px',
+                                            transform: 'rotateY(-10deg) rotateX(5deg) scale(1.02)',
+                                            transition: 'all 0.5s ease-in-out',
+                                            '@keyframes float': {
+                                                '0%, 100%': { transform: 'translateY(0) rotateY(-10deg) rotateX(5deg) scale(1.02)' },
+                                                '50%': { transform: 'translateY(-10px) rotateY(-8deg) rotateX(4deg) scale(1.03)' },
+                                            },
+                                            animation: 'float 6s ease-in-out infinite',
+                                            '&:hover': {
+                                                transform: 'rotateY(0deg) rotateX(0deg) scale(1.05)',
+                                                animationPlayState: 'paused',
+                                                boxShadow: '0 35px 60px -12px rgba(0, 0, 0, 0.6), 0 0 30px rgba(221, 237, 0, 0.15)',
+                                            }
+                                        }}
+                                    />
+                                    <Typography
+                                        variant="h2"
+                                        sx={{
+                                            fontWeight: 900,
+                                            color: '#fff',
+                                            fontSize: '2.75rem',
+                                            lineHeight: 1.1,
+                                            letterSpacing: '-1.5px',
+                                            mb: 2
+                                        }}
+                                    >
                         Built for <br />
                         High Performers.
                     </Typography>

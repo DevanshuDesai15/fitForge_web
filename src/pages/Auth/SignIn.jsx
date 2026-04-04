@@ -1,9 +1,11 @@
 import { Box, Typography } from '@mui/material';
 import { SignIn as ClerkSignIn } from '@clerk/clerk-react';
+import logo from '../../../public/logo.svg';
+import signInHero from '../../assets/image/Signin.png';
 
 export default function SignIn() {
     return (
-        <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: '#0A0A0A' }}>
+        <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden', backgroundColor: '#0A0A0A' }}>
             {/* Left Column: Auth Form */}
             <Box
                 sx={{
@@ -19,8 +21,9 @@ export default function SignIn() {
             >
                 {/* Subtle top-left branding */}
                 <Box sx={{ position: 'absolute', top: 40, left: 40, display: { xs: 'none', md: 'block' } }}>
-                    <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: '-0.5px', color: '#dded00' }}>
-                        FitForge <span style={{ color: '#fff', opacity: 0.5 }}>//</span>
+                    <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', fontWeight: 800, letterSpacing: '-0.5px', color: '#dded00' }}>
+                        <img src={logo} alt="FitForge Logo" style={{ width: 40, height: 40, marginRight: 8 }} />
+                        FitForge
                     </Typography>
                 </Box>
 
@@ -65,7 +68,7 @@ export default function SignIn() {
                                     padding: 0,
                                 },
                                 headerTitle: {
-                                    display: 'none', 
+                                    display: 'none',
                                 },
                                 headerSubtitle: {
                                     display: 'none',
@@ -184,7 +187,7 @@ export default function SignIn() {
                         zIndex: 0,
                     }}
                 />
-                
+
                 {/* A glowing orb/accent in the center */}
                 <Box
                     sx={{
@@ -201,25 +204,51 @@ export default function SignIn() {
                     }}
                 />
 
-                <Box sx={{ position: 'relative', zIndex: 1, maxWidth: 480, textAlign: 'center', px: 4 }}>
-                    <Typography 
-                        variant="h2" 
-                        sx={{ 
-                            fontWeight: 900, 
-                            color: '#fff', 
-                            fontSize: '3.5rem',
+                <Box sx={{ position: 'relative', zIndex: 1, maxWidth: 480, textAlign: 'center', px: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Box
+                        component="img"
+                        src={signInHero}
+                        alt="FitForge Interface"
+                        sx={{
+                            width: '100%',
+                            maxWidth: '380px',
+                            borderRadius: '24px',
+                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 20px rgba(221, 237, 0, 0.05)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            mb: 3,
+                            perspective: '2000px',
+                            transform: 'rotateY(-10deg) rotateX(5deg) scale(1.02)',
+                            transition: 'all 0.5s ease-in-out',
+                            '@keyframes float': {
+                                '0%, 100%': { transform: 'translateY(0) rotateY(-10deg) rotateX(5deg) scale(1.02)' },
+                                '50%': { transform: 'translateY(-10px) rotateY(-8deg) rotateX(4deg) scale(1.03)' },
+                            },
+                            animation: 'float 6s ease-in-out infinite',
+                            '&:hover': {
+                                transform: 'rotateY(0deg) rotateX(0deg) scale(1.05)',
+                                animationPlayState: 'paused',
+                                boxShadow: '0 35px 60px -12px rgba(0, 0, 0, 0.6), 0 0 30px rgba(221, 237, 0, 0.15)',
+                            }
+                        }}
+                    />
+                    <Typography
+                        variant="h2"
+                        sx={{
+                            fontWeight: 900,
+                            color: '#fff',
+                            fontSize: '2.75rem',
                             lineHeight: 1.1,
                             letterSpacing: '-1.5px',
-                            mb: 2 
+                            mb: 2
                         }}
                     >
                         Precision training. <br />
                         Powered by AI.
                     </Typography>
-                    <Typography 
-                        variant="h6" 
-                        sx={{ 
-                            color: 'rgba(255,255,255,0.5)', 
+                    <Typography
+                        variant="h6"
+                        sx={{
+                            color: 'rgba(255,255,255,0.5)',
                             fontWeight: 400,
                             lineHeight: 1.5
                         }}
