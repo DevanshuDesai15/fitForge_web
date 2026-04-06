@@ -33,6 +33,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useSupabase } from '../../hooks/useSupabase';
 import { useNavigate } from 'react-router-dom';
 import { getWeightUnit } from '../../utils/weightUnit';
+import { flattenExercisesFromWorkouts } from '../../utils/workoutExerciseHistory';
 // Date utils no longer needed for new calendar
 import WorkoutCalendar from '../Workout/WorkoutCalendar';
 import {
@@ -128,16 +129,7 @@ export default function History() {
 
                 if (queryError) throw queryError;
 
-                const exerciseRecords = [];
-                for (const workout of workoutData || []) {
-                    for (const exercise of workout.exercises || []) {
-                        exerciseRecords.push({
-                            ...exercise,
-                            timestamp: workout.timestamp,
-                        });
-                    }
-                }
-                setExerciseHistory(exerciseRecords);
+                setExerciseHistory(flattenExercisesFromWorkouts(workoutData || []));
             }
         } catch (err) {
             console.error('Error details:', err);
@@ -210,7 +202,7 @@ export default function History() {
         if (exerciseHistory.length === 0) return null;
 
         const totalExercises = exerciseHistory.length;
-        const uniqueExercises = [...new Set(exerciseHistory.map(ex => ex.exerciseName))].length;
+        const uniqueExercises = [...new Set(exerciseHistory.map(ex => ex.exerciseName || ex.name))].length;
         const totalWeight = exerciseHistory.reduce((sum, ex) => {
             if (Array.isArray(ex.sets)) {
                 return sum + ex.sets.reduce((setSum, set) => {

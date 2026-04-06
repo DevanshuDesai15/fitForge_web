@@ -30,6 +30,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useSupabase } from '../../hooks/useSupabase';
 import { fetchExercisesByName } from '../../services/localExerciseService';
 import progressiveOverloadAI from '../../services/progressiveOverloadAI';
+import { getRecentExercisesFromWorkouts } from '../../utils/workoutExerciseHistory';
 
 const SearchContainer = styled(Box)(() => ({
     position: 'relative',
@@ -152,18 +153,12 @@ export default function ExerciseSelector({
                 .limit(10);
 
             if (error) throw error;
-
-            const seen = new Set();
-            const exercises = [];
-            for (const workout of recentWorkouts || []) {
-                for (const exercise of workout.exercises || []) {
-                    if (!seen.has(exercise.name) && exercises.length < 5) {
-                        seen.add(exercise.name);
-                        exercises.push({ ...exercise, type: 'recent' });
-                    }
-                }
-            }
-            setRecentExercises(exercises);
+            setRecentExercises(
+                getRecentExercisesFromWorkouts(recentWorkouts || []).map((exercise) => ({
+                    ...exercise,
+                    type: 'recent'
+                }))
+            );
         } catch (error) {
             console.error('Error loading recent exercises:', error);
         }
@@ -386,7 +381,7 @@ export default function ExerciseSelector({
                                     <MdHistory style={{ color: theme.palette.primary.main, marginRight: '12px' }} />
                                     <ListItemText
                                         primary={exercise.exerciseName}
-                                        secondary={`${exercise.sets} sets × ${exercise.reps} reps`}
+                                        secondary={`${exercise.setCount} sets × ${exercise.reps} reps`}
                                         primaryTypographyProps={{ color: theme.palette.text.primary }}
                                         secondaryTypographyProps={{ color: theme.palette.text.secondary }}
                                     />

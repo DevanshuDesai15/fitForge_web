@@ -25,6 +25,7 @@ import { useSupabase } from '../../hooks/useSupabase';
 import { useUnits } from '../../contexts/UnitsContext';
 import { useNavigate } from 'react-router-dom';
 import ExerciseSelector from '../common/ExerciseSelector';
+import { getRecentExercisesFromWorkouts } from '../../utils/workoutExerciseHistory';
 
 const StyledCard = styled(Card)(({ theme }) => ({
     background: '#282828',
@@ -95,18 +96,7 @@ export default function QuickAdd() {
                 .limit(10);
 
             if (error) throw error;
-
-            const seen = new Set();
-            const exercisesData = [];
-            for (const workout of recentWorkouts || []) {
-                for (const exercise of workout.exercises || []) {
-                    if (!seen.has(exercise.name) && exercisesData.length < 5) {
-                        seen.add(exercise.name);
-                        exercisesData.push({ ...exercise, exerciseName: exercise.name });
-                    }
-                }
-            }
-            setRecentExercises(exercisesData);
+            setRecentExercises(getRecentExercisesFromWorkouts(recentWorkouts || []));
         } catch (error) {
             console.error('Error loading recent exercises:', error);
         }
@@ -421,8 +411,8 @@ export default function QuickAdd() {
                                             </Typography>
                                             <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                                                 {Array.isArray(exercise.sets)
-                                                    ? `${exercise.sets.length} sets × ${exercise.sets[0].reps} reps × ${exercise.sets[0].weight}${weightUnit}`
-                                                    : `${exercise.sets} sets × ${exercise.reps} reps × ${exercise.weight}${weightUnit}`
+                                                    ? `${exercise.setCount} sets × ${exercise.reps} reps × ${exercise.weight}${weightUnit}`
+                                                    : `${exercise.setCount} sets × ${exercise.reps} reps × ${exercise.weight}${weightUnit}`
                                                 }
                                             </Typography>
                                         </Box>

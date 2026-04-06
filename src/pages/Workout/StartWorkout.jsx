@@ -23,6 +23,75 @@ import { useWorkoutState } from './hooks/useWorkoutState';
 import { useWorkoutTemplates } from './hooks/useWorkoutTemplates';
 import { useAISuggestions } from './hooks/useAISuggestions';
 
+const DEFAULT_EMPTY_SET = [
+    { weight: '', reps: '', completed: false },
+    { weight: '', reps: '', completed: false },
+    { weight: '', reps: '', completed: false }
+];
+
+const toArray = (value) => (Array.isArray(value) ? value : []);
+
+const deriveMuscleGroups = (exercises = []) => {
+    const groups = new Map();
+
+    for (const exercise of toArray(exercises)) {
+        const rawName = exercise.muscleGroup || exercise.target || exercise.bodyPart;
+        if (!rawName) continue;
+
+        const name = String(rawName).trim();
+        const id = name.toLowerCase();
+
+        if (!groups.has(id)) {
+            groups.set(id, { id, name });
+        }
+    }
+
+    return Array.from(groups.values());
+};
+
+const normalizeWorkoutExercises = (exerciseList) =>
+    toArray(exerciseList).map(exercise => ({
+        ...exercise,
+        targetSets: exercise.targetSets || exercise.sets?.length || 3,
+        sets: Array.isArray(exercise.sets) && exercise.sets.length > 0
+            ? exercise.sets
+            : DEFAULT_EMPTY_SET.map(set => ({ ...set }))
+    }));
+
+export function resolveProgramWorkoutSelection(programData, templateRows, requestedDayId = null) {
+    const templateIds = toArray(programData?.template_ids ?? programData?.templateIds);
+    const templateById = new Map(toArray(templateRows).map((template) => [template.id, template]));
+
+    const days = templateIds
+        .map((templateId, index) => {
+            const template = templateById.get(templateId);
+            if (!template) return null;
+
+            const exercises = toArray(template.exercises);
+            return {
+                id: template.id,
+                templateId: template.id,
+                name: template.name || `Day ${index + 1}`,
+                focus: template.description || '',
+                exercises,
+                muscleGroups: deriveMuscleGroups(exercises),
+                category: template.category || 'Strength Training',
+                difficulty: template.difficulty || 'Intermediate',
+            };
+        })
+        .filter(Boolean);
+
+    const selectedDay = requestedDayId
+        ? days.find(day => day.templateId === requestedDayId || day.id === requestedDayId) || days[0]
+        : days[0];
+
+    return {
+        currentTemplate: programData,
+        selectedDay: selectedDay || null,
+        days,
+    };
+}
+
 const StartWorkout = () => {
     // State management
     const [currentStep, setCurrentStep] = useState('template'); // 'template', 'day', 'workout'
@@ -164,19 +233,6 @@ const StartWorkout = () => {
                 } else if (templateId && currentUser) {
                     console.log('🚀 Auto-loading template from DB:', { templateId, dayId: stateDayId });
 
-                    const buildExercises = (exerciseList) =>
-                        (exerciseList || []).map(exercise => ({
-                            ...exercise,
-                            targetSets: exercise.sets?.length || 3,
-                            sets: Array.isArray(exercise.sets) && exercise.sets.length > 0
-                                ? exercise.sets
-                                : [
-                                    { weight: '', reps: '', completed: false },
-                                    { weight: '', reps: '', completed: false },
-                                    { weight: '', reps: '', completed: false }
-                                ]
-                        }));
-
                     // Try workout_templates first
                     const { data: templateData, error: templateError } = await supabase
                         .from('workout_templates')
@@ -190,7 +246,7 @@ const StartWorkout = () => {
                         const exercises = templateData.exercises || [];
                         if (exercises.length > 0) {
                             setSelectedDay({ name: templateData.name, exercises });
-                            setExercises(buildExercises(exercises));
+                            setExercises(normalizeWorkoutExercises(exercises));
                             setTimeout(() => {
                                 setWorkoutStartTime(new Date().toISOString());
                                 setWorkoutStarted(true);
@@ -208,15 +264,25 @@ const StartWorkout = () => {
                             .single();
 
                         if (!programError && programData) {
-                            setCurrentTemplate(programData);
-                            const days = programData.days || [];
-                            const dayToSelect = stateDayId
-                                ? days.find(d => d.id === stateDayId)
-                                : days[0];
+                            const templateIds = toArray(programData.template_ids);
+                            const { data: templateRows, error: programTemplateError } = await supabase
+                                .from('workout_templates')
+                                .select('*')
+                                .eq('user_id', currentUser.uid)
+                                .in('id', templateIds);
+
+                            if (programTemplateError) {
+                                throw programTemplateError;
+                            }
+
+                            const { currentTemplate: resolvedProgram, selectedDay: dayToSelect } =
+                                resolveProgramWorkoutSelection(programData, templateRows, stateDayId);
+
+                            setCurrentTemplate(resolvedProgram);
 
                             if (dayToSelect && dayToSelect.exercises) {
                                 setSelectedDay(dayToSelect);
-                                setExercises(buildExercises(dayToSelect.exercises));
+                                setExercises(normalizeWorkoutExercises(dayToSelect.exercises));
                                 setTimeout(() => {
                                     setWorkoutStartTime(new Date().toISOString());
                                     setWorkoutStarted(true);
@@ -266,18 +332,7 @@ const StartWorkout = () => {
     const handleSelectDay = (day) => {
         setSelectedDay(day);
         if (day.exercises) {
-            const workoutExercises = day.exercises.map(exercise => ({
-                ...exercise,
-                targetSets: exercise.sets?.length || 3,
-                sets: Array.isArray(exercise.sets) && exercise.sets.length > 0
-                    ? exercise.sets
-                    : [
-                        { weight: '', reps: '', completed: false },
-                        { weight: '', reps: '', completed: false },
-                        { weight: '', reps: '', completed: false }
-                    ]
-            }));
-            setExercises(workoutExercises);
+            setExercises(normalizeWorkoutExercises(day.exercises));
         }
     };
 

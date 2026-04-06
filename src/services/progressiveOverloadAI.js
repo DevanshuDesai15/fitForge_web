@@ -2848,14 +2848,16 @@ class ProgressiveOverloadAIService {
    */
   async getActivePlateauAlerts(userId) {
     try {
-      const alertsDoc = await getDoc(doc(db, "aiSuggestions", userId));
+      const suggestions = await aiDatabaseService.getAISuggestions(
+        this.supabase,
+        userId
+      );
 
-      if (!alertsDoc.exists()) {
+      if (!suggestions) {
         return [];
       }
 
-      const data = alertsDoc.data();
-      const plateauAlerts = data.plateauAlerts || [];
+      const plateauAlerts = suggestions.plateauAlerts || [];
 
       // Filter for active alerts only
       const activeAlerts = plateauAlerts.filter(
@@ -2889,14 +2891,16 @@ class ProgressiveOverloadAIService {
     try {
       this._log("Acknowledging plateau alert", { userId, alertId });
 
-      const alertsDoc = await getDoc(doc(db, "aiSuggestions", userId));
+      const suggestions = await aiDatabaseService.getAISuggestions(
+        this.supabase,
+        userId
+      );
 
-      if (!alertsDoc.exists()) {
+      if (!suggestions) {
         return false;
       }
 
-      const data = alertsDoc.data();
-      const plateauAlerts = data.plateauAlerts || [];
+      const plateauAlerts = suggestions.plateauAlerts || [];
 
       // Find and update the alert
       const alertIndex = plateauAlerts.findIndex(
@@ -2915,10 +2919,8 @@ class ProgressiveOverloadAIService {
         lastShown: new Date(),
       };
 
-      // Update Firestore
-      await updateDoc(doc(db, "aiSuggestions", userId), {
+      await aiDatabaseService.updateAISuggestions(this.supabase, userId, {
         plateauAlerts,
-        lastUpdated: serverTimestamp(),
       });
 
       this._log("Plateau alert acknowledged", { userId, alertId });
@@ -2940,14 +2942,16 @@ class ProgressiveOverloadAIService {
     try {
       this._log("Dismissing plateau alert", { userId, alertId, reason });
 
-      const alertsDoc = await getDoc(doc(db, "aiSuggestions", userId));
+      const suggestions = await aiDatabaseService.getAISuggestions(
+        this.supabase,
+        userId
+      );
 
-      if (!alertsDoc.exists()) {
+      if (!suggestions) {
         return false;
       }
 
-      const data = alertsDoc.data();
-      const plateauAlerts = data.plateauAlerts || [];
+      const plateauAlerts = suggestions.plateauAlerts || [];
 
       // Find and update the alert
       const alertIndex = plateauAlerts.findIndex(
@@ -2967,10 +2971,8 @@ class ProgressiveOverloadAIService {
         status: "dismissed",
       };
 
-      // Update Firestore
-      await updateDoc(doc(db, "aiSuggestions", userId), {
+      await aiDatabaseService.updateAISuggestions(this.supabase, userId, {
         plateauAlerts,
-        lastUpdated: serverTimestamp(),
       });
 
       this._log("Plateau alert dismissed", { userId, alertId });
@@ -3148,7 +3150,7 @@ class ProgressiveOverloadAIService {
   }
 
   /**
-   * Save plateau alerts to Firestore
+   * Save plateau alerts to Supabase-backed AI suggestion storage
    * @param {string} userId - User identifier
    * @param {Array<PlateauAlert>} alerts - Alerts to save
    * @returns {Promise<void>}
@@ -3156,14 +3158,11 @@ class ProgressiveOverloadAIService {
    */
   async _savePlateauAlerts(userId, alerts) {
     try {
-      // Get existing alerts
-      const alertsDoc = await getDoc(doc(db, "aiSuggestions", userId));
-      let existingAlerts = [];
-
-      if (alertsDoc.exists()) {
-        const data = alertsDoc.data();
-        existingAlerts = data.plateauAlerts || [];
-      }
+      const suggestions = await aiDatabaseService.getAISuggestions(
+        this.supabase,
+        userId
+      );
+      const existingAlerts = suggestions?.plateauAlerts || [];
 
       // Merge new alerts with existing ones
       const allAlerts = [...existingAlerts, ...alerts];
@@ -3171,15 +3170,11 @@ class ProgressiveOverloadAIService {
       // Remove duplicates and old alerts (keep last 20)
       const uniqueAlerts = this._deduplicateAlerts(allAlerts).slice(0, 20);
 
-      // Save to Firestore
-      await setDoc(
-        doc(db, "aiSuggestions", userId),
-        {
+      await aiDatabaseService.saveAISuggestions(this.supabase, userId, {
+          nextWorkoutSuggestions: suggestions?.nextWorkoutSuggestions || [],
           plateauAlerts: uniqueAlerts,
-          lastUpdated: serverTimestamp(),
-        },
-        { merge: true }
-      );
+          progressionPlan: suggestions?.progressionPlan || {},
+        });
     } catch (error) {
       this._logError("Error saving plateau alerts", error);
       throw error;

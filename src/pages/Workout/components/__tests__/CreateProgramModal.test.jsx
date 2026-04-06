@@ -16,14 +16,6 @@ const mutationSpies = vi.hoisted(() => ({
   updateProgram: vi.fn(),
 }));
 
-const firebaseWriteSpies = vi.hoisted(() => ({
-  collection: vi.fn(),
-  addDoc: vi.fn().mockResolvedValue({ id: 'firebase_program' }),
-  serverTimestamp: vi.fn(() => 'firebase_timestamp'),
-  doc: vi.fn(),
-  updateDoc: vi.fn().mockResolvedValue(undefined),
-}));
-
 vi.mock('../../../../contexts/AuthContext', () => ({
   useAuth: () => ({
     currentUser: { uid: 'user_123' },
@@ -42,14 +34,6 @@ vi.mock('../../../../services/localExerciseService', () => ({
   fetchAllExercises: vi.fn().mockResolvedValue([]),
 }));
 
-vi.mock('../../../../firebase/config', () => ({
-  db: {},
-}));
-
-vi.mock('firebase/firestore', () => ({
-  ...firebaseWriteSpies,
-}));
-
 describe('CreateProgramModal', () => {
   beforeEach(() => {
     vi.spyOn(window, 'alert').mockImplementation(() => {});
@@ -57,11 +41,6 @@ describe('CreateProgramModal', () => {
     mutationSpies.updateTemplate.mockReset();
     mutationSpies.createProgram.mockReset();
     mutationSpies.updateProgram.mockReset();
-    firebaseWriteSpies.collection.mockClear();
-    firebaseWriteSpies.addDoc.mockClear();
-    firebaseWriteSpies.serverTimestamp.mockClear();
-    firebaseWriteSpies.doc.mockClear();
-    firebaseWriteSpies.updateDoc.mockClear();
 
     mutationSpies.createTemplate.mockResolvedValue({ id: 'template_1' });
     mutationSpies.createProgram.mockResolvedValue({ id: 'program_1' });
@@ -109,10 +88,6 @@ describe('CreateProgramModal', () => {
         templateIds: ['template_1'],
       })
     );
-    expect(firebaseWriteSpies.addDoc).not.toHaveBeenCalled();
-    expect(firebaseWriteSpies.updateDoc).not.toHaveBeenCalled();
-    expect(firebaseWriteSpies.collection).not.toHaveBeenCalled();
-    expect(firebaseWriteSpies.doc).not.toHaveBeenCalled();
     expect(mutationSpies.createProgram).not.toHaveBeenCalledWith(
       expect.objectContaining({
         days: expect.any(Array),
@@ -205,7 +180,6 @@ describe('loadCompletedWorkoutsFromSupabase', () => {
         timestamp: '2026-04-03T12:00:00.000Z',
       }),
     ]);
-    expect(firebaseWriteSpies.collection).not.toHaveBeenCalled();
   });
 });
 
