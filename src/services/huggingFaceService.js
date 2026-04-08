@@ -1,254 +1,291 @@
-/**
- * @fileoverview Hugging Face AI Service
- * Integrates Hugging Face's Inference API for intelligent fitness coaching and analysis,
- * completely replacing the deprecated Gemini integration.
- */
-
 import { HfInference } from "@huggingface/inference";
+import geminiConfig from "../config/geminiConfig";
+import exerciseVectorSearchService from "./exerciseVectorSearchService";
 import { fetchExerciseForRAG } from "./localExerciseService";
 
-// Get environment variables in a Vite-compatible way
-const getEnvVar = (key, defaultValue = "") => {
-  if (typeof import.meta !== "undefined" && import.meta.env) {
-    return import.meta.env[key] || defaultValue;
-  }
-  if (typeof process !== "undefined" && process?.env) {
-    return process.env[key] || defaultValue;
-  }
-  if (typeof window !== "undefined" && window.env) {
-    return window.env[key] || defaultValue;
-  }
-  return defaultValue;
-};
-
-// Global instance
-let hfModel = null;
-
-const initializeHF = () => {
-  const apiKey = getEnvVar("VITE_HF_API_KEY");
-  if (!apiKey) {
-    console.warn("Hugging Face API key is missing. AI features will fail or fallback.");
-    return false;
-  }
-  if (hfModel) return true;
-  
-  try {
-    hfModel = new HfInference(apiKey);
-    return true;
-  } catch (error) {
-    console.error("Error initializing Hugging Face API:", error);
-    return false;
-  }
-};
-
-// Config Settings
-const hfConfig = {
-  model: "Qwen/Qwen2.5-72B-Instruct", // Top tier open weights model, excellent for JSON formatting
-  temperature: 0.4, // Lower temperature for more deterministic coaching advice
-  maxTokens: 1500,
-  emergencyDisable: false,
-};
+const FIVE_MINUTES = 5 * 60 * 1000;
+const ONE_HOUR = 60 * 60 * 1000;
 
 class HuggingFaceService {
-  constructor() {
-    this.disabled = !initializeHF();
+  constructor(config = geminiConfig) {
+    this.config = config;
+    this.client = null;
+    this.supabase = null;
     this.requestCache = new Map();
     this.pendingRequests = new Map();
+    this.requestCount = 0;
+    this.requestCountResetTime = Date.now();
+    this.circuitBreaker = {
+      isOpen: false,
+      failureCount: 0,
+      lastFailureTime: 0,
+      threshold: 2,
+      timeout: 10 * 60 * 1000,
+    };
+
+    if (typeof window !== "undefined") {
+      setInterval(() => this.cleanup(), FIVE_MINUTES);
+    }
   }
 
-  /**
-   * Helper to execute inference using the serverless HF api
-   */
-  async _makeRequest(systemPrompt, userPrompt) {
-    if (this.disabled || hfConfig.emergencyDisable) {
-      throw new Error("AI Service is disabled.");
+  setSupabase(supabase) {
+    this.supabase = supabase;
+    exerciseVectorSearchService.setSupabase(supabase);
+  }
+
+  _getClient() {
+    if (this.client) {
+      return this.client;
     }
-    
+
+    if (!this.config.apiKey) {
+      throw new Error("Hugging Face API key is missing");
+    }
+
+    this.client = new HfInference(this.config.apiKey);
+    return this.client;
+  }
+
+  _isEnabled() {
+    return !!this.config.apiKey && !this.config.emergencyDisable && this.config.useGeminiAI;
+  }
+
+  _isCircuitOpen() {
+    if (!this.circuitBreaker.isOpen) {
+      return false;
+    }
+
+    if (Date.now() - this.circuitBreaker.lastFailureTime > this.circuitBreaker.timeout) {
+      this.circuitBreaker.isOpen = false;
+      this.circuitBreaker.failureCount = 0;
+      return false;
+    }
+
+    return true;
+  }
+
+  _recordFailure() {
+    this.circuitBreaker.failureCount += 1;
+    this.circuitBreaker.lastFailureTime = Date.now();
+
+    if (this.circuitBreaker.failureCount >= this.circuitBreaker.threshold) {
+      this.circuitBreaker.isOpen = true;
+    }
+  }
+
+  _resetCircuitBreaker() {
+    this.circuitBreaker.isOpen = false;
+    this.circuitBreaker.failureCount = 0;
+  }
+
+  _incrementRequestCount() {
+    const now = Date.now();
+    if (now - this.requestCountResetTime > ONE_HOUR) {
+      this.requestCount = 0;
+      this.requestCountResetTime = now;
+    }
+    this.requestCount += 1;
+  }
+
+  async _runCachedRequest(cacheKey, requestFn) {
+    const cached = this.requestCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < FIVE_MINUTES) {
+      return cached.result;
+    }
+
+    if (this.pendingRequests.has(cacheKey)) {
+      return this.pendingRequests.get(cacheKey);
+    }
+
+    const promise = requestFn();
+    this.pendingRequests.set(cacheKey, promise);
+
     try {
-      const response = await hfModel.chatCompletion({
-        model: hfConfig.model,
+      const result = await promise;
+      this.requestCache.set(cacheKey, { result, timestamp: Date.now() });
+      return result;
+    } finally {
+      this.pendingRequests.delete(cacheKey);
+    }
+  }
+
+  async _makeRequest(systemPrompt, userPrompt) {
+    if (!this._isEnabled()) {
+      throw new Error("Hugging Face service is disabled");
+    }
+
+    if (this._isCircuitOpen()) {
+      throw new Error("Hugging Face service circuit breaker is open");
+    }
+
+    try {
+      this._incrementRequestCount();
+      const client = this._getClient();
+      const response = await client.chatCompletion({
+        model: this.config.model,
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
+          { role: "user", content: userPrompt },
         ],
-        temperature: hfConfig.temperature,
-        max_tokens: hfConfig.maxTokens,
-        response_format: { type: "json_object" } // Tell Qwen to strictly format as json
+        temperature: this.config.temperature,
+        max_tokens: this.config.maxTokens,
+        response_format: { type: "json_object" },
       });
-      
-      return response.choices[0].message.content;
-    } catch (err) {
-      console.error("HF Inference API Error:", err);
-      throw err;
+
+      this._resetCircuitBreaker();
+      return response.choices?.[0]?.message?.content ?? "{}";
+    } catch (error) {
+      this._recordFailure();
+      throw error;
     }
   }
 
-  /**
-   * Safe JSON extraction from marked down output ```json ... ```
-   */
   _extractJsonFromResponse(text) {
     try {
       return JSON.parse(text);
-    } catch (e) {
-      // Try to extract from markdown blocks
+    } catch {
       const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch && jsonMatch[1]) {
-        try {
-          return JSON.parse(jsonMatch[1].trim());
-        } catch (e2) {
-          console.error("Failed to parse extracted JSON:", e2);
-        }
+      if (jsonMatch?.[1]) {
+        return JSON.parse(jsonMatch[1].trim());
       }
-      
-      // Attempt to find the first { and last }
-      const start = text.indexOf('{');
-      const end = text.lastIndexOf('}');
+
+      const start = text.indexOf("{");
+      const end = text.lastIndexOf("}");
       if (start >= 0 && end > start) {
-        try {
-          return JSON.parse(text.substring(start, end + 1));
-        } catch (e3) {
-          console.error("Failed to parse bracketed JSON:", e3);
-        }
+        return JSON.parse(text.slice(start, end + 1));
       }
-      
+
       throw new Error("Could not extract valid JSON from AI response");
     }
   }
 
-  /**
-   * Generate progression suggestions for a single exercise
-   */
-  async generateProgressionSuggestions(analysisData, userProfile, workoutHistory) {
-    const requestKey = `prog_hf_${analysisData.exerciseId}_${analysisData.currentWeight}_${analysisData.currentReps}`;
-
-    // Cache logic
-    const cached = this.requestCache.get(requestKey);
-    if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) return cached.result;
-    if (this.pendingRequests.has(requestKey)) return this.pendingRequests.get(requestKey);
-
-    const exerciseRagContext = await fetchExerciseForRAG(analysisData.exerciseId);
-
-    const requestPromise = this._executeProgressionRequest(analysisData, userProfile, workoutHistory, exerciseRagContext);
-    this.pendingRequests.set(requestKey, requestPromise);
-
-    try {
-      const result = await requestPromise;
-      this.requestCache.set(requestKey, { result, timestamp: Date.now() });
-      return result;
-    } finally {
-      this.pendingRequests.delete(requestKey);
-    }
-  }
-
-  async _executeProgressionRequest(analysisData, userProfile, workoutHistory, ragContext) {
-    try {
-      const { system, prompt } = this._buildProgressionPrompt(analysisData, userProfile, workoutHistory, ragContext);
-      const responseText = await this._makeRequest(system, prompt);
-      const aiResponse = this._extractJsonFromResponse(responseText);
-
-      return {
-        ...aiResponse,
-        confidence: 0.85, // Stub standard confidence for now
-        reasoning: aiResponse.reasoning,
-        alternatives: aiResponse.alternatives || [],
-        personalizedTips: aiResponse.personalizedTips || [],
-      };
-    } catch (error) {
-      console.error("HF Inference error, returning null to force rule-based fallback:", error);
-      return null;
-    }
-  }
-
-  /**
-   * Generate progression suggestions for multiple exercises
-   */
-  async generateBatchProgressionSuggestions(analysesData, userProfile, workoutHistory) {
-    const exerciseIds = analysesData.map((a) => a.exerciseId).sort().join(",");
-    const requestKey = `batch_hf_${exerciseIds}_${Date.now() - (Date.now() % (5 * 60 * 1000))}`;
-
-    const cached = this.requestCache.get(requestKey);
-    if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) return cached.result;
-    if (this.pendingRequests.has(requestKey)) return this.pendingRequests.get(requestKey);
-
-    const ragContexts = [];
-    for (const a of analysesData) {
-      if (a.exerciseId) {
-        const rag = await fetchExerciseForRAG(a.exerciseId);
-        if (rag) ragContexts.push(rag);
-      }
+  _formatWorkoutHistory(workoutHistory = [], limit = 3) {
+    if (!Array.isArray(workoutHistory) || workoutHistory.length === 0) {
+      return "No recent workouts available";
     }
 
-    const requestPromise = this._executeBatchProgressionRequest(analysesData, userProfile, workoutHistory, ragContexts);
-    this.pendingRequests.set(requestKey, requestPromise);
-
-    try {
-      const result = await requestPromise;
-      this.requestCache.set(requestKey, { result, timestamp: Date.now() });
-      return result;
-    } finally {
-      this.pendingRequests.delete(requestKey);
-    }
-  }
-
-  async _executeBatchProgressionRequest(analysesData, userProfile, workoutHistory, ragContexts) {
-    try {
-      const { system, prompt } = this._buildBatchProgressionPrompt(analysesData, userProfile, workoutHistory, ragContexts);
-      const responseText = await this._makeRequest(system, prompt);
-      const aiResponse = this._extractJsonFromResponse(responseText);
-
-      return {
-        suggestions: aiResponse.suggestions || [],
-        overallInsights: aiResponse.overallInsights,
-        batchConfidence: 0.85,
-        processedCount: analysesData.length,
-      };
-    } catch (error) {
-      console.error("HF batch API error, returning empty to force rule-based fallback:", error);
-      return null;
-    }
-  }
-
-  // PRocess Prompts Arrays
-  _buildProgressionPrompt(analysisData, userProfile, workoutHistory, ragContext) {
-    const system = "You are an expert fitness AI coach analyzing a user's workout progression data. Your entire response MUST be valid JSON, strictly adhering to the schema provided. Do not include markdown wraps or conversational chatter outside the JSON.";
-    
-    // Stringify simple history into a Markdown Table for History RAG
-    let historyStr = "No recent workouts available";
-    if (workoutHistory && workoutHistory.length > 0) {
-      historyStr = "| Date | Exercise | Weight (kg) | Reps |\n|---|---|---|---|\n";
-      workoutHistory.slice(0, 3).forEach(w => {
-        const date = w.timestamp?.toDate ? w.timestamp.toDate().toLocaleDateString() : 'unknown';
-        (w.exercises || []).slice(0, 5).forEach(e => {
-          const exName = e.name || e.exerciseName || 'exercise';
-          historyStr += `| ${date} | ${exName} | ${e.weight || 0} | ${e.reps || 0} |\n`;
-        });
+    return workoutHistory.slice(0, limit).map((workout) => {
+      const date =
+        typeof workout.timestamp?.toDate === "function"
+          ? workout.timestamp.toDate().toLocaleDateString()
+          : workout.timestamp || "unknown date";
+      const exercises = (workout.exercises || []).slice(0, 5).map((exercise) => {
+        const name = exercise.name || exercise.exerciseName || "exercise";
+        return `${name}: ${exercise.weight || 0}kg x ${exercise.reps || 0}`;
       });
-    }
 
-    const ragStr = ragContext ? `\nEXERCISE MECHANICS (RAG CONTEXT):\n${ragContext}\n` : '';
+      return `Session ${date}\n${exercises.join("\n")}`;
+    }).join("\n\n");
+  }
 
+  async generateProgressionSuggestions(analysisData, userProfile, workoutHistory) {
+    const cacheKey = `progression:${analysisData.exerciseId}:${analysisData.currentWeight}:${analysisData.currentReps}`;
+
+    return this._runCachedRequest(cacheKey, async () => {
+      const ragContext = analysisData.exerciseId
+        ? await fetchExerciseForRAG(analysisData.exerciseId).catch(() => null)
+        : null;
+      const { system, prompt } = this._buildProgressionPrompt(
+        analysisData,
+        userProfile,
+        workoutHistory,
+        ragContext
+      );
+      const response = await this._makeRequest(system, prompt);
+      return this._extractJsonFromResponse(response);
+    });
+  }
+
+  async generateBatchProgressionSuggestions(analysesData, userProfile, workoutHistory) {
+    const exerciseIds = analysesData.map((analysis) => analysis.exerciseId).sort().join(",");
+    const cacheKey = `batch:${exerciseIds}`;
+
+    return this._runCachedRequest(cacheKey, async () => {
+      const ragContexts = await Promise.all(
+        analysesData.map(async (analysis) => {
+          if (!analysis.exerciseId) {
+            return null;
+          }
+          return fetchExerciseForRAG(analysis.exerciseId).catch(() => null);
+        })
+      );
+
+      const { system, prompt } = this._buildBatchProgressionPrompt(
+        analysesData,
+        userProfile,
+        workoutHistory,
+        ragContexts.filter(Boolean)
+      );
+      const response = await this._makeRequest(system, prompt);
+      return this._extractJsonFromResponse(response);
+    });
+  }
+
+  async generatePlateauInterventions(plateauData, userProfile, pastInterventions = []) {
+    const cacheKey = `plateau:${plateauData.exerciseId}:${plateauData.plateauDuration}:${plateauData.severity}`;
+    return this._runCachedRequest(cacheKey, async () => {
+      const { system, prompt } = this._buildPlateauPrompt(
+        plateauData,
+        userProfile,
+        pastInterventions
+      );
+      const response = await this._makeRequest(system, prompt);
+      return this._extractJsonFromResponse(response);
+    });
+  }
+
+  async generateWorkoutRecommendations(context, userProfile, recentWorkouts) {
+    const cacheKey = `workout:${context.workoutType}:${context.availableTime}:${(context.targetMuscleGroups || []).join(",")}`;
+    return this._runCachedRequest(cacheKey, async () => {
+      const relevantExercises = await exerciseVectorSearchService.searchRelevantExercises(context, {
+        limit: 5,
+      });
+      const { system, prompt } = this._buildWorkoutPrompt(
+        context,
+        userProfile,
+        recentWorkouts,
+        relevantExercises
+      );
+      const response = await this._makeRequest(system, prompt);
+      return this._extractJsonFromResponse(response);
+    });
+  }
+
+  async generateWorkoutAnalysis(exercise, completedSets) {
+    const cacheKey = `coach:${exercise.name}:${completedSets.length}:${completedSets.map((set) => `${set.weight}-${set.reps}`).join("|")}`;
+    return this._runCachedRequest(cacheKey, async () => {
+      const { system, prompt } = this._buildWorkoutAnalysisPrompt(exercise, completedSets);
+      const response = await this._makeRequest(system, prompt);
+      return this._extractJsonFromResponse(response);
+    });
+  }
+
+  _buildProgressionPrompt(analysisData, userProfile, workoutHistory, ragContext) {
+    const system =
+      "You are an expert fitness AI coach. Respond with JSON only and no markdown.";
+    const ragBlock = ragContext
+      ? `\nEXERCISE CONTEXT:\n${ragContext}\n`
+      : "";
     const prompt = `USER PROFILE:
 - Experience Level: ${userProfile.experienceLevel}
 - Age: ${userProfile.age}
 - Training Frequency: ${userProfile.trainingFrequency} sessions/week
 - Preferred Style: ${userProfile.preferredProgressionStyle}
 - Bodyweight: ${userProfile.bodyweight}kg
-${ragStr}
+${ragBlock}
 CURRENT ANALYSIS DATA:
 ${JSON.stringify(analysisData, null, 2)}
 
 RECENT WORKOUT HISTORY:
-${historyStr}
+${this._formatWorkoutHistory(workoutHistory)}
 
-TASK: Provide intelligent progression suggestions that enhance the rule-based analysis.
-
-Respond strictly in JSON format:
+Respond as JSON:
 {
   "primarySuggestion": {
     "exerciseId": "string",
     "exerciseName": "string",
     "suggestion": "string",
-    "reasoning": "detailed explanation",
+    "reasoning": "string",
     "confidence": 0.85,
     "riskFactors": ["string"],
     "benefits": ["string"]
@@ -268,45 +305,39 @@ Respond strictly in JSON format:
   }
 
   _buildBatchProgressionPrompt(analysesData, userProfile, workoutHistory, ragContexts) {
-    const system = "You are an expert fitness AI coach analyzing multiple exercises for progression optimization. Your entire response MUST be valid JSON, strictly adhering to the schema provided.";
-    
-    // Stringify simple history into a Markdown Table for History RAG
-    let historyStr = "No recent workouts available";
-    if (workoutHistory && workoutHistory.length > 0) {
-      historyStr = "| Date | Exercise | Weight (kg) | Reps |\n|---|---|---|---|\n";
-      workoutHistory.slice(0, 3).forEach(w => {
-        const date = w.timestamp?.toDate ? w.timestamp.toDate().toLocaleDateString() : 'unknown';
-        (w.exercises || []).slice(0, 5).forEach(e => {
-          const exName = e.name || e.exerciseName || 'exercise';
-          historyStr += `| ${date} | ${exName} | ${e.weight || 0} | ${e.reps || 0} |\n`;
-        });
-      });
-    }
-
-    const ragStr = ragContexts && ragContexts.length > 0 
-      ? `\nEXERCISE MECHANICS (RAG CONTEXT):\n${ragContexts.join('\n')}\n` 
-      : '';
-
+    const system =
+      "You are an expert fitness AI coach. Respond with JSON only and no markdown.";
+    const ragBlock =
+      ragContexts.length > 0
+        ? `\nEXERCISE CONTEXT:\n${ragContexts.join("\n\n")}\n`
+        : "";
     const prompt = `USER PROFILE:
 - Experience Level: ${userProfile.experienceLevel}
 - Age: ${userProfile.age}
-${ragStr}
+- Training Frequency: ${userProfile.trainingFrequency} sessions/week
+- Preferred Style: ${userProfile.preferredProgressionStyle}
+- Bodyweight: ${userProfile.bodyweight}kg
+${ragBlock}
 EXERCISES TO ANALYZE:
-${analysesData.map((a, i) => `Exercise ${i + 1}: ${a.exerciseName} | Wgt: ${a.currentWeight}kg | Reps: ${a.currentReps} | Trend: ${a.progressionTrend}`).join("\n")}
+${analysesData.map((analysis, index) => `Exercise ${index + 1}: ${analysis.exerciseName}
+- Current Weight: ${analysis.currentWeight}kg
+- Current Reps: ${analysis.currentReps}
+- Current Sets: ${analysis.currentSets}
+- Progression Trend: ${analysis.progressionTrend}
+- Confidence Level: ${analysis.confidenceLevel}
+- Total Sessions: ${analysis.totalSessions}`).join("\n\n")}
 
 RECENT WORKOUT HISTORY:
-${historyStr}
+${this._formatWorkoutHistory(workoutHistory)}
 
-TASK: Provide progression suggestions for ALL exercises in a single response, optimizing fatigue management and balanced progression.
-
-Respond strictly in JSON format:
+Respond as JSON:
 {
   "suggestions": [
     {
       "exerciseId": "string",
-      "exerciseName": "string", 
+      "exerciseName": "string",
       "suggestion": "string",
-      "reasoning": "detailed explanation",
+      "reasoning": "string",
       "confidence": 0.85,
       "riskFactors": ["string"],
       "benefits": ["string"]
@@ -322,17 +353,142 @@ Respond strictly in JSON format:
     return { system, prompt };
   }
 
-  async generatePlateauInterventions(plateauData, userProfile, pastInterventions) {
-    console.warn("generatePlateauInterventions not yet implemented in huggingFaceService");
-    return null;
+  _buildPlateauPrompt(plateauData, userProfile, pastInterventions) {
+    const system =
+      "You are an expert fitness AI coach. Respond with JSON only and no markdown.";
+    const prompt = `USER PROFILE:
+- Experience Level: ${userProfile.experienceLevel}
+- Plateau Tolerance: ${userProfile.plateauTolerance} sessions
+- Preferred Style: ${userProfile.preferredProgressionStyle}
+
+PLATEAU DATA:
+${JSON.stringify(plateauData, null, 2)}
+
+PAST INTERVENTIONS:
+${JSON.stringify(pastInterventions, null, 2)}
+
+Respond as JSON:
+{
+  "interventions": [
+    {
+      "type": "string",
+      "title": "string",
+      "description": "string",
+      "implementation": {
+        "duration": "string",
+        "parameters": {},
+        "progressionPlan": "string"
+      },
+      "reasoning": "string",
+      "confidence": 0.8,
+      "expectedTimeframe": "string"
+    }
+  ],
+  "explanation": "string",
+  "expectedOutcome": "string",
+  "timeframe": "string",
+  "preventionTips": ["string"]
+}`;
+    return { system, prompt };
   }
-  
-  async generateWorkoutRecommendations(context, userProfile, recentWorkouts) {
-    console.warn("generateWorkoutRecommendations not yet implemented in huggingFaceService");
-    return null;
+
+  _buildWorkoutPrompt(context, userProfile, recentWorkouts, relevantExercises = []) {
+    const system =
+      "You are an expert fitness AI coach. Respond with JSON only and no markdown.";
+    const relevantExerciseBlock =
+      relevantExercises.length > 0
+        ? `\nSEMANTIC EXERCISE MATCHES:\n${JSON.stringify(relevantExercises, null, 2)}\n`
+        : "";
+    const prompt = `WORKOUT CONTEXT:
+${JSON.stringify(context, null, 2)}
+
+USER PROFILE:
+${JSON.stringify(userProfile, null, 2)}
+
+RECENT WORKOUTS:
+${this._formatWorkoutHistory(recentWorkouts)}
+${relevantExerciseBlock}
+
+Respond as JSON:
+{
+  "workoutPlan": {
+    "exercises": [
+      {
+        "exerciseId": "string",
+        "exerciseName": "string",
+        "sets": 3,
+        "reps": "8-10",
+        "weight": "progressive",
+        "restTime": 90,
+        "notes": "string"
+      }
+    ]
+  },
+  "reasoning": "string",
+  "adaptations": {
+    "timeConstrained": "string",
+    "equipmentLimited": "string",
+    "fatigue": "string"
+  },
+  "tips": ["string"],
+  "estimatedDuration": 45,
+  "difficultyLevel": "intermediate"
+}`;
+    return { system, prompt };
+  }
+
+  _buildWorkoutAnalysisPrompt(exercise, completedSets) {
+    const system =
+      "You are an expert fitness AI coach. Respond with JSON only and no markdown.";
+    const prompt = `EXERCISE:
+${JSON.stringify(exercise, null, 2)}
+
+COMPLETED SETS:
+${JSON.stringify(completedSets, null, 2)}
+
+Respond as JSON:
+{
+  "avgWeight": "135.5lbs",
+  "avgReps": "9.5",
+  "formScore": "95%",
+  "insight": "string",
+  "quality": "Excellent",
+  "confidence": "92%"
+}`;
+    return { system, prompt };
+  }
+
+  async isAvailable() {
+    return this._isEnabled() && !this._isCircuitOpen();
+  }
+
+  getUsageStats() {
+    return {
+      totalRequests: this.requestCount,
+      pendingRequests: this.pendingRequests.size,
+      cachedResults: this.requestCache.size,
+      circuitBreakerStatus: this.circuitBreaker.isOpen ? "OPEN" : "CLOSED",
+      failureCount: this.circuitBreaker.failureCount,
+      requestsThisHour: this.requestCount,
+    };
+  }
+
+  cleanup() {
+    const now = Date.now();
+    for (const [key, value] of this.requestCache.entries()) {
+      if (now - value.timestamp > FIVE_MINUTES) {
+        this.requestCache.delete(key);
+      }
+    }
+
+    if (now - this.requestCountResetTime > ONE_HOUR) {
+      this.requestCount = 0;
+      this.requestCountResetTime = now;
+    }
   }
 }
 
-// Singleton pattern
 const instance = new HuggingFaceService();
+
 export default instance;
+export { HuggingFaceService };

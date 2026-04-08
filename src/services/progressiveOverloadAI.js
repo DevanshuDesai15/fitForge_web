@@ -5,7 +5,7 @@
  */
 
 import aiDatabaseService from "./aiDatabaseService";
-import huggingFaceService from "./huggingFaceService";
+import geminiAIService from "./geminiAIService";
 
 /**
  * @typedef {Object} ProgressionAnalysis
@@ -133,6 +133,7 @@ import huggingFaceService from "./huggingFaceService";
 class ProgressiveOverloadAIService {
   setSupabase(supabaseClient) {
     this.supabase = supabaseClient;
+    geminiAIService.setSupabase(supabaseClient);
   }
 
   /**
@@ -313,7 +314,7 @@ class ProgressiveOverloadAIService {
         try {
           const workoutHistory = await this._getRecentWorkoutHistory(userId, 5);
           const geminiSuggestion =
-            await huggingFaceService.generateProgressionSuggestions(
+            await geminiAIService.generateProgressionSuggestions(
               analysis,
               userProfile,
               workoutHistory
@@ -696,7 +697,7 @@ class ProgressiveOverloadAIService {
         try {
           const workoutHistory = await this._getRecentWorkoutHistory(userId, 5);
           const batchGeminiSuggestion =
-            await huggingFaceService.generateBatchProgressionSuggestions(
+            await geminiAIService.generateBatchProgressionSuggestions(
               analyses,
               userProfile,
               workoutHistory
