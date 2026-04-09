@@ -287,8 +287,13 @@ describe('buildStarterWorkoutRecommendations', () => {
 describe('buildStarterWorkoutStartState', () => {
   it('builds populated route state for starter workouts', () => {
     const starterWorkout = buildStarterWorkoutRecommendations()[0];
+    const originalExercise = starterWorkout.dayData.exercises[0];
+    const originalSet = originalExercise.sets[0];
+    const result = buildStarterWorkoutStartState(starterWorkout);
+    const resultExercise = result.workout.exercises[0];
+    const resultSet = resultExercise.sets[0];
 
-    expect(buildStarterWorkoutStartState(starterWorkout)).toEqual(
+    expect(result).toEqual(
       expect.objectContaining({
         templateId: starterWorkout.id,
         dayId: starterWorkout.id,
@@ -300,5 +305,14 @@ describe('buildStarterWorkoutStartState', () => {
         }),
       })
     );
+    expect(result.workout.exercises).not.toBe(starterWorkout.dayData.exercises);
+    expect(resultExercise).not.toBe(originalExercise);
+    expect(resultSet).not.toBe(originalSet);
+
+    resultExercise.name = 'Changed Name';
+    resultSet.completed = true;
+
+    expect(starterWorkout.dayData.exercises[0].name).toBe(originalExercise.name);
+    expect(starterWorkout.dayData.exercises[0].sets[0].completed).toBe(false);
   });
 });

@@ -77,6 +77,11 @@ export function buildStarterWorkoutRecommendations() {
 }
 
 export function buildStarterWorkoutStartState(workout, options = {}) {
+  const exercises = (workout.dayData?.exercises || []).map((exercise) => ({
+    ...exercise,
+    sets: (exercise.sets || []).map((set) => ({ ...set })),
+  }));
+
   return {
     templateId: workout.id,
     dayId: workout.id,
@@ -85,7 +90,7 @@ export function buildStarterWorkoutStartState(workout, options = {}) {
       name: workout.title,
       programName: workout.title,
       dayName: workout.title,
-      exercises: workout.dayData?.exercises || [],
+      exercises,
     },
   };
 }
