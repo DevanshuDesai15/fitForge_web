@@ -7,6 +7,10 @@ import {
   findNextDayInProgram,
   loadCompletedWorkoutsFromSupabase,
 } from '../WorkoutsTab';
+import {
+  buildStarterWorkoutRecommendations,
+  buildStarterWorkoutStartState,
+} from '../starterWorkoutRecommendations';
 import { syncProgramTemplateIds } from '../../hooks/useWorkoutMutations';
 
 const mutationSpies = vi.hoisted(() => ({
@@ -251,5 +255,50 @@ describe('syncProgramTemplateIds', () => {
     await result.rollback();
 
     expect(deleteTemplate).toHaveBeenCalledWith('template_new');
+  });
+});
+
+describe('buildStarterWorkoutRecommendations', () => {
+  it('returns three AI starter workouts with populated exercise previews', () => {
+    const result = buildStarterWorkoutRecommendations();
+
+    expect(result).toHaveLength(3);
+    expect(result[0]).toEqual(
+      expect.objectContaining({
+        id: expect.any(String),
+        title: expect.any(String),
+        duration: '60 min',
+        difficulty: 'Beginner',
+        isAIPick: true,
+        type: 'starter',
+        exercises: expect.any(Number),
+        dayData: expect.objectContaining({
+          exercises: expect.arrayContaining([
+            expect.objectContaining({
+              name: expect.any(String),
+            }),
+          ]),
+        }),
+      })
+    );
+  });
+});
+
+describe('buildStarterWorkoutStartState', () => {
+  it('builds populated route state for starter workouts', () => {
+    const starterWorkout = buildStarterWorkoutRecommendations()[0];
+
+    expect(buildStarterWorkoutStartState(starterWorkout)).toEqual(
+      expect.objectContaining({
+        templateId: starterWorkout.id,
+        dayId: starterWorkout.id,
+        workout: expect.objectContaining({
+          name: starterWorkout.title,
+          exercises: expect.arrayContaining([
+            expect.objectContaining({ name: expect.any(String) }),
+          ]),
+        }),
+      })
+    );
   });
 });
