@@ -295,8 +295,8 @@ describe('buildStarterWorkoutStartState', () => {
 
     expect(result).toEqual(
       expect.objectContaining({
-        templateId: starterWorkout.id,
-        dayId: starterWorkout.id,
+        templateId: starterWorkout.dayData.templateId,
+        dayId: starterWorkout.dayData.id,
         workout: expect.objectContaining({
           name: starterWorkout.title,
           exercises: expect.arrayContaining([

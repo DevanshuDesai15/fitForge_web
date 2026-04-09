@@ -77,14 +77,16 @@ export function buildStarterWorkoutRecommendations() {
 }
 
 export function buildStarterWorkoutStartState(workout, options = {}) {
+  const templateId = workout.dayData?.templateId || workout.id;
+  const dayId = workout.dayData?.id || workout.id;
   const exercises = (workout.dayData?.exercises || []).map((exercise) => ({
     ...exercise,
     sets: (exercise.sets || []).map((set) => ({ ...set })),
   }));
 
   return {
-    templateId: workout.id,
-    dayId: workout.id,
+    templateId,
+    dayId,
     editBeforeStart: options.editBeforeStart ?? false,
     workout: {
       name: workout.title,
