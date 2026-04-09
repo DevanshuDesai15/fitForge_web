@@ -15,7 +15,6 @@
     "@clerk/clerk-react": "^5.61.4",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
-    "@google/generative-ai": "^0.24.1",
     "@huggingface/inference": "^4.13.15",
     "@mui/icons-material": "^6.5.0",
     "@mui/material": "^6.5.0",

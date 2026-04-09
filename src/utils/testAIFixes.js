@@ -1,9 +1,9 @@
 /**
  * @fileoverview Test AI System Fixes
- * Utility to test the fixes for limit2 error and Gemini JSON parsing
+ * Utility to test the fixes for workout-history retrieval and AI JSON parsing.
  */
 
-import geminiAIService from "../services/geminiAIService";
+import huggingFaceService from "../services/huggingFaceService";
 import progressiveOverloadAI from "../services/progressiveOverloadAI";
 
 /**
@@ -15,7 +15,7 @@ export const testAIFixes = async () => {
 
   const results = {
     workoutHistoryTest: false,
-    geminiJsonTest: false,
+    aiJsonParsingTest: false,
     aiSuggestionsTest: false,
     errors: [],
   };
@@ -38,8 +38,8 @@ export const testAIFixes = async () => {
   }
 
   try {
-    // Test 2: Gemini JSON Parsing
-    console.log("🧠 Testing Gemini JSON parsing...");
+    // Test 2: AI JSON parsing
+    console.log("🧠 Testing AI JSON parsing...");
 
     // Test the JSON extraction method directly
     const testResponseWithCodeBlocks = `
@@ -61,17 +61,17 @@ Here's the analysis:
 
 Hope this helps!`;
 
-    const parsed = geminiAIService._extractJsonFromResponse(
+    const parsed = huggingFaceService._extractJsonFromResponse(
       testResponseWithCodeBlocks
     );
-    results.geminiJsonTest =
+    results.aiJsonParsingTest =
       parsed &&
       parsed.primarySuggestion &&
       parsed.primarySuggestion.exerciseId === "test-exercise";
-    console.log("✅ Gemini JSON test passed:", results.geminiJsonTest);
+    console.log("✅ AI JSON parsing test passed:", results.aiJsonParsingTest);
   } catch (error) {
-    console.error("❌ Gemini JSON test failed:", error);
-    results.errors.push(`Gemini JSON: ${error.message}`);
+    console.error("❌ AI JSON parsing test failed:", error);
+    results.errors.push(`AI JSON parsing: ${error.message}`);
   }
 
   try {
@@ -95,7 +95,7 @@ Hope this helps!`;
     "- Workout History Fix:",
     results.workoutHistoryTest ? "✅" : "❌"
   );
-  console.log("- Gemini JSON Fix:", results.geminiJsonTest ? "✅" : "❌");
+  console.log("- AI JSON Parsing Fix:", results.aiJsonParsingTest ? "✅" : "❌");
   console.log("- AI Suggestions Fix:", results.aiSuggestionsTest ? "✅" : "❌");
 
   if (results.errors.length > 0) {
@@ -109,7 +109,7 @@ Hope this helps!`;
 
   const allPassed =
     results.workoutHistoryTest &&
-    results.geminiJsonTest &&
+    results.aiJsonParsingTest &&
     results.aiSuggestionsTest;
 
   return {

@@ -3712,29 +3712,67 @@ class ProgressiveOverloadAIService {
       const recentWorkouts = await this._getRecentWorkoutHistory(userId, 3);
       const analyses = await this.analyzeWorkoutHistory(userId);
 
-      // Use Gemini AI for intelligent workout planning
+      // Use the generative provider for intelligent workout planning
       if (this.config.useGeminiAI && analyses.length > 0) {
-        this._log("Using Gemini AI for workout suggestions", {
+        this._log("Using AI workout recommendations", {
           analysisCount: analyses.length,
         });
-        const geminiResult =
-          await geminiAIService.generateBatchProgressionSuggestions(
-            analyses,
+        const recommendationResult =
+          await geminiAIService.generateWorkoutRecommendations(
+            workoutContext,
             userProfile,
             recentWorkouts
           );
 
-        // Transform Gemini suggestions to the required format
-        return geminiResult.suggestions.map((suggestion) => ({
-          ...suggestion,
-          confidenceLevel: suggestion.confidence,
-          suggestedWeight: suggestion.suggestedWeight || 0,
-          suggestedReps: suggestion.suggestedReps || 10,
-          suggestedSets: suggestion.suggestedSets || 3,
-        }));
+        const recommendedExercises =
+          recommendationResult?.workoutPlan?.exercises || [];
+
+        if (recommendedExercises.length > 0) {
+          return recommendedExercises.map((exercise) => {
+            const matchingAnalysis = analyses.find(
+              (analysis) =>
+                analysis.exerciseId === exercise.exerciseId ||
+                analysis.exerciseName === exercise.exerciseName
+            );
+
+            const parsedReps = Number.parseInt(
+              String(exercise.reps || "").split("-").pop(),
+              10
+            );
+            const parsedWeight = Number.parseFloat(exercise.weight);
+
+            return {
+              exerciseId:
+                exercise.exerciseId ||
+                matchingAnalysis?.exerciseId ||
+                exercise.exerciseName,
+              exerciseName:
+                exercise.exerciseName ||
+                matchingAnalysis?.exerciseName ||
+                "Recommended Exercise",
+              suggestedWeight:
+                Number.isFinite(parsedWeight)
+                  ? parsedWeight
+                  : matchingAnalysis?.currentWeight || 0,
+              suggestedReps: Number.isFinite(parsedReps) ? parsedReps : 10,
+              suggestedSets: exercise.sets || 3,
+              restTime: exercise.restTime || 90,
+              priority:
+                matchingAnalysis?.confidenceLevel >= 0.7 ? "high" : "medium",
+              reasoning:
+                exercise.notes ||
+                recommendationResult.reasoning ||
+                "AI-generated workout recommendation",
+              confidenceLevel: matchingAnalysis?.confidenceLevel || 0.75,
+              aiGenerated: true,
+              difficultyLevel: recommendationResult.difficultyLevel,
+              estimatedDuration: recommendationResult.estimatedDuration,
+            };
+          });
+        }
       }
 
-      // Fallback to rule-based suggestions if Gemini is disabled or no analysis
+      // Fallback to rule-based suggestions if AI is disabled or no analysis
       this._log("Using rule-based workout suggestions", {
         geminiEnabled: this.config.useGeminiAI,
         analysisCount: analyses.length,

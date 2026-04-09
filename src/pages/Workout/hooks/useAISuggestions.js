@@ -19,7 +19,7 @@ export const useAISuggestions = () => {
       const suggestions = {};
       for (const exerciseName of exerciseNames) {
         try {
-          const progression = await ProgressiveOverloadAIService.getProgressionSuggestion(
+          const progression = await ProgressiveOverloadAIService.calculateNextProgression(
             currentUser.uid,
             exerciseName
           );

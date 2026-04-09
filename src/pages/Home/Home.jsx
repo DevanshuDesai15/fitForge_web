@@ -23,8 +23,6 @@ import {
     Clock
 } from "lucide-react";
 import progressiveOverloadAI from '../../services/progressiveOverloadAI';
-import { logGeminiStats } from '../../utils/geminiMonitor';
-import { checkGeminiStatus } from '../../utils/geminiStatus';
 import QuickAddExerciseModal from '../../components/workout/QuickAddExerciseModal';
 
 // Components
@@ -171,12 +169,6 @@ export default function Home() {
 
             // Initialize AI Service with Supabase client
             progressiveOverloadAI.setSupabase(supabase);
-
-            // Monitor API usage in development
-            if (import.meta.env?.MODE === 'development') {
-                logGeminiStats();
-                checkGeminiStatus();
-            }
 
             // Timeout safety net — if AI service hangs, resolve after 30 seconds
             let timeoutId;

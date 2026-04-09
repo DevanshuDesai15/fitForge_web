@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, useNavigate } from 'react-router-dom'
+import PropTypes from 'prop-types'
 import './index.css'
 import App from './App.jsx'
 
@@ -11,11 +12,9 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 // Create a client
 const queryClient = new QueryClient();
 
-// Set up Gemini test functions for debugging (dev only)
+// Set up AI debug helpers in development only
 if (import.meta.env.DEV) {
-  import('./utils/geminiTest').then(m => m.setupGeminiConsoleTest())
   import('./utils/testAIFixes').then(m => m.setupAIFixesTest())
-  import('./utils/geminiSetupTest').then(m => m.setupGeminiSetupTest())
 }
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
@@ -38,6 +37,10 @@ function ClerkProviderWithRouter({ children }) {
     </ClerkProvider>
   );
 }
+
+ClerkProviderWithRouter.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

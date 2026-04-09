@@ -50,14 +50,6 @@ vi.mock('../../services/progressiveOverloadAI', () => ({
     }
 }));
 
-vi.mock('../../utils/geminiMonitor', () => ({
-    logGeminiStats: vi.fn()
-}));
-
-vi.mock('../../utils/geminiStatus', () => ({
-    checkGeminiStatus: vi.fn()
-}));
-
 vi.mock('../../components/workout/QuickAddExerciseModal', () => ({
     default: () => null
 }));
