@@ -32,6 +32,7 @@ import WeeklyStatsGrid from './components/WeeklyStatsGrid';
 import RecentAchievementsList from './components/RecentAchievementsList';
 import QuickActionsGrid from './components/QuickActionsGrid';
 import WeeklyTargetsGrid from './components/WeeklyTargetsGrid';
+import { deriveHomeFocus } from './utils/homeFocus';
 
 
 
@@ -150,11 +151,16 @@ export default function Home() {
         recentAchievements, 
         nextWorkout, 
         isTomorrowFocus, 
+        lastRepeatableWorkout,
         isLoading: statsLoading,
         error: statsError,
         refetch: refetchStats
     } = useDashboardStats();
     const safeWeeklyStats = weeklyStats ?? DEFAULT_WEEKLY_STATS;
+    const homeFocus = deriveHomeFocus({
+        nextWorkout,
+        lastRepeatableWorkout
+    });
 
     // Set greeting state
     const [greeting, setGreeting] = useState(getDynamicGreeting());
@@ -299,12 +305,13 @@ export default function Home() {
                 {/* Today's / Tomorrow's Focus */}
                 {isLoading ? (
                     <Skeleton variant="rectangular" height={200} sx={{ borderRadius: '24px', mb: 4 }} />
-                ) : (
+                ) : homeFocus.mode !== 'hidden' ? (
                     <TodaysFocusCard
-                        nextWorkout={nextWorkout}
+                        mode={homeFocus.mode}
+                        focusWorkout={homeFocus.workout}
                         isTomorrowFocus={isTomorrowFocus}
                     />
-                )}
+                ) : null}
 
                 {/* This Week Stats */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 2, mt: 4 }}>

@@ -120,7 +120,14 @@ const AISuggestionCards = ({
     const debounceTimerRef = useRef(null);
 
     useEffect(() => {
-        if (!currentUser || !userId) return;
+        let isActive = true;
+
+        if (!currentUser || !userId) {
+            setLoading(false);
+            return () => {
+                isActive = false;
+            };
+        }
 
         // Debounce with useRef to prevent timer loss across re-renders
         if (debounceTimerRef.current) {
@@ -146,7 +153,6 @@ const AISuggestionCards = ({
                 } else {
                     // For home screen, get general progression suggestions
                     const analyses = await progressiveOverloadAI.analyzeWorkoutHistory(userId);
-                    console.log('AI Suggestions Debug - Analyses:', analyses);
 
                     if (analyses.length > 0) {
                         const selectedAnalyses = analyses.slice(0, maxSuggestions);
@@ -172,8 +178,6 @@ const AISuggestionCards = ({
                                 uncachedAnalyses.push(analysis);
                             }
                         });
-
-                        console.log(`Cache Status: ${cachedSuggestions.length} cached, ${uncachedExerciseIds.length} need API calls`);
 
                         // Only make API calls for uncached exercises
                         let freshSuggestions = [];
@@ -211,24 +215,34 @@ const AISuggestionCards = ({
                 const filteredSuggestions = workoutSuggestions.filter(s => s.confidenceLevel > 0.5);
                 const filteredPlateaus = plateauData.filter(p => p.severity !== 'mild');
 
+                if (!isActive) {
+                    return;
+                }
+
                 setSuggestions(filteredSuggestions);
                 setPlateauAlerts(filteredPlateaus);
 
             } catch (err) {
+                if (!isActive) {
+                    return;
+                }
                 console.error('Error loading AI suggestions:', err);
                 setError('Unable to load AI suggestions. Please try again.');
             } finally {
-                setLoading(false);
+                if (isActive) {
+                    setLoading(false);
+                }
             }
         }, 500);
 
         return () => {
+            isActive = false;
             if (debounceTimerRef.current) {
                 clearTimeout(debounceTimerRef.current);
             }
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentUser?.uid, userId]);
+    }, [currentUser?.uid, maxSuggestions, showPlateauWarnings, userId, workoutContext]);
 
     const handleAcceptSuggestion = async (suggestion) => {
         try {
@@ -252,9 +266,6 @@ const AISuggestionCards = ({
 
             // Remove from suggestions
             setSuggestions(prev => prev.filter(s => s.exerciseId !== suggestion.exerciseId));
-
-            console.log(`✅ Accepted suggestion for ${suggestion.exerciseId} and invalidated cache`);
-
         } catch (error) {
             console.error('Error accepting suggestion:', error);
         }

@@ -12,8 +12,39 @@ const FeaturedWorkoutCard = styled(Card)(() => ({
     overflow: 'hidden',
 }));
 
-export default function TodaysFocusCard({ nextWorkout, isTomorrowFocus }) {
+const DEFAULT_REPEAT_DESCRIPTION = 'Repeat your most recent workout and keep your momentum going.';
+
+const getExerciseCount = (focusWorkout) => focusWorkout?.exercises?.length || 0;
+
+const getRepeatWorkoutState = (focusWorkout) => ({
+    workout: {
+        name: focusWorkout.name || 'Workout',
+        dayName: focusWorkout.day_name || focusWorkout.dayName || focusWorkout.name || 'Workout',
+        exercises: Array.isArray(focusWorkout.exercises) ? focusWorkout.exercises : []
+    }
+});
+
+export default function TodaysFocusCard({ mode = 'program', focusWorkout, isTomorrowFocus }) {
     const navigate = useNavigate();
+    const isRepeatLast = mode === 'repeat-last';
+    const title = isRepeatLast
+        ? (focusWorkout?.name || 'Repeat Last Workout')
+        : (focusWorkout ? `${focusWorkout.programName}: ${focusWorkout.name}` : 'Upper Body Strength');
+    const description = isRepeatLast
+        ? `This is the last workout you completed. ${DEFAULT_REPEAT_DESCRIPTION}`
+        : focusWorkout
+            ? `Up next in your program! Focus: ${focusWorkout.focus || 'General Training'}.`
+            : 'Perfect for building muscle and increasing your bench press PR. You’ve completed this workout 3 times with great results.';
+    const duration = isRepeatLast
+        ? `${getExerciseCount(focusWorkout) * 5 + 10} minutes`
+        : focusWorkout
+            ? `${getExerciseCount(focusWorkout) * 5 + 10} minutes`
+            : '45 minutes';
+    const exerciseCount = isRepeatLast
+        ? `${getExerciseCount(focusWorkout)} exercises`
+        : focusWorkout
+            ? `${getExerciseCount(focusWorkout)} exercises`
+            : '8 exercises';
 
     return (
         <Box sx={{ mb: 4 }}>
@@ -47,7 +78,7 @@ export default function TodaysFocusCard({ nextWorkout, isTomorrowFocus }) {
                                     letterSpacing: 1,
                                     textTransform: 'uppercase'
                                 }}>
-                                    Featured Workout
+                                    {isRepeatLast ? 'Repeat Last Workout' : 'Featured Workout'}
                                 </Typography>
                             </Box>
                             <Typography variant="h4" sx={{
@@ -55,7 +86,7 @@ export default function TodaysFocusCard({ nextWorkout, isTomorrowFocus }) {
                                 mb: 2,
                                 fontSize: { xs: '1.75rem', md: '2.25rem' }
                             }}>
-                                {nextWorkout ? `${nextWorkout.programName}: ${nextWorkout.name}` : 'Upper Body Strength'}
+                                {title}
                             </Typography>
                             <Typography variant="body1" sx={{
                                 color: 'text.secondary',
@@ -63,21 +94,19 @@ export default function TodaysFocusCard({ nextWorkout, isTomorrowFocus }) {
                                 lineHeight: 1.6,
                                 fontSize: '1rem'
                             }}>
-                                {nextWorkout
-                                    ? `Up next in your program! Focus: ${nextWorkout.focus || 'General Training'}.`
-                                    : 'Perfect for building muscle and increasing your bench press PR. You’ve completed this workout 3 times with great results.'}
+                                {description}
                             </Typography>
                             <Box sx={{ display: 'flex', gap: 3, mb: 3, flexWrap: 'wrap' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <Clock size={16} style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
                                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                        {nextWorkout ? `${(nextWorkout.exercises?.length || 0) * 5 + 10} minutes` : '45 minutes'}
+                                        {duration}
                                     </Typography>
                                 </Box>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <Target size={16} style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
                                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                        {nextWorkout ? `${nextWorkout.exercises?.length || 0} exercises` : '8 exercises'}
+                                        {exerciseCount}
                                     </Typography>
                                 </Box>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -112,16 +141,20 @@ export default function TodaysFocusCard({ nextWorkout, isTomorrowFocus }) {
                                     }
                                 }}
                                 onClick={() => {
-                                    if (nextWorkout) {
+                                    if (isRepeatLast && focusWorkout) {
+                                        navigate('/workout/start', {
+                                            state: getRepeatWorkoutState(focusWorkout)
+                                        });
+                                    } else if (focusWorkout) {
                                         navigate('/workout/start', {
                                             state: {
-                                                templateId: nextWorkout.programId,
-                                                dayId: nextWorkout.id,
+                                                templateId: focusWorkout.programId,
+                                                dayId: focusWorkout.id,
                                                 workout: {
-                                                    name: `${nextWorkout.programName} - ${nextWorkout.name}`,
-                                                    programName: nextWorkout.programName,
-                                                    dayName: nextWorkout.name,
-                                                    exercises: nextWorkout.exercises || []
+                                                    name: `${focusWorkout.programName} - ${focusWorkout.name}`,
+                                                    programName: focusWorkout.programName,
+                                                    dayName: focusWorkout.name,
+                                                    exercises: focusWorkout.exercises || []
                                                 }
                                             }
                                         });

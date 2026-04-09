@@ -1,6 +1,19 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import Home from './Home';
+
+const dashboardStatsMock = vi.hoisted(() => ({
+    value: {
+        stats: undefined,
+        recentAchievements: [],
+        nextWorkout: null,
+        isTomorrowFocus: false,
+        lastRepeatableWorkout: null,
+        isLoading: true,
+        error: null,
+        refetch: vi.fn()
+    }
+}));
 
 vi.mock('../../contexts/AuthContext', () => ({
     useAuth: () => ({
@@ -23,15 +36,7 @@ vi.mock('../../hooks/useProfile', () => ({
 }));
 
 vi.mock('../../hooks/useDashboardStats', () => ({
-    useDashboardStats: () => ({
-        stats: undefined,
-        recentAchievements: [],
-        nextWorkout: null,
-        isTomorrowFocus: false,
-        isLoading: true,
-        error: null,
-        refetch: vi.fn()
-    })
+    useDashboardStats: () => dashboardStatsMock.value
 }));
 
 vi.mock('react-router-dom', async () => {
@@ -64,7 +69,13 @@ vi.mock('./components/WelcomeHeader', () => ({
 }));
 
 vi.mock('./components/TodaysFocusCard', () => ({
-    default: () => <div>Today&apos;s focus</div>
+    default: ({ mode, focusWorkout }) => (
+        <div>
+            <span>Today&apos;s focus</span>
+            <span>{mode || 'legacy-mode'}</span>
+            <span>{focusWorkout?.name || 'no-focus-workout'}</span>
+        </div>
+    )
 }));
 
 vi.mock('./components/WeeklyStatsGrid', () => ({
@@ -84,10 +95,65 @@ vi.mock('./components/WeeklyTargetsGrid', () => ({
 }));
 
 describe('Home', () => {
+    beforeEach(() => {
+        dashboardStatsMock.value = {
+            stats: undefined,
+            recentAchievements: [],
+            nextWorkout: null,
+            isTomorrowFocus: false,
+            lastRepeatableWorkout: null,
+            isLoading: true,
+            error: null,
+            refetch: vi.fn()
+        };
+    });
+
     it('renders safely while dashboard stats are still unavailable', () => {
         render(<Home />);
 
         expect(screen.getByText('member')).toBeInTheDocument();
         expect(screen.getByText('Weekly Targets')).toBeInTheDocument();
+    });
+
+    it('hides today focus for brand-new users with no program or workout history', async () => {
+        dashboardStatsMock.value = {
+            stats: undefined,
+            recentAchievements: [],
+            nextWorkout: null,
+            isTomorrowFocus: false,
+            lastRepeatableWorkout: null,
+            isLoading: false,
+            error: null,
+            refetch: vi.fn()
+        };
+
+        render(<Home />);
+
+        await waitFor(() => {
+            expect(screen.queryByText("Today's focus")).not.toBeInTheDocument();
+        });
+    });
+
+    it('passes repeat-last mode into the focus card when the user has workout history but no program', async () => {
+        dashboardStatsMock.value = {
+            stats: undefined,
+            recentAchievements: [],
+            nextWorkout: null,
+            isTomorrowFocus: false,
+            lastRepeatableWorkout: {
+                name: 'Upper Body Repeat',
+                exercises: [{ name: 'Bench Press' }]
+            },
+            isLoading: false,
+            error: null,
+            refetch: vi.fn()
+        };
+
+        render(<Home />);
+
+        await waitFor(() => {
+            expect(screen.getByText('repeat-last')).toBeInTheDocument();
+            expect(screen.getByText('Upper Body Repeat')).toBeInTheDocument();
+        });
     });
 });

@@ -97,6 +97,11 @@ export function useDashboardStats() {
       // Next Workout Logic (Ported from Home.jsx)
       let nextWorkout = null;
       let isTomorrowFocus = false;
+      const lastRepeatableWorkout =
+        completedWorkouts.find(
+          (workout) =>
+            Array.isArray(workout.exercises) && workout.exercises.length > 0
+        ) || null;
 
       // Check if worked out today
       const workedOutToday = uniqueDates.has(new Date().toDateString());
@@ -133,7 +138,8 @@ export function useDashboardStats() {
         },
         nextWorkout,
         isTomorrowFocus,
-        completedWorkoutsCount: completedWorkouts.length
+        completedWorkoutsCount: completedWorkouts.length,
+        lastRepeatableWorkout,
       };
     },
     enabled: !!currentUser?.uid,
