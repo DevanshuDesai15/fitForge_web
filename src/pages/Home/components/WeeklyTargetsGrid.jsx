@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useMediaQuery, useTheme } from '@mui/material';
 
 // Custom SVG circular progress ring with gradient stroke and glow
 const CircularTarget = ({
@@ -36,7 +36,10 @@ const CircularTarget = ({
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            p: { xs: 1, md: 2 },
+            flexShrink: { xs: 1, sm: 0 },
+            flex: { xs: 1, sm: '0 0 auto' },
+            p: { xs: 0.5, md: 2 },
+            minWidth: { xs: size + 12, sm: size + 28 },
         }}>
             <Box sx={{
                 position: 'relative',
@@ -162,6 +165,8 @@ const CircularTarget = ({
 };
 
 export default function WeeklyTargetsGrid({ weeklyStats }) {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const {
         targetedMuscles = { current: 0, target: 11 },
         weeklySets = { current: 0, target: 60 },
@@ -170,64 +175,78 @@ export default function WeeklyTargetsGrid({ weeklyStats }) {
 
     return (
         <Box sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            gap: { xs: 1, sm: 3, md: 6 },
-            flexDirection: { xs: 'column', sm: 'row' },
-            py: { xs: 4, md: 5 },
-            px: { xs: 2, md: 4 },
-            background: 'linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.98) 100%)',
-            borderRadius: '20px',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
-            position: 'relative',
-            overflow: 'hidden',
-            '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background: 'radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.03) 0%, transparent 60%)',
-                pointerEvents: 'none',
-            },
+            overflow: 'hidden'
         }}>
-            {/* Left: Muscles */}
-            <CircularTarget
-                current={targetedMuscles.current}
-                target={targetedMuscles.target}
-                label="Muscles"
-                colorStart="#4a8af5"
-                colorEnd="#7bb8ff"
-                glowColor="#5c9cf6"
-                size={140}
-                strokeWidth={7}
-            />
+            <Box sx={{
+                display: 'flex',
+                justifyContent: { xs: 'space-between', sm: 'center' },
+                alignItems: { xs: 'flex-start', sm: 'center' },
+                gap: { xs: 0.5, sm: 3, md: 6 },
+                flexDirection: 'row',
+                minWidth: 0,
+                py: { xs: 2.5, md: 5 },
+                px: { xs: 0.75, sm: 1.5, md: 4 },
+                background: 'linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.98) 100%)',
+                borderRadius: '20px',
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+                position: 'relative',
+                overflow: 'hidden',
+                '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.03) 0%, transparent 60%)',
+                    pointerEvents: 'none',
+                },
+            }}
+                data-testid="weekly-targets-layout"
+                data-layout={isMobile ? 'horizontal-mobile' : 'horizontal-desktop'}
+            >
+                {/* Left: Muscles */}
+                <Box>
+                    <CircularTarget
+                        current={targetedMuscles.current}
+                        target={targetedMuscles.target}
+                        label="Muscles"
+                        colorStart="#4a8af5"
+                        colorEnd="#7bb8ff"
+                        glowColor="#5c9cf6"
+                        size={isMobile ? 76 : 140}
+                        strokeWidth={isMobile ? 5 : 7}
+                    />
+                </Box>
 
-            {/* Center: Sets (largest) */}
-            <CircularTarget
-                current={weeklySets.current}
-                target={weeklySets.target}
-                label="Sets"
-                colorStart="#f5734a"
-                colorEnd="#ffab76"
-                glowColor="#f67c5c"
-                size={200}
-                strokeWidth={9}
-            />
+                {/* Center: Sets (largest) */}
+                <Box>
+                    <CircularTarget
+                        current={weeklySets.current}
+                        target={weeklySets.target}
+                        label="Sets"
+                        colorStart="#f5734a"
+                        colorEnd="#ffab76"
+                        glowColor="#f67c5c"
+                        size={isMobile ? 104 : 200}
+                        strokeWidth={isMobile ? 6 : 9}
+                    />
+                </Box>
 
-            {/* Right: Exercises */}
-            <CircularTarget
-                current={uniqueExercises.current}
-                target={uniqueExercises.target}
-                label="Exercises"
-                colorStart="#5cd8e8"
-                colorEnd="#a0f0ff"
-                glowColor="#78dce8"
-                size={140}
-                strokeWidth={7}
-            />
+                {/* Right: Exercises */}
+                <Box>
+                    <CircularTarget
+                        current={uniqueExercises.current}
+                        target={uniqueExercises.target}
+                        label="Exercises"
+                        colorStart="#5cd8e8"
+                        colorEnd="#a0f0ff"
+                        glowColor="#78dce8"
+                        size={isMobile ? 76 : 140}
+                        strokeWidth={isMobile ? 5 : 7}
+                    />
+                </Box>
+            </Box>
         </Box>
     );
 }

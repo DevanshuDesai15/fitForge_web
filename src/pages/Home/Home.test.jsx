@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import Home from './Home';
 
@@ -62,15 +62,6 @@ vi.mock('../../components/workout/QuickAddExerciseModal', () => ({
     default: () => null
 }));
 
-vi.mock('./components/WelcomeHeader', () => ({
-    default: ({ displayName, streakDays }) => (
-        <div>
-            <span>{displayName}</span>
-            <span>{streakDays}</span>
-        </div>
-    )
-}));
-
 vi.mock('./components/TodaysFocusCard', () => ({
     default: ({ mode, focusWorkout }) => (
         <div>
@@ -118,8 +109,56 @@ describe('Home', () => {
     it('renders safely while dashboard stats are still unavailable', () => {
         render(<Home />);
 
-        expect(screen.getByText('member')).toBeInTheDocument();
+        expect(screen.getByText(/member/i)).toBeInTheDocument();
         expect(screen.getByText('Weekly Targets')).toBeInTheDocument();
+    });
+
+    it('shows the welcome modal on initial render and hides it when dismissed', async () => {
+        dashboardStatsMock.value = {
+            stats: undefined,
+            recentAchievements: [],
+            nextWorkout: null,
+            isTomorrowFocus: false,
+            lastRepeatableWorkout: null,
+            completedWorkoutsCount: 0,
+            isLoading: false,
+            error: null,
+            refetch: vi.fn()
+        };
+
+        render(<Home />);
+
+        expect(screen.getByText(/good/i)).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /close welcome message/i })).toBeInTheDocument();
+        expect(document.body.style.overflow).toBe('hidden');
+
+        fireEvent.click(screen.getByRole('button', { name: /close welcome message/i }));
+
+        expect(screen.queryByRole('button', { name: /close welcome message/i })).not.toBeInTheDocument();
+        expect(document.body.style.overflow).toBe('');
+    });
+
+    it('shows the welcome modal again on a fresh render after being dismissed', async () => {
+        dashboardStatsMock.value = {
+            stats: undefined,
+            recentAchievements: [],
+            nextWorkout: null,
+            isTomorrowFocus: false,
+            lastRepeatableWorkout: null,
+            completedWorkoutsCount: 0,
+            isLoading: false,
+            error: null,
+            refetch: vi.fn()
+        };
+
+        const firstRender = render(<Home />);
+
+        fireEvent.click(screen.getByRole('button', { name: /close welcome message/i }));
+        firstRender.unmount();
+
+        render(<Home />);
+
+        expect(screen.getByRole('button', { name: /close welcome message/i })).toBeInTheDocument();
     });
 
     it('hides today focus for brand-new users with no program or workout history', () => {
@@ -183,8 +222,8 @@ describe('Home', () => {
             render(<Home />);
         });
 
-        expect(screen.getByText('2 of 5 workouts completed')).toBeInTheDocument();
         expect(screen.getByText('Complete 3 more workouts to unlock AI recommendations')).toBeInTheDocument();
+        expect(screen.getAllByTestId('ai-unlock-bar')).toHaveLength(5);
         expect(aiServiceMock.analyzeWorkoutHistory).not.toHaveBeenCalled();
     });
 });

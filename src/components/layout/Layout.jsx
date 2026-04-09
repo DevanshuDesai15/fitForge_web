@@ -2,7 +2,6 @@ import PropTypes from 'prop-types';
 import { Box, useTheme, useMediaQuery } from '@mui/material';
 import Navigation from './Navigation';
 import ModernSidebar from './ModernSidebar';
-import Header from './Header';
 
 export default function Layout({ children }) {
     const theme = useTheme();
@@ -14,10 +13,9 @@ export default function Layout({ children }) {
             {/* Desktop Sidebar */}
             {isDesktop && <ModernSidebar />}
 
-            {/* Mobile Header and Navigation */}
+            {/* Mobile Navigation */}
             {!isDesktop && (
                 <>
-                    <Header />
                     <Navigation />
                 </>
             )}
@@ -32,7 +30,7 @@ export default function Layout({ children }) {
                     flexGrow: 1,
                     width: isDesktop ? `calc(100% - ${sidebarWidth}px)` : '100%',
                     marginLeft: isDesktop ? `${sidebarWidth}px` : 0,
-                    paddingTop: isDesktop ? 0 : '64px', // Space for header on mobile
+                    paddingTop: 0,
                     paddingBottom: isDesktop ? 0 : '80px', // Space for bottom nav on mobile
                     transition: theme.transitions.create(['margin', 'width'], {
                         easing: theme.transitions.easing.sharp,

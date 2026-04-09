@@ -27,7 +27,7 @@ import QuickAddExerciseModal from '../../components/workout/QuickAddExerciseModa
 
 // Components
 import AIUnlockProgress from './components/AIUnlockProgress';
-import WelcomeHeader from './components/WelcomeHeader';
+import WelcomeModal from './components/WelcomeModal';
 import TodaysFocusCard from './components/TodaysFocusCard';
 import WeeklyStatsGrid from './components/WeeklyStatsGrid';
 import RecentAchievementsList from './components/RecentAchievementsList';
@@ -139,6 +139,7 @@ export default function Home() {
     const [aiLoading, setAiLoading] = useState(false);
     const [aiError, setAiError] = useState('');
     const [quickAddModalOpen, setQuickAddModalOpen] = useState(false);
+    const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(true);
 
     const { currentUser } = useAuth();
     const supabase = useSupabase();
@@ -269,6 +270,19 @@ export default function Home() {
         return () => clearInterval(interval);
     }, []);
 
+    useEffect(() => {
+        if (!isWelcomeModalOpen) {
+            return undefined;
+        }
+
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+
+        return () => {
+            document.body.style.overflow = previousOverflow;
+        };
+    }, [isWelcomeModalOpen]);
+
     const displayName = profile?.username || profile?.full_name || currentUser?.email?.split('@')[0] || 'Member';
 
     const isLoading = statsLoading || profileLoading;
@@ -278,14 +292,16 @@ export default function Home() {
             minHeight: '100vh',
             background: '#121212',
         }}>
-            {/* Welcome Hero Section Banner */}
-            <WelcomeHeader
-                greeting={greeting}
-                displayName={displayName}
-                streakDays={safeWeeklyStats.streakDays}
-                onLogWorkout={() => setQuickAddModalOpen(true)}
-                onStartTraining={() => navigate('/workout')}
-            />
+            {isWelcomeModalOpen ? (
+                <WelcomeModal
+                    greeting={greeting}
+                    displayName={displayName}
+                    streakDays={safeWeeklyStats.streakDays}
+                    onClose={() => setIsWelcomeModalOpen(false)}
+                    onLogWorkout={() => setQuickAddModalOpen(true)}
+                    onStartTraining={() => navigate('/workout')}
+                />
+            ) : null}
 
             <Box sx={{
                 maxWidth: '1400px',
@@ -299,7 +315,7 @@ export default function Home() {
                 )}
 
                 {/* Weekly Targets (Prominently displayed) */}
-                <Box sx={{ mb: 4, mt: { xs: 8, md: 5 } }}>
+                <Box sx={{ mb: 4, mt: isWelcomeModalOpen ? { xs: 2.5, md: 1.5 } : { xs: 5, md: 4 } }}>
                     <Typography variant="h5" sx={{ color: 'text.primary', fontWeight: 'bold', mb: 2 }}>
                         Weekly Targets
                     </Typography>

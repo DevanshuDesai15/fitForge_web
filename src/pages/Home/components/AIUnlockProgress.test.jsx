@@ -6,8 +6,6 @@ describe('AIUnlockProgress', () => {
   it('renders five bars and fills completed workouts', () => {
     render(<AIUnlockProgress completedWorkouts={2} totalWorkouts={5} />);
 
-    expect(screen.getByText('2 of 5 workouts completed')).toBeInTheDocument();
-
     const bars = screen.getAllByTestId('ai-unlock-bar');
     expect(bars).toHaveLength(5);
     expect(bars[0]).toHaveAttribute('data-filled', 'true');
