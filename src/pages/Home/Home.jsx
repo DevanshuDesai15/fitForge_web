@@ -26,6 +26,7 @@ import progressiveOverloadAI from '../../services/progressiveOverloadAI';
 import QuickAddExerciseModal from '../../components/workout/QuickAddExerciseModal';
 
 // Components
+import AIUnlockProgress from './components/AIUnlockProgress';
 import WelcomeHeader from './components/WelcomeHeader';
 import TodaysFocusCard from './components/TodaysFocusCard';
 import WeeklyStatsGrid from './components/WeeklyStatsGrid';
@@ -130,6 +131,8 @@ const DEFAULT_WEEKLY_STATS = {
     uniqueExercises: { current: 0, target: 20 }
 };
 
+const AI_RECOMMENDATION_UNLOCK_WORKOUTS = 5;
+
 export default function Home() {
     const [successMessage, setSuccessMessage] = useState('');
     const [aiRecommendations, setAiRecommendations] = useState([]);
@@ -152,6 +155,7 @@ export default function Home() {
         nextWorkout, 
         isTomorrowFocus, 
         lastRepeatableWorkout,
+        completedWorkoutsCount = 0,
         isLoading: statsLoading,
         error: statsError,
         refetch: refetchStats
@@ -161,6 +165,11 @@ export default function Home() {
         nextWorkout,
         lastRepeatableWorkout
     });
+    const workoutsUntilAiUnlock = Math.max(
+        AI_RECOMMENDATION_UNLOCK_WORKOUTS - completedWorkoutsCount,
+        0
+    );
+    const isAiUnlocked = completedWorkoutsCount >= AI_RECOMMENDATION_UNLOCK_WORKOUTS;
 
     // Set greeting state
     const [greeting, setGreeting] = useState(getDynamicGreeting());
@@ -168,7 +177,12 @@ export default function Home() {
 
 
     const loadAIRecommendations = useCallback(async () => {
-        if (!userId || !supabase) return;
+        if (!userId || !supabase || !isAiUnlocked) {
+            setAiLoading(prev => (prev ? false : prev));
+            setAiRecommendations(prev => (prev.length > 0 ? [] : prev));
+            setAiError(prev => (prev ? '' : prev));
+            return;
+        }
 
         try {
             setAiLoading(true);
@@ -232,7 +246,7 @@ export default function Home() {
         } finally {
             setAiLoading(false);
         }
-    }, [supabase, userId]);
+    }, [isAiUnlocked, supabase, userId]);
 
     useEffect(() => {
         if (userId && supabase && !statsLoading && !profileLoading) {
@@ -490,19 +504,34 @@ export default function Home() {
                                             </>
                                         ) : (
                                             <>
-                                                <Brain size={32} style={{ color: 'rgba(255, 255, 255, 0.3)', marginBottom: '12px' }} />
-                                                <Typography variant="body1" sx={{
+                                                {/* <Brain size={32} style={{ color: 'rgba(255, 255, 255, 0.3)', marginBottom: '12px' }} /> */}
+                                                {/* <Typography variant="body1" sx={{
                                                     color: 'text.secondary',
                                                     mb: 1
                                                 }}>
                                                     No AI recommendations yet
-                                                </Typography>
-                                                <Typography variant="body2" sx={{
-                                                    color: 'rgba(255, 255, 255, 0.5)',
-                                                    fontSize: '0.875rem'
-                                                }}>
-                                                    Complete more workouts to get personalized suggestions
-                                                </Typography>
+                                                </Typography> */}
+                                                {isAiUnlocked ? (
+                                                    <Typography variant="body2" sx={{
+                                                        color: 'rgba(255, 255, 255, 0.5)',
+                                                        fontSize: '0.875rem'
+                                                    }}>
+                                                        AI recommendations are calibrating from your recent workout history
+                                                    </Typography>
+                                                ) : (
+                                                    <>
+                                                        <AIUnlockProgress
+                                                            completedWorkouts={completedWorkoutsCount}
+                                                            totalWorkouts={AI_RECOMMENDATION_UNLOCK_WORKOUTS}
+                                                        />
+                                                        <Typography variant="body2" sx={{
+                                                            color: 'rgba(255, 255, 255, 0.5)',
+                                                            fontSize: '0.875rem'
+                                                        }}>
+                                                            Complete {workoutsUntilAiUnlock} more workout{workoutsUntilAiUnlock === 1 ? '' : 's'} to unlock AI recommendations
+                                                        </Typography>
+                                                    </>
+                                                )}
                                             </>
                                         )}
                                     </Box>

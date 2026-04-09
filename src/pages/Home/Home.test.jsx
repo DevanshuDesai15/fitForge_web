@@ -1,6 +1,12 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import Home from './Home';
+
+const aiServiceMock = vi.hoisted(() => ({
+    setSupabase: vi.fn(),
+    analyzeWorkoutHistory: vi.fn().mockResolvedValue([]),
+    calculateBatchProgressions: vi.fn().mockResolvedValue([])
+}));
 
 const dashboardStatsMock = vi.hoisted(() => ({
     value: {
@@ -9,6 +15,7 @@ const dashboardStatsMock = vi.hoisted(() => ({
         nextWorkout: null,
         isTomorrowFocus: false,
         lastRepeatableWorkout: null,
+        completedWorkoutsCount: 0,
         isLoading: true,
         error: null,
         refetch: vi.fn()
@@ -48,11 +55,7 @@ vi.mock('react-router-dom', async () => {
 });
 
 vi.mock('../../services/progressiveOverloadAI', () => ({
-    default: {
-        setSupabase: vi.fn(),
-        analyzeWorkoutHistory: vi.fn().mockResolvedValue([]),
-        calculateBatchProgressions: vi.fn().mockResolvedValue([])
-    }
+    default: aiServiceMock
 }));
 
 vi.mock('../../components/workout/QuickAddExerciseModal', () => ({
@@ -102,10 +105,14 @@ describe('Home', () => {
             nextWorkout: null,
             isTomorrowFocus: false,
             lastRepeatableWorkout: null,
+            completedWorkoutsCount: 0,
             isLoading: true,
             error: null,
             refetch: vi.fn()
         };
+        aiServiceMock.setSupabase.mockClear();
+        aiServiceMock.analyzeWorkoutHistory.mockClear();
+        aiServiceMock.calculateBatchProgressions.mockClear();
     });
 
     it('renders safely while dashboard stats are still unavailable', () => {
@@ -115,26 +122,27 @@ describe('Home', () => {
         expect(screen.getByText('Weekly Targets')).toBeInTheDocument();
     });
 
-    it('hides today focus for brand-new users with no program or workout history', async () => {
+    it('hides today focus for brand-new users with no program or workout history', () => {
         dashboardStatsMock.value = {
             stats: undefined,
             recentAchievements: [],
             nextWorkout: null,
             isTomorrowFocus: false,
             lastRepeatableWorkout: null,
+            completedWorkoutsCount: 0,
             isLoading: false,
             error: null,
             refetch: vi.fn()
         };
 
-        render(<Home />);
-
-        await waitFor(() => {
-            expect(screen.queryByText("Today's focus")).not.toBeInTheDocument();
+        act(() => {
+            render(<Home />);
         });
+
+        expect(screen.queryByText("Today's focus")).not.toBeInTheDocument();
     });
 
-    it('passes repeat-last mode into the focus card when the user has workout history but no program', async () => {
+    it('passes repeat-last mode into the focus card when the user has workout history but no program', () => {
         dashboardStatsMock.value = {
             stats: undefined,
             recentAchievements: [],
@@ -144,16 +152,39 @@ describe('Home', () => {
                 name: 'Upper Body Repeat',
                 exercises: [{ name: 'Bench Press' }]
             },
+            completedWorkoutsCount: 2,
             isLoading: false,
             error: null,
             refetch: vi.fn()
         };
 
-        render(<Home />);
-
-        await waitFor(() => {
-            expect(screen.getByText('repeat-last')).toBeInTheDocument();
-            expect(screen.getByText('Upper Body Repeat')).toBeInTheDocument();
+        act(() => {
+            render(<Home />);
         });
+
+        expect(screen.getByText('repeat-last')).toBeInTheDocument();
+        expect(screen.getByText('Upper Body Repeat')).toBeInTheDocument();
+    });
+
+    it('shows AI unlock progress before the user reaches five workouts', () => {
+        dashboardStatsMock.value = {
+            stats: undefined,
+            recentAchievements: [],
+            nextWorkout: null,
+            isTomorrowFocus: false,
+            lastRepeatableWorkout: null,
+            completedWorkoutsCount: 2,
+            isLoading: false,
+            error: null,
+            refetch: vi.fn()
+        };
+
+        act(() => {
+            render(<Home />);
+        });
+
+        expect(screen.getByText('2 of 5 workouts completed')).toBeInTheDocument();
+        expect(screen.getByText('Complete 3 more workouts to unlock AI recommendations')).toBeInTheDocument();
+        expect(aiServiceMock.analyzeWorkoutHistory).not.toHaveBeenCalled();
     });
 });
