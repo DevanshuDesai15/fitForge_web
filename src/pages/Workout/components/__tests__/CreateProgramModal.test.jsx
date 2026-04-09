@@ -261,9 +261,11 @@ describe('syncProgramTemplateIds', () => {
 describe('buildStarterWorkoutRecommendations', () => {
   it('returns three AI starter workouts with populated exercise previews', () => {
     const result = buildStarterWorkoutRecommendations();
+    const starterWorkout = result[0];
+    const starterExercise = starterWorkout.dayData.exercises[0];
 
     expect(result).toHaveLength(3);
-    expect(result[0]).toEqual(
+    expect(starterWorkout).toEqual(
       expect.objectContaining({
         id: expect.any(String),
         title: expect.any(String),
@@ -273,12 +275,23 @@ describe('buildStarterWorkoutRecommendations', () => {
         type: 'starter',
         exercises: expect.any(Number),
         dayData: expect.objectContaining({
+          id: starterWorkout.id,
+          templateId: starterWorkout.id,
           exercises: expect.arrayContaining([
             expect.objectContaining({
               name: expect.any(String),
             }),
           ]),
         }),
+      })
+    );
+    expect(starterWorkout.exercises).toBe(starterWorkout.dayData.exercises.length);
+    expect(starterExercise.sets).toHaveLength(3);
+    expect(starterExercise.sets[0]).toEqual(
+      expect.objectContaining({
+        weight: '',
+        reps: '',
+        completed: false,
       })
     );
   });
