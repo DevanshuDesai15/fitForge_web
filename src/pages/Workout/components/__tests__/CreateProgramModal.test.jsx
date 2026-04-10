@@ -2,6 +2,7 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import CreateProgramModal from '../CreateProgramModal';
 import WorkoutRecommendationPreviewDialog from '../WorkoutRecommendationPreviewDialog';
+import WorkoutsTab from '../WorkoutsTab';
 import { seedStarterProgramsWithMutations } from '../../hooks/useWorkoutPrograms';
 import {
   buildWorkoutStartState,
@@ -19,13 +20,66 @@ const mutationSpies = vi.hoisted(() => ({
   updateTemplate: vi.fn(),
   createProgram: vi.fn(),
   updateProgram: vi.fn(),
+  deleteTemplate: vi.fn(),
+  deleteProgram: vi.fn(),
 }));
 
-vi.mock('../../../../contexts/AuthContext', () => ({
-  useAuth: () => ({
-    currentUser: { uid: 'user_123' },
-  }),
+const mockNavigate = vi.hoisted(() => vi.fn());
+const workoutProgramsState = vi.hoisted(() => ({
+  programs: [],
+  loading: false,
+  loadPrograms: vi.fn(),
 }));
+const workoutTemplatesState = vi.hoisted(() => ({
+  templates: [],
+  loading: false,
+  loadTemplates: vi.fn(),
+}));
+const workoutState = vi.hoisted(() => ({
+  workoutStarted: false,
+  exercises: [],
+}));
+const authState = vi.hoisted(() => ({
+  currentUser: { uid: 'user_123' },
+}));
+const supabaseMock = vi.hoisted(() => {
+  const limit = vi.fn().mockResolvedValue({ data: [], error: null });
+  const order = vi.fn(() => ({ limit }));
+  const eqCompleted = vi.fn(() => ({ order }));
+  const eqUser = vi.fn(() => ({ eq: eqCompleted }));
+  const select = vi.fn(() => ({ eq: eqUser }));
+  const from = vi.fn(() => ({ select }));
+
+  return { from };
+});
+
+vi.mock('../../../../contexts/AuthContext', () => ({
+  useAuth: () => authState,
+}));
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
+
+vi.mock('../../../../hooks/useSupabase', () => ({
+  useSupabase: () => supabaseMock,
+}));
+
+vi.mock('../../hooks/useWorkoutTemplates', () => ({
+  useWorkoutTemplates: () => workoutTemplatesState,
+}));
+
+vi.mock('../../hooks/useWorkoutPrograms', async () => {
+  const actual = await vi.importActual('../../hooks/useWorkoutPrograms');
+  return {
+    ...actual,
+    useWorkoutPrograms: () => workoutProgramsState,
+  };
+});
 
 vi.mock('../../../Workout/hooks/useWorkoutMutations', async () => {
   const actual = await vi.importActual('../../../Workout/hooks/useWorkoutMutations');
@@ -35,9 +89,34 @@ vi.mock('../../../Workout/hooks/useWorkoutMutations', async () => {
   };
 });
 
+vi.mock('../../hooks/useWorkoutState', () => ({
+  useWorkoutState: () => workoutState,
+}));
+
 vi.mock('../../../../services/localExerciseService', () => ({
   fetchAllExercises: vi.fn().mockResolvedValue([]),
 }));
+
+vi.mock('../../../../components/common/AISuggestionCards', () => ({
+  default: () => null,
+}));
+
+vi.mock('recharts', () => ({
+  ResponsiveContainer: ({ children }) => children,
+  LineChart: ({ children }) => <div>{children}</div>,
+  Line: () => null,
+  XAxis: () => null,
+  YAxis: () => null,
+  Tooltip: () => null,
+}));
+
+if (!globalThis.ResizeObserver) {
+  globalThis.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
 
 describe('CreateProgramModal', () => {
   beforeEach(() => {
@@ -46,6 +125,19 @@ describe('CreateProgramModal', () => {
     mutationSpies.updateTemplate.mockReset();
     mutationSpies.createProgram.mockReset();
     mutationSpies.updateProgram.mockReset();
+    mutationSpies.deleteTemplate.mockReset();
+    mutationSpies.deleteProgram.mockReset();
+    mockNavigate.mockReset();
+    workoutProgramsState.programs = [];
+    workoutProgramsState.loading = false;
+    workoutProgramsState.loadPrograms.mockReset();
+    workoutTemplatesState.templates = [];
+    workoutTemplatesState.loading = false;
+    workoutTemplatesState.loadTemplates.mockReset();
+    workoutState.workoutStarted = false;
+    workoutState.exercises = [];
+    supabaseMock.from.mockClear();
+    window.localStorage.clear();
 
     mutationSpies.createTemplate.mockResolvedValue({ id: 'template_1' });
     mutationSpies.createProgram.mockResolvedValue({ id: 'program_1' });
@@ -363,5 +455,43 @@ describe('buildStarterWorkoutStartState', () => {
 
     expect(starterWorkout.dayData.exercises[0].name).toBe(originalExercise.name);
     expect(starterWorkout.dayData.exercises[0].sets[0].completed).toBe(false);
+  });
+});
+
+describe('WorkoutsTab starter recommendations', () => {
+  it('renders starter recommendations when no program recommendations exist', async () => {
+    render(<WorkoutsTab />);
+
+    expect(await screen.findByText('Full Body Foundation')).toBeInTheDocument();
+    expect(screen.getByText('Upper Body Basics')).toBeInTheDocument();
+    expect(screen.getByText('Lower Body & Core Basics')).toBeInTheDocument();
+  });
+
+  it('opens the preview dialog instead of navigating immediately for starter cards', async () => {
+    render(<WorkoutsTab />);
+
+    fireEvent.click(await screen.findByText('Full Body Foundation'));
+
+    expect(await screen.findByRole('button', { name: /start workout/i })).toBeInTheDocument();
+    expect(mockNavigate).not.toHaveBeenCalledWith('/workout/start', expect.anything());
+  });
+
+  it('navigates with populated starter workout state when start is chosen', async () => {
+    render(<WorkoutsTab />);
+
+    fireEvent.click(await screen.findByText('Full Body Foundation'));
+    fireEvent.click(await screen.findByRole('button', { name: /start workout/i }));
+
+    expect(mockNavigate).toHaveBeenCalledWith('/workout/start', {
+      state: expect.objectContaining({
+        templateId: 'starter-full-body-foundation',
+        editBeforeStart: false,
+        workout: expect.objectContaining({
+          exercises: expect.arrayContaining([
+            expect.objectContaining({ name: expect.any(String) }),
+          ]),
+        }),
+      }),
+    });
   });
 });

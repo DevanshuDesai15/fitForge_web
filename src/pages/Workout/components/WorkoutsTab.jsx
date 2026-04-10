@@ -11,10 +11,15 @@ import { mapWorkoutDayToTemplateInput, useWorkoutMutations } from '../hooks/useW
 import AISuggestionCards from '../../../components/common/AISuggestionCards';
 import CreateWorkoutModal from './CreateWorkoutModal';
 import CreateProgramModal from './CreateProgramModal';
+import WorkoutRecommendationPreviewDialog from './WorkoutRecommendationPreviewDialog';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import PropTypes from 'prop-types';
 import { Collapse } from '@mui/material';
 import { useWorkoutState } from '../hooks/useWorkoutState';
+import {
+    buildStarterWorkoutRecommendations,
+    buildStarterWorkoutStartState,
+} from './starterWorkoutRecommendations';
 
 const WorkoutCard = styled(Card)(() => ({
     background: 'rgba(40, 40, 40, 0.9)',
@@ -211,6 +216,7 @@ const WorkoutsTab = () => {
     const [editProgramData, setEditProgramData] = useState(null);
     const [hasOngoingWorkout, setHasOngoingWorkout] = useState(false);
     const [workoutInfo, setWorkoutInfo] = useState(null);
+    const [selectedRecommendedWorkout, setSelectedRecommendedWorkout] = useState(null);
 
     const handleSubTabChange = (tabIndex) => {
         setActiveSubTab(tabIndex);
@@ -301,27 +307,13 @@ const WorkoutsTab = () => {
                         programName: program.name,
                         type: 'nextDay',
                     });
-                    break;
                 }
             }
         }
 
-        // Add AI recommendation (placeholder for now)
-        if (recommendations.length < 2) {
-            recommendations.push({
-                id: 'ai-recommendation',
-                title: "AI Recommended Workout",
-                category: "Personalized",
-                duration: "35 min",
-                exercises: 7,
-                difficulty: "Intermediate",
-                progress: 0,
-                isAIPick: true,
-                type: 'aiRecommended'
-            });
-        }
-
-        return recommendations;
+        return recommendations.length > 0
+            ? recommendations.slice(0, 3)
+            : buildStarterWorkoutRecommendations();
     }, []);
 
     // Load user's completed workouts and calculate recommendations
@@ -400,7 +392,32 @@ const WorkoutsTab = () => {
         // Handle suggestion dismissal logic here
     };
 
+    const handleStarterWorkoutStart = () => {
+        if (!selectedRecommendedWorkout) return;
+
+        navigate('/workout/start', {
+            state: buildStarterWorkoutStartState(selectedRecommendedWorkout),
+        });
+        setSelectedRecommendedWorkout(null);
+    };
+
+    const handleStarterWorkoutEdit = () => {
+        if (!selectedRecommendedWorkout) return;
+
+        navigate('/workout/start', {
+            state: buildStarterWorkoutStartState(selectedRecommendedWorkout, {
+                editBeforeStart: true,
+            }),
+        });
+        setSelectedRecommendedWorkout(null);
+    };
+
     const handleWorkoutClick = (workout) => {
+        if (workout.type === 'starter') {
+            setSelectedRecommendedWorkout(workout);
+            return;
+        }
+
         if (workout.type === 'day') {
             console.log('🚀 Starting day workout:', workout);
             navigate('/workout/start', {
@@ -1626,6 +1643,13 @@ const WorkoutsTab = () => {
                 }}
                 onProgramCreated={handleProgramCreated}
                 editData={editProgramData}
+            />
+            <WorkoutRecommendationPreviewDialog
+                open={Boolean(selectedRecommendedWorkout)}
+                workout={selectedRecommendedWorkout}
+                onClose={() => setSelectedRecommendedWorkout(null)}
+                onStart={handleStarterWorkoutStart}
+                onEdit={handleStarterWorkoutEdit}
             />
         </Box>
     );
