@@ -1,6 +1,7 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import CreateProgramModal from '../CreateProgramModal';
+import WorkoutRecommendationPreviewDialog from '../WorkoutRecommendationPreviewDialog';
 import { seedStarterProgramsWithMutations } from '../../hooks/useWorkoutPrograms';
 import {
   buildWorkoutStartState,
@@ -294,6 +295,28 @@ describe('buildStarterWorkoutRecommendations', () => {
         completed: false,
       })
     );
+  });
+});
+
+describe('WorkoutRecommendationPreviewDialog', () => {
+  it('renders starter workout details and exercise list', () => {
+    const workout = buildStarterWorkoutRecommendations()[0];
+
+    render(
+      <WorkoutRecommendationPreviewDialog
+        open
+        workout={workout}
+        onClose={vi.fn()}
+        onStart={vi.fn()}
+        onEdit={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText(workout.title)).toBeInTheDocument();
+    expect(screen.getByText(workout.description)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /start workout/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /edit workout/i })).toBeInTheDocument();
+    expect(screen.getByText(workout.dayData.exercises[0].name)).toBeInTheDocument();
   });
 });
 
