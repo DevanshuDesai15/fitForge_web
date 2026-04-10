@@ -301,22 +301,35 @@ describe('buildStarterWorkoutRecommendations', () => {
 describe('WorkoutRecommendationPreviewDialog', () => {
   it('renders starter workout details and exercise list', () => {
     const workout = buildStarterWorkoutRecommendations()[0];
+    const onClose = vi.fn();
+    const onStart = vi.fn();
+    const onEdit = vi.fn();
 
     render(
       <WorkoutRecommendationPreviewDialog
         open
         workout={workout}
-        onClose={vi.fn()}
-        onStart={vi.fn()}
-        onEdit={vi.fn()}
+        onClose={onClose}
+        onStart={onStart}
+        onEdit={onEdit}
       />
     );
 
     expect(screen.getByText(workout.title)).toBeInTheDocument();
     expect(screen.getByText(workout.description)).toBeInTheDocument();
+    expect(screen.getByText(/ai pick/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /start workout/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /edit workout/i })).toBeInTheDocument();
     expect(screen.getByText(workout.dayData.exercises[0].name)).toBeInTheDocument();
+    expect(screen.getAllByText(`${workout.dayData.exercises[0].targetSets} sets`)).toHaveLength(
+      workout.dayData.exercises.length
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /start workout/i }));
+    fireEvent.click(screen.getByRole('button', { name: /edit workout/i }));
+
+    expect(onStart).toHaveBeenCalledTimes(1);
+    expect(onEdit).toHaveBeenCalledTimes(1);
   });
 });
 

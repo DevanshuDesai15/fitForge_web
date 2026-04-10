@@ -61,7 +61,30 @@ const WorkoutRecommendationPreviewDialog = ({ open, workout, onClose, onStart, o
 
 WorkoutRecommendationPreviewDialog.propTypes = {
   open: PropTypes.bool.isRequired,
-  workout: PropTypes.object,
+  workout: PropTypes.shape({
+    title: PropTypes.string.isRequired,
+    description: PropTypes.string.isRequired,
+    duration: PropTypes.string.isRequired,
+    exercises: PropTypes.number.isRequired,
+    difficulty: PropTypes.string.isRequired,
+    category: PropTypes.string.isRequired,
+    isAIPick: PropTypes.bool,
+    dayData: PropTypes.shape({
+      exercises: PropTypes.arrayOf(
+        PropTypes.shape({
+          name: PropTypes.string.isRequired,
+          targetSets: PropTypes.number,
+          sets: PropTypes.arrayOf(
+            PropTypes.shape({
+              weight: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+              reps: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+              completed: PropTypes.bool,
+            })
+          ),
+        })
+      ),
+    }),
+  }),
   onClose: PropTypes.func.isRequired,
   onStart: PropTypes.func.isRequired,
   onEdit: PropTypes.func.isRequired,
