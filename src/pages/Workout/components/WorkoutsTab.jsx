@@ -292,7 +292,7 @@ const WorkoutsTab = () => {
         }
     }, [workoutStarted, exercises]);
 
-    const calculateRecommendations = useCallback((userPrograms, completedWorkouts) => {
+    const calculateRecommendations = useCallback((userPrograms, completedWorkouts, userTemplates = []) => {
         const recommendations = [];
 
         for (const program of userPrograms) {
@@ -319,9 +319,32 @@ const WorkoutsTab = () => {
             }
         }
 
-        return recommendations.length > 0
+        const defaultRecommendations = recommendations.length > 0
             ? recommendations.slice(0, 3)
             : buildStarterWorkoutRecommendations();
+
+        // 🎯 Override starter recommendations with custom user templates matching the same name
+        return defaultRecommendations.map(rec => {
+            if (rec.type === 'starter' || rec.isAIPick) {
+                const matchingTemplate = userTemplates.find(t => t.name.toLowerCase() === rec.title.toLowerCase());
+                if (matchingTemplate) {
+                    return {
+                        ...rec,
+                        id: matchingTemplate.id, 
+                        duration: estimateTemplateDuration(matchingTemplate) || rec.duration,
+                        exercises: getTotalExercises(matchingTemplate) || rec.exercises,
+                        difficulty: matchingTemplate.difficulty || rec.difficulty,
+                        dayData: {
+                            ...rec.dayData,
+                            id: matchingTemplate.id,
+                            templateId: matchingTemplate.id,
+                            exercises: matchingTemplate.workoutDays?.[0]?.exercises || matchingTemplate.exercises || [],
+                        }
+                    };
+                }
+            }
+            return rec;
+        });
     }, []);
 
     // Load user's completed workouts and calculate recommendations
@@ -335,7 +358,7 @@ const WorkoutsTab = () => {
                 });
 
                 // Calculate recommendations based on templates and progress
-                const recommendations = calculateRecommendations(programs, workouts);
+                const recommendations = calculateRecommendations(programs, workouts, templates);
                 setRecommendedWorkouts(recommendations);
 
             } catch (error) {
@@ -348,7 +371,7 @@ const WorkoutsTab = () => {
         if (currentUser && !programsLoading) {
             loadWorkoutData();
         }
-    }, [currentUser, programs, programsLoading, calculateRecommendations, supabase]);
+    }, [currentUser, programs, programsLoading, templates, calculateRecommendations, supabase]);
 
     const getTemplateCategory = (day) => {
         if (!day.muscleGroups || day.muscleGroups.length === 0) return 'General';
@@ -415,7 +438,7 @@ const WorkoutsTab = () => {
         setEditingRecommendation({
             ...selectedRecommendedWorkout,
             isAIPick: false,
-            title: selectedRecommendedWorkout.title.includes('Custom') ? selectedRecommendedWorkout.title : `Custom ${selectedRecommendedWorkout.title}`
+            title: selectedRecommendedWorkout.title
         });
         setSelectedRecommendedWorkout(null);
     };
@@ -929,16 +952,37 @@ const WorkoutsTab = () => {
                                                         <WorkoutCard onClick={() => handleWorkoutClick(dayWorkout)}>
                                                             <CardContent>
                                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                                                                    <Typography variant="h6" sx={{ color: '#fff', fontWeight: 'bold', fontSize: '1rem' }}>
+                                                                    <Typography variant="h6" sx={{ color: '#fff', fontWeight: 'bold', fontSize: '1rem', flexGrow: 1, pr: 1 }}>
                                                                         {dayWorkout.title}
                                                                     </Typography>
-                                                                    {dayWorkout.isAIPick && (
-                                                                        <AIPick
-                                                                            icon={<MdAutoAwesome size={12} />}
-                                                                            label="AI Pick"
+                                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                        {dayWorkout.isAIPick && (
+                                                                            <AIPick
+                                                                                icon={<MdAutoAwesome size={12} />}
+                                                                                label="AI Pick"
+                                                                                size="small"
+                                                                            />
+                                                                        )}
+                                                                        <IconButton
                                                                             size="small"
-                                                                        />
-                                                                    )}
+                                                                            onClick={async (e) => {
+                                                                                e.stopPropagation();
+                                                                                if (window.confirm('Are you sure you want to delete this workout?')) {
+                                                                                    await deleteTemplate(dayWorkout.templateId);
+                                                                                    loadTemplates();
+                                                                                }
+                                                                            }}
+                                                                            sx={{
+                                                                                color: 'rgba(255, 255, 255, 0.5)',
+                                                                                '&:hover': {
+                                                                                    color: '#f44336',
+                                                                                    backgroundColor: 'rgba(244, 67, 54, 0.1)'
+                                                                                }
+                                                                            }}
+                                                                        >
+                                                                            <MdDelete size={20} />
+                                                                        </IconButton>
+                                                                    </Box>
                                                                 </Box>
 
                                                                 <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
@@ -1007,16 +1051,37 @@ const WorkoutsTab = () => {
                                                     <WorkoutCard onClick={() => handleWorkoutClick(templateWorkout)}>
                                                         <CardContent>
                                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                                                                <Typography variant="h6" sx={{ color: '#fff', fontWeight: 'bold', fontSize: '1rem' }}>
+                                                                <Typography variant="h6" sx={{ color: '#fff', fontWeight: 'bold', fontSize: '1rem', flexGrow: 1, pr: 1 }}>
                                                                     {templateWorkout.title}
                                                                 </Typography>
-                                                                {templateWorkout.isAIPick && (
-                                                                    <AIPick
-                                                                        icon={<MdAutoAwesome size={12} />}
-                                                                        label="AI Pick"
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                    {templateWorkout.isAIPick && (
+                                                                        <AIPick
+                                                                            icon={<MdAutoAwesome size={12} />}
+                                                                            label="AI Pick"
+                                                                            size="small"
+                                                                        />
+                                                                    )}
+                                                                    <IconButton
                                                                         size="small"
-                                                                    />
-                                                                )}
+                                                                        onClick={async (e) => {
+                                                                            e.stopPropagation();
+                                                                            if (window.confirm('Are you sure you want to delete this workout?')) {
+                                                                                await deleteTemplate(templateWorkout.templateId);
+                                                                                loadTemplates();
+                                                                            }
+                                                                        }}
+                                                                        sx={{
+                                                                            color: 'rgba(255, 255, 255, 0.5)',
+                                                                            '&:hover': {
+                                                                                color: '#f44336',
+                                                                                backgroundColor: 'rgba(244, 67, 54, 0.1)'
+                                                                            }
+                                                                        }}
+                                                                    >
+                                                                        <MdDelete size={20} />
+                                                                    </IconButton>
+                                                                </Box>
                                                             </Box>
 
                                                             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
