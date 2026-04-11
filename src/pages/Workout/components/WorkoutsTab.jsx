@@ -217,6 +217,7 @@ const WorkoutsTab = () => {
     const [hasOngoingWorkout, setHasOngoingWorkout] = useState(false);
     const [workoutInfo, setWorkoutInfo] = useState(null);
     const [selectedRecommendedWorkout, setSelectedRecommendedWorkout] = useState(null);
+    const [editingRecommendation, setEditingRecommendation] = useState(null);
 
     const handleSubTabChange = (tabIndex) => {
         setActiveSubTab(tabIndex);
@@ -235,6 +236,13 @@ const WorkoutsTab = () => {
 
     const handleContinueWorkout = () => {
         navigate('/workout/start');
+    };
+
+    const handleClearOngoingWorkout = (e) => {
+        e.stopPropagation();
+        localStorage.removeItem('workoutState');
+        setHasOngoingWorkout(false);
+        setWorkoutInfo(null);
     };
 
     // Weekly performance data
@@ -404,10 +412,10 @@ const WorkoutsTab = () => {
     const handleStarterWorkoutEdit = () => {
         if (!selectedRecommendedWorkout) return;
 
-        navigate('/workout/start', {
-            state: buildStarterWorkoutStartState(selectedRecommendedWorkout, {
-                editBeforeStart: true,
-            }),
+        setEditingRecommendation({
+            ...selectedRecommendedWorkout,
+            isAIPick: false,
+            title: selectedRecommendedWorkout.title.includes('Custom') ? selectedRecommendedWorkout.title : `Custom ${selectedRecommendedWorkout.title}`
         });
         setSelectedRecommendedWorkout(null);
     };
@@ -635,17 +643,33 @@ const WorkoutsTab = () => {
                                             <Typography variant="h6" sx={{ color: '#fff', fontWeight: 'bold' }}>
                                                 {workoutInfo.name}
                                             </Typography>
-                                            <Chip
-                                                label="AI Pick"
-                                                size="small"
-                                                sx={{
-                                                    backgroundColor: '#dded00',
-                                                    color: '#000',
-                                                    fontWeight: 'bold',
-                                                    fontSize: '0.7rem',
-                                                    height: '20px'
-                                                }}
-                                            />
+                                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                <Chip
+                                                    label="AI Pick"
+                                                    size="small"
+                                                    sx={{
+                                                        backgroundColor: '#dded00',
+                                                        color: '#000',
+                                                        fontWeight: 'bold',
+                                                        fontSize: '0.7rem',
+                                                        height: '20px'
+                                                    }}
+                                                />
+                                                <IconButton
+                                                    size="small"
+                                                    onClick={handleClearOngoingWorkout}
+                                                    sx={{
+                                                        color: 'rgba(255, 255, 255, 0.5)',
+                                                        marginLeft: '8px',
+                                                        '&:hover': {
+                                                            color: '#f44336',
+                                                            backgroundColor: 'rgba(244, 67, 54, 0.1)'
+                                                        }
+                                                    }}
+                                                >
+                                                    <MdDelete size={20} />
+                                                </IconButton>
+                                            </Box>
                                         </Box>
 
                                         <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
@@ -1629,9 +1653,17 @@ const WorkoutsTab = () => {
 
             {/* Create Workout Modal */}
             <CreateWorkoutModal
-                open={createModalOpen}
-                onClose={() => setCreateModalOpen(false)}
-                onWorkoutCreated={handleWorkoutCreated}
+                open={createModalOpen || !!editingRecommendation}
+                editData={editingRecommendation}
+                onClose={() => {
+                    setCreateModalOpen(false);
+                    setEditingRecommendation(null);
+                }}
+                onWorkoutCreated={() => {
+                    setCreateModalOpen(false);
+                    setEditingRecommendation(null);
+                    loadTemplates();
+                }}
             />
 
             {/* Create Program Modal */}

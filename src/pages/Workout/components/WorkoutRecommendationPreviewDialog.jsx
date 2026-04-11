@@ -9,53 +9,91 @@ import {
   Button,
   Chip,
   Divider,
+  IconButton
 } from '@mui/material';
-import { MdAutoAwesome, MdPlayArrow, MdEdit } from 'react-icons/md';
+import { MdAutoAwesome, MdPlayArrow, MdEdit, MdClose } from 'react-icons/md';
+import { styled } from '@mui/material/styles';
 
+const StyledDialog = styled(Dialog)(({ theme }) => ({
+    '& .MuiDialog-paper': {
+        background: '#1a1a1a',
+        border: '1px solid rgba(221, 237, 0, 0.2)',
+        borderRadius: '16px',
+        color: '#fff',
+    },
+}));
 const WorkoutRecommendationPreviewDialog = ({ open, workout, onClose, onStart, onEdit }) => {
   if (!workout) return null;
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>
+    <StyledDialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+      <DialogTitle sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
           <Box>
-            <Typography variant="h6">{workout.title}</Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>{workout.title}</Typography>
+            <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
               {workout.description}
             </Typography>
           </Box>
-          {workout.isAIPick && (
-            <Chip icon={<MdAutoAwesome />} label="AI Pick" size="small" />
-          )}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {workout.isAIPick && (
+                <Chip 
+                  icon={<MdAutoAwesome style={{ color: '#000' }} />} 
+                  label="AI Pick" 
+                  size="small" 
+                  sx={{
+                    backgroundColor: '#dded00',
+                    color: '#000',
+                    fontWeight: 'bold',
+                    fontSize: '0.7rem',
+                    height: '24px'
+                  }}
+                />
+              )}
+              <IconButton onClick={onClose} sx={{ color: 'inherit' }} size="small">
+                  <MdClose />
+              </IconButton>
+          </Box>
         </Box>
       </DialogTitle>
-      <DialogContent dividers>
+      <DialogContent sx={{ mt: 2 }}>
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
-          <Chip label={workout.duration} size="small" />
-          <Chip label={`${workout.exercises} exercises`} size="small" />
-          <Chip label={workout.difficulty} size="small" />
-          <Chip label={workout.category} size="small" />
+          <Chip label={workout.duration} size="small" sx={{ backgroundColor: 'rgba(255,255,255,0.1)', color: '#fff' }} />
+          <Chip label={`${workout.exercises} exercises`} size="small" sx={{ backgroundColor: 'rgba(255,255,255,0.1)', color: '#fff' }} />
+          <Chip label={workout.difficulty} size="small" sx={{ backgroundColor: 'rgba(255,255,255,0.1)', color: '#fff' }} />
+          <Chip label={workout.category} size="small" sx={{ backgroundColor: 'rgba(255,255,255,0.1)', color: '#fff' }} />
         </Box>
-        <Divider sx={{ mb: 2 }} />
+        <Divider sx={{ mb: 2, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
         {workout.dayData?.exercises?.map((exercise) => (
           <Box key={exercise.name} sx={{ py: 1 }}>
             <Typography variant="body1">{exercise.name}</Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)' }}>
               {exercise.targetSets || 3} sets
             </Typography>
           </Box>
         ))}
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onEdit} startIcon={<MdEdit />}>
+      <DialogActions sx={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', p: 2 }}>
+        <Button onClick={onEdit} startIcon={<MdEdit />} sx={{ color: '#dded00' }}>
           Edit Workout
         </Button>
-        <Button variant="contained" onClick={onStart} startIcon={<MdPlayArrow />}>
+        <Button 
+          variant="contained" 
+          onClick={onStart} 
+          startIcon={<MdPlayArrow />}
+          sx={{
+            background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
+             color: '#000',
+             fontWeight: 'bold',
+             '&:hover': {
+                 background: 'linear-gradient(45deg, #e8f15d 30%, #dded00 90%)',
+             },
+          }}
+        >
           Start Workout
         </Button>
       </DialogActions>
-    </Dialog>
+    </StyledDialog>
   );
 };
 

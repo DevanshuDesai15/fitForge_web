@@ -86,7 +86,7 @@ const ExerciseCard = styled(Card)(() => ({
     },
 }));
 
-const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated }) => {
+const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated, editData }) => {
     const [activeStep, setActiveStep] = useState(0);
     const [workoutData, setWorkoutData] = useState({
         name: '',
@@ -104,7 +104,49 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated }) => {
     const [exercisesLoading, setExercisesLoading] = useState(true);
 
     const { currentUser } = useAuth();
-    const { createTemplate } = useWorkoutMutations();
+    const { createTemplate, updateTemplate } = useWorkoutMutations();
+    const isEditMode = !!editData;
+
+    useEffect(() => {
+        if (open && editData) {
+            setWorkoutData({
+                name: editData.title || editData.name || '',
+                category: editData.category || '',
+                description: editData.description || '',
+                difficulty: editData.difficulty || '',
+                duration: editData.duration ? String(editData.duration).replace(' min', '') : '45',
+                exercises: []
+            });
+            
+            const initialExercises = editData.dayData?.exercises || editData.exercises || [];
+            const transformedExercises = initialExercises.map((ex, index) => ({
+                id: ex.id || `ex-${index}`,
+                name: ex.name,
+                muscleGroup: ex.muscleGroup || 'General',
+                equipment: ex.equipment || 'Unknown',
+                description: ex.description || '',
+                target: ex.target || ex.muscleGroup || 'General',
+                sets: Array.isArray(ex.sets) && ex.sets.length > 0 ? ex.sets.map((set, setIndex) => ({
+                    setNumber: set.setNumber || setIndex + 1,
+                    reps: parseInt(set.reps) || 12,
+                    weight: parseFloat(set.weight) || 0,
+                    restTime: parseInt(set.restTime) || 60
+                })) : [{ setNumber: 1, reps: 12, weight: 0, restTime: 60 }]
+            }));
+            setSelectedExercises(transformedExercises);
+        } else if (open && !editData) {
+            setWorkoutData({
+                name: '',
+                category: '',
+                description: '',
+                difficulty: '',
+                duration: '',
+                exercises: []
+            });
+            setSelectedExercises([]);
+            setActiveStep(0);
+        }
+    }, [open, editData]);
 
     const steps = ['Details', 'Exercises'];
 
@@ -360,7 +402,11 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated }) => {
                 })),
             };
 
-            await createTemplate(templateData);
+            if (isEditMode && editData.id && !String(editData.id).startsWith('program-') && !String(editData.id).startsWith('starter-') && !editData.isAIPick) {
+                await updateTemplate(editData.id, templateData);
+            } else {
+                await createTemplate(templateData);
+            }
 
             if (onWorkoutCreated) {
                 onWorkoutCreated();
@@ -1012,7 +1058,7 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated }) => {
                 borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
             }}>
                 <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                    Create New Workout
+                    {isEditMode ? 'Edit Workout' : 'Create New Workout'}
                 </Typography>
                 <IconButton onClick={handleClose} sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                     <MdClose />
@@ -1082,7 +1128,7 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated }) => {
                             },
                         }}
                     >
-                        {loading ? 'Creating...' : 'Create Workout'}
+                        {loading ? (isEditMode ? 'Saving...' : 'Creating...') : (isEditMode ? 'Save Workout' : 'Create Workout')}
                     </Button>
                 ) : (
                     <Button
@@ -1115,6 +1161,7 @@ CreateWorkoutModal.propTypes = {
     open: PropTypes.bool.isRequired,
     onClose: PropTypes.func.isRequired,
     onWorkoutCreated: PropTypes.func.isRequired,
+    editData: PropTypes.object,
 };
 
 export default CreateWorkoutModal;
