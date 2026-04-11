@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import CreateProgramModal from '../CreateProgramModal';
 import WorkoutRecommendationPreviewDialog from '../WorkoutRecommendationPreviewDialog';
 import WorkoutsTab from '../WorkoutsTab';
-import { seedStarterProgramsWithMutations } from '../../hooks/useWorkoutPrograms';
+
 import {
   buildWorkoutStartState,
   findNextDayInProgram,
@@ -195,44 +195,7 @@ describe('CreateProgramModal', () => {
   });
 });
 
-describe('seedStarterProgramsWithMutations', () => {
-  it('creates starter templates and programs through the shared mutation layer', async () => {
-    const createTemplate = vi
-      .fn()
-      .mockResolvedValueOnce({ id: 'template_push' })
-      .mockResolvedValueOnce({ id: 'template_pull' })
-      .mockResolvedValueOnce({ id: 'template_legs' })
-      .mockResolvedValueOnce({ id: 'template_upper_a' })
-      .mockResolvedValueOnce({ id: 'template_lower_a' })
-      .mockResolvedValueOnce({ id: 'template_upper_b' })
-      .mockResolvedValueOnce({ id: 'template_lower_b' });
-    const createProgram = vi.fn().mockResolvedValue({ id: 'program_1' });
 
-    await seedStarterProgramsWithMutations({
-      createTemplate,
-      createProgram,
-    });
-
-    expect(createTemplate).toHaveBeenCalled();
-    expect(createProgram).toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: 'Push Pull Legs',
-        templateIds: ['template_push', 'template_pull', 'template_legs'],
-      })
-    );
-    expect(createProgram).toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: 'Upper Lower Split',
-        templateIds: [
-          'template_upper_a',
-          'template_lower_a',
-          'template_upper_b',
-          'template_lower_b',
-        ],
-      })
-    );
-  });
-});
 
 describe('loadCompletedWorkoutsFromSupabase', () => {
   it('loads completed workouts from Supabase and maps fields for recommendations', async () => {

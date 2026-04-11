@@ -2,11 +2,6 @@ import { useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useSupabase } from '../../../hooks/useSupabase';
-import { programTemplates } from '../components/programTemplates';
-import {
-  createWorkoutMutationLayer,
-  mapWorkoutDayToTemplateInput,
-} from './useWorkoutMutations';
 
 const toArray = (value) => (Array.isArray(value) ? value : []);
 
@@ -45,49 +40,52 @@ function mapTemplateRowToDay(template, index) {
   };
 }
 
-function mapDefaultProgram(program) {
-  return {
-    ...program,
-    templateIds: [],
-    isFromTemplate: true,
-    days: toArray(program.days).map((day, index) => ({
-      ...day,
-      id: `starter-${program.id}-${index + 1}`,
-      templateId: `starter-${program.id}-${index + 1}`,
-      muscleGroups: deriveMuscleGroups(day.exercises),
-    })),
-  };
-}
+/**
+ * One-time cleanup: delete seeded (is_custom = false) templates and any
+ * programs that reference them. Runs once per user, tracked via localStorage.
+ */
+async function cleanupSeededData(supabase, userId) {
+  const cleanupKey = `fitforge_seeded_cleanup_${userId}`;
+  if (localStorage.getItem(cleanupKey)) return;
 
-export async function seedStarterProgramsWithMutations({
-  createTemplate,
-  createProgram,
-}) {
-  for (const program of programTemplates) {
-    const templateIds = [];
+  try {
+    // Find all non-custom templates
+    const { data: seededTemplates } = await supabase
+      .from('workout_templates')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('is_custom', false);
 
-    for (const day of toArray(program.days)) {
-      const templateRow = await createTemplate(
-        mapWorkoutDayToTemplateInput(day, {
-          description: program.description || '',
-          category: program.category,
-          difficulty: program.difficulty,
-          isCustom: false,
-        })
-      );
-      templateIds.push(templateRow.id);
+    if (seededTemplates && seededTemplates.length > 0) {
+      const seededIds = seededTemplates.map(t => t.id);
+
+      // Find programs that reference these templates
+      const { data: allPrograms } = await supabase
+        .from('workout_programs')
+        .select('id, template_ids')
+        .eq('user_id', userId);
+
+      // Delete programs whose template_ids are entirely seeded
+      for (const program of (allPrograms || [])) {
+        const tIds = toArray(program.template_ids);
+        const allSeeded = tIds.length > 0 && tIds.every(id => seededIds.includes(id));
+        if (allSeeded) {
+          await supabase.from('workout_programs').delete().eq('id', program.id);
+        }
+      }
+
+      // Delete the seeded templates
+      await supabase
+        .from('workout_templates')
+        .delete()
+        .eq('user_id', userId)
+        .eq('is_custom', false);
     }
-
-    await createProgram({
-      name: program.name,
-      description: program.description || '',
-      category: program.category ?? null,
-      difficulty: program.difficulty ?? null,
-      frequency: program.frequency ?? null,
-      duration: program.duration ?? null,
-      templateIds,
-    });
+  } catch (error) {
+    console.error('Error cleaning up seeded data:', error);
   }
+
+  localStorage.setItem(cleanupKey, 'true');
 }
 
 export const useWorkoutPrograms = () => {
@@ -104,8 +102,11 @@ export const useWorkoutPrograms = () => {
     queryKey: ['workoutPrograms', currentUser?.uid],
     queryFn: async () => {
       if (!currentUser) {
-        return programTemplates.map(mapDefaultProgram);
+        return [];
       }
+
+      // One-time cleanup of any previously seeded data
+      await cleanupSeededData(supabase, currentUser.uid);
 
       const fetchPrograms = async () => {
         const result = await supabase
@@ -118,21 +119,7 @@ export const useWorkoutPrograms = () => {
         return result.data || [];
       };
 
-      let programRows = await fetchPrograms();
-
-      if (programRows.length === 0) {
-        const mutationLayer = createWorkoutMutationLayer({
-          supabase,
-          queryClient,
-          userId: currentUser.uid,
-        });
-
-        await seedStarterProgramsWithMutations({
-          createTemplate: mutationLayer.createTemplate,
-          createProgram: mutationLayer.createProgram,
-        });
-        programRows = await fetchPrograms();
-      }
+      const programRows = await fetchPrograms();
 
       const { data: templateRows, error: templateError } = await supabase
         .from('workout_templates')

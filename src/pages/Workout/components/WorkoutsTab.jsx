@@ -333,7 +333,7 @@ const WorkoutsTab = () => {
                 if (matchingTemplate) {
                     return {
                         ...rec,
-                        id: matchingTemplate.id, 
+                        id: matchingTemplate.id,
                         duration: estimateTemplateDuration(matchingTemplate) || rec.duration,
                         exercises: getTotalExercises(matchingTemplate) || rec.exercises,
                         difficulty: matchingTemplate.difficulty || rec.difficulty,
@@ -697,7 +697,7 @@ const WorkoutsTab = () => {
         if (!selectedProgram) return;
 
         const confirmMessage = selectedProgram.isFromTemplate
-            ? `Are you sure you want to delete "${selectedProgram.name}"? This is a starter program that will be restored if you create a new account.`
+            ? `Are you sure you want to delete "${selectedProgram.name}"? This action cannot be undone.`
             : `Are you sure you want to delete "${selectedProgram.name}"? This action cannot be undone.`;
 
         if (window.confirm(confirmMessage)) {
@@ -706,6 +706,7 @@ const WorkoutsTab = () => {
                 for (const templateId of selectedProgram.templateIds || []) {
                     await deleteTemplate(templateId);
                 }
+                loadPrograms();
             } catch (error) {
                 console.error('Error deleting program:', error);
             }
@@ -1772,9 +1773,40 @@ const WorkoutsTab = () => {
                                 ))
                             ) : (
                                 <Grid item xs={12}>
-                                    <Typography sx={{ color: 'text.secondary', textAlign: 'center', py: 4 }}>
-                                        No custom programs created yet.
-                                    </Typography>
+                                    <Box sx={{
+                                        textAlign: 'center',
+                                        py: 6,
+                                        px: 3,
+                                        background: 'rgba(40, 40, 40, 0.5)',
+                                        borderRadius: '16px',
+                                        border: '1px dashed rgba(255, 255, 255, 0.15)',
+                                    }}>
+                                        <MdFolderOpen size={48} style={{ color: 'rgba(255, 255, 255, 0.3)', marginBottom: '16px' }} />
+                                        <Typography variant="h6" sx={{ color: '#fff', mb: 1, fontWeight: 'bold' }}>
+                                            No Programs Yet
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3, maxWidth: '500px', mx: 'auto', lineHeight: 1.6 }}>
+                                            Programs help you organize your workouts into structured training plans. Create a program to group your workout days (e.g., Push/Pull/Legs) and track your progress through a multi-week plan.
+                                        </Typography>
+                                        <Button
+                                            variant="contained"
+                                            startIcon={<MdAdd />}
+                                            onClick={handleCreateProgram}
+                                            sx={{
+                                                background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
+                                                color: '#000',
+                                                fontWeight: 'bold',
+                                                borderRadius: '8px',
+                                                px: 4,
+                                                py: 1.2,
+                                                '&:hover': {
+                                                    background: 'linear-gradient(45deg, #e8f15d 30%, #dded00 90%)',
+                                                },
+                                            }}
+                                        >
+                                            Create Your First Program
+                                        </Button>
+                                    </Box>
                                 </Grid>
                             )}
                         </Grid>
@@ -1835,131 +1867,6 @@ const WorkoutsTab = () => {
                             Delete
                         </MenuItem>
                     </Menu>
-
-                    {/* Popular Programs Section */}
-                    <Box>
-                        <Typography variant="h6" sx={{ color: '#fff', mb: 3, fontWeight: 'bold' }}>
-                            Popular Programs
-                        </Typography>
-
-                        <Grid container spacing={3}>
-                            {/* Popular Program Card */}
-                            <Grid item xs={12} md={6}>
-                                <Card sx={{
-                                    background: 'rgba(40, 40, 40, 0.9)',
-                                    borderRadius: '16px',
-                                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                                    p: 3,
-                                    '&:hover': {
-                                        border: '1px solid rgba(221, 237, 0, 0.3)',
-                                    }
-                                }}>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                                        <Box>
-                                            <Typography variant="h6" sx={{ color: '#fff', fontWeight: 'bold', mb: 1 }}>
-                                                Full Body Starter
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-                                                Perfect beginner program to build foundation
-                                            </Typography>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                                                <Chip
-                                                    label="beginner"
-                                                    size="small"
-                                                    sx={{
-                                                        backgroundColor: 'rgba(76, 175, 80, 0.2)',
-                                                        color: '#4caf50',
-                                                        fontSize: '0.7rem'
-                                                    }}
-                                                />
-                                                <Chip
-                                                    label="Popular"
-                                                    size="small"
-                                                    icon={<span style={{ fontSize: '12px' }}>⭐</span>}
-                                                    sx={{
-                                                        backgroundColor: 'rgba(221, 237, 0, 0.2)',
-                                                        color: '#dded00',
-                                                        fontSize: '0.7rem'
-                                                    }}
-                                                />
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                                        👥 234 users
-                                                    </Typography>
-                                                </Box>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                                        ⭐ 4.9/5
-                                                    </Typography>
-                                                </Box>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                                        📅 4 weeks
-                                                    </Typography>
-                                                </Box>
-                                            </Box>
-                                        </Box>
-                                        <Button
-                                            variant="outlined"
-                                            size="small"
-                                            startIcon={<span style={{ fontSize: '12px' }}>+</span>}
-                                            sx={{
-                                                borderColor: '#dded00',
-                                                color: '#dded00',
-                                                fontSize: '0.75rem',
-                                                '&:hover': {
-                                                    backgroundColor: 'rgba(221, 237, 0, 0.1)',
-                                                    borderColor: '#dded00',
-                                                },
-                                            }}
-                                        >
-                                            Add to Mine
-                                        </Button>
-                                    </Box>
-
-                                    {/* Program Preview Days */}
-                                    <Grid container spacing={1}>
-                                        <Grid item xs={6}>
-                                            <Box sx={{
-                                                background: 'rgba(60, 60, 60, 0.3)',
-                                                borderRadius: '8px',
-                                                p: 1.5,
-                                                textAlign: 'center'
-                                            }}>
-                                                <Typography variant="caption" sx={{ color: '#fff', fontWeight: 'bold', display: 'block' }}>
-                                                    Full Body A
-                                                </Typography>
-                                                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                                    2 exercises
-                                                </Typography>
-                                                <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
-                                                    45min
-                                                </Typography>
-                                            </Box>
-                                        </Grid>
-                                        <Grid item xs={6}>
-                                            <Box sx={{
-                                                background: 'rgba(60, 60, 60, 0.3)',
-                                                borderRadius: '8px',
-                                                p: 1.5,
-                                                textAlign: 'center'
-                                            }}>
-                                                <Typography variant="caption" sx={{ color: '#fff', fontWeight: 'bold', display: 'block' }}>
-                                                    Full Body B
-                                                </Typography>
-                                                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                                    2 exercises
-                                                </Typography>
-                                                <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
-                                                    45min
-                                                </Typography>
-                                            </Box>
-                                        </Grid>
-                                    </Grid>
-                                </Card>
-                            </Grid>
-                        </Grid>
-                    </Box>
                 </Box>
             )}
 

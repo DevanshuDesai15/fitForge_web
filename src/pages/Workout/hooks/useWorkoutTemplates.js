@@ -55,6 +55,7 @@ export const useWorkoutTemplates = () => {
         .from("workout_templates")
         .select("*")
         .eq("user_id", currentUser.uid)
+        .neq("is_custom", false)
         .order("created_at", { ascending: false });
 
       if (err) throw err;
