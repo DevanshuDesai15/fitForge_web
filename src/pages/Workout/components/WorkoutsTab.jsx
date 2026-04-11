@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Box, Typography, Grid, Card, CardContent, Button, Chip, LinearProgress, TextField, InputAdornment, Select, MenuItem, FormControl, Menu, IconButton } from '@mui/material';
+import { Box, Typography, Grid, Card, CardContent, Button, Chip, LinearProgress, TextField, InputAdornment, Select, MenuItem, FormControl, Menu, IconButton, Skeleton, Alert } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { MdPlayArrow, MdTimer, MdAutoAwesome, MdFlashOn, MdFolderOpen, MdAdd, MdSearch, MdArrowDropDown, MdExpandMore, MdMoreVert, MdEdit, MdContentCopy, MdDelete } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
@@ -8,7 +8,6 @@ import { useSupabase } from '../../../hooks/useSupabase';
 import { useWorkoutTemplates } from '../hooks/useWorkoutTemplates';
 import { useWorkoutPrograms } from '../hooks/useWorkoutPrograms';
 import { mapWorkoutDayToTemplateInput, useWorkoutMutations } from '../hooks/useWorkoutMutations';
-import AISuggestionCards from '../../../components/common/AISuggestionCards';
 import CreateWorkoutModal from './CreateWorkoutModal';
 import CreateProgramModal from './CreateProgramModal';
 import WorkoutRecommendationPreviewDialog from './WorkoutRecommendationPreviewDialog';
@@ -20,6 +19,9 @@ import {
     buildStarterWorkoutRecommendations,
     buildStarterWorkoutStartState,
 } from './starterWorkoutRecommendations';
+import progressiveOverloadAI from '../../../services/progressiveOverloadAI';
+import { Brain, TrendingUp, Clock } from 'lucide-react';
+import AIUnlockProgress from '../../Home/components/AIUnlockProgress';
 
 const WorkoutCard = styled(Card)(() => ({
     background: 'rgba(40, 40, 40, 0.9)',
@@ -245,16 +247,17 @@ const WorkoutsTab = () => {
         setWorkoutInfo(null);
     };
 
-    // Weekly performance data
-    const weeklyPerformanceData = [
-        { date: 'Mon', value: 65 },
-        { date: 'Tue', value: 75 },
-        { date: 'Wed', value: 55 },
-        { date: 'Thu', value: 80 },
-        { date: 'Fri', value: 75 },
-        { date: 'Sat', value: 85 },
-        { date: 'Sun', value: 95 }
-    ];
+    // Weekly performance data - computed from real workout history
+    const [weeklyPerformanceData, setWeeklyPerformanceData] = useState([]);
+
+    // AI Recommendation state (matching Home page)
+    const AI_RECOMMENDATION_UNLOCK_WORKOUTS = 5;
+    const [aiRecommendations, setAiRecommendations] = useState([]);
+    const [aiLoading, setAiLoading] = useState(false);
+    const [aiError, setAiError] = useState('');
+    const [completedWorkoutsCount, setCompletedWorkoutsCount] = useState(0);
+    const isAiUnlocked = completedWorkoutsCount >= AI_RECOMMENDATION_UNLOCK_WORKOUTS;
+    const workoutsUntilAiUnlock = Math.max(AI_RECOMMENDATION_UNLOCK_WORKOUTS - completedWorkoutsCount, 0);
 
     // Check for ongoing workout
     useEffect(() => {
@@ -357,9 +360,46 @@ const WorkoutsTab = () => {
                     userId: currentUser.uid,
                 });
 
+                // Track total completed workouts for AI unlock
+                setCompletedWorkoutsCount(workouts.length);
+
                 // Calculate recommendations based on templates and progress
                 const recommendations = calculateRecommendations(programs, workouts, templates);
                 setRecommendedWorkouts(recommendations);
+
+                // Compute weekly performance from real data
+                const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                const today = new Date();
+                const weekStart = new Date(today);
+                weekStart.setDate(today.getDate() - today.getDay()); // Start of this week (Sunday)
+                weekStart.setHours(0, 0, 0, 0);
+
+                // Initialize all 7 days
+                const weekData = dayNames.map((name, i) => {
+                    const dayDate = new Date(weekStart);
+                    dayDate.setDate(weekStart.getDate() + i);
+                    return { date: name, value: 0, dayDate };
+                });
+
+                // Fill in performance scores from completed workouts
+                workouts.forEach(workout => {
+                    const wDate = new Date(workout.timestamp || workout.completedAt);
+                    if (wDate >= weekStart) {
+                        const dayIndex = wDate.getDay();
+                        // Calculate a performance score from the workout
+                        const totalSets = workout.exercises?.reduce((sum, ex) =>
+                            sum + (ex.sets?.filter(s => s.completed).length || 0), 0) || 0;
+                        const totalVolume = workout.exercises?.reduce((sum, ex) =>
+                            sum + (ex.sets?.reduce((setSum, s) =>
+                                setSum + ((parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0)), 0) || 0), 0) || 0;
+                        // Score: combination of sets completed and volume (normalized roughly)
+                        const score = Math.min(100, Math.round((totalSets * 5) + (totalVolume / 50)));
+                        weekData[dayIndex].value = Math.max(weekData[dayIndex].value, score);
+                    }
+                });
+
+                // Remove the dayDate helper before setting state
+                setWeeklyPerformanceData(weekData.map(({ date, value }) => ({ date, value })));
 
             } catch (error) {
                 console.error('Error loading workout data:', error);
@@ -372,6 +412,99 @@ const WorkoutsTab = () => {
             loadWorkoutData();
         }
     }, [currentUser, programs, programsLoading, templates, calculateRecommendations, supabase]);
+
+    // AI Recommendation utility functions (matching Home page)
+    const getPriorityColor = (priority) => {
+        switch (priority) {
+            case 'high':
+                return { backgroundColor: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)' };
+            case 'medium':
+                return { backgroundColor: 'rgba(234, 179, 8, 0.2)', color: '#facc15', border: '1px solid rgba(234, 179, 8, 0.3)' };
+            case 'low':
+            default:
+                return { backgroundColor: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.3)' };
+        }
+    };
+
+    const getRecommendationTitle = (recommendation) => {
+        if (recommendation.progressionType === 'weight') return 'Increase Weight';
+        if (recommendation.progressionType === 'reps') return 'Increase Reps';
+        if (recommendation.progressionType === 'deload') return 'Deload Week';
+        return 'Progression Suggested';
+    };
+
+    const getRecommendationDescription = (recommendation) => {
+        if (recommendation.progressionType === 'weight') {
+            return `Try increasing ${recommendation.exerciseName} from ${recommendation.currentWeight}kg to ${recommendation.suggestedWeight}kg.`;
+        } else if (recommendation.progressionType === 'reps') {
+            return `Try increasing reps for ${recommendation.exerciseName} from ${recommendation.currentReps} to ${recommendation.suggestedReps}.`;
+        } else if (recommendation.progressionType === 'deload') {
+            return `Consider a deload week for ${recommendation.exerciseName}. Reduce weight to ${recommendation.suggestedWeight}kg.`;
+        }
+        return recommendation.reasoning || `Consider progression for ${recommendation.exerciseName}.`;
+    };
+
+    // Load AI recommendations (matching Home page pattern)
+    const loadAIRecommendations = useCallback(async () => {
+        if (!currentUser?.uid || !supabase || !isAiUnlocked) {
+            setAiLoading(false);
+            setAiRecommendations([]);
+            setAiError('');
+            return;
+        }
+
+        try {
+            setAiLoading(true);
+            progressiveOverloadAI.setSupabase(supabase);
+
+            let timeoutId;
+            const timeoutPromise = new Promise((_, reject) => {
+                timeoutId = setTimeout(() => reject(new Error('AI recommendations timed out')), 30000);
+            });
+
+            const loadPromise = (async () => {
+                const analyses = await progressiveOverloadAI.analyzeWorkoutHistory(currentUser.uid);
+                if (analyses && analyses.length > 0) {
+                    const topAnalyses = analyses.slice(0, 3);
+                    const exerciseIds = topAnalyses.map(a => a.exerciseId);
+                    const batchProgressions = await progressiveOverloadAI.calculateBatchProgressions(currentUser.uid, exerciseIds);
+                    return batchProgressions.map((progression, index) => {
+                        if (!progression) return null;
+                        return {
+                            ...progression,
+                            ...topAnalyses[index],
+                            priority: (progression.confidenceLevel || 0) >= 0.8 ? 'high' :
+                                (progression.confidenceLevel || 0) >= 0.6 ? 'medium' : 'low',
+                            icon: progression.progressionType === 'weight' ? TrendingUp :
+                                progression.progressionType === 'deload' ? Clock : Brain
+                        };
+                    }).filter(s => s !== null);
+                }
+                return [];
+            })();
+
+            const suggestions = await Promise.race([loadPromise, timeoutPromise]);
+            clearTimeout(timeoutId);
+            setAiRecommendations(suggestions);
+        } catch (error) {
+            console.error('Error loading AI recommendations:', error);
+            setAiRecommendations([]);
+            if (error.message?.includes('429') || error.message?.includes('Rate limit')) {
+                setAiError('AI suggestions temporarily unavailable due to high usage.');
+            } else {
+                setAiError('');
+            }
+        } finally {
+            setAiLoading(false);
+        }
+    }, [isAiUnlocked, supabase, currentUser?.uid]);
+
+    // Trigger AI recommendation loading
+    useEffect(() => {
+        if (currentUser?.uid && supabase && !loading) {
+            loadAIRecommendations();
+        }
+    }, [currentUser?.uid, supabase, loading, loadAIRecommendations]);
 
     const getTemplateCategory = (day) => {
         if (!day.muscleGroups || day.muscleGroups.length === 0) return 'General';
@@ -1148,22 +1281,136 @@ const WorkoutsTab = () => {
 
                         {/* AI Recommendations Sidebar */}
                         <Grid item xs={12} md={4}>
-                            <Typography variant="h6" sx={{ color: '#dded00', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <MdAutoAwesome />
-                                AI Recommendations
-                            </Typography>
+                            <Card sx={{
+                                background: 'rgba(40, 40, 40, 0.6)',
+                                backdropFilter: 'blur(10px)',
+                                borderRadius: '16px',
+                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                p: 3,
+                                mb: 3
+                            }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                                    <Brain size={20} style={{ color: '#dded00' }} />
+                                    <Typography variant="h6" sx={{ color: '#fff', fontSize: '1.125rem' }}>
+                                        AI Recommendations
+                                    </Typography>
+                                </Box>
 
-                            <AISuggestionCards
-                                userId={currentUser?.uid}
-                                workoutContext="workout"
-                                onSuggestionAccept={handleSuggestionAccept}
-                                onSuggestionDismiss={handleSuggestionDismiss}
-                                maxSuggestions={3}
-                                showPlateauWarnings={true}
-                            />
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                                    {aiLoading ? (
+                                        <>
+                                            {[1, 2, 3].map((i) => (
+                                                <Box key={i} sx={{ background: 'rgba(255, 255, 255, 0.02)', borderRadius: '12px', p: 2.5 }}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                                                        <Skeleton variant="circular" width={20} height={20} />
+                                                        <Box sx={{ flex: 1 }}>
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                                                                <Skeleton variant="text" width="60%" height={24} />
+                                                                <Skeleton variant="rectangular" width={60} height={22} sx={{ borderRadius: '12px' }} />
+                                                            </Box>
+                                                            <Skeleton variant="text" width="90%" height={20} />
+                                                            <Skeleton variant="text" width="70%" height={20} />
+                                                            <Skeleton variant="text" width="40%" height={16} sx={{ mt: 1 }} />
+                                                        </Box>
+                                                    </Box>
+                                                </Box>
+                                            ))}
+                                        </>
+                                    ) : aiRecommendations.length > 0 ? (
+                                        aiRecommendations.map((recommendation, index) => (
+                                            <Box key={recommendation.exerciseId || index} sx={{
+                                                background: 'rgba(255, 255, 255, 0.02)',
+                                                borderRadius: '12px',
+                                                p: 2.5,
+                                                transition: 'all 0.2s ease',
+                                                '&:hover': { background: 'rgba(255, 255, 255, 0.05)' }
+                                            }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                                                    <recommendation.icon size={20} style={{ color: '#dded00', marginTop: '2px' }} />
+                                                    <Box sx={{ flex: 1 }}>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                                                            <Typography variant="subtitle1" sx={{ color: '#fff', fontSize: '1rem' }}>
+                                                                {getRecommendationTitle(recommendation)}
+                                                            </Typography>
+                                                            <Chip
+                                                                label={recommendation.priority}
+                                                                size="small"
+                                                                sx={{
+                                                                    ...getPriorityColor(recommendation.priority),
+                                                                    fontSize: '0.7rem',
+                                                                    height: 22,
+                                                                    '& .MuiChip-label': { px: 1.5 }
+                                                                }}
+                                                            />
+                                                        </Box>
+                                                        <Typography variant="body2" sx={{
+                                                            color: 'rgba(255, 255, 255, 0.7)',
+                                                            mb: 2.5,
+                                                            lineHeight: 1.4,
+                                                            fontSize: '0.875rem'
+                                                        }}>
+                                                            {getRecommendationDescription(recommendation)}
+                                                        </Typography>
+                                                        <Button
+                                                            variant="text"
+                                                            size="small"
+                                                            sx={{
+                                                                color: '#dded00',
+                                                                textTransform: 'none',
+                                                                fontSize: '0.875rem',
+                                                                p: 0,
+                                                                minWidth: 'auto',
+                                                                '&:hover': { backgroundColor: 'transparent', color: '#e8f15d' }
+                                                            }}
+                                                            onClick={() => navigate('/workout/start')}
+                                                        >
+                                                            Start Workout
+                                                        </Button>
+                                                    </Box>
+                                                </Box>
+                                            </Box>
+                                        ))
+                                    ) : (
+                                        <Box sx={{ background: 'rgba(255, 255, 255, 0.02)', borderRadius: '12px', p: 3, textAlign: 'center' }}>
+                                            {aiError ? (
+                                                <>
+                                                    <Alert severity="info" sx={{ mb: 2, backgroundColor: 'rgba(33, 150, 243, 0.1)', color: '#64b5f6' }}>
+                                                        {aiError}
+                                                    </Alert>
+                                                    <Brain size={32} style={{ color: 'rgba(255, 255, 255, 0.3)', marginBottom: '12px' }} />
+                                                    <Typography variant="body1" sx={{ color: 'text.secondary', mb: 1 }}>
+                                                        Using Smart Fallbacks
+                                                    </Typography>
+                                                    <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.875rem' }}>
+                                                        Rule-based progression system is still working
+                                                    </Typography>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    {isAiUnlocked ? (
+                                                        <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.875rem' }}>
+                                                            AI recommendations are calibrating from your recent workout history
+                                                        </Typography>
+                                                    ) : (
+                                                        <>
+                                                            <AIUnlockProgress
+                                                                completedWorkouts={completedWorkoutsCount}
+                                                                totalWorkouts={AI_RECOMMENDATION_UNLOCK_WORKOUTS}
+                                                            />
+                                                            <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.875rem' }}>
+                                                                Complete {workoutsUntilAiUnlock} more workout{workoutsUntilAiUnlock === 1 ? '' : 's'} to unlock AI recommendations
+                                                            </Typography>
+                                                        </>
+                                                    )}
+                                                </>
+                                            )}
+                                        </Box>
+                                    )}
+                                </Box>
+                            </Card>
 
                             {/* Weekly Performance Chart */}
-                            <Box sx={{ mt: 3 }}>
+                            <Box>
                                 <Typography variant="h6" sx={{ color: '#fff', mb: 2 }}>
                                     Weekly Performance
                                 </Typography>
