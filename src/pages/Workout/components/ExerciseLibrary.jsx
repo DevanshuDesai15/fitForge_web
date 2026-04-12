@@ -3,6 +3,7 @@ import { Box, Typography, TextField, InputAdornment, Grid2, Card, CardContent, C
 import { styled } from '@mui/material/styles';
 import { MdSearch, MdFilterList, MdFitnessCenter } from 'react-icons/md';
 import { Dumbbell, Target, Activity, Zap } from 'lucide-react';
+import { extractExerciseDataArray } from '../../../utils/exerciseData';
 
 const ExerciseCard = styled(Card)(() => ({
     background: 'rgba(40, 40, 40, 0.8)',
@@ -34,8 +35,25 @@ const ExerciseLibrary = () => {
 
     // Dynamically load exercise data on mount
     useEffect(() => {
-        import('../../../../MergedData.json').then(module => {
-            setExerciseData(module.default || []);
+        import('../../../../UpdatedExerciseData.json').then(module => {
+            const exercises = extractExerciseDataArray(module.default).map((exercise) => {
+                const bodyPart = exercise.primary_muscle || exercise.muscle_groups?.[0] || 'Unknown';
+                const equipment = Array.isArray(exercise.equipment_needed)
+                    ? exercise.equipment_needed[0]
+                    : Array.isArray(exercise.equipment)
+                        ? exercise.equipment[0]
+                        : exercise.equipment_needed || exercise.equipment || '';
+
+                return {
+                    id: exercise.id,
+                    name: exercise.title || exercise.name,
+                    bodyPart,
+                    equipment,
+                    target: bodyPart,
+                    gifUrl: exercise.video_urls?.['480p'] || exercise.video_urls?.['720p'] || null,
+                };
+            });
+            setExerciseData(exercises);
         });
     }, []);
 

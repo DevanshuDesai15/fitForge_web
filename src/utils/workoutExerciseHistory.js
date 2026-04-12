@@ -1,3 +1,5 @@
+import { convertWeight } from './unitConversions';
+
 const toArray = (value) => (Array.isArray(value) ? value : []);
 
 function normalizeWorkoutExercise(workout, exercise, index) {
@@ -49,4 +51,54 @@ export function getRecentExercisesFromWorkouts(workouts = [], limit = 5) {
   }
 
   return recentExercises;
+}
+
+export function getExerciseLibraryStatsFromWorkouts(workouts = [], displayUnit = 'lbs') {
+  const normalizedDisplayUnit = displayUnit === 'kg' ? 'kg' : 'lbs';
+  const uniqueExercises = new Set();
+  let totalSets = 0;
+  let totalVolume = 0;
+
+  for (const workout of toArray(workouts)) {
+    for (const exercise of toArray(workout?.exercises)) {
+      const exerciseName = exercise?.name || exercise?.exerciseName;
+      if (exerciseName) {
+        uniqueExercises.add(exerciseName.toLowerCase());
+      }
+
+      for (const set of toArray(exercise?.sets)) {
+        const isCompleted = set?.completed !== false;
+        if (!isCompleted) {
+          continue;
+        }
+
+        totalSets += 1;
+
+        const reps = Number(set?.reps);
+        const weight = Number(set?.weight);
+
+        if (!Number.isFinite(reps) || !Number.isFinite(weight)) {
+          continue;
+        }
+
+        const setWeightUnit = set?.weightUnit || workout?.weight_unit || workout?.weightUnit || normalizedDisplayUnit;
+        const normalizedSetUnit = setWeightUnit === 'kg' ? 'kg' : 'lbs';
+        const convertedWeight = Number(convertWeight(weight, normalizedSetUnit, normalizedDisplayUnit));
+
+        if (!Number.isFinite(convertedWeight)) {
+          continue;
+        }
+
+        totalVolume += convertedWeight * reps;
+      }
+    }
+  }
+
+  return {
+    exercisesTried: uniqueExercises.size,
+    totalSets,
+    totalVolume: Math.round(totalVolume),
+    volumeUnit: normalizedDisplayUnit,
+    hasWorkoutData: totalSets > 0,
+  };
 }
