@@ -67,3 +67,13 @@ export const fetchExerciseCatalogPage = async (supabase, filters) => {
     totalCount: count || 0,
   };
 };
+
+export const fetchExerciseCatalogFilters = async (supabase) => {
+  const { data, error } = await supabase
+    .from('exercises')
+    .select('primary_muscle, difficulty, equipment_needed, tags, body_part');
+    
+  if (error) throw error;
+  
+  return getDistinctFilterOptions(data);
+};
