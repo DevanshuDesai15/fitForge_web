@@ -22,6 +22,19 @@ vi.mock('../huggingFaceService', () => ({
   },
 }));
 
+vi.mock('../config/geminiConfig', () => ({
+  default: {
+    apiKey: 'hf_test_key',
+    useGeminiAI: true,
+    emergencyDisable: false,
+    model: 'test-model',
+    temperature: 0.4,
+    maxTokens: 1500,
+    maxRetries: 0,
+    requestTimeout: 20000,
+  },
+}));
+
 describe('geminiAIService compatibility facade', () => {
   beforeEach(() => {
     vi.resetModules();
