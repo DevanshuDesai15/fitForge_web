@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { useSupabase } from '../../hooks/useSupabase';
+import { buildProfileSyncPayload } from './profileSync';
 
 export default function SyncProfile() {
     const { user, isLoaded } = useUser();
@@ -10,16 +11,25 @@ export default function SyncProfile() {
         async function syncUserToSupabase() {
             if (!isLoaded || !user) return;
 
-            // Blind upsert: ensure Clerk user exists in Supabase profiles
-            // We only map standard basic details on auth state changes
             try {
+                const { data: existingProfile, error: profileLookupError } = await supabase
+                    .from('profiles')
+                    .select('display_name')
+                    .eq('id', user.id)
+                    .maybeSingle();
+
+                if (profileLookupError) {
+                    throw profileLookupError;
+                }
+
+                const payload = buildProfileSyncPayload({
+                    user,
+                    existingProfile,
+                });
+
                 const { error } = await supabase
                     .from('profiles')
-                    .upsert({
-                        id: user.id,
-                        email: user.primaryEmailAddress?.emailAddress || null,
-                        display_name: user.fullName || user.firstName || 'New Lifter'
-                    }, { onConflict: 'id' });
+                    .upsert(payload, { onConflict: 'id' });
 
                 if (error) {
                     console.error('Failed to sync Clerk profile to Supabase:', error);

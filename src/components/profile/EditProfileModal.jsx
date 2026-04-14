@@ -19,6 +19,7 @@ import {
 } from '@mui/material';
 import { X, Save, User, Activity, Target, Bell } from 'lucide-react';
 import FitForgeSwitch from '../common/FitForgeSwitch';
+import { formatHeight } from '../../utils/unitConversion';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialog-paper': {
@@ -247,7 +248,7 @@ const EditProfileModal = ({ open, onClose, userData, onSave, loading, preference
     username: userData?.username || '',
     email: userData?.email || '',
     bio: userData?.bio || '',
-    height: userData?.height || '',
+    height: userData?.height ? formatHeight(userData.height, userData.heightUnit, unitPreference) : '',
     heightUnit: userData?.heightUnit || 'ft',
     weight: userData?.weight || '',
     age: userData?.age || '',
@@ -275,7 +276,7 @@ const EditProfileModal = ({ open, onClose, userData, onSave, loading, preference
         username: userData?.username || '',
         email: userData?.email || '',
         bio: userData?.bio || '',
-        height: userData?.height || '',
+        height: userData?.height ? formatHeight(userData.height, userData.heightUnit, unitPreference) : '',
         heightUnit: userData?.heightUnit || 'ft',
         weight: userData?.weight || '',
         age: userData?.age || '',
@@ -467,13 +468,13 @@ const EditProfileModal = ({ open, onClose, userData, onSave, loading, preference
             <SectionTitle>Physical Statistics</SectionTitle>
             <Grid container spacing={3}>
               <Grid item xs={4}>
-                <Label>Height ({heightUnit})</Label>
+                <Label>{heightUnit === 'cm' ? 'Height (cm)' : 'Height (ft\'in")'}</Label>
                 <StyledTextField
                   fullWidth
                   size="small"
                   value={formData.height}
                   onChange={(e) => handleChange('height', e.target.value)}
-                  placeholder={heightUnit === 'cm' ? '183' : "6'0&quot;"}
+                  placeholder={heightUnit === 'cm' ? '182' : "5'11\""}
                 />
               </Grid>
               <Grid item xs={4}>

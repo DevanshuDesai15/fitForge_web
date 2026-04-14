@@ -1,3 +1,5 @@
+import { parseHeight } from '../../utils/unitConversion';
+
 const DEFAULT_PREFERENCES = {
   units: 'imperial',
   theme: 'dark',
@@ -115,7 +117,7 @@ export const buildProfileUpdatePayload = ({
       ...existingPreferences,
       profile: {
         ...existingProfileDetails,
-        height: formData.height ?? existingProfileDetails.height ?? '',
+        height: parseHeight(formData.height, formData.heightUnit || existingProfileDetails.heightUnit || 'ft') ?? existingProfileDetails.height ?? '',
         heightUnit: formData.heightUnit ?? existingProfileDetails.heightUnit ?? 'ft',
         bio: formData.bio ?? existingProfileDetails.bio ?? '',
         fitnessGoal: formData.primaryGoal ?? formData.fitnessGoal ?? existingProfileDetails.fitnessGoal ?? '',

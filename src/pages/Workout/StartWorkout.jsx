@@ -491,10 +491,13 @@ const StartWorkout = () => {
 
             // Save workout to database
             const completedAt = new Date().toISOString();
+            const resolvedTemplateName = currentTemplate?.name || 'Custom Workout';
+            const resolvedDayName = selectedDay?.name || 'Workout Session';
             const workoutData = {
+                name: `${resolvedTemplateName} - ${resolvedDayName}`,
                 templateId: currentTemplate?.id || null,
-                templateName: currentTemplate?.name || 'Custom Workout',
-                dayName: selectedDay?.name || 'Workout Session',
+                templateName: resolvedTemplateName,
+                dayName: resolvedDayName,
                 weightUnit,
                 exercises: exercises.map(exercise => ({
                     name: exercise.name,

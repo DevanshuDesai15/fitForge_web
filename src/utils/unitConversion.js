@@ -24,8 +24,8 @@ export const convertWeight = (value, fromUnit, toUnit) => {
 export const convertHeight = (value, fromUnit, toUnit) => {
   if (!value || fromUnit === toUnit) return value;
 
-  const numValue = parseFloat(value);
-  if (isNaN(numValue)) return value;
+  const numValue = parseHeight(value, fromUnit);
+  if (numValue === null) return value;
 
   if (fromUnit === 'ft' && toUnit === 'cm') {
     // Value in inches, convert to cm
@@ -36,6 +36,41 @@ export const convertHeight = (value, fromUnit, toUnit) => {
   }
 
   return value;
+};
+
+/**
+ * Parse height string into a numeric value (inches for ft, cm for cm)
+ */
+export const parseHeight = (value, unit = 'ft') => {
+  if (value === null || value === undefined || value === '') return null;
+
+  if (unit === 'metric' || unit === 'cm') {
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? null : parsed;
+  }
+
+  // Handle imperial (ft/in)
+  if (typeof value === 'number') return value;
+
+  const strValue = String(value).trim();
+
+  // Handle format like 5'11" or 5'11
+  const ftInMatch = strValue.match(/^(\d+)'\s*(\d+)?"?$/) || strValue.match(/^(\d+)\s+(\d+)$/);
+  if (ftInMatch) {
+    const feet = parseInt(ftInMatch[1], 10);
+    const inches = parseInt(ftInMatch[2] || '0', 10);
+    return (feet * 12) + inches;
+  }
+
+  // Handle format like 6'
+  const ftMatch = strValue.match(/^(\d+)'$/);
+  if (ftMatch) {
+    return parseInt(ftMatch[1], 10) * 12;
+  }
+
+  // Fallback to simple number (treated as total inches)
+  const parsed = parseFloat(strValue);
+  return isNaN(parsed) ? null : parsed;
 };
 
 /**
@@ -52,30 +87,32 @@ export const formatWeight = (weight, unitPreference = 'imperial') => {
  * Format height for display based on unit preference
  */
 export const formatHeight = (height, heightUnit, unitPreference = 'imperial') => {
-  if (!height) return 'N/A';
+  const numericHeight = parseHeight(height, heightUnit);
+  if (numericHeight === null) return 'N/A';
 
   if (unitPreference === 'metric') {
     // Display in cm
-    if (heightUnit === 'cm') {
-      return `${height} cm`;
+    if (heightUnit === 'cm' || heightUnit === 'metric') {
+      return `${Math.round(numericHeight)} cm`;
     } else {
       // Convert from inches to cm
-      const cm = Math.round(height * 2.54);
+      const cm = Math.round(numericHeight * 2.54);
       return `${cm} cm`;
     }
   } else {
     // Display in ft/in
-    if (heightUnit === 'ft') {
-      const feet = Math.floor(height / 12);
-      const inches = height % 12;
-      return `${feet}'${inches}"`;
+    let totalInches;
+    if (heightUnit === 'ft' || heightUnit === 'imperial') {
+      totalInches = numericHeight;
     } else {
       // Convert from cm to ft/in
-      const totalInches = Math.round(height / 2.54);
-      const feet = Math.floor(totalInches / 12);
-      const inches = totalInches % 12;
-      return `${feet}'${inches}"`;
+      totalInches = Math.round(numericHeight / 2.54);
     }
+
+    const roundedInches = Math.round(totalInches);
+    const feet = Math.floor(roundedInches / 12);
+    const inches = roundedInches % 12;
+    return `${feet}'${inches}"`;
   }
 };
 

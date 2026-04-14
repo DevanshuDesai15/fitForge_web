@@ -111,11 +111,24 @@ describe('workoutDataService', () => {
     expect(resultA).toMatchObject({
       user_id: 'user_123',
       template_id: 'template_1',
+      name: 'Push Day - Monday',
       template_name: 'Push Day',
       day_name: 'Monday',
       duration: 45,
       completed: true,
     });
+  });
+
+  it('falls back to a non-null workout name when only day metadata exists', () => {
+    const result = mapWorkoutToDb(
+      {
+        templateName: 'Custom Workout',
+        dayName: 'Workout Session',
+      },
+      'user_123'
+    );
+
+    expect(result.name).toBe('Custom Workout - Workout Session');
   });
 });
 

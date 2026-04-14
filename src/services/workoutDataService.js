@@ -39,11 +39,20 @@ export function mapProgramToDb(program = {}, userId, options = {}) {
 }
 
 export function mapWorkoutToDb(workout = {}, userId, options = {}) {
+  const resolvedTemplateName = workout.templateName ?? workout.template_name ?? 'Workout';
+  const resolvedDayName = workout.dayName ?? workout.day_name ?? '';
+  const resolvedName =
+    workout.name
+    ?? workout.title
+    ?? workout.workoutName
+    ?? (resolvedDayName ? `${resolvedTemplateName} - ${resolvedDayName}` : resolvedTemplateName);
+
   return {
     user_id: userId,
+    name: resolvedName,
     template_id: workout.templateId ?? workout.template_id ?? null,
-    template_name: workout.templateName ?? workout.template_name ?? '',
-    day_name: workout.dayName ?? workout.day_name ?? '',
+    template_name: resolvedTemplateName,
+    day_name: resolvedDayName,
     weight_unit: workout.weightUnit ?? workout.weight_unit ?? null,
     exercises: toArray(workout.exercises),
     duration: workout.duration ?? null,
