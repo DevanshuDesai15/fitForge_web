@@ -19,9 +19,9 @@ import {
 import { Activity, Target, Weight, BarChart3, Search } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useSupabase } from '../../../hooks/useSupabase';
-import { extractExerciseDataArray } from '../../../utils/exerciseData';
 import { getWeightUnit } from '../../../utils/weightUnit';
 import { getExerciseLibraryStatsFromWorkouts } from '../../../utils/workoutExerciseHistory';
+import { useExerciseCatalog } from '../hooks/useExerciseCatalog';
 
 const EMPTY_LIBRARY_STATS = {
     exercisesTried: 0,
@@ -99,20 +99,34 @@ import ExerciseDetailDialog from './ExerciseDetailDialog';
 const ExerciseLibraryTab = () => {
     const { currentUser } = useAuth();
     const supabase = useSupabase();
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('All');
-    const [exerciseData, setExerciseData] = useState(null);
+    
+    const [filters, setFilters] = useState({
+        searchTerm: '',
+        primaryMuscle: '',
+        equipment: '',
+        difficulty: '',
+        tag: '',
+        page: 1,
+        pageSize: 24,
+    });
+
+    const { items, totalCount, filterOptions, loading, error } = useExerciseCatalog({
+        supabase,
+        filters,
+    });
+
     const [selectedExercise, setSelectedExercise] = useState(null);
     const [detailOpen, setDetailOpen] = useState(false);
     const [libraryStats, setLibraryStats] = useState(EMPTY_LIBRARY_STATS);
     const [workouts, setWorkouts] = useState([]);
 
-    // Dynamically load exercise data on mount
-    useEffect(() => {
-        import('../../../../UpdatedExerciseData.json').then(module => {
-            setExerciseData({ products: extractExerciseDataArray(module.default) });
-        });
-    }, []);
+    const handleFilterChange = (key, value) => {
+        setFilters((current) => ({
+            ...current,
+            [key]: value,
+            page: 1,
+        }));
+    };
 
     useEffect(() => {
         const loadLibraryStats = async () => {
@@ -143,16 +157,6 @@ const ExerciseLibraryTab = () => {
 
         loadLibraryStats();
     }, [currentUser, supabase]);
-
-    // Build a lookup from exercise id to raw exercise data (for the detail dialog)
-    // Must be before the early return to avoid React hooks violation
-    const rawExerciseLookup = useMemo(() => {
-        const lookup = {};
-        if (exerciseData?.products) {
-            exerciseData.products.forEach(ex => { lookup[ex.id] = ex; });
-        }
-        return lookup;
-    }, [exerciseData]);
 
     const userWorkoutHistory = useMemo(() => {
         const historyByExercise = {};
@@ -226,31 +230,13 @@ const ExerciseLibraryTab = () => {
         );
     }, [workouts]);
 
-    // Show nothing while data is loading
-    if (!exerciseData) return null;
+    // Show nothing while data is loading initially or if errored
+    if (loading && items.length === 0) return <Typography>Loading exercises...</Typography>;
+    if (error) return <Typography color="error">{error}</Typography>;
 
-    // Map primary muscle to category
-    const getCategoryFromMuscle = (primaryMuscle) => {
-        if (!primaryMuscle || typeof primaryMuscle !== 'string') return 'Other';
-        const muscleToCategory = {
-            'Latissimus Dorsi': 'Back', 'Rhomboids': 'Back', 'Trapezius': 'Back', 'Erector Spinae': 'Back',
-            'Quadriceps': 'Legs', 'Hamstrings': 'Legs', 'Glutes': 'Legs', 'Calves': 'Legs', 'Gastrocnemius': 'Legs', 'Soleus': 'Legs',
-            'Pectorals': 'Chest',
-            'Anterior Deltoids': 'Shoulders', 'Posterior Deltoids': 'Shoulders', 'Lateral Deltoids': 'Shoulders', 'Deltoids': 'Shoulders',
-            'Biceps': 'Arms', 'Triceps': 'Arms', 'Forearms': 'Arms',
-            'Abdominals': 'Core', 'Obliques': 'Core', 'Hip Flexors': 'Core'
-        };
-        for (const [muscle, category] of Object.entries(muscleToCategory)) {
-            if (primaryMuscle.includes(muscle)) return category;
-        }
-        return 'Other';
-    };
-
-
-
-    // Transform exercise data from JSON to match our component structure
-    const exerciseStats = exerciseData.products.map((exercise) => {
-        const userStats = userWorkoutHistory[normalizeExerciseKey(exercise.title)] || {
+    // Transform exercise data from Supabase to match our component structure with history
+    const exerciseStats = items.map((exercise) => {
+        const userStats = userWorkoutHistory[normalizeExerciseKey(exercise.name)] || {
             setsCompleted: 0,
             totalReps: 0,
             volume: null,
@@ -261,41 +247,33 @@ const ExerciseLibraryTab = () => {
 
         return {
             id: exercise.id || 'unknown',
-            name: exercise.title || 'Unknown Exercise',
-            category: getCategoryFromMuscle(exercise.primary_muscle),
+            name: exercise.name || 'Unknown Exercise',
+            category: exercise.primaryMuscle || 'Unknown',
             difficulty: exercise.difficulty || 'Beginner',
-            primaryMuscle: exercise.primary_muscle || 'Unknown',
-            secondaryMuscles: exercise.secondary_muscles || [],
-            equipment: exercise.equipment_needed || [],
+            primaryMuscle: exercise.primaryMuscle || 'Unknown',
+            secondaryMuscles: exercise.secondaryMuscles || [],
+            equipment: exercise.equipmentNeeded || [],
             description: exercise.description || 'No description available',
-            videoUrls: exercise.video_urls || {},
+            videoUrls: exercise.videoUrls || {},
+            raw: exercise,
             ...userStats
         };
     });
 
     const handleExerciseClick = (exerciseId) => {
-        const rawExercise = rawExerciseLookup[exerciseId];
-        if (rawExercise) {
-            setSelectedExercise(rawExercise);
+        const selected = exerciseStats.find(ex => ex.id === exerciseId);
+        if (selected && selected.raw) {
+            setSelectedExercise(selected.raw);
             setDetailOpen(true);
         }
     };
 
-    // Get unique categories from the actual data
-    const uniqueCategories = [...new Set(exerciseStats.map(ex => ex.category))].sort();
-    const categories = ['All', ...uniqueCategories];
+    // Replace old uniqueCategories with filterOptions from Supabase hook
+    const categories = ['All', ...filterOptions.primaryMuscles];
 
-    // Filter exercises
-    const filteredExercises = exerciseStats.filter(exercise => {
-        const matchesSearch = exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            exercise.category.toLowerCase().includes(searchTerm.toLowerCase());
-
-        const matchesCategory = selectedCategory === 'All' || exercise.category === selectedCategory;
-
-        return matchesSearch && matchesCategory;
-    });
-
-    const totalExercises = exerciseStats.length; // Total exercises in database
+    // For display
+    const filteredExercises = exerciseStats;
+    const totalExercises = totalCount;
     const historyStats = [
         {
             icon: <Target size={20} color="#dded00" />,
@@ -413,8 +391,8 @@ const ExerciseLibraryTab = () => {
                     />
                     <TextField
                         placeholder="Search exercises..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        value={filters.searchTerm}
+                        onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
                         fullWidth
                         sx={{
                             '& .MuiOutlinedInput-root': {
@@ -498,8 +476,8 @@ const ExerciseLibraryTab = () => {
                         key={category}
                         label={category}
                         size="small"
-                        active={selectedCategory === category}
-                        onClick={() => setSelectedCategory(category)}
+                        active={(filters.primaryMuscle || 'All') === category}
+                        onClick={() => handleFilterChange('primaryMuscle', category === 'All' ? '' : category)}
                         sx={{
                             fontSize: { xs: '0.7rem', sm: '0.75rem' },
                             height: { xs: '24px', sm: '28px' },
@@ -514,7 +492,7 @@ const ExerciseLibraryTab = () => {
                 <Typography variant="h6" sx={{ color: '#fff' }}>
                     Exercise Library
                     <Typography component="span" sx={{ color: 'text.secondary', ml: 1 }}>
-                        {filteredExercises.length} of {totalExercises} exercises
+                        Page {filters.page} (Total: {totalExercises} exercises)
                     </Typography>
                 </Typography>
                 <Typography variant="body2" sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -720,22 +698,34 @@ const ExerciseLibraryTab = () => {
                 </Grid>
             </Box>
 
-            {/* Load More Button */}
-            <Box sx={{ textAlign: 'center', mt: 4 }}>
+            {/* Pagination Controls */}
+            <Box sx={{ textAlign: 'center', mt: 4, display: 'flex', justifyContent: 'center', gap: 2, alignItems: 'center' }}>
                 <Button
                     variant="outlined"
+                    onClick={() => handleFilterChange('page', filters.page - 1)}
+                    disabled={filters.page === 1}
                     sx={{
                         borderColor: 'rgba(255, 255, 255, 0.3)',
                         color: 'rgba(255, 255, 255, 0.7)',
-                        px: 4,
-                        py: 1,
-                        '&:hover': {
-                            borderColor: '#dded00',
-                            color: '#dded00',
-                        }
+                        '&:hover': { borderColor: '#dded00', color: '#dded00' }
                     }}
                 >
-                    Load More Exercises
+                    Previous
+                </Button>
+                <Typography sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                    Page {filters.page}
+                </Typography>
+                <Button
+                    variant="outlined"
+                    onClick={() => handleFilterChange('page', filters.page + 1)}
+                    disabled={filters.page * filters.pageSize >= totalExercises}
+                    sx={{
+                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        '&:hover': { borderColor: '#dded00', color: '#dded00' }
+                    }}
+                >
+                    Next
                 </Button>
             </Box>
 
