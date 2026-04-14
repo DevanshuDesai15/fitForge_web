@@ -24,8 +24,6 @@
     "@tanstack/react-query-devtools": "^5.96.1",
     "date-fns": "^4.1.0",
     "dotenv": "^17.4.0",
-    "firebase": "^11.1.0",
-    "firebase-admin": "^13.7.0",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.542.0",
     "posthog-js": "^1.364.6",
