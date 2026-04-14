@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import ExerciseLibraryTab from '../ExerciseLibraryTab';
+import ExerciseDetailDialog from '../ExerciseDetailDialog';
 import { useExerciseCatalog } from '../../hooks/useExerciseCatalog';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { useSupabase } from '../../../../hooks/useSupabase';
@@ -52,5 +53,41 @@ describe('ExerciseLibraryTab', () => {
     fireEvent.click(backFilter);
     
     expect(screen.getAllByText(/Page 1/i).length).toBeGreaterThan(0);
+  });
+});
+
+describe('ExerciseDetailDialog', () => {
+  it('renders variations, safety considerations, and tags from normalized exercise records', async () => {
+    render(
+      <ExerciseDetailDialog
+        open
+        onClose={() => {}}
+        exercise={{
+          name: 'Kettlebell Single Arm Row',
+          description: 'Updated description',
+          steps: ['Hinge', 'Row'],
+          primaryMuscle: 'Back',
+          secondaryMuscles: ['Rhomboids'],
+          equipmentNeeded: ['Kettlebell'],
+          proTips: ['Drive the elbow back'],
+          commonMistakes: ['Twisting the torso'],
+          variations: ['Single Arm Dumbbell Row'],
+          safetyConsiderations: ['Brace your core'],
+          tags: ['Back'],
+        }}
+      />
+    );
+
+    expect(screen.getByText('Kettlebell Single Arm Row')).toBeInTheDocument();
+    
+    // Check if the tag is rendered in Overview tab
+    expect(screen.getAllByText('Back').length).toBeGreaterThan(0);
+    
+    // Switch to Tips tab to see variations and safety constraints
+    const tipsTab = screen.getByRole('button', { name: /Tips/i });
+    fireEvent.click(tipsTab);
+    
+    expect(screen.getByText(/Single Arm Dumbbell Row/i)).toBeInTheDocument();
+    expect(screen.getByText(/Brace your core/i)).toBeInTheDocument();
   });
 });

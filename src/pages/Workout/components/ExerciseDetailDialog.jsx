@@ -30,13 +30,17 @@ const ExerciseDetailDialog = ({ open, onClose, exercise }) => {
     const name = exercise.title || exercise.name || 'Exercise';
     const description = exercise.description || 'No description available.';
     const steps = exercise.steps || [];
-    const proTips = exercise.pro_tips || [];
-    const commonMistakes = exercise.common_mistakes || [];
+    const proTips = exercise.proTips || exercise.pro_tips || [];
+    const commonMistakes = exercise.commonMistakes || exercise.common_mistakes || [];
     const primaryMuscle = exercise.primary_muscle || exercise.primaryMuscle || '';
     const secondaryMuscles = exercise.secondary_muscles || exercise.secondaryMuscles || [];
-    const equipment = exercise.equipment_needed || exercise.equipment || [];
-    const videoUrls = exercise.video_urls || exercise.videoUrls || {};
+    const equipment = exercise.equipmentNeeded || exercise.equipment_needed || exercise.equipment || [];
+    const videoUrls = exercise.videoUrls || exercise.video_urls || {};
     const difficulty = exercise.difficulty || 'Beginner';
+    
+    const variations = exercise.variations || [];
+    const safetyConsiderations = exercise.safetyConsiderations || exercise.safety_considerations || [];
+    const tags = exercise.tags || [];
 
     return (
         <Dialog
@@ -225,31 +229,67 @@ const ExerciseDetailDialog = ({ open, onClose, exercise }) => {
                                 </Box>
                             </Box>
 
-                            {/* Equipment */}
-                            <Box>
-                                <Typography variant="subtitle2" sx={{
-                                    color: '#fff',
-                                    fontWeight: 'bold',
-                                    mb: 1.5,
-                                    fontSize: '0.85rem',
-                                }}>
-                                    Equipment Needed
-                                </Typography>
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
-                                    {(Array.isArray(equipment) ? equipment : [equipment]).filter(Boolean).map((item, i) => (
-                                        <Chip
-                                            key={i}
-                                            label={item}
-                                            size="small"
-                                            sx={{
-                                                backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                                                color: 'rgba(255, 255, 255, 0.7)',
-                                                fontSize: '0.75rem',
-                                                height: '26px',
-                                            }}
-                                        />
-                                    ))}
+                            {/* Equipment & Tags */}
+                            <Box sx={{ display: 'flex', gap: 4 }}>
+                                <Box sx={{ flex: 1 }}>
+                                    <Typography variant="subtitle2" sx={{
+                                        color: '#fff',
+                                        fontWeight: 'bold',
+                                        mb: 1.5,
+                                        fontSize: '0.85rem',
+                                    }}>
+                                        Equipment Needed
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+                                        {(Array.isArray(equipment) ? equipment : [equipment]).filter(Boolean).length > 0 ? (
+                                            (Array.isArray(equipment) ? equipment : [equipment]).filter(Boolean).map((item, i) => (
+                                                <Chip
+                                                    key={i}
+                                                    label={item}
+                                                    size="small"
+                                                    sx={{
+                                                        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                                                        color: 'rgba(255, 255, 255, 0.7)',
+                                                        fontSize: '0.75rem',
+                                                        height: '26px',
+                                                    }}
+                                                />
+                                            ))
+                                        ) : (
+                                            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}>
+                                                Bodyweight / None
+                                            </Typography>
+                                        )}
+                                    </Box>
                                 </Box>
+
+                                {tags.length > 0 && (
+                                    <Box sx={{ flex: 1 }}>
+                                        <Typography variant="subtitle2" sx={{
+                                            color: '#fff',
+                                            fontWeight: 'bold',
+                                            mb: 1.5,
+                                            fontSize: '0.85rem',
+                                        }}>
+                                            🏷️ Tags
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+                                            {tags.map((tag, i) => (
+                                                <Chip
+                                                    key={i}
+                                                    label={tag}
+                                                    size="small"
+                                                    sx={{
+                                                        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                                                        color: 'rgba(255, 255, 255, 0.7)',
+                                                        fontSize: '0.75rem',
+                                                        height: '26px',
+                                                    }}
+                                                />
+                                            ))}
+                                        </Box>
+                                    </Box>
+                                )}
                             </Box>
                         </Box>
                     )}
@@ -467,7 +507,91 @@ const ExerciseDetailDialog = ({ open, onClose, exercise }) => {
                                 </Box>
                             )}
 
-                            {proTips.length === 0 && commonMistakes.length === 0 && (
+                            {/* Warning: Safety Considerations */}
+                            {safetyConsiderations.length > 0 && (
+                                <Box sx={{ mb: 3 }}>
+                                    <Typography variant="subtitle2" sx={{
+                                        color: '#fff',
+                                        fontWeight: 'bold',
+                                        mb: 2,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 1,
+                                        fontSize: '0.95rem',
+                                    }}>
+                                        <AlertTriangle size={18} color="#f44336" />
+                                        Safety Considerations
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                        {safetyConsiderations.map((safety, index) => (
+                                            <Box
+                                                key={index}
+                                                sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'flex-start',
+                                                    gap: 1.5,
+                                                    p: 1.5,
+                                                    backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                                                    border: '1px solid rgba(244, 67, 54, 0.2)',
+                                                    borderRadius: '10px',
+                                                }}
+                                            >
+                                                <AlertTriangle size={16} color="#f44336" style={{ flexShrink: 0, marginTop: '2px' }} />
+                                                <Typography variant="body2" sx={{
+                                                    color: 'rgba(255, 255, 255, 0.85)',
+                                                    fontSize: '0.85rem',
+                                                    lineHeight: 1.5,
+                                                }}>
+                                                    {safety}
+                                                </Typography>
+                                            </Box>
+                                        ))}
+                                    </Box>
+                                </Box>
+                            )}
+                            
+                            {/* Variations */}
+                            {variations.length > 0 && (
+                                <Box sx={{ mb: 3 }}>
+                                    <Typography variant="subtitle2" sx={{
+                                        color: '#fff',
+                                        fontWeight: 'bold',
+                                        mb: 2,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 1,
+                                        fontSize: '0.95rem',
+                                    }}>
+                                        🔄 Variations
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                        {variations.map((variation, index) => (
+                                            <Box
+                                                key={index}
+                                                sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'flex-start',
+                                                    gap: 1.5,
+                                                    p: 1.5,
+                                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                    borderRadius: '10px',
+                                                }}
+                                            >
+                                                <Typography variant="body2" sx={{
+                                                    color: 'rgba(255, 255, 255, 0.75)',
+                                                    fontSize: '0.85rem',
+                                                    lineHeight: 1.5,
+                                                }}>
+                                                    • {variation}
+                                                </Typography>
+                                            </Box>
+                                        ))}
+                                    </Box>
+                                </Box>
+                            )}
+
+                            {proTips.length === 0 && commonMistakes.length === 0 && safetyConsiderations.length === 0 && variations.length === 0 && (
                                 <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', mt: 1 }}>
                                     No tips available for this exercise.
                                 </Typography>
