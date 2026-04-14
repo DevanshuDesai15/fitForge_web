@@ -1,7 +1,9 @@
 import { useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { usePostHog } from 'posthog-js/react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useSupabase } from '../../../hooks/useSupabase';
+import { safeCapture } from '../../../services/analyticsService';
 
 const GOAL_QUERY_KEY = (userId) => ['goals', userId];
 
@@ -166,14 +168,42 @@ export function useGoalMutations() {
   const { currentUser } = useAuth();
   const supabase = useSupabase();
   const queryClient = useQueryClient();
+  const posthog = usePostHog();
 
-  return useMemo(
-    () =>
-      createGoalMutationLayer({
-        supabase,
-        queryClient,
-        userId: currentUser?.uid,
-      }),
-    [currentUser?.uid, queryClient, supabase]
-  );
+  return useMemo(() => {
+    const layer = createGoalMutationLayer({
+      supabase,
+      queryClient,
+      userId: currentUser?.uid,
+    });
+
+    return {
+      ...layer,
+      createGoal: async (goal) => {
+        const data = await layer.createGoal(goal);
+        safeCapture(posthog, 'goal_created', {
+          goal_id: data?.id,
+          goal_type: data?.type,
+          goal_category: data?.category,
+          goal_priority: data?.priority,
+        });
+        return data;
+      },
+      updateGoal: async (id, goal) => {
+        const data = await layer.updateGoal(id, goal);
+        if (goal.completed === true) {
+          safeCapture(posthog, 'goal_completed', {
+            goal_id: id,
+            goal_type: data?.type,
+          });
+        }
+        return data;
+      },
+      deleteGoal: async (id) => {
+        const data = await layer.deleteGoal(id);
+        safeCapture(posthog, 'goal_deleted', { goal_id: id });
+        return data;
+      },
+    };
+  }, [currentUser?.uid, queryClient, supabase, posthog]);
 }

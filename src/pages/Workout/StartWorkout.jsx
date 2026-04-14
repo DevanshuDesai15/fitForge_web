@@ -2,10 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Card, CardContent } from '@mui/material';
 import { CheckCircle as MdCheckCircle, Timer as MdTimer, ArrowLeft, Lightbulb as MdLightbulb, ArrowLeftRight as MdSwapHoriz } from 'lucide-react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { usePostHog } from 'posthog-js/react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSupabase } from '../../hooks/useSupabase';
 import { useWorkoutMutations } from './hooks/useWorkoutMutations';
 import { useUnits } from '../../contexts/UnitsContext';
+import { safeCapture } from '../../services/analyticsService';
 
 // Components
 import TemplateSelector from './components/TemplateSelector';
@@ -92,6 +94,21 @@ export function resolveProgramWorkoutSelection(programData, templateRows, reques
     };
 }
 
+export function beginWorkoutSession({
+    setWorkoutStartTime,
+    setWorkoutStarted,
+    posthog,
+    analyticsPayload,
+    shouldTrackAnalytics = true,
+}) {
+    setWorkoutStartTime(new Date().toISOString());
+    setWorkoutStarted(true);
+
+    if (shouldTrackAnalytics) {
+        safeCapture(posthog, 'workout_started', analyticsPayload);
+    }
+}
+
 const StartWorkout = () => {
     // State management
     const [currentStep, setCurrentStep] = useState('template'); // 'template', 'day', 'workout'
@@ -113,6 +130,7 @@ const StartWorkout = () => {
     const supabase = useSupabase();
     const { createWorkout } = useWorkoutMutations();
     const { weightUnit } = useUnits();
+    const posthog = usePostHog();
 
     const {
         workoutStarted,
@@ -226,8 +244,18 @@ const StartWorkout = () => {
                         }
 
                         setTimeout(() => {
-                            setWorkoutStartTime(new Date().toISOString());
-                            setWorkoutStarted(true);
+                            beginWorkoutSession({
+                                setWorkoutStartTime,
+                                setWorkoutStarted,
+                                posthog,
+                                analyticsPayload: {
+                                    template_name: passedWorkout.programName || passedWorkout.name?.split(' - ')[0] || 'Program',
+                                    template_id: templateId,
+                                    day_name: passedWorkout.dayName || passedWorkout.name?.split(' - ')[1] || 'Workout',
+                                    exercise_count: workoutExercises.length,
+                                },
+                                shouldTrackAnalytics: false,
+                            });
                         }, 100);
                     }
                 } else if (templateId && currentUser) {
@@ -248,8 +276,18 @@ const StartWorkout = () => {
                             setSelectedDay({ name: templateData.name, exercises });
                             setExercises(normalizeWorkoutExercises(exercises));
                             setTimeout(() => {
-                                setWorkoutStartTime(new Date().toISOString());
-                                setWorkoutStarted(true);
+                                beginWorkoutSession({
+                                    setWorkoutStartTime,
+                                    setWorkoutStarted,
+                                    posthog,
+                                    analyticsPayload: {
+                                        template_name: templateData.name,
+                                        template_id: templateData.id,
+                                        day_name: templateData.name,
+                                        exercise_count: exercises.length,
+                                    },
+                                    shouldTrackAnalytics: false,
+                                });
                             }, 100);
                         } else {
                             setError('This workout template has no exercises configured.');
@@ -284,8 +322,18 @@ const StartWorkout = () => {
                                 setSelectedDay(dayToSelect);
                                 setExercises(normalizeWorkoutExercises(dayToSelect.exercises));
                                 setTimeout(() => {
-                                    setWorkoutStartTime(new Date().toISOString());
-                                    setWorkoutStarted(true);
+                                    beginWorkoutSession({
+                                        setWorkoutStartTime,
+                                        setWorkoutStarted,
+                                        posthog,
+                                        analyticsPayload: {
+                                            template_name: resolvedProgram?.name,
+                                            template_id: resolvedProgram?.id,
+                                            day_name: dayToSelect?.name,
+                                            exercise_count: dayToSelect?.exercises?.length || 0,
+                                        },
+                                        shouldTrackAnalytics: false,
+                                    });
                                 }, 100);
                             } else {
                                 setError('This program has no exercises configured.');
@@ -323,6 +371,11 @@ const StartWorkout = () => {
     // Event handlers
     const handleSelectTemplate = (template) => {
         setCurrentTemplate(template);
+        safeCapture(posthog, 'workout_template_selected', {
+            template_id: template.id,
+            template_name: template.name,
+            template_category: template.category,
+        });
         if (template.workoutDays && template.workoutDays.length === 1) {
             // Auto-select if only one day
             handleSelectDay(template.workoutDays[0]);
@@ -332,7 +385,19 @@ const StartWorkout = () => {
     const handleSelectDay = (day) => {
         setSelectedDay(day);
         if (day.exercises) {
-            setExercises(normalizeWorkoutExercises(day.exercises));
+            const normalizedExercises = normalizeWorkoutExercises(day.exercises);
+            setExercises(normalizedExercises);
+            beginWorkoutSession({
+                setWorkoutStartTime,
+                setWorkoutStarted,
+                posthog,
+                analyticsPayload: {
+                    template_name: currentTemplate?.name,
+                    template_id: currentTemplate?.id,
+                    day_name: day?.name,
+                    exercise_count: normalizedExercises.length,
+                },
+            });
         }
     };
 
@@ -454,6 +519,11 @@ const StartWorkout = () => {
         const updatedExercises = [...exercises, exercise];
         setExercises(updatedExercises);
         setAddExerciseDialog(false);
+        safeCapture(posthog, 'exercise_added_to_workout', {
+            exercise_name: exercise.name,
+            exercise_category: exercise.category,
+            total_exercises: updatedExercises.length,
+        });
     };
 
     // 🎯 NEW: Handle notes change for current exercise
@@ -518,6 +588,15 @@ const StartWorkout = () => {
             console.log('💾 Saving workout data:', workoutData);
             const savedWorkout = await createWorkout(workoutData);
             console.log('✅ Workout saved with ID:', savedWorkout.id);
+
+            safeCapture(posthog, 'workout_completed', {
+                workout_id: savedWorkout.id,
+                template_name: workoutData.templateName,
+                duration_seconds: elapsedTime,
+                exercise_count: workoutData.exercises.length,
+                total_sets: workoutData.exercises.reduce((acc, ex) => acc + ex.sets.length, 0),
+                weight_unit: weightUnit,
+            });
 
             console.log('🎉 Workout save complete! Navigating to progress...');
 

@@ -9,6 +9,7 @@ import {
     Container,
     styled
 } from '@mui/material';
+import { usePostHog } from 'posthog-js/react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUnits } from '../../contexts/UnitsContext';
 import { useNavigate } from 'react-router-dom';
@@ -21,6 +22,7 @@ import ProfileTab from '../../components/profile/ProfileTab';
 import PreferencesTab from '../../components/profile/PreferencesTab';
 import AccountTab from '../../components/profile/AccountTab';
 import EditProfileModal from '../../components/profile/EditProfileModal';
+import { safeCapture } from '../../services/analyticsService';
 import {
     buildProfileUpdatePayload,
     getProfileNotifications,
@@ -71,6 +73,7 @@ export default function Profile() {
     const { currentUser, logout } = useAuth();
     const { updateUnitPreference } = useUnits();
     const navigate = useNavigate();
+    const posthog = usePostHog();
 
     // State Management
     // User Data State (Supabase Hooks)
@@ -121,6 +124,10 @@ export default function Profile() {
             });
 
             await updateProfile(profileUpdate);
+
+            safeCapture(posthog, 'profile_updated', {
+                fields_updated: Object.keys(profileUpdate).filter(k => k !== 'user_id'),
+            });
 
             setSuccess('Profile updated successfully!');
             setEditModalOpen(false);

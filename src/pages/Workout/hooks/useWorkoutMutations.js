@@ -1,7 +1,9 @@
 import { useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { usePostHog } from 'posthog-js/react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useSupabase } from '../../../hooks/useSupabase';
+import { safeCapture } from '../../../services/analyticsService';
 import {
   mapProgramToDb,
   mapProgramUpdateToDb,
@@ -266,14 +268,40 @@ export function useWorkoutMutations() {
   const { currentUser } = useAuth();
   const supabase = useSupabase();
   const queryClient = useQueryClient();
+  const posthog = usePostHog();
 
-  return useMemo(
-    () =>
-      createWorkoutMutationLayer({
-        supabase,
-        queryClient,
-        userId: currentUser?.uid,
-      }),
-    [currentUser?.uid, queryClient, supabase]
-  );
+  return useMemo(() => {
+    const layer = createWorkoutMutationLayer({
+      supabase,
+      queryClient,
+      userId: currentUser?.uid,
+    });
+
+    return {
+      ...layer,
+      createTemplate: async (value) => {
+        const data = await layer.createTemplate(value);
+        safeCapture(posthog, 'workout_template_created', {
+          template_id: data?.id,
+          template_name: data?.name,
+          exercise_count: Array.isArray(data?.exercises) ? data.exercises.length : undefined,
+        });
+        return data;
+      },
+      deleteTemplate: async (id) => {
+        const data = await layer.deleteTemplate(id);
+        safeCapture(posthog, 'workout_template_deleted', { template_id: id });
+        return data;
+      },
+      createProgram: async (value) => {
+        const data = await layer.createProgram(value);
+        safeCapture(posthog, 'workout_program_created', {
+          program_id: data?.id,
+          program_name: data?.name,
+          day_count: Array.isArray(data?.template_ids) ? data.template_ids.length : undefined,
+        });
+        return data;
+      },
+    };
+  }, [currentUser?.uid, queryClient, supabase, posthog]);
 }

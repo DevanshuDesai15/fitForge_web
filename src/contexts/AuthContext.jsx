@@ -1,5 +1,7 @@
-import { createContext, useContext, useMemo } from 'react';
+import { createContext, useContext, useEffect, useMemo } from 'react';
 import { useUser, useAuth as useClerkAuth, useClerk } from '@clerk/clerk-react';
+import posthog from 'posthog-js';
+import { identifyUser, resetAnalytics } from '../services/analyticsService';
 
 const AuthContext = createContext();
 
@@ -27,6 +29,17 @@ export function AuthProvider({ children }) {
         };
     }, [user]);
 
+    useEffect(() => {
+        if (user) {
+            identifyUser(posthog, user);
+        }
+    }, [user]);
+
+    const logout = async () => {
+        resetAnalytics(posthog);
+        return signOut();
+    };
+
     const value = {
         currentUser,
         loading,
@@ -34,7 +47,7 @@ export function AuthProvider({ children }) {
         signup: () => openSignUp(),
         login: () => openSignIn(),
         loginWithGoogle: () => openSignIn(),
-        logout: () => signOut()
+        logout
     };
 
     return (
