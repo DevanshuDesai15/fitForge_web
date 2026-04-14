@@ -1,0 +1,18 @@
+export const normalizeExerciseCatalogRow = (row) => ({
+  id: row.id,
+  slug: row.slug,
+  name: row.name,
+  description: row.description || '',
+  steps: row.steps || [],
+  primaryMuscle: row.primary_muscle || row.body_part || 'Unknown',
+  secondaryMuscles: row.secondary_muscles || [],
+  equipmentNeeded: row.equipment_needed || [],
+  exerciseTypes: row.exercise_types || [],
+  difficulty: row.difficulty || 'Beginner',
+  videoUrls: row.video_urls || {},
+  proTips: row.pro_tips || [],
+  commonMistakes: row.common_mistakes || [],
+  variations: row.variations || [],
+  safetyConsiderations: row.safety_considerations || [],
+  tags: row.tags || [],
+});
