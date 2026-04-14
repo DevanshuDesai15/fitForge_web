@@ -43,7 +43,7 @@ if (SENTRY_DSN) {
 if (POSTHOG_KEY) {
   posthog.init(POSTHOG_KEY, {
     api_host: POSTHOG_HOST,
-    capture_pageview: false,
+    capture_pageview: true,
     persistence: 'localStorage',
     loaded: (client) => {
       if (import.meta.env.DEV) {
