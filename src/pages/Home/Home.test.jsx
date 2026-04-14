@@ -10,12 +10,14 @@ const aiServiceMock = vi.hoisted(() => ({
 
 const dashboardStatsMock = vi.hoisted(() => ({
     value: {
-        stats: undefined,
-        recentAchievements: [],
-        nextWorkout: null,
-        isTomorrowFocus: false,
-        lastRepeatableWorkout: null,
-        completedWorkoutsCount: 0,
+        data: {
+            weeklyStats: undefined,
+            recentAchievements: [],
+            nextWorkout: null,
+            isTomorrowFocus: false,
+            lastRepeatableWorkout: null,
+            completedWorkoutsCount: 0,
+        },
         isLoading: true,
         error: null,
         refetch: vi.fn()
@@ -91,12 +93,14 @@ vi.mock('./components/WeeklyTargetsGrid', () => ({
 describe('Home', () => {
     beforeEach(() => {
         dashboardStatsMock.value = {
-            stats: undefined,
-            recentAchievements: [],
-            nextWorkout: null,
-            isTomorrowFocus: false,
-            lastRepeatableWorkout: null,
-            completedWorkoutsCount: 0,
+            data: {
+                weeklyStats: undefined,
+                recentAchievements: [],
+                nextWorkout: null,
+                isTomorrowFocus: false,
+                lastRepeatableWorkout: null,
+                completedWorkoutsCount: 0,
+            },
             isLoading: true,
             error: null,
             refetch: vi.fn()
@@ -115,12 +119,14 @@ describe('Home', () => {
 
     it('shows the welcome modal on initial render and hides it when dismissed', async () => {
         dashboardStatsMock.value = {
-            stats: undefined,
-            recentAchievements: [],
-            nextWorkout: null,
-            isTomorrowFocus: false,
-            lastRepeatableWorkout: null,
-            completedWorkoutsCount: 0,
+            data: {
+                weeklyStats: undefined,
+                recentAchievements: [],
+                nextWorkout: null,
+                isTomorrowFocus: false,
+                lastRepeatableWorkout: null,
+                completedWorkoutsCount: 0,
+            },
             isLoading: false,
             error: null,
             refetch: vi.fn()
@@ -140,12 +146,14 @@ describe('Home', () => {
 
     it('shows the welcome modal again on a fresh render after being dismissed', async () => {
         dashboardStatsMock.value = {
-            stats: undefined,
-            recentAchievements: [],
-            nextWorkout: null,
-            isTomorrowFocus: false,
-            lastRepeatableWorkout: null,
-            completedWorkoutsCount: 0,
+            data: {
+                weeklyStats: undefined,
+                recentAchievements: [],
+                nextWorkout: null,
+                isTomorrowFocus: false,
+                lastRepeatableWorkout: null,
+                completedWorkoutsCount: 0,
+            },
             isLoading: false,
             error: null,
             refetch: vi.fn()
@@ -163,12 +171,14 @@ describe('Home', () => {
 
     it('hides today focus for brand-new users with no program or workout history', () => {
         dashboardStatsMock.value = {
-            stats: undefined,
-            recentAchievements: [],
-            nextWorkout: null,
-            isTomorrowFocus: false,
-            lastRepeatableWorkout: null,
-            completedWorkoutsCount: 0,
+            data: {
+                weeklyStats: undefined,
+                recentAchievements: [],
+                nextWorkout: null,
+                isTomorrowFocus: false,
+                lastRepeatableWorkout: null,
+                completedWorkoutsCount: 0,
+            },
             isLoading: false,
             error: null,
             refetch: vi.fn()
@@ -183,15 +193,17 @@ describe('Home', () => {
 
     it('passes repeat-last mode into the focus card when the user has workout history but no program', () => {
         dashboardStatsMock.value = {
-            stats: undefined,
-            recentAchievements: [],
-            nextWorkout: null,
-            isTomorrowFocus: false,
-            lastRepeatableWorkout: {
-                name: 'Upper Body Repeat',
-                exercises: [{ name: 'Bench Press' }]
+            data: {
+                weeklyStats: undefined,
+                recentAchievements: [],
+                nextWorkout: null,
+                isTomorrowFocus: false,
+                lastRepeatableWorkout: {
+                    name: 'Upper Body Repeat',
+                    exercises: [{ name: 'Bench Press' }]
+                },
+                completedWorkoutsCount: 2,
             },
-            completedWorkoutsCount: 2,
             isLoading: false,
             error: null,
             refetch: vi.fn()
@@ -207,12 +219,14 @@ describe('Home', () => {
 
     it('shows AI unlock progress before the user reaches five workouts', () => {
         dashboardStatsMock.value = {
-            stats: undefined,
-            recentAchievements: [],
-            nextWorkout: null,
-            isTomorrowFocus: false,
-            lastRepeatableWorkout: null,
-            completedWorkoutsCount: 2,
+            data: {
+                weeklyStats: undefined,
+                recentAchievements: [],
+                nextWorkout: null,
+                isTomorrowFocus: false,
+                lastRepeatableWorkout: null,
+                completedWorkoutsCount: 2,
+            },
             isLoading: false,
             error: null,
             refetch: vi.fn()

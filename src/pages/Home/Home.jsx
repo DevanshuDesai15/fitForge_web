@@ -151,16 +151,21 @@ export default function Home() {
     // React Query Hooks (Supabase)
     const { profile, isLoading: profileLoading } = useProfile();
     const { 
-        stats: weeklyStats, 
-        recentAchievements, 
-        nextWorkout, 
-        isTomorrowFocus, 
-        lastRepeatableWorkout,
-        completedWorkoutsCount = 0,
+        data: statsData,
         isLoading: statsLoading,
         error: statsError,
         refetch: refetchStats
     } = useDashboardStats();
+
+    const {
+        weeklyStats,
+        recentAchievements,
+        nextWorkout,
+        isTomorrowFocus,
+        lastRepeatableWorkout,
+        completedWorkoutsCount = 0
+    } = statsData || {};
+
     const safeWeeklyStats = weeklyStats ?? DEFAULT_WEEKLY_STATS;
     const homeFocus = deriveHomeFocus({
         nextWorkout,
