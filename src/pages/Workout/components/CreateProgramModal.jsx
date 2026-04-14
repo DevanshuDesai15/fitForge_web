@@ -24,7 +24,7 @@ import {
     TextareaAutosize,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { MdClose, MdAdd, MdCalendarToday, MdDeleteOutline, MdFitnessCenter } from 'react-icons/md';
+import { X as MdClose, Plus as MdAdd, Calendar as MdCalendarToday, Trash2 as MdDeleteOutline, Dumbbell as MdFitnessCenter } from 'lucide-react';
 import { fetchAllExercises } from '../../../services/localExerciseService';
 import { useAuth } from '../../../contexts/AuthContext';
 import { syncProgramTemplateIds, useWorkoutMutations } from '../hooks/useWorkoutMutations';

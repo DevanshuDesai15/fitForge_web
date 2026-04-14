@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 
 export function useSupabase() {
   const { session } = useSession();
+  const sessionId = session?.id || null;
 
   return useMemo(() => {
     return createClient(
@@ -34,5 +35,5 @@ export function useSupabase() {
         },
       }
     );
-  }, [session]);
+  }, [sessionId]);
 }

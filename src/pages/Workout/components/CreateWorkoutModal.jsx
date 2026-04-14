@@ -23,7 +23,7 @@ import {
     Grid
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { MdClose, MdAdd, MdTimer, MdFitnessCenter, MdRemove } from 'react-icons/md';
+import { X as MdClose, Plus as MdAdd, Timer as MdTimer, Dumbbell as MdFitnessCenter, Minus as MdRemove } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { fetchAllExercises } from '../../../services/localExerciseService';
 import { useWorkoutMutations } from '../hooks/useWorkoutMutations';

@@ -1,13 +1,13 @@
 import { Box, Typography, Grid, CardContent } from '@mui/material';
 import {
-    MdTimeline,
-    MdEmojiEvents,
-    MdFitnessCenter,
-    MdShowChart,
-    MdPsychology,
-    MdTrendingUp,
-    MdTrendingFlat
-} from 'react-icons/md';
+    Activity as MdTimeline,
+    Trophy as MdEmojiEvents,
+    Dumbbell as MdFitnessCenter,
+    LineChart as MdShowChart,
+    Brain as MdPsychology,
+    TrendingUp as MdTrendingUp,
+    Minus as MdTrendingFlat
+} from 'lucide-react';
 import StatCard from './shared/StatCard';
 import { StyledCard } from './shared/StyledComponents';
 

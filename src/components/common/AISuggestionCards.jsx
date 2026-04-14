@@ -14,14 +14,14 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
-    MdClose,
-    MdCheckCircle,
-    MdTrendingUp,
-    MdFitnessCenter,
-    MdLightbulb,
-    MdWarning,
-    MdAutoAwesome
-} from 'react-icons/md';
+    X as MdClose,
+    CheckCircle as MdCheckCircle,
+    TrendingUp as MdTrendingUp,
+    Dumbbell as MdFitnessCenter,
+    Lightbulb as MdLightbulb,
+    AlertTriangle as MdWarning,
+    Sparkles as MdAutoAwesome
+} from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUnits } from '../../contexts/UnitsContext';
 import progressiveOverloadAI from '../../services/progressiveOverloadAI';

@@ -27,16 +27,16 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
-    MdExpandMore,
-    MdMerge,
-    MdEdit,
-    MdDelete,
-    MdWarning,
-    MdCheckCircle,
-    MdClose,
-    MdSave,
-    MdCleaningServices
-} from 'react-icons/md';
+    ChevronDown as MdExpandMore,
+    GitMerge as MdMerge,
+    Pencil as MdEdit,
+    Trash2 as MdDelete,
+    AlertTriangle as MdWarning,
+    CheckCircle as MdCheckCircle,
+    X as MdClose,
+    Save as MdSave,
+    Eraser as MdCleaningServices
+} from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSupabase } from '../../hooks/useSupabase';
 import { groupSimilarExercises, validateExerciseName, autoCorrectExerciseName } from '../../utils/exerciseValidator';

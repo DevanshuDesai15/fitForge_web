@@ -1,5 +1,5 @@
 import { CardContent, Typography, Box, Grid, Chip } from '@mui/material';
-import { MdTrendingUp, MdTrendingDown, MdTrendingFlat } from 'react-icons/md';
+import { TrendingUp as MdTrendingUp, TrendingDown as MdTrendingDown, Minus as MdTrendingFlat } from 'lucide-react';
 import { format } from 'date-fns';
 import { StyledCard } from './StyledComponents';
 

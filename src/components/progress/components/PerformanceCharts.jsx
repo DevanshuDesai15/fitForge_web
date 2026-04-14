@@ -10,7 +10,7 @@ import {
     Chip,
     Tooltip
 } from '@mui/material';
-import { MdShowChart, MdPsychology } from 'react-icons/md';
+import { LineChart as MdShowChart, Brain as MdPsychology } from 'lucide-react';
 import { format } from 'date-fns';
 import { StyledCard } from './shared/StyledComponents';
 import { getTimeRangeData, calculateTrendLine, identifyPlateauPoints } from '../utils/progressUtils';

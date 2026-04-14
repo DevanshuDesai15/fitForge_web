@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Box, Typography, TextField, InputAdornment, Grid2, Card, CardContent, Chip } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { MdSearch, MdFilterList, MdFitnessCenter } from 'react-icons/md';
-import { Dumbbell, Target, Activity, Zap } from 'lucide-react';
+import { Search as MdSearch, Filter as MdFilterList, Dumbbell as MdFitnessCenter, Dumbbell, Target, Activity, Zap } from 'lucide-react';
 import { extractExerciseDataArray } from '../../../utils/exerciseData';
 
 const ExerciseCard = styled(Card)(() => ({

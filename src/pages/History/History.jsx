@@ -19,16 +19,17 @@ import {
 } from '@mui/material';
 import { styled, useTheme } from '@mui/material/styles';
 import {
-    MdCalendarMonth,
-    MdHistory,
-    MdFitnessCenter,
-    MdTimer,
-    MdTrendingUp,
-    MdBarChart,
-    MdToday,
-    MdAdd,
-    MdClose,
-} from 'react-icons/md';
+    CalendarRange as MdCalendarMonth,
+    History as MdHistory,
+    Dumbbell as MdFitnessCenter,
+    Timer as MdTimer,
+    TrendingUp as MdTrendingUp,
+    BarChart2 as MdBarChart,
+    CalendarDays as MdToday,
+    Plus as MdAdd,
+    X as MdClose,
+    Play as MdPlayArrow,
+} from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSupabase } from '../../hooks/useSupabase';
 import { useNavigate } from 'react-router-dom';

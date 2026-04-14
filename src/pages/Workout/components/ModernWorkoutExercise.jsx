@@ -1,5 +1,5 @@
 import { Box, Typography, Card, CardContent, Button, Chip, IconButton, TextField } from '@mui/material';
-import { MdInfo, MdRemove, MdAdd, MdCheckCircle, MdClose } from 'react-icons/md';
+import { Info, Minus, Plus, CheckCircle, X } from 'lucide-react';
 import PropTypes from 'prop-types';
 
 const ModernWorkoutExercise = ({
@@ -55,7 +55,7 @@ const ModernWorkoutExercise = ({
                         </Box>
                     </Box>
                     <IconButton size="small" sx={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-                        <MdInfo />
+                        <Info size={18} />
                     </IconButton>
                 </Box>
 
@@ -108,7 +108,7 @@ const ModernWorkoutExercise = ({
                                     }}
                                 >
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                        <MdCheckCircle style={{ color: '#4caf50', fontSize: '20px' }} />
+                                        <CheckCircle size={20} style={{ color: "#4caf50" }} />
                                         <Typography variant="body2" sx={{ color: '#fff', fontWeight: 'medium' }}>
                                             Set {index + 1}
                                         </Typography>
@@ -128,7 +128,7 @@ const ModernWorkoutExercise = ({
                                                 }
                                             }}
                                         >
-                                            <MdClose fontSize="small" />
+                                            <X size={16} />
                                         </IconButton>
                                     </Box>
                                 </Box>
@@ -147,7 +147,7 @@ const ModernWorkoutExercise = ({
                             p: 3,
                             textAlign: 'center'
                         }}>
-                            <MdCheckCircle style={{ color: '#4caf50', fontSize: '40px', marginBottom: '12px' }} />
+                            <CheckCircle size={40} style={{ color: "#4caf50", marginBottom: "12px" }} />
                             <Typography variant="h6" sx={{ color: '#4caf50', fontWeight: 'bold', mb: 1 }}>
                                 Target Sets Completed!
                             </Typography>
@@ -156,7 +156,7 @@ const ModernWorkoutExercise = ({
                             </Typography>
                             <Button
                                 variant="outlined"
-                                startIcon={<MdAdd />}
+                                startIcon={<Plus size={18} />}
                                 onClick={() => onAddExtraSet(exerciseIndex)}
                                 sx={{
                                     color: '#dded00',
@@ -238,7 +238,7 @@ const ModernWorkoutExercise = ({
                                             }
                                         }}
                                     >
-                                        <MdRemove />
+                                        <Minus size={18} />
                                     </IconButton>
                                     <TextField
                                         type="number"
@@ -280,7 +280,7 @@ const ModernWorkoutExercise = ({
                                             }
                                         }}
                                     >
-                                        <MdAdd />
+                                        <Plus size={18} />
                                     </IconButton>
                                 </Box>
                             </Box>
@@ -304,7 +304,7 @@ const ModernWorkoutExercise = ({
                                             }
                                         }}
                                     >
-                                        <MdRemove />
+                                        <Minus size={18} />
                                     </IconButton>
                                     <TextField
                                         type="number"
@@ -346,7 +346,7 @@ const ModernWorkoutExercise = ({
                                             }
                                         }}
                                     >
-                                        <MdAdd />
+                                        <Plus size={18} />
                                     </IconButton>
                                 </Box>
                             </Box>
@@ -356,7 +356,7 @@ const ModernWorkoutExercise = ({
                         <Button
                             variant="contained"
                             fullWidth
-                            startIcon={<MdCheckCircle />}
+                            startIcon={<CheckCircle size={18} />}
                             onClick={() => onCompleteSet(exerciseIndex, currentSetIndex)}
                             disabled={!currentSet.reps}
                             sx={{

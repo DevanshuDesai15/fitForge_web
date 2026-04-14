@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Card, CardContent } from '@mui/material';
-import { MdCheckCircle, MdTimer, MdArrowBack, MdLightbulb, MdSwapHoriz } from 'react-icons/md';
+import { CheckCircle as MdCheckCircle, Timer as MdTimer, ArrowLeft, Lightbulb as MdLightbulb, ArrowLeftRight as MdSwapHoriz } from 'lucide-react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSupabase } from '../../hooks/useSupabase';
@@ -604,7 +604,7 @@ const StartWorkout = () => {
                     <Box sx={{ pb: 2 }}>
                         {/* Back Button */}
                         <Button
-                            startIcon={<MdArrowBack />}
+                            startIcon={<ArrowLeft size={18} />}
                             onClick={() => navigate('/workout')}
                             sx={{
                                 color: 'text.secondary',

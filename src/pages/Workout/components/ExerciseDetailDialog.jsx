@@ -9,9 +9,9 @@ import {
     Chip,
 } from '@mui/material';
 import {
-    MdClose,
-    MdPlayCircle,
-} from 'react-icons/md';
+    X as MdClose,
+    PlayCircle as MdPlayCircle,
+} from 'lucide-react';
 import { LayoutGrid, ListOrdered, Play, Lightbulb, Target, Zap, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
 import PropTypes from 'prop-types';
 

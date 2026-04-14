@@ -17,11 +17,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import appLogo from '../../assets/appLogo.svg';
 import shortLogo from '../../assets/shortLogo.svg';
 import {
-    MdFitnessCenter,
-    MdHistory,
-    MdShowChart,
-    MdPerson
-} from 'react-icons/md';
+    Dumbbell as MdFitnessCenter,
+    History as MdHistory,
+    LineChart as MdShowChart,
+    User as MdPerson
+} from 'lucide-react';
 
 export default function Navigation() {
     const navigate = useNavigate();

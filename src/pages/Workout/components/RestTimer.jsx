@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Box, Typography, Card, Button, IconButton } from '@mui/material';
-import { MdTimer, MdAdd, MdRemove } from 'react-icons/md';
+import { Timer as MdTimer, Plus as MdAdd, Minus as MdRemove } from 'lucide-react';
 import PropTypes from 'prop-types';
 
 const RestTimer = ({ duration = 180, onComplete, onSkip }) => {
@@ -194,4 +194,3 @@ RestTimer.propTypes = {
 };
 
 export default RestTimer;
-

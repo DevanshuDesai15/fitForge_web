@@ -29,9 +29,12 @@ const WorkoutTemplates = lazy(() => import('./components/workout/WorkoutTemplate
 const QuickAdd = lazy(() => import('./components/workout/QuickAdd'));
 const ExerciseDetail = lazy(() => import('./components/workout/ExerciseDetail'));
 
-// Lazy-loaded test components (dev only)
-const TimerTest = lazy(() => import('./components/test/TimerTest'));
-const CalendarTest = lazy(() => import('./components/test/CalendarTest'));
+const TimerTest = import.meta.env.DEV
+  ? lazy(() => import('./components/test/TimerTest'))
+  : null;
+const CalendarTest = import.meta.env.DEV
+  ? lazy(() => import('./components/test/CalendarTest'))
+  : null;
 
 // Wrapper component to handle conditional styling
 function AppWrapper({ children }) {
@@ -160,7 +163,7 @@ function App() {
                   } />
 
                   {/* Test routes for debugging (dev only) */}
-                  {import.meta.env.DEV && (
+                  {import.meta.env.DEV && TimerTest && CalendarTest && (
                     <>
                       <Route path="/test-timer" element={<TimerTest />} />
                       <Route path="/test-calendar" element={<CalendarTest />} />

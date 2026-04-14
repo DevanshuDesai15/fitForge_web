@@ -12,11 +12,15 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
-    MdFilterList,
-    MdAdd,
-    MdInfo
-} from 'react-icons/md';
-import { Activity, Target, Weight, BarChart3, Search } from 'lucide-react';
+    Filter as MdFilterList,
+    Plus as MdAdd,
+    Info as MdInfo,
+    Activity,
+    Target,
+    Weight,
+    BarChart3,
+    Search
+} from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useSupabase } from '../../../hooks/useSupabase';
 import { getWeightUnit } from '../../../utils/weightUnit';

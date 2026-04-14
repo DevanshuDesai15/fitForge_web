@@ -14,12 +14,12 @@ import {
 } from '@mui/material';
 import { styled, useTheme } from '@mui/material/styles';
 import {
-    MdFitnessCenter,
-    MdSave,
-    MdCancel,
-    MdHistory,
-    MdAdd
-} from 'react-icons/md';
+    Dumbbell as MdFitnessCenter,
+    Save as MdSave,
+    X as MdCancel,
+    History as MdHistory,
+    Plus as MdAdd
+} from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSupabase } from '../../hooks/useSupabase';
 import { useUnits } from '../../contexts/UnitsContext';

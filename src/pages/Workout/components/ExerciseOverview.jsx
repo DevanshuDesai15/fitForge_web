@@ -1,5 +1,5 @@
 import { Box, Typography, Card, IconButton } from '@mui/material';
-import { MdCheckCircle, MdDelete } from 'react-icons/md';
+import { CheckCircle, Trash2 as MdDelete } from 'lucide-react';
 import { UserPlus, Shuffle } from 'lucide-react';
 import PropTypes from 'prop-types';
 
@@ -105,7 +105,7 @@ const ExerciseOverview = ({ exercises, currentExerciseIndex, onExerciseClick, on
                                         }}
                                     >
                                         {targetSetsMet && (
-                                            <MdCheckCircle style={{ color: '#4caf50', fontSize: '18px' }} />
+                                            <CheckCircle size={18} style={{ color: "#4caf50" }} />
                                         )}
                                     </Box>
                                     <IconButton
@@ -149,4 +149,3 @@ ExerciseOverview.propTypes = {
 };
 
 export default ExerciseOverview;
-

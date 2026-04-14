@@ -19,13 +19,13 @@ import {
 } from '@mui/material';
 import { styled, useTheme } from '@mui/material/styles';
 import {
-    MdSearch,
-    MdFavorite,
-    MdHistory,
-    MdClose,
-    MdArrowDropDown,
-    MdLightbulb
-} from 'react-icons/md';
+    Search as MdSearch,
+    Heart as MdFavorite,
+    History as MdHistory,
+    X as MdClose,
+    ChevronDown as MdArrowDropDown,
+    Lightbulb as MdLightbulb
+} from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSupabase } from '../../hooks/useSupabase';
 import { fetchExercisesByName } from '../../services/localExerciseService';

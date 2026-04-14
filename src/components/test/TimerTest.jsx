@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Box, Button, Typography, Card, CardContent } from '@mui/material';
-import { MdPlayArrow, MdPause, MdStop } from 'react-icons/md';
+import { Play as MdPlayArrow, Pause as MdPause, Square as MdStop } from 'lucide-react';
 import { useWorkoutTimer } from '../../hooks/useWorkoutTimer';
 
 export default function TimerTest() {

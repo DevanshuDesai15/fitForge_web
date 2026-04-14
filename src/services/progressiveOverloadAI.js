@@ -152,10 +152,10 @@ class ProgressiveOverloadAIService {
       plateauThreshold: 3, // sessions
       deloadPercentage: 0.1, // 10%
       confidenceThreshold: 0.7,
-      // Gemini AI integration
+      // Generative AI integration
       useGeminiAI: config.useGeminiAI !== false, // Default to true
       hybridMode: config.hybridMode !== false, // Use both rule-based and AI
-      geminiPriority: config.geminiPriority || 0.4, // 40% weight to Gemini suggestions
+      geminiPriority: config.geminiPriority || 0.4, // 40% weight to provider suggestions
       ...config,
     };
 
@@ -309,7 +309,7 @@ class ProgressiveOverloadAIService {
         userProfile
       );
 
-      // Step 2: Use Gemini AI for enhanced intelligence (when enabled)
+      // Step 2: Use the generative provider for enhanced intelligence (when enabled)
       if (this.config.useGeminiAI) {
         try {
           const workoutHistory = await this._getRecentWorkoutHistory(userId, 5);
@@ -326,7 +326,7 @@ class ProgressiveOverloadAIService {
             geminiSuggestion
           );
         } catch (error) {
-          this._log("Gemini AI unavailable, using rule-based suggestion", {
+          this._log("Generative AI unavailable, using rule-based suggestion", {
             exerciseId,
             error: error.message,
           });
@@ -692,7 +692,7 @@ class ProgressiveOverloadAIService {
         )
       );
 
-      // Step 3: Use single Gemini AI call for all exercises (when enabled)
+      // Step 3: Use a single provider call for all exercises (when enabled)
       if (this.config.useGeminiAI && exerciseIds.length > 0) {
         try {
           const workoutHistory = await this._getRecentWorkoutHistory(userId, 5);
@@ -718,7 +718,7 @@ class ProgressiveOverloadAIService {
           });
         } catch (error) {
           this._log(
-            "Gemini AI unavailable for batch, using rule-based suggestions",
+            "Generative AI unavailable for batch, using rule-based suggestions",
             {
               exerciseCount: exerciseIds.length,
               error: error.message,
@@ -1142,7 +1142,7 @@ class ProgressiveOverloadAIService {
         plateauData
       );
 
-      // Step 2: Use Gemini AI for intelligent analysis (when enabled and userId available)
+      // Step 2: Use the generative provider for intelligent analysis (when enabled and userId available)
       if (this.config.useGeminiAI && userId) {
         try {
           const userProfile = await this._getUserProgressionProfile(userId);
@@ -1170,7 +1170,7 @@ class ProgressiveOverloadAIService {
           );
         } catch (error) {
           this._log(
-            "Gemini AI unavailable for interventions, using rule-based",
+            "Generative AI unavailable for interventions, using rule-based",
             {
               exerciseId: plateauData.exerciseId,
               error: error.message,

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Box, Typography, Card, CardContent, Button, Accordion, AccordionSummary, AccordionDetails, Chip } from '@mui/material';
-import { MdExpandMore, MdFitnessCenter, MdAdd, MdDelete } from 'react-icons/md';
+import { ChevronDown as MdExpandMore, Dumbbell as MdFitnessCenter, Plus as MdAdd, Trash2 as MdDelete } from 'lucide-react';
 import ExerciseSet from './ExerciseSet';
 
 const WorkoutExercise = ({

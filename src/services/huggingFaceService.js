@@ -5,6 +5,8 @@ import { fetchExerciseForRAG } from "./localExerciseService";
 
 const FIVE_MINUTES = 5 * 60 * 1000;
 const ONE_HOUR = 60 * 60 * 1000;
+const DEFAULT_RETRY_DELAY_MS = 750;
+const RETRYABLE_STATUS_CODES = new Set([408, 409, 425, 429, 500, 502, 503, 504]);
 
 class HuggingFaceService {
   constructor(config = geminiConfig) {
@@ -87,6 +89,85 @@ class HuggingFaceService {
     this.requestCount += 1;
   }
 
+  _sleep(ms) {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  _withTimeout(promise, timeoutMs) {
+    if (!timeoutMs || timeoutMs <= 0) {
+      return promise;
+    }
+
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(new Error(`Hugging Face request timed out after ${timeoutMs}ms`));
+        }, timeoutMs);
+      }),
+    ]);
+  }
+
+  _getErrorStatus(error) {
+    return (
+      error?.status ||
+      error?.statusCode ||
+      error?.response?.status ||
+      error?.cause?.status ||
+      null
+    );
+  }
+
+  _getRetryAfterMs(error) {
+    const retryAfterHeader =
+      error?.response?.headers?.["retry-after"] ||
+      error?.response?.headers?.get?.("retry-after");
+
+    if (!retryAfterHeader) {
+      return null;
+    }
+
+    const seconds = Number.parseFloat(retryAfterHeader);
+    if (Number.isFinite(seconds)) {
+      return seconds * 1000;
+    }
+
+    const retryAt = Date.parse(retryAfterHeader);
+    if (Number.isFinite(retryAt)) {
+      return Math.max(retryAt - Date.now(), 0);
+    }
+
+    return null;
+  }
+
+  _isRetryableError(error) {
+    const status = this._getErrorStatus(error);
+
+    if (status && RETRYABLE_STATUS_CODES.has(status)) {
+      return true;
+    }
+
+    const message = error?.message?.toLowerCase?.() || "";
+    return (
+      message.includes("timed out") ||
+      message.includes("timeout") ||
+      message.includes("rate limit") ||
+      message.includes("temporarily unavailable") ||
+      message.includes("network")
+    );
+  }
+
+  _getRetryDelayMs(error, attempt) {
+    const retryAfterMs = this._getRetryAfterMs(error);
+    if (retryAfterMs !== null) {
+      return retryAfterMs;
+    }
+
+    return DEFAULT_RETRY_DELAY_MS * 2 ** Math.max(attempt - 1, 0);
+  }
+
   async _runCachedRequest(cacheKey, requestFn) {
     const cached = this.requestCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < FIVE_MINUTES) {
@@ -118,26 +199,42 @@ class HuggingFaceService {
       throw new Error("Hugging Face service circuit breaker is open");
     }
 
-    try {
-      this._incrementRequestCount();
-      const client = this._getClient();
-      const response = await client.chatCompletion({
-        model: this.config.model,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        temperature: this.config.temperature,
-        max_tokens: this.config.maxTokens,
-        response_format: { type: "json_object" },
-      });
+    const totalAttempts = Math.max(1, (this.config.maxRetries || 0) + 1);
 
-      this._resetCircuitBreaker();
-      return response.choices?.[0]?.message?.content ?? "{}";
-    } catch (error) {
-      this._recordFailure();
-      throw error;
+    for (let attempt = 1; attempt <= totalAttempts; attempt += 1) {
+      try {
+        this._incrementRequestCount();
+        const client = this._getClient();
+        const response = await this._withTimeout(
+          client.chatCompletion({
+            model: this.config.model,
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: userPrompt },
+            ],
+            temperature: this.config.temperature,
+            max_tokens: this.config.maxTokens,
+            response_format: { type: "json_object" },
+          }),
+          this.config.requestTimeout
+        );
+
+        this._resetCircuitBreaker();
+        return response.choices?.[0]?.message?.content ?? "{}";
+      } catch (error) {
+        const shouldRetry =
+          attempt < totalAttempts && this._isRetryableError(error);
+
+        if (!shouldRetry) {
+          this._recordFailure();
+          throw error;
+        }
+
+        await this._sleep(this._getRetryDelayMs(error, attempt));
+      }
     }
+
+    throw new Error("Hugging Face request failed unexpectedly");
   }
 
   _extractJsonFromResponse(text) {

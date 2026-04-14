@@ -8,16 +8,16 @@ import {
     Grid2
 } from '@mui/material';
 import {
-    MdArrowBack,
-    MdFitnessCenter,
-    MdBuild,
-    MdSignalCellular1Bar,
-    MdSignalCellular2Bar,
-    MdSignalCellular4Bar,
-    MdPlayCircle,
-    MdInfo,
-    MdList
-} from 'react-icons/md';
+    ArrowLeft as MdArrowBack,
+    Dumbbell as MdFitnessCenter,
+    Wrench as MdBuild,
+    Signal as MdSignalCellular1Bar,
+    Signal as MdSignalCellular2Bar,
+    Signal as MdSignalCellular4Bar,
+    PlayCircle as MdPlayCircle,
+    Info as MdInfo,
+    List as MdList
+} from 'lucide-react';
 import { fetchExerciseImages } from '../../services/localExerciseService';
 import { useTheme } from '@mui/material/styles';
 

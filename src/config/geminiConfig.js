@@ -1,7 +1,7 @@
 /**
  * @fileoverview AI provider configuration
- * Maintains Gemini-era naming for compatibility while resolving Hugging Face
- * settings as the active generative provider.
+ * Maintains legacy Gemini-era exports for compatibility while resolving
+ * Hugging Face settings as the active generative provider.
  */
 
 // Get environment variables in a Vite-compatible way

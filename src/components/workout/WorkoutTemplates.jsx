@@ -18,15 +18,7 @@ import {
     Alert
 } from '@mui/material';
 import { styled, useTheme } from '@mui/material/styles';
-import {
-    MdAdd,
-    MdEdit,
-    MdDelete,
-    MdFitnessCenter,
-    MdPlayArrow,
-    MdLibraryBooks,
-    MdClose
-} from 'react-icons/md';
+import { Plus, Pencil, Trash2, Dumbbell, Play, BookOpen, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ExerciseSelector from '../common/ExerciseSelector';
 import { useWorkoutPrograms } from '../../pages/Workout/hooks/useWorkoutPrograms';
@@ -288,7 +280,7 @@ export default function WorkoutTemplates() {
                                 }}
                                 sx={{ color: theme.palette.status.warning, mr: 1 }}
                             >
-                                <MdEdit />
+                                <Pencil size={18} />
                             </IconButton>
                             <IconButton
                                 size="small"
@@ -298,7 +290,7 @@ export default function WorkoutTemplates() {
                                 }}
                                 sx={{ color: theme.palette.status.error }}
                             >
-                                <MdDelete />
+                                <Trash2 size={18} />
                             </IconButton>
                         </Box>
                     </Box>
@@ -359,7 +351,7 @@ export default function WorkoutTemplates() {
                         <ActionButton
                             variant="primary"
                             size="small"
-                            startIcon={<MdPlayArrow />}
+                            startIcon={<Play size={18} />}
                             onClick={() => {
                                 if (!firstDay) {
                                     navigate('/workout/start');
@@ -409,7 +401,7 @@ export default function WorkoutTemplates() {
                     </Typography>
                     <ActionButton
                         variant="primary"
-                        startIcon={<MdAdd />}
+                        startIcon={<Plus size={18} />}
                         onClick={() => setDialogOpen(true)}
                         sx={{
                             background: theme.palette.background.gradient.button,
@@ -432,7 +424,7 @@ export default function WorkoutTemplates() {
                             </Typography>
                             <ActionButton
                                 variant="primary"
-                                startIcon={<MdAdd />}
+                                startIcon={<Plus size={18} />}
                                 onClick={() => setDialogOpen(true)}
                                 sx={{
                                     background: theme.palette.background.gradient.button,
@@ -444,7 +436,7 @@ export default function WorkoutTemplates() {
                             </ActionButton>
                             <Button
                                 variant="outlined"
-                                startIcon={<MdFitnessCenter />}
+                                startIcon={<Dumbbell size={18} />}
                                 onClick={() => navigate('/workout/start')}
                                 sx={{ mr: 2, color: theme.palette.status.error, borderColor: theme.palette.status.error }}
                             >
@@ -452,7 +444,7 @@ export default function WorkoutTemplates() {
                             </Button>
                             <Button
                                 variant="outlined"
-                                startIcon={<MdLibraryBooks />}
+                                startIcon={<BookOpen size={18} />}
                                 onClick={() => navigate('/workout/library')}
                                 sx={{ color: theme.palette.primary.light, borderColor: theme.palette.primary.light }}
                             >
@@ -494,7 +486,7 @@ export default function WorkoutTemplates() {
                     }}>
                         {editingTemplate ? 'Edit Template' : 'Create New Template'}
                         <IconButton onClick={() => setDialogOpen(false)} sx={{ color: theme.palette.primary.main }}>
-                            <MdClose />
+                            <X size={18} />
                         </IconButton>
                     </DialogTitle>
                     <DialogContent sx={{ overflow: 'visible' }}>
@@ -524,7 +516,7 @@ export default function WorkoutTemplates() {
                             </Typography>
                             <ActionButton
                                 size="small"
-                                startIcon={<MdAdd />}
+                                startIcon={<Plus size={18} />}
                                 onClick={handleAddDay}
                                 sx={{ color: theme.palette.primary.main, borderColor: theme.palette.primary.main }}
                                 variant="outlined"
@@ -545,7 +537,7 @@ export default function WorkoutTemplates() {
                                                 onClick={() => handleRemoveDay(day.id)}
                                                 sx={{ color: theme.palette.status.error }}
                                             >
-                                                <MdDelete />
+                                                <Trash2 size={18} />
                                             </IconButton>
                                         )}
                                     </Box>
@@ -620,7 +612,7 @@ export default function WorkoutTemplates() {
                                                         onClick={() => removeExercise(day.id, exerciseIndex)}
                                                         sx={{ color: theme.palette.status.error }}
                                                     >
-                                                        <MdDelete />
+                                                        <Trash2 size={18} />
                                                     </IconButton>
                                                 </ListItem>
                                             ))}

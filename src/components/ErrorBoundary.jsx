@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Box, Typography, Button, Card, CardContent } from '@mui/material';
-import { MdError, MdRefresh } from 'react-icons/md';
+import { AlertCircle as MdError, RefreshCw as MdRefresh } from 'lucide-react';
 
 class ErrorBoundary extends React.Component {
     constructor(props) {

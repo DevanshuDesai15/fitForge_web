@@ -1,5 +1,5 @@
 import { Box, Typography, Grid, Button } from '@mui/material';
-import { MdPsychology } from 'react-icons/md';
+import { Brain as MdPsychology } from 'lucide-react';
 import ExerciseCard from './shared/ExerciseCard';
 
 const AIInsights = ({

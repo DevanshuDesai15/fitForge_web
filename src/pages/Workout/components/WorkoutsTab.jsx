@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Box, Typography, Grid, Card, CardContent, Button, Chip, LinearProgress, TextField, InputAdornment, Select, MenuItem, FormControl, Menu, IconButton, Skeleton, Alert } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { MdPlayArrow, MdTimer, MdAutoAwesome, MdFlashOn, MdFolderOpen, MdAdd, MdSearch, MdArrowDropDown, MdExpandMore, MdMoreVert, MdEdit, MdContentCopy, MdDelete } from 'react-icons/md';
+import { Play, Timer, Sparkles, Zap, FolderOpen, Plus, Search, ChevronDown, ChevronDown as ExpandMore, MoreVertical, Pencil, Copy, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useSupabase } from '../../../hooks/useSupabase';
@@ -746,14 +746,14 @@ const WorkoutsTab = () => {
                     <TabButton
                         $active={activeSubTab === 0}
                         onClick={() => handleSubTabChange(0)}
-                        startIcon={<MdFlashOn />}
+                        startIcon={<Zap size={18} />}
                     >
                         Quick Start
                     </TabButton>
                     <TabButton
                         $active={activeSubTab === 1}
                         onClick={() => handleSubTabChange(1)}
-                        startIcon={<MdFolderOpen />}
+                        startIcon={<FolderOpen size={18} />}
                     >
                         Programs
                     </TabButton>
@@ -824,7 +824,7 @@ const WorkoutsTab = () => {
                                                         }
                                                     }}
                                                 >
-                                                    <MdDelete size={20} />
+                                                    <Trash2 size={20} />
                                                 </IconButton>
                                             </Box>
                                         </Box>
@@ -835,7 +835,7 @@ const WorkoutsTab = () => {
 
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                <MdTimer size={16} style={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+                                                <Timer size={16} style={{ color: "rgba(255, 255, 255, 0.7)" }} />
                                                 <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                                                     {workoutInfo.duration} min
                                                 </Typography>
@@ -881,7 +881,7 @@ const WorkoutsTab = () => {
 
                                         <Button
                                             variant="contained"
-                                            startIcon={<MdPlayArrow />}
+                                            startIcon={<Play size={18} />}
                                             fullWidth
                                             onClick={handleContinueWorkout}
                                             sx={{
@@ -924,7 +924,7 @@ const WorkoutsTab = () => {
                                                 </Typography>
                                                 {workout.isAIPick && (
                                                     <AIPick
-                                                        icon={<MdAutoAwesome size={12} />}
+                                                        icon={<Sparkles size={12} />}
                                                         label="AI Pick"
                                                         size="small"
                                                     />
@@ -937,7 +937,7 @@ const WorkoutsTab = () => {
 
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                    <MdTimer size={16} style={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+                                                    <Timer size={16} style={{ color: "rgba(255, 255, 255, 0.7)" }} />
                                                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                                                         {workout.duration}
                                                     </Typography>
@@ -985,7 +985,7 @@ const WorkoutsTab = () => {
 
                                             <Button
                                                 variant="contained"
-                                                startIcon={<MdPlayArrow />}
+                                                startIcon={<Play size={18} />}
                                                 fullWidth
                                                 sx={{
                                                     background: workout.progress > 0
@@ -1029,7 +1029,7 @@ const WorkoutsTab = () => {
                                 </Typography>
                                 {/* <Button
                             variant="contained"
-                            startIcon={<MdAdd />}
+                            startIcon={<Plus size={18} />}
                             onClick={handleNewWorkout}
                             sx={{
                                 background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
@@ -1092,7 +1092,7 @@ const WorkoutsTab = () => {
                                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                                         {dayWorkout.isAIPick && (
                                                                             <AIPick
-                                                                                icon={<MdAutoAwesome size={12} />}
+                                                                                icon={<Sparkles size={12} />}
                                                                                 label="AI Pick"
                                                                                 size="small"
                                                                             />
@@ -1114,7 +1114,7 @@ const WorkoutsTab = () => {
                                                                                 }
                                                                             }}
                                                                         >
-                                                                            <MdDelete size={20} />
+                                                                            <Trash2 size={20} />
                                                                         </IconButton>
                                                                     </Box>
                                                                 </Box>
@@ -1125,7 +1125,7 @@ const WorkoutsTab = () => {
 
                                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                                        <MdTimer size={16} style={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+                                                                        <Timer size={16} style={{ color: "rgba(255, 255, 255, 0.7)" }} />
                                                                         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                                                                             {dayWorkout.duration}
                                                                         </Typography>
@@ -1147,7 +1147,7 @@ const WorkoutsTab = () => {
 
                                                                 <Button
                                                                     variant="contained"
-                                                                    startIcon={<MdPlayArrow />}
+                                                                    startIcon={<Play size={18} />}
                                                                     fullWidth
                                                                     sx={{
                                                                         background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
@@ -1191,7 +1191,7 @@ const WorkoutsTab = () => {
                                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                                     {templateWorkout.isAIPick && (
                                                                         <AIPick
-                                                                            icon={<MdAutoAwesome size={12} />}
+                                                                            icon={<Sparkles size={12} />}
                                                                             label="AI Pick"
                                                                             size="small"
                                                                         />
@@ -1213,7 +1213,7 @@ const WorkoutsTab = () => {
                                                                             }
                                                                         }}
                                                                     >
-                                                                        <MdDelete size={20} />
+                                                                        <Trash2 size={20} />
                                                                     </IconButton>
                                                                 </Box>
                                                             </Box>
@@ -1224,7 +1224,7 @@ const WorkoutsTab = () => {
 
                                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                                    <MdTimer size={16} style={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+                                                                    <Timer size={16} style={{ color: "rgba(255, 255, 255, 0.7)" }} />
                                                                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                                                                         {templateWorkout.duration}
                                                                     </Typography>
@@ -1246,7 +1246,7 @@ const WorkoutsTab = () => {
 
                                                             <Button
                                                                 variant="contained"
-                                                                startIcon={<MdPlayArrow />}
+                                                                startIcon={<Play size={18} />}
                                                                 fullWidth
                                                                 sx={{
                                                                     background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
@@ -1469,7 +1469,7 @@ const WorkoutsTab = () => {
                         </Box>
                         <Button
                             variant="contained"
-                            startIcon={<MdAdd />}
+                            startIcon={<Plus size={18} />}
                             onClick={handleCreateProgram}
                             sx={{
                                 background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
@@ -1501,7 +1501,7 @@ const WorkoutsTab = () => {
                             InputProps={{
                                 startAdornment: (
                                     <InputAdornment position="start">
-                                        <MdSearch style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+                                        <Search size={18} style={{ color: "rgba(255, 255, 255, 0.5)" }} />
                                     </InputAdornment>
                                 ),
                             }}
@@ -1535,7 +1535,7 @@ const WorkoutsTab = () => {
                                 value={selectedCategory}
                                 onChange={(e) => setSelectedCategory(e.target.value)}
                                 displayEmpty
-                                IconComponent={MdArrowDropDown}
+                                IconComponent={() => <ChevronDown size={18} />}
                                 sx={{
                                     backgroundColor: 'rgba(40, 40, 40, 0.8)',
                                     borderRadius: '12px',
@@ -1662,7 +1662,7 @@ const WorkoutsTab = () => {
                                                         zIndex: 10
                                                     }}
                                                 >
-                                                    <MdMoreVert />
+                                                    <MoreVertical size={20} />
                                                 </IconButton>
                                             </Box>
 
@@ -1695,7 +1695,7 @@ const WorkoutsTab = () => {
                                                                 </Box>
                                                                 <Button
                                                                     variant="contained"
-                                                                    startIcon={<MdPlayArrow />}
+                                                                    startIcon={<Play size={18} />}
                                                                     fullWidth
                                                                     size="small"
                                                                     onClick={() => handleStartWorkout(program, day)}
@@ -1726,7 +1726,7 @@ const WorkoutsTab = () => {
                                                                     }}
                                                                 >
                                                                     <Typography variant="caption">View Exercises</Typography>
-                                                                    <MdExpandMore style={{ transform: expandedDay === `${program.id}-${day.id}` ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }} />
+                                                                    <ChevronDown size={18} style={{ transform: expandedDay === `${program.id}-${day.id}` ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s" }} />
                                                                 </Box>
                                                             </Box>
                                                             <Collapse in={expandedDay === `${program.id}-${day.id}`}>
@@ -1745,7 +1745,7 @@ const WorkoutsTab = () => {
                                                                     ))}
                                                                     <Button
                                                                         variant="contained"
-                                                                        startIcon={<MdPlayArrow />}
+                                                                        startIcon={<Play size={18} />}
                                                                         fullWidth
                                                                         size="small"
                                                                         onClick={() => handleStartWorkout(program, day)}
@@ -1781,7 +1781,7 @@ const WorkoutsTab = () => {
                                         borderRadius: '16px',
                                         border: '1px dashed rgba(255, 255, 255, 0.15)',
                                     }}>
-                                        <MdFolderOpen size={48} style={{ color: 'rgba(255, 255, 255, 0.3)', marginBottom: '16px' }} />
+                                        <FolderOpen size={48} style={{ color: "rgba(255, 255, 255, 0.3)", marginBottom: "16px" }} />
                                         <Typography variant="h6" sx={{ color: '#fff', mb: 1, fontWeight: 'bold' }}>
                                             No Programs Yet
                                         </Typography>
@@ -1790,7 +1790,7 @@ const WorkoutsTab = () => {
                                         </Typography>
                                         <Button
                                             variant="contained"
-                                            startIcon={<MdAdd />}
+                                            startIcon={<Plus size={18} />}
                                             onClick={handleCreateProgram}
                                             sx={{
                                                 background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
@@ -1837,7 +1837,7 @@ const WorkoutsTab = () => {
                                 gap: 1
                             }}
                         >
-                            <MdEdit size={16} />
+                            <Pencil size={16} />
                             Edit Program
                         </MenuItem>
                         <MenuItem
@@ -1850,7 +1850,7 @@ const WorkoutsTab = () => {
                                 gap: 1
                             }}
                         >
-                            <MdContentCopy size={16} />
+                            <Copy size={16} />
                             Duplicate
                         </MenuItem>
                         <MenuItem
@@ -1863,7 +1863,7 @@ const WorkoutsTab = () => {
                                 gap: 1
                             }}
                         >
-                            <MdDelete size={16} />
+                            <Trash2 size={16} />
                             Delete
                         </MenuItem>
                     </Menu>
