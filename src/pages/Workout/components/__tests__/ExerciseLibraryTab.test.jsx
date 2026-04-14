@@ -19,24 +19,42 @@ vi.mock('../../../../hooks/useSupabase', () => ({
   useSupabase: vi.fn(),
 }));
 
+vi.mock('../../../../utils/weightUnit', () => ({
+  getWeightUnit: vi.fn(() => 'kg'),
+}));
+
+const createSupabaseMock = () => ({
+  from: vi.fn(() => ({
+    select: vi.fn(() => ({
+      eq: vi.fn(() => ({
+        order: vi.fn().mockResolvedValue({ data: [], error: null }),
+      })),
+    })),
+  })),
+});
+
 describe('ExerciseLibraryTab', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useAuth.mockReturnValue({ currentUser: { uid: 'user-1' } });
-    useSupabase.mockReturnValue({});
-    useExerciseCatalog.mockReturnValue({
-      items: [
-        { id: '1', name: 'Kettlebell Single Arm Row', primaryMuscle: 'Back', tags: ['Strength'] }
-      ],
-      totalCount: 1,
-      filterOptions: {
-        primaryMuscles: ['Back', 'Chest'],
-        equipment: [],
-        difficulties: [],
-        tags: [],
-      },
-      loading: false,
-      error: '',
+    useSupabase.mockReturnValue(createSupabaseMock());
+    useExerciseCatalog.mockImplementation(({ filters }) => {
+      const pageItems = filters.page === 2
+        ? [{ id: '2', name: 'Barbell Bench Press', primaryMuscle: 'Chest', tags: ['Strength'] }]
+        : [{ id: '1', name: 'Kettlebell Single Arm Row', primaryMuscle: 'Back', tags: ['Strength'] }];
+
+      return {
+        items: pageItems,
+        totalCount: 25,
+        filterOptions: {
+          primaryMuscles: ['Back', 'Chest'],
+          equipment: [],
+          difficulties: [],
+          tags: [],
+        },
+        loading: false,
+        error: '',
+      };
     });
   });
 
@@ -45,14 +63,27 @@ describe('ExerciseLibraryTab', () => {
     expect(await screen.findByText('Kettlebell Single Arm Row')).toBeInTheDocument();
   });
 
-  it('resets to page 1 when a filter changes', async () => {
+  it('moves to the next page when pagination is clicked', async () => {
     render(<ExerciseLibraryTab />);
-    
-    // We will just assume there's a button rendering the filters or pagination
-    const backFilter = screen.getByRole('button', { name: /Back/i });
-    fireEvent.click(backFilter);
-    
-    expect(screen.getAllByText(/Page 1/i).length).toBeGreaterThan(0);
+
+    expect(await screen.findByText('Kettlebell Single Arm Row')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Next/i }));
+
+    expect(await screen.findByText('Barbell Bench Press')).toBeInTheDocument();
+    expect(screen.getByText(/^Page 2$/i)).toBeInTheDocument();
+  });
+
+  it('renders pagination controls before the performance insights section', async () => {
+    render(<ExerciseLibraryTab />);
+
+    const paginationLabel = await screen.findByText(/^Page 1$/i);
+    const performanceInsightsHeading = screen.getByText(/Performance Insights/i);
+
+    expect(
+      paginationLabel.compareDocumentPosition(performanceInsightsHeading)
+        & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
   });
 });
 

@@ -124,7 +124,7 @@ const ExerciseLibraryTab = () => {
         setFilters((current) => ({
             ...current,
             [key]: value,
-            page: 1,
+            page: key === 'page' ? value : 1,
         }));
     };
 
@@ -653,6 +653,37 @@ const ExerciseLibraryTab = () => {
                 ))}
             </Box>
 
+            {/* Pagination Controls */}
+            <Box sx={{ textAlign: 'center', mt: 4, display: 'flex', justifyContent: 'center', gap: 2, alignItems: 'center' }}>
+                <Button
+                    variant="outlined"
+                    onClick={() => handleFilterChange('page', filters.page - 1)}
+                    disabled={filters.page === 1}
+                    sx={{
+                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        '&:hover': { borderColor: '#dded00', color: '#dded00' }
+                    }}
+                >
+                    Previous
+                </Button>
+                <Typography sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                    Page {filters.page}
+                </Typography>
+                <Button
+                    variant="outlined"
+                    onClick={() => handleFilterChange('page', filters.page + 1)}
+                    disabled={filters.page * filters.pageSize >= totalExercises}
+                    sx={{
+                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        '&:hover': { borderColor: '#dded00', color: '#dded00' }
+                    }}
+                >
+                    Next
+                </Button>
+            </Box>
+
             {/* Performance Insights */}
             <Box sx={{ mt: 4 }}>
                 <Typography variant="h6" sx={{ color: '#fff', mb: 2 }}>
@@ -696,37 +727,6 @@ const ExerciseLibraryTab = () => {
                         </StatsCard>
                     </Grid>
                 </Grid>
-            </Box>
-
-            {/* Pagination Controls */}
-            <Box sx={{ textAlign: 'center', mt: 4, display: 'flex', justifyContent: 'center', gap: 2, alignItems: 'center' }}>
-                <Button
-                    variant="outlined"
-                    onClick={() => handleFilterChange('page', filters.page - 1)}
-                    disabled={filters.page === 1}
-                    sx={{
-                        borderColor: 'rgba(255, 255, 255, 0.3)',
-                        color: 'rgba(255, 255, 255, 0.7)',
-                        '&:hover': { borderColor: '#dded00', color: '#dded00' }
-                    }}
-                >
-                    Previous
-                </Button>
-                <Typography sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                    Page {filters.page}
-                </Typography>
-                <Button
-                    variant="outlined"
-                    onClick={() => handleFilterChange('page', filters.page + 1)}
-                    disabled={filters.page * filters.pageSize >= totalExercises}
-                    sx={{
-                        borderColor: 'rgba(255, 255, 255, 0.3)',
-                        color: 'rgba(255, 255, 255, 0.7)',
-                        '&:hover': { borderColor: '#dded00', color: '#dded00' }
-                    }}
-                >
-                    Next
-                </Button>
             </Box>
 
             {/* Exercise Detail Dialog */}
