@@ -1,51 +1,65 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-// Mock MergedData.json with minimal test data
-vi.mock('../../../MergedData.json', () => ({
-    default: {
-        metadata: { total_records: 3 },
-        products: [
-            {
-                id: '001',
-                title: 'Bench Press',
-                slug: 'bench-press',
-                description: 'Classic chest exercise',
-                steps: ['Lie on bench', 'Press up'],
-                muscle_groups: ['Chest', 'Triceps'],
-                equipment: ['Barbell'],
-                exercise_types: ['Strength'],
-                difficulty: 'Intermediate',
-                video_urls: { '720p': 'https://example.com/bp720.mp4' },
-                url: 'https://example.com/bench-press',
-            },
-            {
-                id: '002',
-                title: 'Squat',
-                slug: 'squat',
-                description: 'Compound lower body exercise',
-                steps: ['Stand', 'Squat down'],
-                muscle_groups: ['Quadriceps', 'Glutes'],
-                equipment: ['Barbell'],
-                exercise_types: ['Strength'],
-                difficulty: 'Intermediate',
-                video_urls: null,
-                url: 'https://example.com/squat',
-            },
-            {
-                id: '003',
-                title: 'Kettlebell Swing',
-                slug: 'kettlebell-swing',
-                description: 'Full body explosive exercise',
-                steps: ['Hinge', 'Swing'],
-                muscle_groups: ['Glutes', 'Hamstrings'],
-                equipment: ['Kettlebell'],
-                exercise_types: ['Cardio', 'Strength'],
-                difficulty: 'Beginner',
-                video_urls: { '720p': 'https://example.com/kb720.mp4', '480p': 'https://example.com/kb480.mp4' },
-                url: 'https://example.com/kettlebell-swing',
-            },
-        ],
-    },
+// Mock UpdatedExerciseData.json with the newer export shape
+vi.mock('../../../UpdatedExerciseData.json', () => ({
+    default: [
+        {
+            data: [
+                {
+                    id: '001',
+                    title: 'Bench Press',
+                    slug: 'bench-press',
+                    description: 'Classic chest exercise',
+                    enhanced_description: 'Updated bench press description',
+                    steps: ['Lie on bench', 'Press up'],
+                    primary_muscle: 'Chest',
+                    secondary_muscles: ['Triceps'],
+                    equipment_needed: ['Barbell'],
+                    exercise_types: ['Strength'],
+                    difficulty: 'Intermediate',
+                    video_urls: { '720p': 'https://example.com/bp720.mp4' },
+                    url: 'https://example.com/bench-press',
+                    variations: ['Dumbbell Bench Press'],
+                    safety_considerations: ['Use a spotter for heavy sets'],
+                    tags: ['Chest', 'Compound']
+                },
+                {
+                    id: '002',
+                    title: 'Squat',
+                    slug: 'squat',
+                    description: 'Compound lower body exercise',
+                    steps: ['Stand', 'Squat down'],
+                    primary_muscle: 'Quadriceps',
+                    secondary_muscles: ['Glutes'],
+                    equipment_needed: ['Barbell'],
+                    exercise_types: ['Strength'],
+                    difficulty: 'Intermediate',
+                    video_urls: null,
+                    url: 'https://example.com/squat',
+                    variations: [],
+                    safety_considerations: [],
+                    tags: ['Legs']
+                },
+                {
+                    id: '003',
+                    title: 'Kettlebell Swing',
+                    slug: 'kettlebell-swing',
+                    description: 'Full body explosive exercise',
+                    steps: ['Hinge', 'Swing'],
+                    primary_muscle: 'Glutes',
+                    secondary_muscles: ['Hamstrings'],
+                    equipment_needed: ['Kettlebell'],
+                    exercise_types: ['Cardio', 'Strength'],
+                    difficulty: 'Beginner',
+                    video_urls: { '720p': 'https://example.com/kb720.mp4', '480p': 'https://example.com/kb480.mp4' },
+                    url: 'https://example.com/kettlebell-swing',
+                    variations: ['American Kettlebell Swing'],
+                    safety_considerations: ['Keep your back neutral'],
+                    tags: ['Power']
+                },
+            ],
+        },
+    ],
 }));
 
 // Must import AFTER the mock is defined
@@ -74,6 +88,9 @@ describe('localExerciseService', () => {
             expect(bench.bodyPart).toBe('Chest');
             expect(bench.equipment).toBe('Barbell');
             expect(bench.difficulty).toBe('Intermediate');
+            expect(bench.variations).toEqual(['Dumbbell Bench Press']);
+            expect(bench.safety_considerations).toEqual(['Use a spotter for heavy sets']);
+            expect(bench.tags).toEqual(['Chest', 'Compound']);
             expect(bench.type).toBe('local');
         });
     });

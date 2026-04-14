@@ -12,11 +12,30 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
-    MdFilterList,
-    MdAdd,
-    MdInfo
-} from 'react-icons/md';
-import { Activity, Target, Weight, BarChart3, Search } from 'lucide-react';
+    Filter as MdFilterList,
+    Plus as MdAdd,
+    Info as MdInfo,
+    Activity,
+    Target,
+    Weight,
+    BarChart3,
+    Search
+} from 'lucide-react';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useSupabase } from '../../../hooks/useSupabase';
+import { getWeightUnit } from '../../../utils/weightUnit';
+import { getExerciseLibraryStatsFromWorkouts } from '../../../utils/workoutExerciseHistory';
+import { useExerciseCatalog } from '../hooks/useExerciseCatalog';
+
+const EMPTY_LIBRARY_STATS = {
+    exercisesTried: 0,
+    totalSets: 0,
+    totalVolume: 0,
+    volumeUnit: 'lbs',
+    hasWorkoutData: false,
+};
+
+const normalizeExerciseKey = (name) => (name || '').trim().toLowerCase();
 
 const ViewDetailsChip = styled(Chip)(({ theme }) => ({
     backgroundColor: 'rgba(221, 237, 0, 0.118)',
@@ -82,144 +101,203 @@ const CategoryChip = styled(Chip)(({ active }) => ({
 import ExerciseDetailDialog from './ExerciseDetailDialog';
 
 const ExerciseLibraryTab = () => {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('All');
-    const [exerciseData, setExerciseData] = useState(null);
+    const { currentUser } = useAuth();
+    const supabase = useSupabase();
+    
+    const [filters, setFilters] = useState({
+        searchTerm: '',
+        primaryMuscle: '',
+        equipment: '',
+        difficulty: '',
+        tag: '',
+        page: 1,
+        pageSize: 24,
+    });
+
+    const { items, totalCount, filterOptions, loading, error } = useExerciseCatalog({
+        supabase,
+        filters,
+    });
+
     const [selectedExercise, setSelectedExercise] = useState(null);
     const [detailOpen, setDetailOpen] = useState(false);
+    const [libraryStats, setLibraryStats] = useState(EMPTY_LIBRARY_STATS);
+    const [workouts, setWorkouts] = useState([]);
 
-    // Dynamically load exercise data on mount
+    const handleFilterChange = (key, value) => {
+        setFilters((current) => ({
+            ...current,
+            [key]: value,
+            page: key === 'page' ? value : 1,
+        }));
+    };
+
     useEffect(() => {
-        import('../../../../MergedData.json').then(module => {
-            setExerciseData(module.default);
-        });
-    }, []);
+        const loadLibraryStats = async () => {
+            if (!currentUser?.uid) {
+                setLibraryStats(EMPTY_LIBRARY_STATS);
+                setWorkouts([]);
+                return;
+            }
 
-    // Build a lookup from exercise id to raw exercise data (for the detail dialog)
-    // Must be before the early return to avoid React hooks violation
-    const rawExerciseLookup = useMemo(() => {
-        const lookup = {};
-        if (exerciseData?.products) {
-            exerciseData.products.forEach(ex => { lookup[ex.id] = ex; });
-        }
-        return lookup;
-    }, [exerciseData]);
+            try {
+                const { data, error } = await supabase
+                    .from('workouts')
+                    .select('id, exercises, weight_unit, timestamp, created_at')
+                    .eq('user_id', currentUser.uid)
+                    .order('timestamp', { ascending: false });
 
-    // Show nothing while data is loading
-    if (!exerciseData) return null;
+                if (error) throw error;
 
-    // Simulate user's workout history - in a real app, this would come from the database
-    const userWorkoutHistory = {
-        "0001": { // Kettlebell Single Arm Row
-            setsCompleted: 16,
-            totalReps: 199,
-            volume: null,
-            lastPerformed: "Aug 27, 2025",
-            hasData: true
-        },
-        "0002": { // Example: Another exercise the user has done
-            setsCompleted: 5,
-            totalReps: 127,
-            volume: "1536lb volume",
-            lastPerformed: "Aug 27, 2025",
-            hasData: true
-        },
-        "0010": { // Example: Third exercise
-            setsCompleted: 1,
-            totalReps: 156,
-            volume: null,
-            lastPerformed: "Aug 27, 2025",
-            hasData: true
-        },
-        "0015": { // Example: Fourth exercise
-            setsCompleted: 5,
-            totalReps: 178,
-            volume: "694lb volume",
-            lastPerformed: "Aug 27, 2025",
-            hasData: true
-        },
-        "0020": { // Example: Fifth exercise
-            setsCompleted: 3,
-            totalReps: 140,
-            volume: "3323lb volume",
-            lastPerformed: "Aug 27, 2025",
-            hasData: true
-        }
-    };
-
-    // Map primary muscle to category
-    const getCategoryFromMuscle = (primaryMuscle) => {
-        if (!primaryMuscle || typeof primaryMuscle !== 'string') return 'Other';
-        const muscleToCategory = {
-            'Latissimus Dorsi': 'Back', 'Rhomboids': 'Back', 'Trapezius': 'Back', 'Erector Spinae': 'Back',
-            'Quadriceps': 'Legs', 'Hamstrings': 'Legs', 'Glutes': 'Legs', 'Calves': 'Legs', 'Gastrocnemius': 'Legs', 'Soleus': 'Legs',
-            'Pectorals': 'Chest',
-            'Anterior Deltoids': 'Shoulders', 'Posterior Deltoids': 'Shoulders', 'Lateral Deltoids': 'Shoulders', 'Deltoids': 'Shoulders',
-            'Biceps': 'Arms', 'Triceps': 'Arms', 'Forearms': 'Arms',
-            'Abdominals': 'Core', 'Obliques': 'Core', 'Hip Flexors': 'Core'
+                setWorkouts(data || []);
+                const displayUnit = getWeightUnit() === 'kg' ? 'kg' : 'lbs';
+                setLibraryStats(getExerciseLibraryStatsFromWorkouts(data || [], displayUnit));
+            } catch (error) {
+                console.error('Error loading exercise library stats:', error);
+                setLibraryStats(EMPTY_LIBRARY_STATS);
+                setWorkouts([]);
+            }
         };
-        for (const [muscle, category] of Object.entries(muscleToCategory)) {
-            if (primaryMuscle.includes(muscle)) return category;
-        }
-        return 'Other';
-    };
 
+        loadLibraryStats();
+    }, [currentUser, supabase]);
 
+    const userWorkoutHistory = useMemo(() => {
+        const historyByExercise = {};
+        const displayUnit = getWeightUnit() === 'kg' ? 'kg' : 'lbs';
 
-    // Transform exercise data from JSON to match our component structure
-    const exerciseStats = exerciseData.products.map((exercise) => {
-        const userStats = userWorkoutHistory[exercise.id] || {
-            setsCompleted: 0, totalReps: 0, volume: null, lastPerformed: null, isNew: true, hasData: false
+        workouts.forEach((workout) => {
+            const performedAt = workout?.timestamp || workout?.created_at;
+            const formattedDate = performedAt
+                ? new Date(performedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                : null;
+
+            (workout?.exercises || []).forEach((exercise) => {
+                const exerciseName = exercise?.name || exercise?.exerciseName;
+                const exerciseKey = normalizeExerciseKey(exerciseName);
+
+                if (!exerciseKey) return;
+
+                const existing = historyByExercise[exerciseKey] || {
+                    setsCompleted: 0,
+                    totalReps: 0,
+                    totalVolume: 0,
+                    lastPerformed: null,
+                    lastPerformedAt: null,
+                    hasData: false,
+                };
+
+                (exercise?.sets || []).forEach((set) => {
+                    if (set?.completed === false) return;
+
+                    existing.setsCompleted += 1;
+
+                    const reps = Number(set?.reps);
+                    if (Number.isFinite(reps)) {
+                        existing.totalReps += reps;
+                    }
+
+                    const weight = Number(set?.weight);
+                    if (Number.isFinite(weight) && Number.isFinite(reps)) {
+                        const setWeightUnit = set?.weightUnit || workout?.weight_unit || displayUnit;
+                        const normalizedSetUnit = setWeightUnit === 'kg' ? 'kg' : 'lbs';
+                        const convertedWeight = normalizedSetUnit === displayUnit
+                            ? weight
+                            : Number((normalizedSetUnit === 'kg' ? weight * 2.20462 : weight / 2.20462).toFixed(1));
+
+                        existing.totalVolume += convertedWeight * reps;
+                    }
+                });
+
+                if (performedAt && (!existing.lastPerformedAt || new Date(performedAt) > new Date(existing.lastPerformedAt))) {
+                    existing.lastPerformedAt = performedAt;
+                    existing.lastPerformed = formattedDate;
+                }
+
+                existing.hasData = existing.setsCompleted > 0;
+                historyByExercise[exerciseKey] = existing;
+            });
+        });
+
+        return Object.fromEntries(
+            Object.entries(historyByExercise).map(([key, stats]) => [
+                key,
+                {
+                    setsCompleted: stats.setsCompleted,
+                    totalReps: stats.totalReps,
+                    volume: stats.totalVolume > 0 ? `${Math.round(stats.totalVolume)}${displayUnit} volume` : null,
+                    lastPerformed: stats.lastPerformed,
+                    hasData: stats.hasData,
+                    isNew: !stats.hasData,
+                },
+            ])
+        );
+    }, [workouts]);
+
+    // Show nothing while data is loading initially or if errored
+    if (loading && items.length === 0) return <Typography>Loading exercises...</Typography>;
+    if (error) return <Typography color="error">{error}</Typography>;
+
+    // Transform exercise data from Supabase to match our component structure with history
+    const exerciseStats = items.map((exercise) => {
+        const userStats = userWorkoutHistory[normalizeExerciseKey(exercise.name)] || {
+            setsCompleted: 0,
+            totalReps: 0,
+            volume: null,
+            lastPerformed: null,
+            isNew: true,
+            hasData: false,
         };
 
         return {
             id: exercise.id || 'unknown',
-            name: exercise.title || 'Unknown Exercise',
-            category: getCategoryFromMuscle(exercise.primary_muscle),
+            name: exercise.name || 'Unknown Exercise',
+            category: exercise.primaryMuscle || 'Unknown',
             difficulty: exercise.difficulty || 'Beginner',
-            primaryMuscle: exercise.primary_muscle || 'Unknown',
-            secondaryMuscles: exercise.secondary_muscles || [],
-            equipment: exercise.equipment_needed || [],
+            primaryMuscle: exercise.primaryMuscle || 'Unknown',
+            secondaryMuscles: exercise.secondaryMuscles || [],
+            equipment: exercise.equipmentNeeded || [],
             description: exercise.description || 'No description available',
-            videoUrls: exercise.video_urls || {},
+            videoUrls: exercise.videoUrls || {},
+            raw: exercise,
             ...userStats
         };
     });
 
     const handleExerciseClick = (exerciseId) => {
-        const rawExercise = rawExerciseLookup[exerciseId];
-        if (rawExercise) {
-            setSelectedExercise(rawExercise);
+        const selected = exerciseStats.find(ex => ex.id === exerciseId);
+        if (selected && selected.raw) {
+            setSelectedExercise(selected.raw);
             setDetailOpen(true);
         }
     };
 
-    // Get unique categories from the actual data
-    const uniqueCategories = [...new Set(exerciseStats.map(ex => ex.category))].sort();
-    const categories = ['All', ...uniqueCategories];
+    // Replace old uniqueCategories with filterOptions from Supabase hook
+    const categories = ['All', ...filterOptions.primaryMuscles];
 
-    // Filter exercises
-    const filteredExercises = exerciseStats.filter(exercise => {
-        const matchesSearch = exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            exercise.category.toLowerCase().includes(searchTerm.toLowerCase());
-
-        const matchesCategory = selectedCategory === 'All' || exercise.category === selectedCategory;
-
-        return matchesSearch && matchesCategory;
-    });
-
-    // Calculate totals
-    const performedExercises = exerciseStats.filter(ex => ex.hasData);
-    const totalExercises = exerciseStats.length; // Total exercises in database
-    const uniqueExercises = new Set(performedExercises.map(ex => ex.name)).size; // Only performed exercises
-    const totalWeight = performedExercises.reduce((sum, ex) => {
-        if (ex.volume) {
-            const weight = parseFloat(ex.volume.replace(/[^\d.]/g, ''));
-            return sum + (weight || 0);
+    // For display
+    const filteredExercises = exerciseStats;
+    const totalExercises = totalCount;
+    const historyStats = [
+        {
+            icon: <Target size={20} color="#dded00" />,
+            label: 'Exercises Tried',
+            value: libraryStats.hasWorkoutData ? libraryStats.exercisesTried : 'No data yet',
+            helper: libraryStats.hasWorkoutData ? 'Distinct exercises logged' : 'Log a workout to see the data',
+        },
+        {
+            icon: <Weight size={20} color="#dded00" />,
+            label: 'Total Sets',
+            value: libraryStats.hasWorkoutData ? libraryStats.totalSets : 'No data yet',
+            helper: libraryStats.hasWorkoutData ? 'Completed sets across workouts' : 'Log a workout to see the data',
+        },
+        {
+            icon: <BarChart3 size={20} color="#dded00" />,
+            label: 'Total Volume',
+            value: libraryStats.hasWorkoutData ? `${libraryStats.totalVolume}${libraryStats.volumeUnit}` : 'No data yet',
+            helper: libraryStats.hasWorkoutData ? `Accumulated training volume (${libraryStats.volumeUnit})` : 'Log a workout to see the data',
         }
-        return sum;
-    }, 0);
-    const totalReps = performedExercises.reduce((sum, ex) => sum + ex.totalReps, 0);
+    ];
 
     return (
         <Box>
@@ -251,84 +329,43 @@ const ExerciseLibraryTab = () => {
                         </Box>
                     </StatsCard>
                 </Grid>
-                <Grid item xs={6} sm={6} md={3}>
-                    <StatsCard sx={{ padding: { xs: '16px', sm: '20px' } }}>
-                        <IconContainer iconColor="rgba(221, 237, 0, 0.2)" sx={{
-                            width: { xs: '40px', sm: '48px' },
-                            height: { xs: '40px', sm: '48px' }
-                        }}>
-                            <Target size={20} color="#dded00" />
-                        </IconContainer>
-                        <Box>
-                            <Typography variant="h4" sx={{
-                                color: '#fff',
-                                fontWeight: 'bold',
-                                mb: 0.5,
-                                fontSize: { xs: '1.5rem', sm: '2rem' }
+                {historyStats.map((stat) => (
+                    <Grid item xs={6} sm={6} md={3} key={stat.label}>
+                        <StatsCard sx={{ padding: { xs: '16px', sm: '20px' } }}>
+                            <IconContainer iconColor="rgba(221, 237, 0, 0.2)" sx={{
+                                width: { xs: '40px', sm: '48px' },
+                                height: { xs: '40px', sm: '48px' }
                             }}>
-                                {uniqueExercises}
-                            </Typography>
-                            <Typography variant="body2" sx={{
-                                color: 'rgba(255, 255, 255, 0.6)',
-                                fontSize: { xs: '0.75rem', sm: '0.875rem' }
-                            }}>
-                                Unique Exercises
-                            </Typography>
-                        </Box>
-                    </StatsCard>
-                </Grid>
-                <Grid item xs={6} sm={6} md={3}>
-                    <StatsCard sx={{ padding: { xs: '16px', sm: '20px' } }}>
-                        <IconContainer iconColor="rgba(221, 237, 0, 0.2)" sx={{
-                            width: { xs: '40px', sm: '48px' },
-                            height: { xs: '40px', sm: '48px' }
-                        }}>
-                            <Weight size={20} color="#dded00" />
-                        </IconContainer>
-                        <Box>
-                            <Typography variant="h4" sx={{
-                                color: '#fff',
-                                fontWeight: 'bold',
-                                mb: 0.5,
-                                fontSize: { xs: '1.5rem', sm: '2rem' }
-                            }}>
-                                {Math.round(totalWeight)}lb
-                            </Typography>
-                            <Typography variant="body2" sx={{
-                                color: 'rgba(255, 255, 255, 0.6)',
-                                fontSize: { xs: '0.75rem', sm: '0.875rem' }
-                            }}>
-                                Total Weight
-                            </Typography>
-                        </Box>
-                    </StatsCard>
-                </Grid>
-                <Grid item xs={6} sm={6} md={3}>
-                    <StatsCard sx={{ padding: { xs: '16px', sm: '20px' } }}>
-                        <IconContainer iconColor="rgba(221, 237, 0, 0.2)" sx={{
-                            width: { xs: '40px', sm: '48px' },
-                            height: { xs: '40px', sm: '48px' }
-                        }}>
-                            <BarChart3 size={20} color="#dded00" />
-                        </IconContainer>
-                        <Box>
-                            <Typography variant="h4" sx={{
-                                color: '#fff',
-                                fontWeight: 'bold',
-                                mb: 0.5,
-                                fontSize: { xs: '1.5rem', sm: '2rem' }
-                            }}>
-                                {totalReps}
-                            </Typography>
-                            <Typography variant="body2" sx={{
-                                color: 'rgba(255, 255, 255, 0.6)',
-                                fontSize: { xs: '0.75rem', sm: '0.875rem' }
-                            }}>
-                                Total Reps
-                            </Typography>
-                        </Box>
-                    </StatsCard>
-                </Grid>
+                                {stat.icon}
+                            </IconContainer>
+                            <Box>
+                                <Typography variant="h4" sx={{
+                                    color: '#fff',
+                                    fontWeight: 'bold',
+                                    mb: 0.5,
+                                    fontSize: libraryStats.hasWorkoutData ? { xs: '1.5rem', sm: '2rem' } : { xs: '1rem', sm: '1.2rem' }
+                                }}>
+                                    {stat.value}
+                                </Typography>
+                                <Typography variant="body2" sx={{
+                                    color: 'rgba(255, 255, 255, 0.6)',
+                                    fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                                }}>
+                                    {stat.label}
+                                </Typography>
+                                <Typography variant="caption" sx={{
+                                    display: 'block',
+                                    color: 'rgba(255, 255, 255, 0.45)',
+                                    mt: 0.5,
+                                    fontSize: { xs: '0.65rem', sm: '0.7rem' },
+                                    maxWidth: '180px'
+                                }}>
+                                    {stat.helper}
+                                </Typography>
+                            </Box>
+                        </StatsCard>
+                    </Grid>
+                ))}
             </Grid>
 
             {/* Search and Filter */}
@@ -358,8 +395,8 @@ const ExerciseLibraryTab = () => {
                     />
                     <TextField
                         placeholder="Search exercises..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        value={filters.searchTerm}
+                        onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
                         fullWidth
                         sx={{
                             '& .MuiOutlinedInput-root': {
@@ -443,8 +480,8 @@ const ExerciseLibraryTab = () => {
                         key={category}
                         label={category}
                         size="small"
-                        active={selectedCategory === category}
-                        onClick={() => setSelectedCategory(category)}
+                        active={(filters.primaryMuscle || 'All') === category}
+                        onClick={() => handleFilterChange('primaryMuscle', category === 'All' ? '' : category)}
                         sx={{
                             fontSize: { xs: '0.7rem', sm: '0.75rem' },
                             height: { xs: '24px', sm: '28px' },
@@ -459,7 +496,7 @@ const ExerciseLibraryTab = () => {
                 <Typography variant="h6" sx={{ color: '#fff' }}>
                     Exercise Library
                     <Typography component="span" sx={{ color: 'text.secondary', ml: 1 }}>
-                        {filteredExercises.length} of {totalExercises} exercises
+                        Page {filters.page} (Total: {totalExercises} exercises)
                     </Typography>
                 </Typography>
                 <Typography variant="body2" sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -620,6 +657,37 @@ const ExerciseLibraryTab = () => {
                 ))}
             </Box>
 
+            {/* Pagination Controls */}
+            <Box sx={{ textAlign: 'center', mt: 4, display: 'flex', justifyContent: 'center', gap: 2, alignItems: 'center' }}>
+                <Button
+                    variant="outlined"
+                    onClick={() => handleFilterChange('page', filters.page - 1)}
+                    disabled={filters.page === 1}
+                    sx={{
+                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        '&:hover': { borderColor: '#dded00', color: '#dded00' }
+                    }}
+                >
+                    Previous
+                </Button>
+                <Typography sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                    Page {filters.page}
+                </Typography>
+                <Button
+                    variant="outlined"
+                    onClick={() => handleFilterChange('page', filters.page + 1)}
+                    disabled={filters.page * filters.pageSize >= totalExercises}
+                    sx={{
+                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        '&:hover': { borderColor: '#dded00', color: '#dded00' }
+                    }}
+                >
+                    Next
+                </Button>
+            </Box>
+
             {/* Performance Insights */}
             <Box sx={{ mt: 4 }}>
                 <Typography variant="h6" sx={{ color: '#fff', mb: 2 }}>
@@ -663,25 +731,6 @@ const ExerciseLibraryTab = () => {
                         </StatsCard>
                     </Grid>
                 </Grid>
-            </Box>
-
-            {/* Load More Button */}
-            <Box sx={{ textAlign: 'center', mt: 4 }}>
-                <Button
-                    variant="outlined"
-                    sx={{
-                        borderColor: 'rgba(255, 255, 255, 0.3)',
-                        color: 'rgba(255, 255, 255, 0.7)',
-                        px: 4,
-                        py: 1,
-                        '&:hover': {
-                            borderColor: '#dded00',
-                            color: '#dded00',
-                        }
-                    }}
-                >
-                    Load More Exercises
-                </Button>
             </Box>
 
             {/* Exercise Detail Dialog */}

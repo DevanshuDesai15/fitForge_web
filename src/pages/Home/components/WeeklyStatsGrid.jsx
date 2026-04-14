@@ -18,13 +18,13 @@ const StatsCard = styled(Card)(() => ({
 export default function WeeklyStatsGrid({ weeklyStats }) {
     return (
         <Box sx={{ mb: 4 }}>
-            <Typography variant="h4" sx={{
+            {/* <Typography variant="h4" sx={{
                 color: 'text.primary',
                 mb: 3,
                 fontSize: { xs: '1.5rem', md: '2rem' }
             }}>
                 This Week
-            </Typography>
+            </Typography> */}
             <Grid container spacing={3}>
                 <Grid item xs={6} md={3}>
                     <StatsCard>

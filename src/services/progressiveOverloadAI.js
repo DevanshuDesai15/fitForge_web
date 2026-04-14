@@ -4,21 +4,7 @@
  * and adaptive training suggestions based on user workout history and performance patterns.
  */
 
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  setDoc,
-  updateDoc,
-  query,
-  where,
-  orderBy,
-  limit,
-  serverTimestamp,
-} from "firebase/firestore";
-import { db } from "../firebase/config";
-import aiFirestoreService from "./aiFirestoreService";
+import aiDatabaseService from "./aiDatabaseService";
 import geminiAIService from "./geminiAIService";
 
 /**
@@ -145,6 +131,11 @@ import geminiAIService from "./geminiAIService";
  * Core service for intelligent workout progression and training optimization
  */
 class ProgressiveOverloadAIService {
+  setSupabase(supabaseClient) {
+    this.supabase = supabaseClient;
+    geminiAIService.setSupabase(supabaseClient);
+  }
+
   /**
    * Initialize the AI service
    * @param {Object} config - Service configuration
@@ -161,10 +152,10 @@ class ProgressiveOverloadAIService {
       plateauThreshold: 3, // sessions
       deloadPercentage: 0.1, // 10%
       confidenceThreshold: 0.7,
-      // Gemini AI integration
+      // Generative AI integration
       useGeminiAI: config.useGeminiAI !== false, // Default to true
       hybridMode: config.hybridMode !== false, // Use both rule-based and AI
-      geminiPriority: config.geminiPriority || 0.4, // 40% weight to Gemini suggestions
+      geminiPriority: config.geminiPriority || 0.4, // 40% weight to provider suggestions
       ...config,
     };
 
@@ -208,19 +199,28 @@ class ProgressiveOverloadAIService {
         return await this._analyzeExerciseHistory(userId, exerciseId);
       }
 
-      // Load exercises from the exercises collection (your app's data structure)
-      const exercisesQuery = query(
-        collection(db, "exercises"),
-        where("userId", "==", userId),
-        orderBy("timestamp", "desc"),
-        limit(50) // Get more exercises to have enough data for analysis
-      );
+      // Fetch workouts to extract flattened exercises in Postgres
+      const { data: workouts, error } = await this.supabase
+        .from("workouts")
+        .select("id, timestamp, exercises")
+        .eq("user_id", userId)
+        .order("timestamp", { ascending: false })
+        .limit(20);
 
-      const exercisesSnapshot = await getDocs(exercisesQuery);
-      const exercises = exercisesSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      if (error) throw error;
+
+      const exercises = [];
+      workouts.forEach(workout => {
+        if (workout.exercises && Array.isArray(workout.exercises)) {
+          workout.exercises.forEach((ex, idx) => {
+             exercises.push({
+               ...ex,
+               id: `${workout.id}_${idx}`,
+               timestamp: workout.timestamp
+             });
+          });
+        }
+      });
 
       this._log("Exercises found for analysis", {
         userId,
@@ -309,7 +309,7 @@ class ProgressiveOverloadAIService {
         userProfile
       );
 
-      // Step 2: Use Gemini AI for enhanced intelligence (when enabled)
+      // Step 2: Use the generative provider for enhanced intelligence (when enabled)
       if (this.config.useGeminiAI) {
         try {
           const workoutHistory = await this._getRecentWorkoutHistory(userId, 5);
@@ -326,7 +326,7 @@ class ProgressiveOverloadAIService {
             geminiSuggestion
           );
         } catch (error) {
-          this._log("Gemini AI unavailable, using rule-based suggestion", {
+          this._log("Generative AI unavailable, using rule-based suggestion", {
             exerciseId,
             error: error.message,
           });
@@ -692,7 +692,7 @@ class ProgressiveOverloadAIService {
         )
       );
 
-      // Step 3: Use single Gemini AI call for all exercises (when enabled)
+      // Step 3: Use a single provider call for all exercises (when enabled)
       if (this.config.useGeminiAI && exerciseIds.length > 0) {
         try {
           const workoutHistory = await this._getRecentWorkoutHistory(userId, 5);
@@ -718,7 +718,7 @@ class ProgressiveOverloadAIService {
           });
         } catch (error) {
           this._log(
-            "Gemini AI unavailable for batch, using rule-based suggestions",
+            "Generative AI unavailable for batch, using rule-based suggestions",
             {
               exerciseCount: exerciseIds.length,
               error: error.message,
@@ -747,7 +747,7 @@ class ProgressiveOverloadAIService {
    */
   async _getUserProgressionProfile(userId) {
     try {
-      let profile = await aiFirestoreService.getUserProgressionProfile(userId);
+      let profile = await aiDatabaseService.getUserProgressionProfile(this.supabase, userId);
 
       if (profile) {
         // Convert to expected format
@@ -776,7 +776,8 @@ class ProgressiveOverloadAIService {
         plateauTolerance: 3,
       };
 
-      await aiFirestoreService.saveUserProgressionProfile(
+      await aiDatabaseService.saveUserProgressionProfile(
+        this.supabase,
         userId,
         defaultProfileData
       );
@@ -800,20 +801,29 @@ class ProgressiveOverloadAIService {
    * @private
    */
   async _analyzeExerciseHistory(userId, exerciseId) {
-    // Get all recent exercises and filter client-side to avoid index requirements
-    const exercisesQuery = query(
-      collection(db, "exercises"),
-      where("userId", "==", userId),
-      orderBy("timestamp", "desc"),
-      limit(50) // Get more to ensure we have enough for the specific exercise
-    );
+    // Fetch recent workouts from Supabase to extract exercises
+    const { data: workouts, error } = await this.supabase
+        .from("workouts")
+        .select("id, timestamp, exercises")
+        .eq("user_id", userId)
+        .order("timestamp", { ascending: false })
+        .limit(20);
 
-    const exercisesSnapshot = await getDocs(exercisesQuery);
-    const allExercises = exercisesSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      date: doc.data().timestamp,
-      ...doc.data(),
-    }));
+    if (error) throw error;
+
+    const allExercises = [];
+    workouts.forEach(workout => {
+      if (workout.exercises && Array.isArray(workout.exercises)) {
+        workout.exercises.forEach((ex, idx) => {
+           allExercises.push({
+             ...ex,
+             id: `${workout.id}_${idx}`,
+             date: workout.timestamp,
+             timestamp: workout.timestamp
+           });
+        });
+      }
+    });
 
     // Filter for the specific exercise and limit to 10 most recent
     const exerciseSessions = allExercises
@@ -1132,7 +1142,7 @@ class ProgressiveOverloadAIService {
         plateauData
       );
 
-      // Step 2: Use Gemini AI for intelligent analysis (when enabled and userId available)
+      // Step 2: Use the generative provider for intelligent analysis (when enabled and userId available)
       if (this.config.useGeminiAI && userId) {
         try {
           const userProfile = await this._getUserProgressionProfile(userId);
@@ -1160,7 +1170,7 @@ class ProgressiveOverloadAIService {
           );
         } catch (error) {
           this._log(
-            "Gemini AI unavailable for interventions, using rule-based",
+            "Generative AI unavailable for interventions, using rule-based",
             {
               exerciseId: plateauData.exerciseId,
               error: error.message,
@@ -1825,19 +1835,15 @@ class ProgressiveOverloadAIService {
       this._log("Analyzing comprehensive workout history", { userId });
 
       // Get last 16 workouts as per requirements
-      const workoutsQuery = query(
-        collection(db, "workouts"),
-        where("userId", "==", userId),
-        where("completed", "==", true),
-        orderBy("timestamp", "desc"),
-        limit(16)
-      );
+      const { data: workoutsData, error } = await this.supabase
+        .from("workouts")
+        .select("*")
+        .eq("user_id", userId)
+        .order("timestamp", { ascending: false })
+        .limit(16);
 
-      const workoutsSnapshot = await getDocs(workoutsQuery);
-      const workouts = workoutsSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      if (error) throw error;
+      const workouts = workoutsData.map(w => ({ ...w, userId: w.user_id }));
 
       if (workouts.length === 0) {
         return this._getEmptyAnalysis();
@@ -2357,19 +2363,15 @@ class ProgressiveOverloadAIService {
       this._log("Running advanced plateau detection", { userId });
 
       // Get recent workout history for detailed analysis
-      const workoutsQuery = query(
-        collection(db, "workouts"),
-        where("userId", "==", userId),
-        where("completed", "==", true),
-        orderBy("timestamp", "desc"),
-        limit(20) // Analyze more sessions for accurate plateau detection
-      );
+      const { data: workoutsData, error } = await this.supabase
+        .from("workouts")
+        .select("*")
+        .eq("user_id", userId)
+        .order("timestamp", { ascending: false })
+        .limit(20);
 
-      const workoutsSnapshot = await getDocs(workoutsQuery);
-      const workouts = workoutsSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      if (error) throw error;
+      const workouts = workoutsData.map(w => ({ ...w, userId: w.user_id }));
 
       if (workouts.length < 3) {
         this._log("Insufficient workout data for plateau detection");
@@ -2847,14 +2849,16 @@ class ProgressiveOverloadAIService {
    */
   async getActivePlateauAlerts(userId) {
     try {
-      const alertsDoc = await getDoc(doc(db, "aiSuggestions", userId));
+      const suggestions = await aiDatabaseService.getAISuggestions(
+        this.supabase,
+        userId
+      );
 
-      if (!alertsDoc.exists()) {
+      if (!suggestions) {
         return [];
       }
 
-      const data = alertsDoc.data();
-      const plateauAlerts = data.plateauAlerts || [];
+      const plateauAlerts = suggestions.plateauAlerts || [];
 
       // Filter for active alerts only
       const activeAlerts = plateauAlerts.filter(
@@ -2888,14 +2892,16 @@ class ProgressiveOverloadAIService {
     try {
       this._log("Acknowledging plateau alert", { userId, alertId });
 
-      const alertsDoc = await getDoc(doc(db, "aiSuggestions", userId));
+      const suggestions = await aiDatabaseService.getAISuggestions(
+        this.supabase,
+        userId
+      );
 
-      if (!alertsDoc.exists()) {
+      if (!suggestions) {
         return false;
       }
 
-      const data = alertsDoc.data();
-      const plateauAlerts = data.plateauAlerts || [];
+      const plateauAlerts = suggestions.plateauAlerts || [];
 
       // Find and update the alert
       const alertIndex = plateauAlerts.findIndex(
@@ -2914,10 +2920,8 @@ class ProgressiveOverloadAIService {
         lastShown: new Date(),
       };
 
-      // Update Firestore
-      await updateDoc(doc(db, "aiSuggestions", userId), {
+      await aiDatabaseService.updateAISuggestions(this.supabase, userId, {
         plateauAlerts,
-        lastUpdated: serverTimestamp(),
       });
 
       this._log("Plateau alert acknowledged", { userId, alertId });
@@ -2939,14 +2943,16 @@ class ProgressiveOverloadAIService {
     try {
       this._log("Dismissing plateau alert", { userId, alertId, reason });
 
-      const alertsDoc = await getDoc(doc(db, "aiSuggestions", userId));
+      const suggestions = await aiDatabaseService.getAISuggestions(
+        this.supabase,
+        userId
+      );
 
-      if (!alertsDoc.exists()) {
+      if (!suggestions) {
         return false;
       }
 
-      const data = alertsDoc.data();
-      const plateauAlerts = data.plateauAlerts || [];
+      const plateauAlerts = suggestions.plateauAlerts || [];
 
       // Find and update the alert
       const alertIndex = plateauAlerts.findIndex(
@@ -2966,10 +2972,8 @@ class ProgressiveOverloadAIService {
         status: "dismissed",
       };
 
-      // Update Firestore
-      await updateDoc(doc(db, "aiSuggestions", userId), {
+      await aiDatabaseService.updateAISuggestions(this.supabase, userId, {
         plateauAlerts,
-        lastUpdated: serverTimestamp(),
       });
 
       this._log("Plateau alert dismissed", { userId, alertId });
@@ -2988,7 +2992,8 @@ class ProgressiveOverloadAIService {
    */
   async _getNotificationSettings(userId) {
     try {
-      const profileData = await aiFirestoreService.getUserProgressionProfile(
+      const profileData = await aiDatabaseService.getUserProgressionProfile(
+        this.supabase,
         userId
       );
 
@@ -3146,7 +3151,7 @@ class ProgressiveOverloadAIService {
   }
 
   /**
-   * Save plateau alerts to Firestore
+   * Save plateau alerts to Supabase-backed AI suggestion storage
    * @param {string} userId - User identifier
    * @param {Array<PlateauAlert>} alerts - Alerts to save
    * @returns {Promise<void>}
@@ -3154,14 +3159,11 @@ class ProgressiveOverloadAIService {
    */
   async _savePlateauAlerts(userId, alerts) {
     try {
-      // Get existing alerts
-      const alertsDoc = await getDoc(doc(db, "aiSuggestions", userId));
-      let existingAlerts = [];
-
-      if (alertsDoc.exists()) {
-        const data = alertsDoc.data();
-        existingAlerts = data.plateauAlerts || [];
-      }
+      const suggestions = await aiDatabaseService.getAISuggestions(
+        this.supabase,
+        userId
+      );
+      const existingAlerts = suggestions?.plateauAlerts || [];
 
       // Merge new alerts with existing ones
       const allAlerts = [...existingAlerts, ...alerts];
@@ -3169,15 +3171,11 @@ class ProgressiveOverloadAIService {
       // Remove duplicates and old alerts (keep last 20)
       const uniqueAlerts = this._deduplicateAlerts(allAlerts).slice(0, 20);
 
-      // Save to Firestore
-      await setDoc(
-        doc(db, "aiSuggestions", userId),
-        {
+      await aiDatabaseService.saveAISuggestions(this.supabase, userId, {
+          nextWorkoutSuggestions: suggestions?.nextWorkoutSuggestions || [],
           plateauAlerts: uniqueAlerts,
-          lastUpdated: serverTimestamp(),
-        },
-        { merge: true }
-      );
+          progressionPlan: suggestions?.progressionPlan || {},
+        });
     } catch (error) {
       this._logError("Error saving plateau alerts", error);
       throw error;
@@ -3235,7 +3233,8 @@ class ProgressiveOverloadAIService {
       };
 
       // Save to AI suggestions collection for tracking
-      await aiFirestoreService.trackSuggestionInteraction(
+      await aiDatabaseService.trackSuggestionInteraction(
+        this.supabase,
         userId,
         interactionData
       );
@@ -3307,7 +3306,7 @@ class ProgressiveOverloadAIService {
         suggestionStats,
       };
 
-      await aiFirestoreService.updatePerformanceMetrics(userId, updatedMetrics);
+      await aiDatabaseService.updatePerformanceMetrics(this.supabase, userId, updatedMetrics);
 
       this._log("Suggestion effectiveness updated", {
         userId,
@@ -3450,19 +3449,15 @@ class ProgressiveOverloadAIService {
         limitCount = 5;
       }
 
-      const workoutsQuery = query(
-        collection(db, "workouts"),
-        where("userId", "==", userId),
-        where("completed", "==", true),
-        orderBy("timestamp", "desc"),
-        limit(limitCount)
-      );
+      const { data: workoutsData, error } = await this.supabase
+        .from("workouts")
+        .select("*")
+        .eq("user_id", userId)
+        .order("timestamp", { ascending: false })
+        .limit(limitCount);
 
-      const workoutsSnapshot = await getDocs(workoutsQuery);
-      const workouts = workoutsSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      if (error) throw error;
+      const workouts = workoutsData.map(w => ({ ...w, userId: w.user_id }));
 
       this._log("Retrieved workout history", {
         userId,
@@ -3626,7 +3621,7 @@ class ProgressiveOverloadAIService {
    */
   async _getPastInterventions(userId, exerciseId) {
     try {
-      const suggestions = await aiFirestoreService.getAISuggestions(userId);
+      const suggestions = await aiDatabaseService.getAISuggestions(this.supabase, userId);
       if (!suggestions || !suggestions.interactions) {
         return [];
       }
@@ -3717,29 +3712,67 @@ class ProgressiveOverloadAIService {
       const recentWorkouts = await this._getRecentWorkoutHistory(userId, 3);
       const analyses = await this.analyzeWorkoutHistory(userId);
 
-      // Use Gemini AI for intelligent workout planning
+      // Use the generative provider for intelligent workout planning
       if (this.config.useGeminiAI && analyses.length > 0) {
-        this._log("Using Gemini AI for workout suggestions", {
+        this._log("Using AI workout recommendations", {
           analysisCount: analyses.length,
         });
-        const geminiResult =
-          await geminiAIService.generateBatchProgressionSuggestions(
-            analyses,
+        const recommendationResult =
+          await geminiAIService.generateWorkoutRecommendations(
+            workoutContext,
             userProfile,
             recentWorkouts
           );
 
-        // Transform Gemini suggestions to the required format
-        return geminiResult.suggestions.map((suggestion) => ({
-          ...suggestion,
-          confidenceLevel: suggestion.confidence,
-          suggestedWeight: suggestion.suggestedWeight || 0,
-          suggestedReps: suggestion.suggestedReps || 10,
-          suggestedSets: suggestion.suggestedSets || 3,
-        }));
+        const recommendedExercises =
+          recommendationResult?.workoutPlan?.exercises || [];
+
+        if (recommendedExercises.length > 0) {
+          return recommendedExercises.map((exercise) => {
+            const matchingAnalysis = analyses.find(
+              (analysis) =>
+                analysis.exerciseId === exercise.exerciseId ||
+                analysis.exerciseName === exercise.exerciseName
+            );
+
+            const parsedReps = Number.parseInt(
+              String(exercise.reps || "").split("-").pop(),
+              10
+            );
+            const parsedWeight = Number.parseFloat(exercise.weight);
+
+            return {
+              exerciseId:
+                exercise.exerciseId ||
+                matchingAnalysis?.exerciseId ||
+                exercise.exerciseName,
+              exerciseName:
+                exercise.exerciseName ||
+                matchingAnalysis?.exerciseName ||
+                "Recommended Exercise",
+              suggestedWeight:
+                Number.isFinite(parsedWeight)
+                  ? parsedWeight
+                  : matchingAnalysis?.currentWeight || 0,
+              suggestedReps: Number.isFinite(parsedReps) ? parsedReps : 10,
+              suggestedSets: exercise.sets || 3,
+              restTime: exercise.restTime || 90,
+              priority:
+                matchingAnalysis?.confidenceLevel >= 0.7 ? "high" : "medium",
+              reasoning:
+                exercise.notes ||
+                recommendationResult.reasoning ||
+                "AI-generated workout recommendation",
+              confidenceLevel: matchingAnalysis?.confidenceLevel || 0.75,
+              aiGenerated: true,
+              difficultyLevel: recommendationResult.difficultyLevel,
+              estimatedDuration: recommendationResult.estimatedDuration,
+            };
+          });
+        }
       }
 
-      // Fallback to rule-based suggestions if Gemini is disabled or no analysis
+      // Fallback to rule-based suggestions if AI is disabled or no analysis
       this._log("Using rule-based workout suggestions", {
         geminiEnabled: this.config.useGeminiAI,
         analysisCount: analyses.length,

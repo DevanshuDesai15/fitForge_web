@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '../firebase/config';
 import { useAuth } from './AuthContext';
+import { useSupabase } from '../hooks/useSupabase';
 import PropTypes from 'prop-types';
 import { convertWeight as convertWeightUtil, formatWeight as formatWeightUtil, getWeightLabel as getWeightLabelUtil } from '../utils/unitConversions';
 
@@ -17,6 +16,7 @@ export const useUnits = () => {
 
 export const UnitsProvider = ({ children }) => {
     const { currentUser } = useAuth();
+    const supabase = useSupabase();
     const [unitPreference, setUnitPreference] = useState('imperial'); // 'metric' or 'imperial'
     const [loading, setLoading] = useState(true);
 
@@ -24,41 +24,53 @@ export const UnitsProvider = ({ children }) => {
     const weightUnit = unitPreference === 'metric' ? 'kg' : 'lbs';
     const heightUnit = unitPreference === 'metric' ? 'cm' : 'ft';
 
-    // Load user's unit preference from Firestore
+    const getStoredUnitPreference = () => {
+        const storedUnit = localStorage.getItem('weightUnit');
+        if (storedUnit === 'kg') {
+            return 'metric';
+        }
+        if (storedUnit === 'lbs') {
+            return 'imperial';
+        }
+        return 'imperial';
+    };
+
+    // Load the user's unit preference from Supabase when authenticated,
+    // otherwise fall back to the locally stored preference.
     useEffect(() => {
         const loadUserPreference = async () => {
-            if (!currentUser) {
-                // Not logged in - use localStorage or default
-                const storedUnit = localStorage.getItem('weightUnit');
-                if (storedUnit === 'kg') {
-                    setUnitPreference('metric');
-                } else if (storedUnit === 'lbs') {
-                    setUnitPreference('imperial');
-                } else {
-                    setUnitPreference('imperial'); // Default
-                }
+            if (!currentUser?.uid) {
+                setUnitPreference(getStoredUnitPreference());
                 setLoading(false);
                 return;
             }
 
             try {
-                const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    const preference = userData.preferences?.units || 'imperial';
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('preferences')
+                    .eq('id', currentUser.uid)
+                    .single();
+
+                if (error) {
+                    if (error.code === 'PGRST116') {
+                        setUnitPreference(getStoredUnitPreference());
+                    } else {
+                        throw error;
+                    }
+                } else if (data?.preferences?.units) {
+                    const preference = data.preferences.units;
                     setUnitPreference(preference);
 
                     // Sync to localStorage for backward compatibility
                     const unit = preference === 'metric' ? 'kg' : 'lbs';
                     localStorage.setItem('weightUnit', unit);
                 } else {
-                    // New user - set default
-                    setUnitPreference('imperial');
-                    localStorage.setItem('weightUnit', 'lbs');
+                    setUnitPreference(getStoredUnitPreference());
                 }
             } catch (error) {
-                console.error('Error loading user preferences:', error);
-                setUnitPreference('imperial');
+                console.error('Error loading user preferences from Supabase:', error);
+                setUnitPreference(getStoredUnitPreference());
             } finally {
                 setLoading(false);
             }
@@ -67,23 +79,36 @@ export const UnitsProvider = ({ children }) => {
         loadUserPreference();
     }, [currentUser]);
 
-    // Update unit preference in Firestore and localStorage
+    // Persist the preference to Supabase and mirror it into localStorage.
     const updateUnitPreference = async (newPreference) => {
-        if (!currentUser) {
+        if (!currentUser?.uid) {
             console.error('Cannot update preferences: user not logged in');
             return;
         }
 
         try {
-            // Update Firestore
-            await setDoc(doc(db, 'users', currentUser.uid), {
-                preferences: {
-                    units: newPreference
-                },
-                weightUnit: newPreference === 'metric' ? 'kg' : 'lbs',
-                heightUnit: newPreference === 'metric' ? 'cm' : 'ft',
-                updatedAt: new Date().toISOString(),
-            }, { merge: true });
+            // Update Supabase profiles table
+            // We fetch the current preferences first to merge them properly
+            const { data: currentProfile } = await supabase
+                .from('profiles')
+                .select('preferences')
+                .eq('id', currentUser.uid)
+                .single();
+
+            const updatedPreferences = {
+                ...(currentProfile?.preferences || {}),
+                units: newPreference
+            };
+
+            const { error } = await supabase
+                .from('profiles')
+                .upsert({
+                    id: currentUser.uid,
+                    preferences: updatedPreferences,
+                    updated_at: new Date().toISOString()
+                });
+
+            if (error) throw error;
 
             // Update local state
             setUnitPreference(newPreference);
@@ -92,9 +117,9 @@ export const UnitsProvider = ({ children }) => {
             const unit = newPreference === 'metric' ? 'kg' : 'lbs';
             localStorage.setItem('weightUnit', unit);
 
-            console.log('✅ Unit preference updated:', newPreference);
+            console.log('✅ Unit preference updated in Supabase:', newPreference);
         } catch (error) {
-            console.error('Error updating unit preference:', error);
+            console.error('Error updating unit preference in Supabase:', error);
             throw error;
         }
     };

@@ -20,8 +20,14 @@ import {
     useMediaQuery,
     useTheme
 } from '@mui/material';
-import { MdClose, MdSearch, MdFilterList, MdTimer, MdFitnessCenter } from 'react-icons/md';
-import { Target, Dumbbell } from 'lucide-react';
+import {
+    X as MdClose,
+    Search as MdSearch,
+    Filter as MdFilterList,
+    Timer as MdTimer,
+    Dumbbell as MdFitnessCenter,
+    Target
+} from 'lucide-react';
 import { fetchExercises, fetchExercisesByBodyPart } from '../../../services/localExerciseService';
 import PropTypes from 'prop-types';
 

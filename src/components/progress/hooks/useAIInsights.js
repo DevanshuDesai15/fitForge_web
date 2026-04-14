@@ -1,13 +1,17 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import ProgressiveOverloadAIService from "../../../services/progressiveOverloadAI";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useSupabase } from "../../../hooks/useSupabase";
 
 export const useAIInsights = () => {
-  const [aiInsights, setAiInsights] = useState([]);
-  const [progressionAnalyses, setProgressionAnalyses] = useState([]);
   const [aiService] = useState(() => ProgressiveOverloadAIService);
-
   const { currentUser } = useAuth();
+  const supabase = useSupabase();
+
+  useEffect(() => {
+    aiService.setSupabase(supabase);
+  }, [supabase, aiService]);
 
   const generateProgressionInsightMessage = useCallback((analysis) => {
     const trend = analysis.progressionTrend;
@@ -25,40 +29,34 @@ export const useAIInsights = () => {
     }
   }, []);
 
-  const loadAIInsights = useCallback(
-    async (exerciseNames) => {
-      if (!exerciseNames.length) return;
+  const { data, refetch: loadAIInsights } = useQuery({
+    queryKey: ['aiInsights', currentUser?.uid],
+    queryFn: async () => {
+      if (!currentUser) return { analyses: [], insights: [] };
 
-      try {
-        // Load progression analyses for all exercises
-        const analyses = await aiService.analyzeWorkoutHistory(currentUser.uid);
-        setProgressionAnalyses(analyses);
+      const analyses = await aiService.analyzeWorkoutHistory(currentUser.uid);
+      const insights = analyses
+        .filter((analysis) => analysis.totalSessions >= 3)
+        .map((analysis) => ({
+          exerciseId: analysis.exerciseId,
+          exerciseName: analysis.exerciseName,
+          type: "progression_trend",
+          title: `${analysis.exerciseName} Progression Analysis`,
+          message: generateProgressionInsightMessage(analysis),
+          confidenceLevel: analysis.confidenceLevel,
+          trend: analysis.progressionTrend,
+          data: analysis,
+        }));
 
-        // Generate AI insights for weight progress
-        const insights = analyses
-          .filter((analysis) => analysis.totalSessions >= 3) // Only show insights for exercises with enough data
-          .map((analysis) => ({
-            exerciseId: analysis.exerciseId,
-            exerciseName: analysis.exerciseName,
-            type: "progression_trend",
-            title: `${analysis.exerciseName} Progression Analysis`,
-            message: generateProgressionInsightMessage(analysis),
-            confidenceLevel: analysis.confidenceLevel,
-            trend: analysis.progressionTrend,
-            data: analysis,
-          }));
-
-        setAiInsights(insights);
-      } catch (error) {
-        console.error("Error loading AI insights:", error);
-      }
+      return { analyses, insights };
     },
-    [currentUser.uid, aiService, generateProgressionInsightMessage]
-  );
+    enabled: !!currentUser,
+    staleTime: 5 * 60 * 1000,
+  });
 
   return {
-    aiInsights,
-    progressionAnalyses,
+    aiInsights: data?.insights || [],
+    progressionAnalyses: data?.analyses || [],
     loadAIInsights,
   };
 };

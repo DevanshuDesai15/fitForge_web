@@ -14,18 +14,18 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
-    MdFitnessCenter,
-    MdShowChart,
-    MdHistory,
-    MdTrendingUp,
-    MdPhoneAndroid,
-    MdCloud,
-    MdSecurity,
-    MdSpeed,
-    MdArrowForward,
-    MdCheckCircle,
-    MdEmojiEvents
-} from 'react-icons/md';
+    Dumbbell as MdFitnessCenter,
+    LineChart as MdShowChart,
+    History as MdHistory,
+    TrendingUp as MdTrendingUp,
+    Smartphone as MdPhoneAndroid,
+    Cloud as MdCloud,
+    ShieldCheck as MdSecurity,
+    Zap as MdSpeed,
+    ArrowRight as MdArrowForward,
+    CheckCircle as MdCheckCircle,
+    Trophy as MdEmojiEvents
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import appLogo from '../../assets/appLogo.svg';

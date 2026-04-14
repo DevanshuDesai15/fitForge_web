@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import { Box, Typography, FormControlLabel, Switch, Divider } from '@mui/material';
-import { MdTrendingUp, MdTrendingDown, MdTrendingFlat } from 'react-icons/md';
+import { TrendingUp as MdTrendingUp, TrendingDown as MdTrendingDown, Minus as MdTrendingFlat } from 'lucide-react';
 import { Trophy, Flame, Zap } from 'lucide-react';
 import { format, subMonths, isWithinInterval, startOfMonth, formatDistanceToNow } from 'date-fns';
 

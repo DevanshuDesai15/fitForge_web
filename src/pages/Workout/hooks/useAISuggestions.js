@@ -1,67 +1,55 @@
-import { useState, useCallback } from "react";
+import { useCallback, useEffect } from "react";
+import { useMutation } from "@tanstack/react-query";
 import ProgressiveOverloadAIService from "../../../services/progressiveOverloadAI";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useSupabase } from "../../../hooks/useSupabase";
 
 export const useAISuggestions = () => {
-  const [aiSuggestions, setAiSuggestions] = useState({});
-  const [loading, setLoading] = useState(false);
-
   const { currentUser } = useAuth();
+  const supabase = useSupabase();
 
-  const loadAISuggestions = useCallback(
-    async (exerciseNames) => {
-      if (!currentUser || !exerciseNames.length) return;
+  useEffect(() => {
+    ProgressiveOverloadAIService.setSupabase(supabase);
+  }, [supabase]);
 
-      setLoading(true);
+  const mutation = useMutation({
+    mutationFn: async (exerciseNames) => {
+      if (!currentUser || !exerciseNames?.length) return {};
+      
+      const suggestions = {};
+      for (const exerciseName of exerciseNames) {
+        try {
+          const progression = await ProgressiveOverloadAIService.calculateNextProgression(
+            currentUser.uid,
+            exerciseName
+          );
 
-      try {
-        const suggestions = {};
-
-        // Load AI suggestions for each exercise
-        for (const exerciseName of exerciseNames) {
-          try {
-            const progression =
-              await ProgressiveOverloadAIService.getProgressionSuggestion(
-                currentUser.uid,
-                exerciseName
-              );
-
-            if (progression && progression.confidenceLevel > 0.3) {
-              suggestions[exerciseName] = progression;
-            }
-          } catch (error) {
-            console.warn(
-              `Failed to load AI suggestion for ${exerciseName}:`,
-              error
-            );
+          if (progression && progression.confidenceLevel > 0.3) {
+            suggestions[exerciseName] = progression;
           }
+        } catch (error) {
+          console.warn(`Failed to load AI suggestion for ${exerciseName}:`, error);
         }
-
-        setAiSuggestions(suggestions);
-      } catch (error) {
-        console.error("Error loading AI suggestions:", error);
-      } finally {
-        setLoading(false);
       }
-    },
-    [currentUser]
-  );
+      return suggestions;
+    }
+  });
 
   const getSuggestionForExercise = useCallback(
     (exerciseName) => {
-      return aiSuggestions[exerciseName] || null;
+      return mutation.data ? mutation.data[exerciseName] || null : null;
     },
-    [aiSuggestions]
+    [mutation.data]
   );
 
   const clearSuggestions = useCallback(() => {
-    setAiSuggestions({});
-  }, []);
+    mutation.reset();
+  }, [mutation]);
 
   return {
-    aiSuggestions,
-    loading,
-    loadAISuggestions,
+    aiSuggestions: mutation.data || {},
+    loading: mutation.isPending,
+    loadAISuggestions: mutation.mutateAsync,
     getSuggestionForExercise,
     clearSuggestions,
   };

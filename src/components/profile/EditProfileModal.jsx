@@ -18,6 +18,8 @@ import {
   Avatar
 } from '@mui/material';
 import { X, Save, User, Activity, Target, Bell } from 'lucide-react';
+import FitForgeSwitch from '../common/FitForgeSwitch';
+import { formatHeight } from '../../utils/unitConversion';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialog-paper': {
@@ -232,39 +234,6 @@ const NotificationDesc = styled(Typography)({
   color: 'rgba(255, 255, 255, 0.6)',
 });
 
-const StyledSwitch = styled('input')({
-  appearance: 'none',
-  width: '48px',
-  height: '28px',
-  backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  borderRadius: '14px',
-  position: 'relative',
-  cursor: 'pointer',
-  transition: 'background-color 0.3s',
-  outline: 'none',
-  border: 'none',
-
-  '&:checked': {
-    backgroundColor: '#dded00',
-  },
-
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    width: '24px',
-    height: '24px',
-    borderRadius: '50%',
-    backgroundColor: '#fff',
-    top: '2px',
-    left: '2px',
-    transition: 'transform 0.3s',
-  },
-
-  '&:checked::before': {
-    transform: 'translateX(20px)',
-  },
-});
-
 const EditProfileModal = ({ open, onClose, userData, onSave, loading, preferences }) => {
   const [activeTab, setActiveTab] = useState('personal');
 
@@ -279,7 +248,7 @@ const EditProfileModal = ({ open, onClose, userData, onSave, loading, preference
     username: userData?.username || '',
     email: userData?.email || '',
     bio: userData?.bio || '',
-    height: userData?.height || '',
+    height: userData?.height ? formatHeight(userData.height, userData.heightUnit, unitPreference) : '',
     heightUnit: userData?.heightUnit || 'ft',
     weight: userData?.weight || '',
     age: userData?.age || '',
@@ -307,7 +276,7 @@ const EditProfileModal = ({ open, onClose, userData, onSave, loading, preference
         username: userData?.username || '',
         email: userData?.email || '',
         bio: userData?.bio || '',
-        height: userData?.height || '',
+        height: userData?.height ? formatHeight(userData.height, userData.heightUnit, unitPreference) : '',
         heightUnit: userData?.heightUnit || 'ft',
         weight: userData?.weight || '',
         age: userData?.age || '',
@@ -499,13 +468,13 @@ const EditProfileModal = ({ open, onClose, userData, onSave, loading, preference
             <SectionTitle>Physical Statistics</SectionTitle>
             <Grid container spacing={3}>
               <Grid item xs={4}>
-                <Label>Height ({heightUnit})</Label>
+                <Label>{heightUnit === 'cm' ? 'Height (cm)' : 'Height (ft\'in")'}</Label>
                 <StyledTextField
                   fullWidth
                   size="small"
                   value={formData.height}
                   onChange={(e) => handleChange('height', e.target.value)}
-                  placeholder={heightUnit === 'cm' ? '183' : "6'0&quot;"}
+                  placeholder={heightUnit === 'cm' ? '182' : "5'11\""}
                 />
               </Grid>
               <Grid item xs={4}>
@@ -621,10 +590,10 @@ const EditProfileModal = ({ open, onClose, userData, onSave, loading, preference
                   <NotificationTitle>Workout Reminders</NotificationTitle>
                   <NotificationDesc>Get notified when it's time for your next workout</NotificationDesc>
                 </NotificationInfo>
-                <StyledSwitch
-                  type="checkbox"
+                <FitForgeSwitch
                   checked={notifications.workoutReminders}
                   onChange={() => handleNotificationToggle('workoutReminders')}
+                  inputProps={{ 'aria-label': 'Workout Reminders' }}
                 />
               </NotificationItem>
 
@@ -633,10 +602,10 @@ const EditProfileModal = ({ open, onClose, userData, onSave, loading, preference
                   <NotificationTitle>Progress Updates</NotificationTitle>
                   <NotificationDesc>Weekly summaries of your fitness progress</NotificationDesc>
                 </NotificationInfo>
-                <StyledSwitch
-                  type="checkbox"
+                <FitForgeSwitch
                   checked={notifications.progressUpdates}
                   onChange={() => handleNotificationToggle('progressUpdates')}
+                  inputProps={{ 'aria-label': 'Progress Updates' }}
                 />
               </NotificationItem>
 
@@ -645,10 +614,10 @@ const EditProfileModal = ({ open, onClose, userData, onSave, loading, preference
                   <NotificationTitle>Achievement Celebrations</NotificationTitle>
                   <NotificationDesc>Get notified when you reach milestones</NotificationDesc>
                 </NotificationInfo>
-                <StyledSwitch
-                  type="checkbox"
+                <FitForgeSwitch
                   checked={notifications.achievementCelebrations}
                   onChange={() => handleNotificationToggle('achievementCelebrations')}
+                  inputProps={{ 'aria-label': 'Achievement Celebrations' }}
                 />
               </NotificationItem>
 
@@ -657,10 +626,10 @@ const EditProfileModal = ({ open, onClose, userData, onSave, loading, preference
                   <NotificationTitle>Weekly Reports</NotificationTitle>
                   <NotificationDesc>Detailed analytics of your weekly performance</NotificationDesc>
                 </NotificationInfo>
-                <StyledSwitch
-                  type="checkbox"
+                <FitForgeSwitch
                   checked={notifications.weeklyReports}
                   onChange={() => handleNotificationToggle('weeklyReports')}
+                  inputProps={{ 'aria-label': 'Weekly Reports' }}
                 />
               </NotificationItem>
 
@@ -669,10 +638,10 @@ const EditProfileModal = ({ open, onClose, userData, onSave, loading, preference
                   <NotificationTitle>Email Notifications</NotificationTitle>
                   <NotificationDesc>Receive important updates via email</NotificationDesc>
                 </NotificationInfo>
-                <StyledSwitch
-                  type="checkbox"
+                <FitForgeSwitch
                   checked={notifications.emailNotifications}
                   onChange={() => handleNotificationToggle('emailNotifications')}
+                  inputProps={{ 'aria-label': 'Email Notifications' }}
                 />
               </NotificationItem>
             </Box>

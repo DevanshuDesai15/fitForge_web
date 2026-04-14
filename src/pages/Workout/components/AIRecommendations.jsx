@@ -1,7 +1,6 @@
 import { Box, Typography, Card, CardContent, Chip, Button } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { MdAutoAwesome, MdTrendingUp, MdInfo } from 'react-icons/md';
-import { Brain, Target, TrendingUp, Activity } from 'lucide-react';
+import { Sparkles as MdAutoAwesome, TrendingUp as MdTrendingUp, Info as MdInfo, Brain, Target, TrendingUp, Activity } from 'lucide-react';
 
 const AIRecommendationsCard = styled(Card)(() => ({
     background: 'linear-gradient(135deg, rgba(221, 237, 0, 0.1), rgba(221, 237, 0, 0.05))',

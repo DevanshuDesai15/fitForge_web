@@ -24,11 +24,10 @@ import {
     TextareaAutosize,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { MdClose, MdAdd, MdCalendarToday, MdDeleteOutline, MdFitnessCenter } from 'react-icons/md';
+import { X as MdClose, Plus as MdAdd, Calendar as MdCalendarToday, Trash2 as MdDeleteOutline, Dumbbell as MdFitnessCenter } from 'lucide-react';
 import { fetchAllExercises } from '../../../services/localExerciseService';
 import { useAuth } from '../../../contexts/AuthContext';
-import { db } from '../../../firebase/config';
-import { collection, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
+import { syncProgramTemplateIds, useWorkoutMutations } from '../hooks/useWorkoutMutations';
 import { programTemplates as defaultProgramTemplates } from './programTemplates';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
@@ -85,11 +84,18 @@ const CreateProgramModal = ({ open, onClose, onProgramCreated, editData }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [programTemplates, setProgramTemplates] = useState([]);
     const { currentUser } = useAuth();
+    const {
+        createTemplate,
+        updateTemplate,
+        deleteTemplate,
+        createProgram,
+        updateProgram,
+    } = useWorkoutMutations();
 
     const [programData, setProgramData] = useState({
         name: '',
         description: '',
-        duration: '8 days',
+        duration: '8 weeks',
         frequency: '4x/week',
         category: 'Strength Training',
         difficulty: 'Intermediate',
@@ -125,7 +131,7 @@ const CreateProgramModal = ({ open, onClose, onProgramCreated, editData }) => {
             setProgramData({
                 name: editData.name || '',
                 description: editData.description || '',
-                duration: editData.duration || '7 days',
+                duration: editData.duration || '8 weeks',
                 frequency: editData.frequency || '1x/week',
                 category: editData.category || 'Strength Training',
                 difficulty: editData.difficulty || 'Intermediate',
@@ -141,7 +147,7 @@ const CreateProgramModal = ({ open, onClose, onProgramCreated, editData }) => {
 
     const steps = ['Template', 'Details', 'Days'];
 
-    const durationOptions = ['2 days', '3 days', '4 days', '5 days', '6 days', '7 days'];
+    const durationOptions = ['2 days', '3 days', '4 days', '5 days', '6 days', '7 days', '4 weeks', '6 weeks', '8 weeks', '12 weeks'];
     const frequencyOptions = ['1x/week', '2x/week', '3x/week', '4x/week', 'Daily'];
     const categoryOptions = [
         'Strength Training', 'Hypertrophy', 'Powerlifting', 'Bodybuilding',
@@ -179,7 +185,7 @@ const CreateProgramModal = ({ open, onClose, onProgramCreated, editData }) => {
         setProgramData({
             name: '',
             description: '',
-            duration: '7 days',
+            duration: '8 weeks',
             frequency: '1x/week',
             category: 'Strength Training',
             difficulty: 'Intermediate',
@@ -223,35 +229,60 @@ const CreateProgramModal = ({ open, onClose, onProgramCreated, editData }) => {
 
     const handleCreateProgram = async () => {
         setLoading(true);
+        let syncResult;
+        let programSaved = false;
         try {
+            if (!currentUser?.uid) {
+                throw new Error('You must be logged in to save a program');
+            }
+
+            syncResult = await syncProgramTemplateIds({
+                days: programData.days,
+                existingTemplateIds: editData?.templateIds || [],
+                createTemplate,
+                updateTemplate,
+                deleteTemplate,
+                defaults: {
+                    category: programData.category,
+                    difficulty: programData.difficulty,
+                    isCustom: true,
+                },
+                removeMissing: Boolean(editData),
+            });
+
+            const programPayload = {
+                name: programData.name,
+                description: programData.description,
+                duration: programData.duration,
+                frequency: programData.frequency,
+                category: programData.category,
+                difficulty: programData.difficulty,
+                templateIds: syncResult.templateIds,
+            };
+
             if (editData) {
-                // Update existing program
-                console.log('Updating program:', programData);
-
-                const programToUpdate = {
-                    ...programData,
-                    updatedAt: serverTimestamp(),
-                };
-
-                await updateDoc(doc(db, 'workoutPrograms', editData.id), programToUpdate);
-                console.log('Program updated successfully');
+                await updateProgram(editData.id, programPayload);
             } else {
-                // Create new program
-                console.log('Creating program:', programData);
+                await createProgram(programPayload);
+            }
+            programSaved = true;
 
-                await addDoc(collection(db, 'workoutPrograms'), {
-                    ...programData,
-                    userId: currentUser.uid,
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp(),
-                    isTemplate: false,
-                });
-                console.log('Program created successfully');
+            try {
+                await syncResult.commitRemovals();
+            } catch (cleanupError) {
+                console.error('Error deleting removed workout day templates:', cleanupError);
             }
 
             onProgramCreated();
             handleClose();
         } catch (error) {
+            if (syncResult && !programSaved) {
+                try {
+                    await syncResult.rollback();
+                } catch (rollbackError) {
+                    console.error('Error rolling back template changes:', rollbackError);
+                }
+            }
             console.error('Error saving program:', error);
             alert(`Failed to ${editData ? 'update' : 'create'} program. Please try again.`);
         } finally {
@@ -365,25 +396,6 @@ const CreateProgramModal = ({ open, onClose, onProgramCreated, editData }) => {
                             }
                             return ex;
                         })
-                    };
-                }
-                return day;
-            })
-        }));
-    };
-
-    const handleExerciseDetailsChange = (exerciseId, field, value) => {
-        setProgramData(prev => ({
-            ...prev,
-            days: prev.days.map(day => {
-                if (day.id === selectedDayId) {
-                    return {
-                        ...day,
-                        exercises: day.exercises.map(ex =>
-                            ex.id === exerciseId
-                                ? { ...ex, [field]: value }
-                                : ex
-                        )
                     };
                 }
                 return day;

@@ -23,11 +23,10 @@ import {
     Grid
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { MdClose, MdAdd, MdTimer, MdFitnessCenter, MdRemove } from 'react-icons/md';
+import { X as MdClose, Plus as MdAdd, Timer as MdTimer, Dumbbell as MdFitnessCenter, Minus as MdRemove } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
-import { collection, addDoc } from 'firebase/firestore';
-import { db } from '../../../firebase/config';
 import { fetchAllExercises } from '../../../services/localExerciseService';
+import { useWorkoutMutations } from '../hooks/useWorkoutMutations';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
     '& .MuiDialog-paper': {
@@ -87,7 +86,7 @@ const ExerciseCard = styled(Card)(() => ({
     },
 }));
 
-const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated }) => {
+const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated, editData }) => {
     const [activeStep, setActiveStep] = useState(0);
     const [workoutData, setWorkoutData] = useState({
         name: '',
@@ -105,6 +104,49 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated }) => {
     const [exercisesLoading, setExercisesLoading] = useState(true);
 
     const { currentUser } = useAuth();
+    const { createTemplate, updateTemplate } = useWorkoutMutations();
+    const isEditMode = !!editData;
+
+    useEffect(() => {
+        if (open && editData) {
+            setWorkoutData({
+                name: editData.title || editData.name || '',
+                category: editData.category || '',
+                description: editData.description || '',
+                difficulty: editData.difficulty || '',
+                duration: editData.duration ? String(editData.duration).replace(' min', '') : '45',
+                exercises: []
+            });
+            
+            const initialExercises = editData.dayData?.exercises || editData.exercises || [];
+            const transformedExercises = initialExercises.map((ex, index) => ({
+                id: ex.id || `ex-${index}`,
+                name: ex.name,
+                muscleGroup: ex.muscleGroup || 'General',
+                equipment: ex.equipment || 'Unknown',
+                description: ex.description || '',
+                target: ex.target || ex.muscleGroup || 'General',
+                sets: Array.isArray(ex.sets) && ex.sets.length > 0 ? ex.sets.map((set, setIndex) => ({
+                    setNumber: set.setNumber || setIndex + 1,
+                    reps: parseInt(set.reps) || 12,
+                    weight: parseFloat(set.weight) || 0,
+                    restTime: parseInt(set.restTime) || 60
+                })) : [{ setNumber: 1, reps: 12, weight: 0, restTime: 60 }]
+            }));
+            setSelectedExercises(transformedExercises);
+        } else if (open && !editData) {
+            setWorkoutData({
+                name: '',
+                category: '',
+                description: '',
+                difficulty: '',
+                duration: '',
+                exercises: []
+            });
+            setSelectedExercises([]);
+            setActiveStep(0);
+        }
+    }, [open, editData]);
 
     const steps = ['Details', 'Exercises'];
 
@@ -333,38 +375,38 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated }) => {
         try {
             setLoading(true);
 
+            if (!currentUser?.uid) {
+                throw new Error('You must be logged in to create a workout');
+            }
+
             const templateData = {
                 name: workoutData.name,
                 description: workoutData.description,
                 category: workoutData.category,
                 difficulty: workoutData.difficulty,
-                duration: workoutData.duration,
-                workoutDays: [{
-                    id: 1,
-                    name: 'Day 1',
-                    exercises: selectedExercises.map(ex => ({
-                        name: ex.name,
-                        muscleGroup: ex.muscleGroup,
-                        equipment: ex.equipment,
-                        sets: Array.isArray(ex.sets) ? ex.sets : [{
-                            setNumber: 1,
-                            reps: 12,
-                            weight: 0,
-                            restTime: 60
-                        }],
-                        notes: ''
-                    })),
-                    muscleGroups: [...new Set(selectedExercises.map(ex => ({
-                        id: ex.muscleGroup.toLowerCase(),
-                        name: ex.muscleGroup
-                    })))]
-                }],
-                userId: currentUser.uid,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
+                estimatedDurationMinutes: Number.parseInt(workoutData.duration, 10) || null,
+                isCustom: true,
+                exercises: selectedExercises.map(ex => ({
+                    name: ex.name,
+                    muscleGroup: ex.muscleGroup,
+                    equipment: ex.equipment,
+                    description: ex.description || '',
+                    target: ex.target || ex.muscleGroup,
+                    sets: Array.isArray(ex.sets) ? ex.sets : [{
+                        setNumber: 1,
+                        reps: 12,
+                        weight: 0,
+                        restTime: 60
+                    }],
+                    notes: '',
+                })),
             };
 
-            await addDoc(collection(db, 'workoutTemplates'), templateData);
+            if (isEditMode && editData.id && !String(editData.id).startsWith('program-') && !String(editData.id).startsWith('starter-') && !editData.isAIPick) {
+                await updateTemplate(editData.id, templateData);
+            } else {
+                await createTemplate(templateData);
+            }
 
             if (onWorkoutCreated) {
                 onWorkoutCreated();
@@ -1016,7 +1058,7 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated }) => {
                 borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
             }}>
                 <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                    Create New Workout
+                    {isEditMode ? 'Edit Workout' : 'Create New Workout'}
                 </Typography>
                 <IconButton onClick={handleClose} sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                     <MdClose />
@@ -1086,7 +1128,7 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated }) => {
                             },
                         }}
                     >
-                        {loading ? 'Creating...' : 'Create Workout'}
+                        {loading ? (isEditMode ? 'Saving...' : 'Creating...') : (isEditMode ? 'Save Workout' : 'Create Workout')}
                     </Button>
                 ) : (
                     <Button
@@ -1119,6 +1161,7 @@ CreateWorkoutModal.propTypes = {
     open: PropTypes.bool.isRequired,
     onClose: PropTypes.func.isRequired,
     onWorkoutCreated: PropTypes.func.isRequired,
+    editData: PropTypes.object,
 };
 
 export default CreateWorkoutModal;

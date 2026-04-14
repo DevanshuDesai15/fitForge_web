@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Box, Typography, Alert, CircularProgress, CardContent, Tooltip } from '@mui/material';
-import { MdPsychology, MdShowChart, MdTrackChanges, MdEmojiEvents } from 'react-icons/md';
-import { Target, Flame, Clock, Zap } from 'lucide-react';
+import { Brain as MdPsychology, LineChart as MdShowChart, Target as MdTrackChanges, Trophy as MdEmojiEvents, Target, Flame, Clock, Zap } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer } from 'recharts';
 import { useUnits } from '../../contexts/UnitsContext';
 import { StyledCard } from './components/shared/StyledComponents';

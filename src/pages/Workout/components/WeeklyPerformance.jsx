@@ -1,6 +1,6 @@
 import { Box, Typography, Card, CardContent, Grid2, Chip } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { MdTrendingUp, MdTrendingDown, MdTrendingFlat } from 'react-icons/md';
+import { TrendingUp as MdTrendingUp, TrendingDown as MdTrendingDown, Minus as MdTrendingFlat } from 'lucide-react';
 import { BarChart3, TrendingUp, Activity, Target } from 'lucide-react';
 
 const ChartContainer = styled(Card)(() => ({

@@ -1,6 +1,6 @@
 import { Box, Typography, Grid2, Card, CardContent, Chip, LinearProgress } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { MdPlayArrow, MdTimer } from 'react-icons/md';
+import { Play as MdPlayArrow, Timer as MdTimer } from 'lucide-react';
 import { Brain, Clock, TrendingUp, Activity, Target, Dumbbell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 

@@ -1,5 +1,5 @@
 import { Box, Typography, Card, CardContent, Button, Chip } from '@mui/material';
-import { MdLibraryBooks, MdFitnessCenter } from 'react-icons/md';
+import { BookOpen as MdLibraryBooks, Dumbbell as MdFitnessCenter } from 'lucide-react';
 
 const TemplateSelector = ({ templates, onSelectTemplate, loading }) => {
     if (loading) {

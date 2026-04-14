@@ -1,20 +1,27 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Box, Typography, Grid, Card, CardContent, Button, Chip, LinearProgress, TextField, InputAdornment, Select, MenuItem, FormControl, Menu, IconButton } from '@mui/material';
+import { Box, Typography, Grid, Card, CardContent, Button, Chip, LinearProgress, TextField, InputAdornment, Select, MenuItem, FormControl, Menu, IconButton, Skeleton, Alert } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { MdPlayArrow, MdTimer, MdAutoAwesome, MdFlashOn, MdFolderOpen, MdAdd, MdSearch, MdArrowDropDown, MdExpandMore, MdMoreVert, MdEdit, MdContentCopy, MdDelete } from 'react-icons/md';
+import { Play, Timer, Sparkles, Zap, FolderOpen, Plus, Search, ChevronDown, ChevronDown as ExpandMore, MoreVertical, Pencil, Copy, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useSupabase } from '../../../hooks/useSupabase';
 import { useWorkoutTemplates } from '../hooks/useWorkoutTemplates';
 import { useWorkoutPrograms } from '../hooks/useWorkoutPrograms';
-import { collection, query, where, orderBy, limit, getDocs, doc, deleteDoc, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../../firebase/config';
-import AISuggestionCards from '../../../components/common/AISuggestionCards';
+import { mapWorkoutDayToTemplateInput, useWorkoutMutations } from '../hooks/useWorkoutMutations';
 import CreateWorkoutModal from './CreateWorkoutModal';
 import CreateProgramModal from './CreateProgramModal';
+import WorkoutRecommendationPreviewDialog from './WorkoutRecommendationPreviewDialog';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import PropTypes from 'prop-types';
 import { Collapse } from '@mui/material';
 import { useWorkoutState } from '../hooks/useWorkoutState';
+import {
+    buildStarterWorkoutRecommendations,
+    buildStarterWorkoutStartState,
+} from './starterWorkoutRecommendations';
+import progressiveOverloadAI from '../../../services/progressiveOverloadAI';
+import { Brain, TrendingUp, Clock } from 'lucide-react';
+import AIUnlockProgress from '../../Home/components/AIUnlockProgress';
 
 const WorkoutCard = styled(Card)(() => ({
     background: 'rgba(40, 40, 40, 0.9)',
@@ -103,11 +110,99 @@ CustomTooltip.propTypes = {
     label: PropTypes.string
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
+export async function loadCompletedWorkoutsFromSupabase({ supabase, userId }) {
+    if (!userId) {
+        return [];
+    }
+
+    const { data, error } = await supabase
+        .from('workouts')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('completed', true)
+        .order('timestamp', { ascending: false })
+        .limit(50);
+
+    if (error) {
+        throw error;
+    }
+
+    return (data || []).map(workout => ({
+        ...workout,
+        userId: workout.user_id,
+        templateId: workout.template_id,
+        templateName: workout.template_name,
+        dayName: workout.day_name,
+        weightUnit: workout.weight_unit,
+        completedAt: workout.completed_at,
+        createdAt: workout.created_at,
+        updatedAt: workout.updated_at,
+    }));
+}
+
+function getPersistedTemplateId(day, fallbackTemplateId) {
+    return day?.templateId || day?.id || fallbackTemplateId || null;
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function buildWorkoutStartState(program, day) {
+    const templateId = day?.templateId || day?.id || null;
+    const dayId = templateId;
+
+    return {
+        templateId,
+        dayId,
+        workout: {
+            name: `${program?.name || 'Program'} - ${day?.name || 'Workout'}`,
+            programName: program?.name || 'Program',
+            dayName: day?.name || 'Workout',
+            exercises: day?.exercises || [],
+        },
+    };
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function findNextDayInProgram(program, completedWorkouts) {
+    const days = Array.isArray(program?.days) ? [...program.days] : [];
+
+    if (days.length <= 1) {
+        return null;
+    }
+
+    const completedTemplateIds = new Set(
+        completedWorkouts
+            .map(workout => workout.templateId)
+            .filter(Boolean)
+    );
+    const completedDayNames = new Set(
+        completedWorkouts
+            .map(workout => workout.dayName)
+            .filter(Boolean)
+    );
+
+    for (const day of days) {
+        const dayTemplateId = day?.templateId || day?.id || null;
+
+        if (dayTemplateId && !completedTemplateIds.has(dayTemplateId)) {
+            return day;
+        }
+
+        if (!dayTemplateId && day?.name && !completedDayNames.has(day.name)) {
+            return day;
+        }
+    }
+
+    return days[0] || null;
+}
+
 const WorkoutsTab = () => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
-    const { templates, loading: templatesLoading } = useWorkoutTemplates();
-    const { programs, loading: programsLoading } = useWorkoutPrograms();
+    const supabase = useSupabase();
+    const { templates, loading: templatesLoading, loadTemplates } = useWorkoutTemplates();
+    const { programs, loading: programsLoading, loadPrograms } = useWorkoutPrograms();
+    const { createTemplate, createProgram, deleteTemplate, deleteProgram } = useWorkoutMutations();
     const { workoutStarted, exercises } = useWorkoutState();
 
     const [activeSubTab, setActiveSubTab] = useState(0); // 0 = Quick Start, 1 = Programs
@@ -123,6 +218,8 @@ const WorkoutsTab = () => {
     const [editProgramData, setEditProgramData] = useState(null);
     const [hasOngoingWorkout, setHasOngoingWorkout] = useState(false);
     const [workoutInfo, setWorkoutInfo] = useState(null);
+    const [selectedRecommendedWorkout, setSelectedRecommendedWorkout] = useState(null);
+    const [editingRecommendation, setEditingRecommendation] = useState(null);
 
     const handleSubTabChange = (tabIndex) => {
         setActiveSubTab(tabIndex);
@@ -134,18 +231,8 @@ const WorkoutsTab = () => {
 
     const handleStartWorkout = (program, day) => {
         console.log('🚀 Starting workout:', { program: program.name, day: day.name });
-        // Navigate to workout with program/day data
         navigate('/workout/start', {
-            state: {
-                templateId: program.id,
-                dayId: day.id,
-                workout: {
-                    name: `${program.name} - ${day.name}`,
-                    programName: program.name,
-                    dayName: day.name,
-                    exercises: day.exercises || []
-                }
-            }
+            state: buildWorkoutStartState(program, day),
         });
     };
 
@@ -153,16 +240,24 @@ const WorkoutsTab = () => {
         navigate('/workout/start');
     };
 
-    // Weekly performance data
-    const weeklyPerformanceData = [
-        { date: 'Mon', value: 65 },
-        { date: 'Tue', value: 75 },
-        { date: 'Wed', value: 55 },
-        { date: 'Thu', value: 80 },
-        { date: 'Fri', value: 75 },
-        { date: 'Sat', value: 85 },
-        { date: 'Sun', value: 95 }
-    ];
+    const handleClearOngoingWorkout = (e) => {
+        e.stopPropagation();
+        localStorage.removeItem('workoutState');
+        setHasOngoingWorkout(false);
+        setWorkoutInfo(null);
+    };
+
+    // Weekly performance data - computed from real workout history
+    const [weeklyPerformanceData, setWeeklyPerformanceData] = useState([]);
+
+    // AI Recommendation state (matching Home page)
+    const AI_RECOMMENDATION_UNLOCK_WORKOUTS = 5;
+    const [aiRecommendations, setAiRecommendations] = useState([]);
+    const [aiLoading, setAiLoading] = useState(false);
+    const [aiError, setAiError] = useState('');
+    const [completedWorkoutsCount, setCompletedWorkoutsCount] = useState(0);
+    const isAiUnlocked = completedWorkoutsCount >= AI_RECOMMENDATION_UNLOCK_WORKOUTS;
+    const workoutsUntilAiUnlock = Math.max(AI_RECOMMENDATION_UNLOCK_WORKOUTS - completedWorkoutsCount, 0);
 
     // Check for ongoing workout
     useEffect(() => {
@@ -200,48 +295,59 @@ const WorkoutsTab = () => {
         }
     }, [workoutStarted, exercises]);
 
-    const calculateRecommendations = useCallback((userTemplates, completedWorkouts) => {
+    const calculateRecommendations = useCallback((userPrograms, completedWorkouts, userTemplates = []) => {
         const recommendations = [];
 
-        // Find next day in multi-day templates
-        for (const template of userTemplates) {
-            if (template.workoutDays && template.workoutDays.length > 1) {
-                const nextDay = findNextDayInTemplate(template, completedWorkouts);
+        for (const program of userPrograms) {
+            if (program.days && program.days.length > 1) {
+                const nextDay = findNextDayInProgram(program, completedWorkouts);
                 if (nextDay) {
                     recommendations.push({
-                        id: `template-${template.id}-${nextDay.id}`,
-                        title: `${template.name} - ${nextDay.name}`,
+                        id: `program-${program.id}-${nextDay.id}`,
+                        title: `${program.name} - ${nextDay.name}`,
                         category: getTemplateCategory(nextDay),
                         duration: estimateDuration(nextDay),
                         exercises: nextDay.exercises?.length || 0,
-                        difficulty: 'Intermediate',
+                        difficulty: nextDay.difficulty || program.difficulty || 'Intermediate',
                         progress: 0,
                         isAIPick: false,
-                        templateId: template.id,
-                        dayId: nextDay.id,
-                        type: 'nextDay'
+                        templateId: getPersistedTemplateId(nextDay, program.id),
+                        dayId: nextDay.id || getPersistedTemplateId(nextDay, program.id),
+                        dayData: nextDay,
+                        programId: program.id,
+                        programName: program.name,
+                        type: 'nextDay',
                     });
-                    break; // Only show one next day recommendation
                 }
             }
         }
 
-        // Add AI recommendation (placeholder for now)
-        if (recommendations.length < 2) {
-            recommendations.push({
-                id: 'ai-recommendation',
-                title: "AI Recommended Workout",
-                category: "Personalized",
-                duration: "35 min",
-                exercises: 7,
-                difficulty: "Intermediate",
-                progress: 0,
-                isAIPick: true,
-                type: 'aiRecommended'
-            });
-        }
+        const defaultRecommendations = recommendations.length > 0
+            ? recommendations.slice(0, 3)
+            : buildStarterWorkoutRecommendations();
 
-        return recommendations;
+        // 🎯 Override starter recommendations with custom user templates matching the same name
+        return defaultRecommendations.map(rec => {
+            if (rec.type === 'starter' || rec.isAIPick) {
+                const matchingTemplate = userTemplates.find(t => t.name.toLowerCase() === rec.title.toLowerCase());
+                if (matchingTemplate) {
+                    return {
+                        ...rec,
+                        id: matchingTemplate.id,
+                        duration: estimateTemplateDuration(matchingTemplate) || rec.duration,
+                        exercises: getTotalExercises(matchingTemplate) || rec.exercises,
+                        difficulty: matchingTemplate.difficulty || rec.difficulty,
+                        dayData: {
+                            ...rec.dayData,
+                            id: matchingTemplate.id,
+                            templateId: matchingTemplate.id,
+                            exercises: matchingTemplate.workoutDays?.[0]?.exercises || matchingTemplate.exercises || [],
+                        }
+                    };
+                }
+            }
+            return rec;
+        });
     }, []);
 
     // Load user's completed workouts and calculate recommendations
@@ -249,25 +355,51 @@ const WorkoutsTab = () => {
         const loadWorkoutData = async () => {
             try {
                 setLoading(true);
+                const workouts = await loadCompletedWorkoutsFromSupabase({
+                    supabase,
+                    userId: currentUser.uid,
+                });
 
-                // Get user's completed workouts
-                const workoutsQuery = query(
-                    collection(db, 'workouts'),
-                    where('userId', '==', currentUser.uid),
-                    where('completed', '==', true),
-                    orderBy('timestamp', 'desc'),
-                    limit(50)
-                );
-
-                const workoutsSnapshot = await getDocs(workoutsQuery);
-                const workouts = workoutsSnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
+                // Track total completed workouts for AI unlock
+                setCompletedWorkoutsCount(workouts.length);
 
                 // Calculate recommendations based on templates and progress
-                const recommendations = calculateRecommendations(templates, workouts);
+                const recommendations = calculateRecommendations(programs, workouts, templates);
                 setRecommendedWorkouts(recommendations);
+
+                // Compute weekly performance from real data
+                const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                const today = new Date();
+                const weekStart = new Date(today);
+                weekStart.setDate(today.getDate() - today.getDay()); // Start of this week (Sunday)
+                weekStart.setHours(0, 0, 0, 0);
+
+                // Initialize all 7 days
+                const weekData = dayNames.map((name, i) => {
+                    const dayDate = new Date(weekStart);
+                    dayDate.setDate(weekStart.getDate() + i);
+                    return { date: name, value: 0, dayDate };
+                });
+
+                // Fill in performance scores from completed workouts
+                workouts.forEach(workout => {
+                    const wDate = new Date(workout.timestamp || workout.completedAt);
+                    if (wDate >= weekStart) {
+                        const dayIndex = wDate.getDay();
+                        // Calculate a performance score from the workout
+                        const totalSets = workout.exercises?.reduce((sum, ex) =>
+                            sum + (ex.sets?.filter(s => s.completed).length || 0), 0) || 0;
+                        const totalVolume = workout.exercises?.reduce((sum, ex) =>
+                            sum + (ex.sets?.reduce((setSum, s) =>
+                                setSum + ((parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0)), 0) || 0), 0) || 0;
+                        // Score: combination of sets completed and volume (normalized roughly)
+                        const score = Math.min(100, Math.round((totalSets * 5) + (totalVolume / 50)));
+                        weekData[dayIndex].value = Math.max(weekData[dayIndex].value, score);
+                    }
+                });
+
+                // Remove the dayDate helper before setting state
+                setWeeklyPerformanceData(weekData.map(({ date, value }) => ({ date, value })));
 
             } catch (error) {
                 console.error('Error loading workout data:', error);
@@ -276,36 +408,103 @@ const WorkoutsTab = () => {
             }
         };
 
-        if (currentUser && templates.length > 0) {
+        if (currentUser && !programsLoading) {
             loadWorkoutData();
         }
-    }, [currentUser, templates, calculateRecommendations]);
+    }, [currentUser, programs, programsLoading, templates, calculateRecommendations, supabase]);
 
-    const findNextDayInTemplate = (template, completedWorkouts) => {
-        if (!template.workoutDays || template.workoutDays.length <= 1) return null;
-
-        // Find the last completed day for this template
-        const templateWorkouts = completedWorkouts.filter(w => w.templateId === template.id);
-
-        if (templateWorkouts.length === 0) {
-            // No workouts completed, return first day
-            return template.workoutDays[0];
+    // AI Recommendation utility functions (matching Home page)
+    const getPriorityColor = (priority) => {
+        switch (priority) {
+            case 'high':
+                return { backgroundColor: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)' };
+            case 'medium':
+                return { backgroundColor: 'rgba(234, 179, 8, 0.2)', color: '#facc15', border: '1px solid rgba(234, 179, 8, 0.3)' };
+            case 'low':
+            default:
+                return { backgroundColor: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.3)' };
         }
-
-        // Find the highest day number completed
-        const completedDayNames = templateWorkouts.map(w => w.dayName);
-        const sortedDays = template.workoutDays.sort((a, b) => a.id - b.id);
-
-        for (let i = 0; i < sortedDays.length; i++) {
-            const day = sortedDays[i];
-            if (!completedDayNames.includes(day.name)) {
-                return day;
-            }
-        }
-
-        // All days completed, start over
-        return sortedDays[0];
     };
+
+    const getRecommendationTitle = (recommendation) => {
+        if (recommendation.progressionType === 'weight') return 'Increase Weight';
+        if (recommendation.progressionType === 'reps') return 'Increase Reps';
+        if (recommendation.progressionType === 'deload') return 'Deload Week';
+        return 'Progression Suggested';
+    };
+
+    const getRecommendationDescription = (recommendation) => {
+        if (recommendation.progressionType === 'weight') {
+            return `Try increasing ${recommendation.exerciseName} from ${recommendation.currentWeight}kg to ${recommendation.suggestedWeight}kg.`;
+        } else if (recommendation.progressionType === 'reps') {
+            return `Try increasing reps for ${recommendation.exerciseName} from ${recommendation.currentReps} to ${recommendation.suggestedReps}.`;
+        } else if (recommendation.progressionType === 'deload') {
+            return `Consider a deload week for ${recommendation.exerciseName}. Reduce weight to ${recommendation.suggestedWeight}kg.`;
+        }
+        return recommendation.reasoning || `Consider progression for ${recommendation.exerciseName}.`;
+    };
+
+    // Load AI recommendations (matching Home page pattern)
+    const loadAIRecommendations = useCallback(async () => {
+        if (!currentUser?.uid || !supabase || !isAiUnlocked) {
+            setAiLoading(false);
+            setAiRecommendations([]);
+            setAiError('');
+            return;
+        }
+
+        try {
+            setAiLoading(true);
+            progressiveOverloadAI.setSupabase(supabase);
+
+            let timeoutId;
+            const timeoutPromise = new Promise((_, reject) => {
+                timeoutId = setTimeout(() => reject(new Error('AI recommendations timed out')), 30000);
+            });
+
+            const loadPromise = (async () => {
+                const analyses = await progressiveOverloadAI.analyzeWorkoutHistory(currentUser.uid);
+                if (analyses && analyses.length > 0) {
+                    const topAnalyses = analyses.slice(0, 3);
+                    const exerciseIds = topAnalyses.map(a => a.exerciseId);
+                    const batchProgressions = await progressiveOverloadAI.calculateBatchProgressions(currentUser.uid, exerciseIds);
+                    return batchProgressions.map((progression, index) => {
+                        if (!progression) return null;
+                        return {
+                            ...progression,
+                            ...topAnalyses[index],
+                            priority: (progression.confidenceLevel || 0) >= 0.8 ? 'high' :
+                                (progression.confidenceLevel || 0) >= 0.6 ? 'medium' : 'low',
+                            icon: progression.progressionType === 'weight' ? TrendingUp :
+                                progression.progressionType === 'deload' ? Clock : Brain
+                        };
+                    }).filter(s => s !== null);
+                }
+                return [];
+            })();
+
+            const suggestions = await Promise.race([loadPromise, timeoutPromise]);
+            clearTimeout(timeoutId);
+            setAiRecommendations(suggestions);
+        } catch (error) {
+            console.error('Error loading AI recommendations:', error);
+            setAiRecommendations([]);
+            if (error.message?.includes('429') || error.message?.includes('Rate limit')) {
+                setAiError('AI suggestions temporarily unavailable due to high usage.');
+            } else {
+                setAiError('');
+            }
+        } finally {
+            setAiLoading(false);
+        }
+    }, [isAiUnlocked, supabase, currentUser?.uid]);
+
+    // Trigger AI recommendation loading
+    useEffect(() => {
+        if (currentUser?.uid && supabase && !loading) {
+            loadAIRecommendations();
+        }
+    }, [currentUser?.uid, supabase, loading, loadAIRecommendations]);
 
     const getTemplateCategory = (day) => {
         if (!day.muscleGroups || day.muscleGroups.length === 0) return 'General';
@@ -357,27 +556,62 @@ const WorkoutsTab = () => {
         // Handle suggestion dismissal logic here
     };
 
+    const handleStarterWorkoutStart = () => {
+        if (!selectedRecommendedWorkout) return;
+
+        navigate('/workout/start', {
+            state: buildStarterWorkoutStartState(selectedRecommendedWorkout),
+        });
+        setSelectedRecommendedWorkout(null);
+    };
+
+    const handleStarterWorkoutEdit = () => {
+        if (!selectedRecommendedWorkout) return;
+
+        setEditingRecommendation({
+            ...selectedRecommendedWorkout,
+            isAIPick: false,
+            title: selectedRecommendedWorkout.title
+        });
+        setSelectedRecommendedWorkout(null);
+    };
+
     const handleWorkoutClick = (workout) => {
+        if (workout.type === 'starter') {
+            setSelectedRecommendedWorkout(workout);
+            return;
+        }
+
         if (workout.type === 'day') {
-            // Navigate to start workout with specific day data
             console.log('🚀 Starting day workout:', workout);
             navigate('/workout/start', {
-                state: {
-                    templateId: workout.templateId,
-                    dayId: workout.dayId,
-                    workout: {
-                        name: workout.title,
-                        exercises: workout.dayData?.exercises || []
+                state: buildWorkoutStartState(
+                    {
+                        id: workout.programId || workout.templateId,
+                        name: workout.programName || workout.title.split(' - ')[0] || 'Workout',
+                    },
+                    {
+                        id: workout.dayId,
+                        templateId: workout.templateId,
+                        name: workout.dayData?.name || workout.title.split(' - ')[1] || 'Workout',
+                        exercises: workout.dayData?.exercises || [],
                     }
-                }
+                ),
             });
         } else if (workout.type === 'nextDay') {
-            // Navigate to start workout with specific template and day
             navigate('/workout/start', {
-                state: {
-                    templateId: workout.templateId,
-                    dayId: workout.dayId
-                }
+                state: buildWorkoutStartState(
+                    {
+                        id: workout.programId || workout.templateId,
+                        name: workout.programName || workout.title.split(' - ')[0] || 'Program',
+                    },
+                    workout.dayData || {
+                        id: workout.dayId,
+                        templateId: workout.templateId,
+                        name: workout.title.split(' - ')[1] || 'Workout',
+                        exercises: [],
+                    }
+                ),
             });
         } else if (workout.type === 'template') {
             // Navigate to template selection
@@ -394,11 +628,8 @@ const WorkoutsTab = () => {
 
 
     const handleWorkoutCreated = () => {
-        // Reload templates after creating a new one
-        if (templates) {
-            // Trigger a reload of templates
-            window.location.reload(); // Simple reload for now
-        }
+        setCreateModalOpen(false);
+        loadTemplates();
     };
 
     const handleCreateProgram = () => {
@@ -406,8 +637,9 @@ const WorkoutsTab = () => {
     };
 
     const handleProgramCreated = () => {
-        // Reload programs after creating a new one
-        window.location.reload();
+        setCreateProgramModalOpen(false);
+        setEditProgramData(null);
+        loadPrograms();
     };
 
     const handleMenuOpen = (event, program) => {
@@ -430,21 +662,31 @@ const WorkoutsTab = () => {
     };
 
     const handleDuplicateProgram = async () => {
-        if (!selectedProgram) return;
+        if (!selectedProgram || !currentUser?.uid) return;
 
         try {
-            const duplicatedProgram = {
-                ...selectedProgram,
-                name: `${selectedProgram.name} (Copy)`,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-                userId: currentUser.uid,
-                isFromTemplate: false, // Duplicated programs are not from templates
-            };
-            delete duplicatedProgram.id; // Remove the original ID
+            const duplicatedTemplateIds = [];
 
-            await addDoc(collection(db, 'workoutPrograms'), duplicatedProgram);
-            console.log('Program duplicated successfully');
+            for (const day of selectedProgram.days || []) {
+                const createdTemplate = await createTemplate(
+                    mapWorkoutDayToTemplateInput(day, {
+                        category: selectedProgram.category,
+                        difficulty: selectedProgram.difficulty,
+                        isCustom: true,
+                    })
+                );
+                duplicatedTemplateIds.push(createdTemplate.id);
+            }
+
+            await createProgram({
+                name: `${selectedProgram.name} (Copy)`,
+                description: selectedProgram.description,
+                category: selectedProgram.category,
+                difficulty: selectedProgram.difficulty,
+                frequency: selectedProgram.frequency,
+                duration: selectedProgram.duration,
+                templateIds: duplicatedTemplateIds,
+            });
         } catch (error) {
             console.error('Error duplicating program:', error);
         }
@@ -455,13 +697,16 @@ const WorkoutsTab = () => {
         if (!selectedProgram) return;
 
         const confirmMessage = selectedProgram.isFromTemplate
-            ? `Are you sure you want to delete "${selectedProgram.name}"? This is a starter program that will be restored if you create a new account.`
+            ? `Are you sure you want to delete "${selectedProgram.name}"? This action cannot be undone.`
             : `Are you sure you want to delete "${selectedProgram.name}"? This action cannot be undone.`;
 
         if (window.confirm(confirmMessage)) {
             try {
-                await deleteDoc(doc(db, 'workoutPrograms', selectedProgram.id));
-                console.log('Program deleted successfully');
+                await deleteProgram(selectedProgram.id);
+                for (const templateId of selectedProgram.templateIds || []) {
+                    await deleteTemplate(templateId);
+                }
+                loadPrograms();
             } catch (error) {
                 console.error('Error deleting program:', error);
             }
@@ -501,14 +746,14 @@ const WorkoutsTab = () => {
                     <TabButton
                         $active={activeSubTab === 0}
                         onClick={() => handleSubTabChange(0)}
-                        startIcon={<MdFlashOn />}
+                        startIcon={<Zap size={18} />}
                     >
                         Quick Start
                     </TabButton>
                     <TabButton
                         $active={activeSubTab === 1}
                         onClick={() => handleSubTabChange(1)}
-                        startIcon={<MdFolderOpen />}
+                        startIcon={<FolderOpen size={18} />}
                     >
                         Programs
                     </TabButton>
@@ -555,17 +800,33 @@ const WorkoutsTab = () => {
                                             <Typography variant="h6" sx={{ color: '#fff', fontWeight: 'bold' }}>
                                                 {workoutInfo.name}
                                             </Typography>
-                                            <Chip
-                                                label="AI Pick"
-                                                size="small"
-                                                sx={{
-                                                    backgroundColor: '#dded00',
-                                                    color: '#000',
-                                                    fontWeight: 'bold',
-                                                    fontSize: '0.7rem',
-                                                    height: '20px'
-                                                }}
-                                            />
+                                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                <Chip
+                                                    label="AI Pick"
+                                                    size="small"
+                                                    sx={{
+                                                        backgroundColor: '#dded00',
+                                                        color: '#000',
+                                                        fontWeight: 'bold',
+                                                        fontSize: '0.7rem',
+                                                        height: '20px'
+                                                    }}
+                                                />
+                                                <IconButton
+                                                    size="small"
+                                                    onClick={handleClearOngoingWorkout}
+                                                    sx={{
+                                                        color: 'rgba(255, 255, 255, 0.5)',
+                                                        marginLeft: '8px',
+                                                        '&:hover': {
+                                                            color: '#f44336',
+                                                            backgroundColor: 'rgba(244, 67, 54, 0.1)'
+                                                        }
+                                                    }}
+                                                >
+                                                    <Trash2 size={20} />
+                                                </IconButton>
+                                            </Box>
                                         </Box>
 
                                         <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
@@ -574,7 +835,7 @@ const WorkoutsTab = () => {
 
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                <MdTimer size={16} style={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+                                                <Timer size={16} style={{ color: "rgba(255, 255, 255, 0.7)" }} />
                                                 <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                                                     {workoutInfo.duration} min
                                                 </Typography>
@@ -620,7 +881,7 @@ const WorkoutsTab = () => {
 
                                         <Button
                                             variant="contained"
-                                            startIcon={<MdPlayArrow />}
+                                            startIcon={<Play size={18} />}
                                             fullWidth
                                             onClick={handleContinueWorkout}
                                             sx={{
@@ -663,7 +924,7 @@ const WorkoutsTab = () => {
                                                 </Typography>
                                                 {workout.isAIPick && (
                                                     <AIPick
-                                                        icon={<MdAutoAwesome size={12} />}
+                                                        icon={<Sparkles size={12} />}
                                                         label="AI Pick"
                                                         size="small"
                                                     />
@@ -676,7 +937,7 @@ const WorkoutsTab = () => {
 
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                    <MdTimer size={16} style={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+                                                    <Timer size={16} style={{ color: "rgba(255, 255, 255, 0.7)" }} />
                                                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                                                         {workout.duration}
                                                     </Typography>
@@ -724,7 +985,7 @@ const WorkoutsTab = () => {
 
                                             <Button
                                                 variant="contained"
-                                                startIcon={<MdPlayArrow />}
+                                                startIcon={<Play size={18} />}
                                                 fullWidth
                                                 sx={{
                                                     background: workout.progress > 0
@@ -768,7 +1029,7 @@ const WorkoutsTab = () => {
                                 </Typography>
                                 {/* <Button
                             variant="contained"
-                            startIcon={<MdAdd />}
+                            startIcon={<Plus size={18} />}
                             onClick={handleNewWorkout}
                             sx={{
                                 background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
@@ -814,8 +1075,8 @@ const WorkoutsTab = () => {
                                                     difficulty: day.difficulty || template.difficulty || 'Intermediate',
                                                     progress: 0,
                                                     isAIPick: template.isAIGenerated || false,
-                                                    templateId: template.id,
-                                                    dayId: day.id || `day-${dayIndex}`,
+                                                    templateId: getPersistedTemplateId(day, template.id),
+                                                    dayId: day.templateId || day.id || getPersistedTemplateId(day, template.id) || `day-${dayIndex}`,
                                                     dayData: day,
                                                     type: 'day'
                                                 };
@@ -825,16 +1086,37 @@ const WorkoutsTab = () => {
                                                         <WorkoutCard onClick={() => handleWorkoutClick(dayWorkout)}>
                                                             <CardContent>
                                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                                                                    <Typography variant="h6" sx={{ color: '#fff', fontWeight: 'bold', fontSize: '1rem' }}>
+                                                                    <Typography variant="h6" sx={{ color: '#fff', fontWeight: 'bold', fontSize: '1rem', flexGrow: 1, pr: 1 }}>
                                                                         {dayWorkout.title}
                                                                     </Typography>
-                                                                    {dayWorkout.isAIPick && (
-                                                                        <AIPick
-                                                                            icon={<MdAutoAwesome size={12} />}
-                                                                            label="AI Pick"
+                                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                        {dayWorkout.isAIPick && (
+                                                                            <AIPick
+                                                                                icon={<Sparkles size={12} />}
+                                                                                label="AI Pick"
+                                                                                size="small"
+                                                                            />
+                                                                        )}
+                                                                        <IconButton
                                                                             size="small"
-                                                                        />
-                                                                    )}
+                                                                            onClick={async (e) => {
+                                                                                e.stopPropagation();
+                                                                                if (window.confirm('Are you sure you want to delete this workout?')) {
+                                                                                    await deleteTemplate(dayWorkout.templateId);
+                                                                                    loadTemplates();
+                                                                                }
+                                                                            }}
+                                                                            sx={{
+                                                                                color: 'rgba(255, 255, 255, 0.5)',
+                                                                                '&:hover': {
+                                                                                    color: '#f44336',
+                                                                                    backgroundColor: 'rgba(244, 67, 54, 0.1)'
+                                                                                }
+                                                                            }}
+                                                                        >
+                                                                            <Trash2 size={20} />
+                                                                        </IconButton>
+                                                                    </Box>
                                                                 </Box>
 
                                                                 <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
@@ -843,7 +1125,7 @@ const WorkoutsTab = () => {
 
                                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                                        <MdTimer size={16} style={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+                                                                        <Timer size={16} style={{ color: "rgba(255, 255, 255, 0.7)" }} />
                                                                         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                                                                             {dayWorkout.duration}
                                                                         </Typography>
@@ -865,7 +1147,7 @@ const WorkoutsTab = () => {
 
                                                                 <Button
                                                                     variant="contained"
-                                                                    startIcon={<MdPlayArrow />}
+                                                                    startIcon={<Play size={18} />}
                                                                     fullWidth
                                                                     sx={{
                                                                         background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
@@ -903,16 +1185,37 @@ const WorkoutsTab = () => {
                                                     <WorkoutCard onClick={() => handleWorkoutClick(templateWorkout)}>
                                                         <CardContent>
                                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                                                                <Typography variant="h6" sx={{ color: '#fff', fontWeight: 'bold', fontSize: '1rem' }}>
+                                                                <Typography variant="h6" sx={{ color: '#fff', fontWeight: 'bold', fontSize: '1rem', flexGrow: 1, pr: 1 }}>
                                                                     {templateWorkout.title}
                                                                 </Typography>
-                                                                {templateWorkout.isAIPick && (
-                                                                    <AIPick
-                                                                        icon={<MdAutoAwesome size={12} />}
-                                                                        label="AI Pick"
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                    {templateWorkout.isAIPick && (
+                                                                        <AIPick
+                                                                            icon={<Sparkles size={12} />}
+                                                                            label="AI Pick"
+                                                                            size="small"
+                                                                        />
+                                                                    )}
+                                                                    <IconButton
                                                                         size="small"
-                                                                    />
-                                                                )}
+                                                                        onClick={async (e) => {
+                                                                            e.stopPropagation();
+                                                                            if (window.confirm('Are you sure you want to delete this workout?')) {
+                                                                                await deleteTemplate(templateWorkout.templateId);
+                                                                                loadTemplates();
+                                                                            }
+                                                                        }}
+                                                                        sx={{
+                                                                            color: 'rgba(255, 255, 255, 0.5)',
+                                                                            '&:hover': {
+                                                                                color: '#f44336',
+                                                                                backgroundColor: 'rgba(244, 67, 54, 0.1)'
+                                                                            }
+                                                                        }}
+                                                                    >
+                                                                        <Trash2 size={20} />
+                                                                    </IconButton>
+                                                                </Box>
                                                             </Box>
 
                                                             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
@@ -921,7 +1224,7 @@ const WorkoutsTab = () => {
 
                                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                                    <MdTimer size={16} style={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+                                                                    <Timer size={16} style={{ color: "rgba(255, 255, 255, 0.7)" }} />
                                                                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                                                                         {templateWorkout.duration}
                                                                     </Typography>
@@ -943,7 +1246,7 @@ const WorkoutsTab = () => {
 
                                                             <Button
                                                                 variant="contained"
-                                                                startIcon={<MdPlayArrow />}
+                                                                startIcon={<Play size={18} />}
                                                                 fullWidth
                                                                 sx={{
                                                                     background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
@@ -979,22 +1282,136 @@ const WorkoutsTab = () => {
 
                         {/* AI Recommendations Sidebar */}
                         <Grid item xs={12} md={4}>
-                            <Typography variant="h6" sx={{ color: '#dded00', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <MdAutoAwesome />
-                                AI Recommendations
-                            </Typography>
+                            <Card sx={{
+                                background: 'rgba(40, 40, 40, 0.6)',
+                                backdropFilter: 'blur(10px)',
+                                borderRadius: '16px',
+                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                p: 3,
+                                mb: 3
+                            }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                                    <Brain size={20} style={{ color: '#dded00' }} />
+                                    <Typography variant="h6" sx={{ color: '#fff', fontSize: '1.125rem' }}>
+                                        AI Recommendations
+                                    </Typography>
+                                </Box>
 
-                            <AISuggestionCards
-                                userId={currentUser?.uid}
-                                workoutContext="workout"
-                                onSuggestionAccept={handleSuggestionAccept}
-                                onSuggestionDismiss={handleSuggestionDismiss}
-                                maxSuggestions={3}
-                                showPlateauWarnings={true}
-                            />
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                                    {aiLoading ? (
+                                        <>
+                                            {[1, 2, 3].map((i) => (
+                                                <Box key={i} sx={{ background: 'rgba(255, 255, 255, 0.02)', borderRadius: '12px', p: 2.5 }}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                                                        <Skeleton variant="circular" width={20} height={20} />
+                                                        <Box sx={{ flex: 1 }}>
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                                                                <Skeleton variant="text" width="60%" height={24} />
+                                                                <Skeleton variant="rectangular" width={60} height={22} sx={{ borderRadius: '12px' }} />
+                                                            </Box>
+                                                            <Skeleton variant="text" width="90%" height={20} />
+                                                            <Skeleton variant="text" width="70%" height={20} />
+                                                            <Skeleton variant="text" width="40%" height={16} sx={{ mt: 1 }} />
+                                                        </Box>
+                                                    </Box>
+                                                </Box>
+                                            ))}
+                                        </>
+                                    ) : aiRecommendations.length > 0 ? (
+                                        aiRecommendations.map((recommendation, index) => (
+                                            <Box key={recommendation.exerciseId || index} sx={{
+                                                background: 'rgba(255, 255, 255, 0.02)',
+                                                borderRadius: '12px',
+                                                p: 2.5,
+                                                transition: 'all 0.2s ease',
+                                                '&:hover': { background: 'rgba(255, 255, 255, 0.05)' }
+                                            }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                                                    <recommendation.icon size={20} style={{ color: '#dded00', marginTop: '2px' }} />
+                                                    <Box sx={{ flex: 1 }}>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                                                            <Typography variant="subtitle1" sx={{ color: '#fff', fontSize: '1rem' }}>
+                                                                {getRecommendationTitle(recommendation)}
+                                                            </Typography>
+                                                            <Chip
+                                                                label={recommendation.priority}
+                                                                size="small"
+                                                                sx={{
+                                                                    ...getPriorityColor(recommendation.priority),
+                                                                    fontSize: '0.7rem',
+                                                                    height: 22,
+                                                                    '& .MuiChip-label': { px: 1.5 }
+                                                                }}
+                                                            />
+                                                        </Box>
+                                                        <Typography variant="body2" sx={{
+                                                            color: 'rgba(255, 255, 255, 0.7)',
+                                                            mb: 2.5,
+                                                            lineHeight: 1.4,
+                                                            fontSize: '0.875rem'
+                                                        }}>
+                                                            {getRecommendationDescription(recommendation)}
+                                                        </Typography>
+                                                        <Button
+                                                            variant="text"
+                                                            size="small"
+                                                            sx={{
+                                                                color: '#dded00',
+                                                                textTransform: 'none',
+                                                                fontSize: '0.875rem',
+                                                                p: 0,
+                                                                minWidth: 'auto',
+                                                                '&:hover': { backgroundColor: 'transparent', color: '#e8f15d' }
+                                                            }}
+                                                            onClick={() => navigate('/workout/start')}
+                                                        >
+                                                            Start Workout
+                                                        </Button>
+                                                    </Box>
+                                                </Box>
+                                            </Box>
+                                        ))
+                                    ) : (
+                                        <Box sx={{ background: 'rgba(255, 255, 255, 0.02)', borderRadius: '12px', p: 3, textAlign: 'center' }}>
+                                            {aiError ? (
+                                                <>
+                                                    <Alert severity="info" sx={{ mb: 2, backgroundColor: 'rgba(33, 150, 243, 0.1)', color: '#64b5f6' }}>
+                                                        {aiError}
+                                                    </Alert>
+                                                    <Brain size={32} style={{ color: 'rgba(255, 255, 255, 0.3)', marginBottom: '12px' }} />
+                                                    <Typography variant="body1" sx={{ color: 'text.secondary', mb: 1 }}>
+                                                        Using Smart Fallbacks
+                                                    </Typography>
+                                                    <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.875rem' }}>
+                                                        Rule-based progression system is still working
+                                                    </Typography>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    {isAiUnlocked ? (
+                                                        <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.875rem' }}>
+                                                            AI recommendations are calibrating from your recent workout history
+                                                        </Typography>
+                                                    ) : (
+                                                        <>
+                                                            <AIUnlockProgress
+                                                                completedWorkouts={completedWorkoutsCount}
+                                                                totalWorkouts={AI_RECOMMENDATION_UNLOCK_WORKOUTS}
+                                                            />
+                                                            <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.875rem' }}>
+                                                                Complete {workoutsUntilAiUnlock} more workout{workoutsUntilAiUnlock === 1 ? '' : 's'} to unlock AI recommendations
+                                                            </Typography>
+                                                        </>
+                                                    )}
+                                                </>
+                                            )}
+                                        </Box>
+                                    )}
+                                </Box>
+                            </Card>
 
                             {/* Weekly Performance Chart */}
-                            <Box sx={{ mt: 3 }}>
+                            <Box>
                                 <Typography variant="h6" sx={{ color: '#fff', mb: 2 }}>
                                     Weekly Performance
                                 </Typography>
@@ -1052,7 +1469,7 @@ const WorkoutsTab = () => {
                         </Box>
                         <Button
                             variant="contained"
-                            startIcon={<MdAdd />}
+                            startIcon={<Plus size={18} />}
                             onClick={handleCreateProgram}
                             sx={{
                                 background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
@@ -1084,7 +1501,7 @@ const WorkoutsTab = () => {
                             InputProps={{
                                 startAdornment: (
                                     <InputAdornment position="start">
-                                        <MdSearch style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+                                        <Search size={18} style={{ color: "rgba(255, 255, 255, 0.5)" }} />
                                     </InputAdornment>
                                 ),
                             }}
@@ -1118,7 +1535,7 @@ const WorkoutsTab = () => {
                                 value={selectedCategory}
                                 onChange={(e) => setSelectedCategory(e.target.value)}
                                 displayEmpty
-                                IconComponent={MdArrowDropDown}
+                                IconComponent={() => <ChevronDown size={18} />}
                                 sx={{
                                     backgroundColor: 'rgba(40, 40, 40, 0.8)',
                                     borderRadius: '12px',
@@ -1245,7 +1662,7 @@ const WorkoutsTab = () => {
                                                         zIndex: 10
                                                     }}
                                                 >
-                                                    <MdMoreVert />
+                                                    <MoreVertical size={20} />
                                                 </IconButton>
                                             </Box>
 
@@ -1278,7 +1695,7 @@ const WorkoutsTab = () => {
                                                                 </Box>
                                                                 <Button
                                                                     variant="contained"
-                                                                    startIcon={<MdPlayArrow />}
+                                                                    startIcon={<Play size={18} />}
                                                                     fullWidth
                                                                     size="small"
                                                                     onClick={() => handleStartWorkout(program, day)}
@@ -1309,7 +1726,7 @@ const WorkoutsTab = () => {
                                                                     }}
                                                                 >
                                                                     <Typography variant="caption">View Exercises</Typography>
-                                                                    <MdExpandMore style={{ transform: expandedDay === `${program.id}-${day.id}` ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }} />
+                                                                    <ChevronDown size={18} style={{ transform: expandedDay === `${program.id}-${day.id}` ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s" }} />
                                                                 </Box>
                                                             </Box>
                                                             <Collapse in={expandedDay === `${program.id}-${day.id}`}>
@@ -1328,7 +1745,7 @@ const WorkoutsTab = () => {
                                                                     ))}
                                                                     <Button
                                                                         variant="contained"
-                                                                        startIcon={<MdPlayArrow />}
+                                                                        startIcon={<Play size={18} />}
                                                                         fullWidth
                                                                         size="small"
                                                                         onClick={() => handleStartWorkout(program, day)}
@@ -1356,9 +1773,40 @@ const WorkoutsTab = () => {
                                 ))
                             ) : (
                                 <Grid item xs={12}>
-                                    <Typography sx={{ color: 'text.secondary', textAlign: 'center', py: 4 }}>
-                                        No custom programs created yet.
-                                    </Typography>
+                                    <Box sx={{
+                                        textAlign: 'center',
+                                        py: 6,
+                                        px: 3,
+                                        background: 'rgba(40, 40, 40, 0.5)',
+                                        borderRadius: '16px',
+                                        border: '1px dashed rgba(255, 255, 255, 0.15)',
+                                    }}>
+                                        <FolderOpen size={48} style={{ color: "rgba(255, 255, 255, 0.3)", marginBottom: "16px" }} />
+                                        <Typography variant="h6" sx={{ color: '#fff', mb: 1, fontWeight: 'bold' }}>
+                                            No Programs Yet
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3, maxWidth: '500px', mx: 'auto', lineHeight: 1.6 }}>
+                                            Programs help you organize your workouts into structured training plans. Create a program to group your workout days (e.g., Push/Pull/Legs) and track your progress through a multi-week plan.
+                                        </Typography>
+                                        <Button
+                                            variant="contained"
+                                            startIcon={<Plus size={18} />}
+                                            onClick={handleCreateProgram}
+                                            sx={{
+                                                background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
+                                                color: '#000',
+                                                fontWeight: 'bold',
+                                                borderRadius: '8px',
+                                                px: 4,
+                                                py: 1.2,
+                                                '&:hover': {
+                                                    background: 'linear-gradient(45deg, #e8f15d 30%, #dded00 90%)',
+                                                },
+                                            }}
+                                        >
+                                            Create Your First Program
+                                        </Button>
+                                    </Box>
                                 </Grid>
                             )}
                         </Grid>
@@ -1389,7 +1837,7 @@ const WorkoutsTab = () => {
                                 gap: 1
                             }}
                         >
-                            <MdEdit size={16} />
+                            <Pencil size={16} />
                             Edit Program
                         </MenuItem>
                         <MenuItem
@@ -1402,7 +1850,7 @@ const WorkoutsTab = () => {
                                 gap: 1
                             }}
                         >
-                            <MdContentCopy size={16} />
+                            <Copy size={16} />
                             Duplicate
                         </MenuItem>
                         <MenuItem
@@ -1415,143 +1863,26 @@ const WorkoutsTab = () => {
                                 gap: 1
                             }}
                         >
-                            <MdDelete size={16} />
+                            <Trash2 size={16} />
                             Delete
                         </MenuItem>
                     </Menu>
-
-                    {/* Popular Programs Section */}
-                    <Box>
-                        <Typography variant="h6" sx={{ color: '#fff', mb: 3, fontWeight: 'bold' }}>
-                            Popular Programs
-                        </Typography>
-
-                        <Grid container spacing={3}>
-                            {/* Popular Program Card */}
-                            <Grid item xs={12} md={6}>
-                                <Card sx={{
-                                    background: 'rgba(40, 40, 40, 0.9)',
-                                    borderRadius: '16px',
-                                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                                    p: 3,
-                                    '&:hover': {
-                                        border: '1px solid rgba(221, 237, 0, 0.3)',
-                                    }
-                                }}>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                                        <Box>
-                                            <Typography variant="h6" sx={{ color: '#fff', fontWeight: 'bold', mb: 1 }}>
-                                                Full Body Starter
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-                                                Perfect beginner program to build foundation
-                                            </Typography>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                                                <Chip
-                                                    label="beginner"
-                                                    size="small"
-                                                    sx={{
-                                                        backgroundColor: 'rgba(76, 175, 80, 0.2)',
-                                                        color: '#4caf50',
-                                                        fontSize: '0.7rem'
-                                                    }}
-                                                />
-                                                <Chip
-                                                    label="Popular"
-                                                    size="small"
-                                                    icon={<span style={{ fontSize: '12px' }}>⭐</span>}
-                                                    sx={{
-                                                        backgroundColor: 'rgba(221, 237, 0, 0.2)',
-                                                        color: '#dded00',
-                                                        fontSize: '0.7rem'
-                                                    }}
-                                                />
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                                        👥 234 users
-                                                    </Typography>
-                                                </Box>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                                        ⭐ 4.9/5
-                                                    </Typography>
-                                                </Box>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                                        📅 4 weeks
-                                                    </Typography>
-                                                </Box>
-                                            </Box>
-                                        </Box>
-                                        <Button
-                                            variant="outlined"
-                                            size="small"
-                                            startIcon={<span style={{ fontSize: '12px' }}>+</span>}
-                                            sx={{
-                                                borderColor: '#dded00',
-                                                color: '#dded00',
-                                                fontSize: '0.75rem',
-                                                '&:hover': {
-                                                    backgroundColor: 'rgba(221, 237, 0, 0.1)',
-                                                    borderColor: '#dded00',
-                                                },
-                                            }}
-                                        >
-                                            Add to Mine
-                                        </Button>
-                                    </Box>
-
-                                    {/* Program Preview Days */}
-                                    <Grid container spacing={1}>
-                                        <Grid item xs={6}>
-                                            <Box sx={{
-                                                background: 'rgba(60, 60, 60, 0.3)',
-                                                borderRadius: '8px',
-                                                p: 1.5,
-                                                textAlign: 'center'
-                                            }}>
-                                                <Typography variant="caption" sx={{ color: '#fff', fontWeight: 'bold', display: 'block' }}>
-                                                    Full Body A
-                                                </Typography>
-                                                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                                    2 exercises
-                                                </Typography>
-                                                <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
-                                                    45min
-                                                </Typography>
-                                            </Box>
-                                        </Grid>
-                                        <Grid item xs={6}>
-                                            <Box sx={{
-                                                background: 'rgba(60, 60, 60, 0.3)',
-                                                borderRadius: '8px',
-                                                p: 1.5,
-                                                textAlign: 'center'
-                                            }}>
-                                                <Typography variant="caption" sx={{ color: '#fff', fontWeight: 'bold', display: 'block' }}>
-                                                    Full Body B
-                                                </Typography>
-                                                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                                    2 exercises
-                                                </Typography>
-                                                <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
-                                                    45min
-                                                </Typography>
-                                            </Box>
-                                        </Grid>
-                                    </Grid>
-                                </Card>
-                            </Grid>
-                        </Grid>
-                    </Box>
                 </Box>
             )}
 
             {/* Create Workout Modal */}
             <CreateWorkoutModal
-                open={createModalOpen}
-                onClose={() => setCreateModalOpen(false)}
-                onWorkoutCreated={handleWorkoutCreated}
+                open={createModalOpen || !!editingRecommendation}
+                editData={editingRecommendation}
+                onClose={() => {
+                    setCreateModalOpen(false);
+                    setEditingRecommendation(null);
+                }}
+                onWorkoutCreated={() => {
+                    setCreateModalOpen(false);
+                    setEditingRecommendation(null);
+                    loadTemplates();
+                }}
             />
 
             {/* Create Program Modal */}
@@ -1563,6 +1894,13 @@ const WorkoutsTab = () => {
                 }}
                 onProgramCreated={handleProgramCreated}
                 editData={editProgramData}
+            />
+            <WorkoutRecommendationPreviewDialog
+                open={Boolean(selectedRecommendedWorkout)}
+                workout={selectedRecommendedWorkout}
+                onClose={() => setSelectedRecommendedWorkout(null)}
+                onStart={handleStarterWorkoutStart}
+                onEdit={handleStarterWorkoutEdit}
             />
         </Box>
     );

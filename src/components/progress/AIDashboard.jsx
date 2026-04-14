@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Box, Typography, Tabs, Tab, Chip } from '@mui/material';
-import { MdPsychology, MdWarning, MdShowChart, MdTimeline, MdEmojiEvents } from 'react-icons/md';
-import { Brain } from 'lucide-react';
+import { Brain as MdPsychology, AlertTriangle as MdWarning, LineChart as MdShowChart, Activity as MdTimeline, Trophy as MdEmojiEvents, Brain } from 'lucide-react';
 import AIInsights from './components/AIInsights';
 import PlateauAlerts from './components/PlateauAlerts';
 import PerformanceCharts from './components/PerformanceCharts';

@@ -29,6 +29,7 @@ dist-ssr
 # Firebase
 .firebase/
 firebase-debug.log
+firebaseAuth.json
 docs/
 .kiro
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { MdAdd, MdShowChart, MdLibraryBooks } from 'react-icons/md';
+import { Plus, LineChart as MdShowChart, BookOpen as MdLibraryBooks } from 'lucide-react';
 import WorkoutsTab from './WorkoutsTab';
 import ExerciseLibraryTab from './ExerciseLibraryTab';
 import CreateWorkoutModal from './CreateWorkoutModal';
@@ -84,7 +84,7 @@ const WorkoutDashboard = () => {
                 </Box>
                 <Button
                     variant="contained"
-                    startIcon={<MdAdd />}
+                    startIcon={<Plus size={18} />}
                     onClick={handleNewWorkout}
                     sx={{
                         background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',

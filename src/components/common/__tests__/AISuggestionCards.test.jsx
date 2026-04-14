@@ -1,6 +1,13 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { act, render, screen } from '@testing-library/react';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
 import AISuggestionCards from '../AISuggestionCards';
+
+const aiServiceMocks = vi.hoisted(() => ({
+    analyzeWorkoutHistory: vi.fn().mockResolvedValue([]),
+    generateWorkoutSuggestions: vi.fn().mockResolvedValue([]),
+    detectPlateaus: vi.fn().mockResolvedValue([]),
+    trackSuggestionInteraction: vi.fn().mockResolvedValue(),
+}));
 
 // Mock the context hooks at the module level
 vi.mock('../../../contexts/AuthContext', () => ({
@@ -21,7 +28,8 @@ vi.mock('../../../contexts/UnitsContext', () => ({
 
 vi.mock('../../../services/progressiveOverloadAI', () => ({
     default: {
-        analyzeWorkoutHistory: vi.fn().mockResolvedValue([]),
+        analyzeWorkoutHistory: aiServiceMocks.analyzeWorkoutHistory,
+        generateWorkoutSuggestions: aiServiceMocks.generateWorkoutSuggestions,
         calculateNextProgression: vi.fn().mockResolvedValue({
             exerciseId: 'bench-press',
             exerciseName: 'Bench Press',
@@ -34,8 +42,8 @@ vi.mock('../../../services/progressiveOverloadAI', () => ({
             confidenceLevel: 0.85,
             alternativeOptions: []
         }),
-        detectPlateaus: vi.fn().mockResolvedValue([]),
-        trackSuggestionInteraction: vi.fn().mockResolvedValue()
+        detectPlateaus: aiServiceMocks.detectPlateaus,
+        trackSuggestionInteraction: aiServiceMocks.trackSuggestionInteraction
     }
 }));
 
@@ -47,6 +55,50 @@ vi.mock('../../../utils/aiSuggestionCache', () => ({
 }));
 
 describe('AISuggestionCards', () => {
+    beforeEach(() => {
+        aiServiceMocks.analyzeWorkoutHistory.mockClear();
+        aiServiceMocks.generateWorkoutSuggestions.mockClear();
+        aiServiceMocks.detectPlateaus.mockClear();
+        aiServiceMocks.trackSuggestionInteraction.mockClear();
+    });
+
+    it('reloads suggestions when the workout context changes', async () => {
+        vi.useFakeTimers();
+
+        const { rerender } = render(
+            <AISuggestionCards
+                userId="test-user-id"
+                workoutContext="home"
+                onSuggestionAccept={vi.fn()}
+                onSuggestionDismiss={vi.fn()}
+            />
+        );
+
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(1500);
+        });
+
+        expect(aiServiceMocks.analyzeWorkoutHistory).toHaveBeenCalledTimes(1);
+        expect(aiServiceMocks.generateWorkoutSuggestions).not.toHaveBeenCalled();
+
+        rerender(
+            <AISuggestionCards
+                userId="test-user-id"
+                workoutContext="start-workout"
+                onSuggestionAccept={vi.fn()}
+                onSuggestionDismiss={vi.fn()}
+            />
+        );
+
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(1500);
+        });
+
+        expect(aiServiceMocks.generateWorkoutSuggestions).toHaveBeenCalledTimes(1);
+
+        vi.useRealTimers();
+    });
+
     it('renders loading state initially', () => {
         render(
             <AISuggestionCards
@@ -75,7 +127,9 @@ describe('AISuggestionCards', () => {
         );
 
         // Advance past the 1-second debounce
-        await vi.advanceTimersByTimeAsync(1500);
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(1500);
+        });
 
         vi.useRealTimers();
 

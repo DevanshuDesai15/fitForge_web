@@ -9,12 +9,12 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
-    MdTrendingUp,
-    MdTrendingDown,
-    MdTrendingFlat,
-    MdLightbulb,
-    MdTimer
-} from 'react-icons/md';
+    TrendingUp as MdTrendingUp,
+    TrendingDown as MdTrendingDown,
+    Minus as MdTrendingFlat,
+    Lightbulb as MdLightbulb,
+    Timer as MdTimer
+} from 'lucide-react';
 import progressiveOverloadAI from '../../services/progressiveOverloadAI';
 
 const ProgressionCard = styled(Box)(({ theme }) => ({

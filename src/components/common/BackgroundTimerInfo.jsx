@@ -8,7 +8,7 @@ import {
     IconButton,
     Typography
 } from '@mui/material';
-import { MdClose, MdInfo, MdTimer, MdPhoneAndroid } from 'react-icons/md';
+import { X as MdClose, Info as MdInfo, Timer as MdTimer, Smartphone as MdPhoneAndroid } from 'lucide-react';
 
 export default function BackgroundTimerInfo({ show, onDismiss }) {
     const [expanded, setExpanded] = useState(false);

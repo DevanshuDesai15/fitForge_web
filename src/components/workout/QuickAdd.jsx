@@ -14,18 +14,18 @@ import {
 } from '@mui/material';
 import { styled, useTheme } from '@mui/material/styles';
 import {
-    MdFitnessCenter,
-    MdSave,
-    MdCancel,
-    MdHistory,
-    MdAdd
-} from 'react-icons/md';
-import { collection, addDoc, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
-import { db } from '../../firebase/config';
+    Dumbbell as MdFitnessCenter,
+    Save as MdSave,
+    X as MdCancel,
+    History as MdHistory,
+    Plus as MdAdd
+} from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useSupabase } from '../../hooks/useSupabase';
 import { useUnits } from '../../contexts/UnitsContext';
 import { useNavigate } from 'react-router-dom';
 import ExerciseSelector from '../common/ExerciseSelector';
+import { getRecentExercisesFromWorkouts } from '../../utils/workoutExerciseHistory';
 
 const StyledCard = styled(Card)(({ theme }) => ({
     background: '#282828',
@@ -73,6 +73,7 @@ export default function QuickAdd() {
     const [recentExercises, setRecentExercises] = useState([]);
 
     const { currentUser } = useAuth();
+    const supabase = useSupabase();
     const { weightUnit } = useUnits();
     const navigate = useNavigate();
     const theme = useTheme();
@@ -87,18 +88,15 @@ export default function QuickAdd() {
         if (!currentUser) return;
 
         try {
-            const exercisesQuery = query(
-                collection(db, 'exercises'),
-                where('userId', '==', currentUser.uid),
-                orderBy('timestamp', 'desc'),
-                limit(5)
-            );
-            const snapshot = await getDocs(exercisesQuery);
-            const exercisesData = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            setRecentExercises(exercisesData);
+            const { data: recentWorkouts, error } = await supabase
+                .from('workouts')
+                .select('exercises, created_at')
+                .eq('user_id', currentUser.uid)
+                .order('created_at', { ascending: false })
+                .limit(10);
+
+            if (error) throw error;
+            setRecentExercises(getRecentExercisesFromWorkouts(recentWorkouts || []));
         } catch (error) {
             console.error('Error loading recent exercises:', error);
         }
@@ -136,7 +134,16 @@ export default function QuickAdd() {
                 type: 'quickAdd'
             };
 
-            await addDoc(collection(db, 'exercises'), exerciseData);
+            const { error: insertError } = await supabase.from('workouts').insert([{
+                user_id: currentUser.uid,
+                name: exerciseName,
+                exercises: [{ name: exerciseName, sets: setsArray, notes: notes.trim() }],
+                weight_unit: weightUnit,
+                completed: true,
+                completed_at: new Date().toISOString(),
+                timestamp: new Date().toISOString(),
+            }]);
+            if (insertError) throw insertError;
 
             setSuccess('Exercise logged successfully!');
 
@@ -404,8 +411,8 @@ export default function QuickAdd() {
                                             </Typography>
                                             <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                                                 {Array.isArray(exercise.sets)
-                                                    ? `${exercise.sets.length} sets × ${exercise.sets[0].reps} reps × ${exercise.sets[0].weight}${weightUnit}`
-                                                    : `${exercise.sets} sets × ${exercise.reps} reps × ${exercise.weight}${weightUnit}`
+                                                    ? `${exercise.setCount} sets × ${exercise.reps} reps × ${exercise.weight}${weightUnit}`
+                                                    : `${exercise.setCount} sets × ${exercise.reps} reps × ${exercise.weight}${weightUnit}`
                                                 }
                                             </Typography>
                                         </Box>

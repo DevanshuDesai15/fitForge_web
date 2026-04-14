@@ -1,5 +1,5 @@
 import { Box, Typography, Card, CardContent, Button, Chip } from '@mui/material';
-import { MdToday, MdFitnessCenter } from 'react-icons/md';
+import { Calendar, Dumbbell as MdFitnessCenter } from 'lucide-react';
 
 const DaySelector = ({ template, onSelectDay, onBack }) => {
     if (!template || !template.workoutDays) {
@@ -19,7 +19,7 @@ const DaySelector = ({ template, onSelectDay, onBack }) => {
         <Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h6" sx={{ color: '#dded00', display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <MdToday />
+                    <Calendar size={18} />
                     Select Workout Day
                 </Typography>
                 <Button onClick={onBack} sx={{ color: 'text.secondary' }}>

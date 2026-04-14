@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { Box, Fab, Typography, useTheme } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-    MdDashboard,
-    MdFitnessCenter,
-    MdHistory,
-    MdShowChart,
-    MdPerson
-} from 'react-icons/md';
+    LayoutDashboard as MdDashboard,
+    Dumbbell as MdFitnessCenter,
+    History as MdHistory,
+    LineChart as MdShowChart,
+    User as MdPerson
+} from 'lucide-react';
 
 export default function ModernNavigation() {
     const navigate = useNavigate();

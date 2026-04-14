@@ -2,8 +2,9 @@
  * Local Exercise Service
  * Uses local JSON data instead of external API for better performance and reliability
  */
+import { extractExerciseDataArray } from '../utils/exerciseData';
 
-// MergedData.json is loaded dynamically on first use to avoid bundling 1.4MB into the initial JS
+// UpdatedExerciseData.json is loaded dynamically on first use to avoid bundling the full dataset into the initial JS
 let mergedDataCache = null;
 
 // Cache the exercises data for performance
@@ -17,8 +18,8 @@ let muscleGroups = null;
  */
 const loadMergedData = async () => {
   if (mergedDataCache) return mergedDataCache;
-  const module = await import('../../MergedData.json');
-  mergedDataCache = module.default;
+  const module = await import('../../UpdatedExerciseData.json');
+  mergedDataCache = extractExerciseDataArray(module.default);
   return mergedDataCache;
 };
 
@@ -33,21 +34,27 @@ const initializeData = async () => {
   console.log('📊 Initializing local exercise data...');
   
   // Transform the JSON data to match the expected format in the app
-  cachedExercises = mergedData.products.map((exercise) => ({
+  cachedExercises = mergedData.map((exercise) => {
+    const primaryMuscle = exercise.primary_muscle || exercise.muscle_groups?.[0] || 'Unknown';
+    const secondaryMuscles = exercise.secondary_muscles || exercise.muscle_groups?.slice(1) || [];
+    const equipmentNeeded = exercise.equipment_needed || exercise.equipment || [];
+    const muscles = [primaryMuscle, ...secondaryMuscles].filter(Boolean);
+
+    return {
     id: exercise.id,
     name: exercise.title,
     title: exercise.title,
     slug: exercise.slug,
-    description: exercise.description || '',
+    description: exercise.enhanced_description || exercise.description || '',
     steps: exercise.steps || [],
-    bodyPart: exercise.muscle_groups?.[0] || 'Unknown',
-    target: exercise.muscle_groups?.[0] || 'Unknown',
-    equipment: exercise.equipment?.[0] || 'bodyweight',
-    muscles: exercise.muscle_groups || [],
-    muscle_groups: exercise.muscle_groups || [],
+    bodyPart: primaryMuscle,
+    target: primaryMuscle,
+    equipment: Array.isArray(equipmentNeeded) ? (equipmentNeeded[0] || 'bodyweight') : (equipmentNeeded || 'bodyweight'),
+    muscles,
+    muscle_groups: muscles,
     exercise_types: exercise.exercise_types || [],
     difficulty: exercise.difficulty || 'Beginner',
-    category: exercise.muscle_groups?.[0] || 'Unknown',
+    category: primaryMuscle,
     images: [], // No static images in this data, but we have videos
     videos: exercise.video_urls ? [
       { quality: '720p', url: exercise.video_urls['720p'] },
@@ -55,8 +62,15 @@ const initializeData = async () => {
     ] : [],
     video_urls: exercise.video_urls || {},
     url: exercise.url,
+    primary_muscle: primaryMuscle,
+    secondary_muscles: secondaryMuscles,
+    equipment_needed: Array.isArray(equipmentNeeded) ? equipmentNeeded : [equipmentNeeded].filter(Boolean),
+    variations: exercise.variations || [],
+    safety_considerations: exercise.safety_considerations || [],
+    tags: exercise.tags || [],
     type: 'local'
-  }));
+  };
+  });
   
   // Extract unique categories for filtering
   exerciseCategories = [...new Set(cachedExercises.map(ex => ex.bodyPart))].filter(Boolean).sort();
@@ -338,6 +352,35 @@ export const fetchExerciseImages = async (exerciseId) => {
   }
 };
 
+/**
+ * Fetch succinct exercise metadata tailored for LLM RAG prompts
+ * Keeps output small to save tokens while providing exact mechanics.
+ */
+export const fetchExerciseForRAG = async (exerciseId) => {
+  try {
+    const exercises = await initializeData();
+    const exercise = exercises.find((ex) => ex.id === exerciseId);
+    
+    if (!exercise) return null;
+
+    // Filter out bulky arrays or urls to save tokens
+    const ragData = {
+      name: exercise.name,
+      description: exercise.description,
+      difficulty: exercise.difficulty,
+      target: exercise.target,
+      equipment: exercise.equipment,
+      steps: exercise.steps || [],
+      muscle_groups: exercise.muscle_groups || []
+    };
+
+    return JSON.stringify(ragData);
+  } catch (error) {
+    console.error(`Error fetching RAG data for exercise ${exerciseId}:`, error);
+    return null;
+  }
+};
+
 // Test function to verify the service works
 export const testLocalService = async () => {
   try {
@@ -355,6 +398,9 @@ export const testLocalService = async () => {
     const categories = await fetchCategoryList();
     console.log(`✅ Categories: ${categories.length}`);
     
+    const ragData = await fetchExerciseForRAG(allExercises[0]?.id);
+    console.log(`✅ RAG Data sample size: ${ragData?.length || 0} chars`);
+
     console.log('🎉 Local exercise service test completed!');
     return true;
   } catch (error) {

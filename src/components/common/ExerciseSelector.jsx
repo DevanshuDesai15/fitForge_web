@@ -19,18 +19,18 @@ import {
 } from '@mui/material';
 import { styled, useTheme } from '@mui/material/styles';
 import {
-    MdSearch,
-    MdFavorite,
-    MdHistory,
-    MdClose,
-    MdArrowDropDown,
-    MdLightbulb
-} from 'react-icons/md';
-import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
-import { db } from '../../firebase/config';
+    Search as MdSearch,
+    Heart as MdFavorite,
+    History as MdHistory,
+    X as MdClose,
+    ChevronDown as MdArrowDropDown,
+    Lightbulb as MdLightbulb
+} from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useSupabase } from '../../hooks/useSupabase';
 import { fetchExercisesByName } from '../../services/localExerciseService';
 import progressiveOverloadAI from '../../services/progressiveOverloadAI';
+import { getRecentExercisesFromWorkouts } from '../../utils/workoutExerciseHistory';
 
 const SearchContainer = styled(Box)(() => ({
     position: 'relative',
@@ -138,29 +138,31 @@ export default function ExerciseSelector({
     const [showVariations, setShowVariations] = useState(false);
 
     const { currentUser } = useAuth();
+    const supabase = useSupabase();
     const theme = useTheme();
 
     const loadRecentExercises = useCallback(async () => {
         if (!currentUser) return;
 
         try {
-            const q = query(
-                collection(db, 'exercises'),
-                where('userId', '==', currentUser.uid),
-                orderBy('timestamp', 'desc'),
-                limit(5)
+            const { data: recentWorkouts, error } = await supabase
+                .from('workouts')
+                .select('exercises, created_at')
+                .eq('user_id', currentUser.uid)
+                .order('created_at', { ascending: false })
+                .limit(10);
+
+            if (error) throw error;
+            setRecentExercises(
+                getRecentExercisesFromWorkouts(recentWorkouts || []).map((exercise) => ({
+                    ...exercise,
+                    type: 'recent'
+                }))
             );
-            const snapshot = await getDocs(q);
-            const exercises = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-                type: 'recent'
-            }));
-            setRecentExercises(exercises);
         } catch (error) {
             console.error('Error loading recent exercises:', error);
         }
-    }, [currentUser]);
+    }, [currentUser, supabase]);
 
     useEffect(() => {
         if (includeHistory && currentUser) {
@@ -379,7 +381,7 @@ export default function ExerciseSelector({
                                     <MdHistory style={{ color: theme.palette.primary.main, marginRight: '12px' }} />
                                     <ListItemText
                                         primary={exercise.exerciseName}
-                                        secondary={`${exercise.sets} sets × ${exercise.reps} reps`}
+                                        secondary={`${exercise.setCount} sets × ${exercise.reps} reps`}
                                         primaryTypographyProps={{ color: theme.palette.text.primary }}
                                         secondaryTypographyProps={{ color: theme.palette.text.secondary }}
                                     />

@@ -19,21 +19,22 @@ import {
 } from '@mui/material';
 import { styled, useTheme } from '@mui/material/styles';
 import {
-    MdCalendarMonth,
-    MdHistory,
-    MdFitnessCenter,
-    MdTimer,
-    MdTrendingUp,
-    MdBarChart,
-    MdToday,
-    MdAdd,
-    MdClose,
-} from 'react-icons/md';
-import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
-import { db } from '../../firebase/config';
+    CalendarRange as MdCalendarMonth,
+    History as MdHistory,
+    Dumbbell as MdFitnessCenter,
+    Timer as MdTimer,
+    TrendingUp as MdTrendingUp,
+    BarChart2 as MdBarChart,
+    CalendarDays as MdToday,
+    Plus as MdAdd,
+    X as MdClose,
+    Play as MdPlayArrow,
+} from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useSupabase } from '../../hooks/useSupabase';
 import { useNavigate } from 'react-router-dom';
 import { getWeightUnit } from '../../utils/weightUnit';
+import { flattenExercisesFromWorkouts } from '../../utils/workoutExerciseHistory';
 // Date utils no longer needed for new calendar
 import WorkoutCalendar from '../Workout/WorkoutCalendar';
 import {
@@ -70,6 +71,7 @@ export default function History() {
     const [selectedDateWorkouts, setSelectedDateWorkouts] = useState([]);
     // Old calendar state variables removed - now using WorkoutCalendar component
     const { currentUser } = useAuth();
+    const supabase = useSupabase();
     const navigate = useNavigate();
     const theme = useTheme();
 
@@ -81,27 +83,22 @@ export default function History() {
         }
 
         try {
-            const workoutsQuery = query(
-                collection(db, 'workouts'),
-                where('userId', '==', currentUser.uid),
-                where('completed', '==', true),
-                orderBy('timestamp', 'desc')
-            );
-            const workoutDocs = await getDocs(workoutsQuery);
-            const workoutData = workoutDocs.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
+            const { data: workoutData, error: queryError } = await supabase
+                .from('workouts')
+                .select('*')
+                .eq('user_id', currentUser.uid)
+                .order('timestamp', { ascending: false });
 
-            // Extract unique dates
-            const dates = workoutData.map(workout => new Date(workout.timestamp).toDateString());
+            if (queryError) throw queryError;
+
+            const dates = (workoutData || []).map(workout => new Date(workout.timestamp).toDateString());
             setWorkoutDates([...new Set(dates)]);
-            setWorkouts(workoutData); // Store workouts for calendar details
+            setWorkouts(workoutData || []);
         } catch (err) {
             console.error('Error loading workout dates:', err);
             setError('Error loading workout dates: ' + err.message);
         }
-    }, [currentUser]);
+    }, [currentUser, supabase]);
 
     const loadData = useCallback(async () => {
         if (!currentUser) {
@@ -116,29 +113,24 @@ export default function History() {
             if (activeTab === 0) { // Calendar - load workout dates
                 await loadWorkoutDates();
             } else if (activeTab === 1) { // Past Workouts
-                const workoutsQuery = query(
-                    collection(db, 'workouts'),
-                    where('userId', '==', currentUser.uid),
-                    where('completed', '==', true),
-                    orderBy('timestamp', 'desc')
-                );
-                const workoutDocs = await getDocs(workoutsQuery);
-                const workoutData = workoutDocs.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-                setWorkouts(workoutData);
-            } else if (activeTab === 2) { // Exercise History
-                const exercisesQuery = query(
-                    collection(db, 'exercises'),
-                    where('userId', '==', currentUser.uid),
-                    orderBy('timestamp', 'desc')
-                );
-                const exerciseDocs = await getDocs(exercisesQuery);
-                setExerciseHistory(exerciseDocs.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                })));
+                const { data: workoutData, error: queryError } = await supabase
+                    .from('workouts')
+                    .select('*')
+                    .eq('user_id', currentUser.uid)
+                    .order('timestamp', { ascending: false });
+
+                if (queryError) throw queryError;
+                setWorkouts(workoutData || []);
+            } else if (activeTab === 2) { // Exercise History — derived from workouts
+                const { data: workoutData, error: queryError } = await supabase
+                    .from('workouts')
+                    .select('exercises, timestamp, created_at')
+                    .eq('user_id', currentUser.uid)
+                    .order('timestamp', { ascending: false });
+
+                if (queryError) throw queryError;
+
+                setExerciseHistory(flattenExercisesFromWorkouts(workoutData || []));
             }
         } catch (err) {
             console.error('Error details:', err);
@@ -211,7 +203,7 @@ export default function History() {
         if (exerciseHistory.length === 0) return null;
 
         const totalExercises = exerciseHistory.length;
-        const uniqueExercises = [...new Set(exerciseHistory.map(ex => ex.exerciseName))].length;
+        const uniqueExercises = [...new Set(exerciseHistory.map(ex => ex.exerciseName || ex.name))].length;
         const totalWeight = exerciseHistory.reduce((sum, ex) => {
             if (Array.isArray(ex.sets)) {
                 return sum + ex.sets.reduce((setSum, set) => {

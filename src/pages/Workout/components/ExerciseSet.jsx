@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Box, TextField, IconButton, Chip, Tooltip } from '@mui/material';
-import { MdCheckCircle, MdCancel, MdAutoAwesome } from 'react-icons/md';
+import { CheckCircle as MdCheckCircle, XCircle as MdCancel, Sparkles as MdAutoAwesome } from 'lucide-react';
 import { getWeightLabel } from '../../../utils/weightUnit';
 
 const ExerciseSet = ({

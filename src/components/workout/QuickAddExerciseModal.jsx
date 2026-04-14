@@ -18,9 +18,9 @@ import {
   CircularProgress
 } from '@mui/material';
 import { X, Plus } from 'lucide-react';
-import { collection, addDoc } from 'firebase/firestore';
-import { db } from '../../firebase/config';
 import { useAuth } from '../../contexts/AuthContext';
+import { useSupabase } from '../../hooks/useSupabase';
+import { useProfile } from '../../hooks/useProfile';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialog-paper': {
@@ -133,6 +133,8 @@ const exerciseTypes = [
 
 const QuickAddExerciseModal = ({ open, onClose, onSuccess }) => {
   const { currentUser } = useAuth();
+  const { supabase } = useSupabase();
+  const { profile } = useProfile();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -201,7 +203,6 @@ const QuickAddExerciseModal = ({ open, onClose, onSuccess }) => {
 
     try {
       const now = new Date().toISOString();
-      const timestamp = Date.now();
 
       // Prepare sets data
       const setsCount = parseInt(formData.sets) || 1;
@@ -217,12 +218,12 @@ const QuickAddExerciseModal = ({ open, onClose, onSuccess }) => {
         });
       }
 
-      // Save to workouts collection (full workout session)
+      // 1. Save to workouts table
       const workoutData = {
-        userId: currentUser.uid,
-        templateId: null,
-        templateName: 'Quick Add Workout',
-        dayName: 'Quick Add Session',
+        user_id: profile.id,
+        template_id: null,
+        template_name: 'Quick Add Workout',
+        day_name: 'Quick Add Session',
         exercises: [{
           name: formData.exerciseName,
           type: formData.exerciseType,
@@ -232,29 +233,37 @@ const QuickAddExerciseModal = ({ open, onClose, onSuccess }) => {
         }],
         duration: formData.duration ? parseInt(formData.duration) : null,
         completed: true,
-        completedAt: now,
-        createdAt: now,
-        timestamp: timestamp
+        completed_at: now,
+        created_at: now
       };
 
-      const workoutDocRef = await addDoc(collection(db, 'workouts'), workoutData);
-      console.log('✅ Workout saved with ID:', workoutDocRef.id);
+      const { data: workout, error: workoutError } = await supabase
+        .from('workouts')
+        .insert([workoutData])
+        .select()
+        .single();
 
-      // Save to exercises collection (individual exercise record)
+      if (workoutError) throw workoutError;
+      console.log('✅ Workout saved with ID:', workout.id);
+
+      // 2. Save to exercises table (individual exercise record)
       const exerciseRecord = {
-        userId: currentUser.uid,
-        exerciseName: formData.exerciseName,
-        exerciseType: formData.exerciseType,
+        user_id: profile.id,
+        workout_id: workout.id,
+        exercise_name: formData.exerciseName,
+        exercise_type: formData.exerciseType,
         sets: sets,
         weight: parseFloat(weightValue) || 0,
         reps: repsCount,
         duration: formData.duration ? parseInt(formData.duration) : null,
-        timestamp: now,
-        createdAt: now,
-        workoutId: workoutDocRef.id
+        created_at: now
       };
 
-      await addDoc(collection(db, 'exercises'), exerciseRecord);
+      const { error: exerciseError } = await supabase
+        .from('exercises')
+        .insert([exerciseRecord]);
+
+      if (exerciseError) throw exerciseError;
       console.log('✅ Exercise record saved');
 
       // Success callback

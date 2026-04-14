@@ -1,0 +1,303 @@
+<style>
+  .cards {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+
+  .card-image {
+    background:
+      radial-gradient(circle at top left, rgba(231, 245, 92, 0.18), transparent 42%),
+      linear-gradient(180deg, #11170f 0%, #161d12 100%);
+    padding: 20px;
+  }
+
+  .app-shell {
+    min-height: 360px;
+    border-radius: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background:
+      linear-gradient(180deg, rgba(21, 28, 18, 0.98), rgba(17, 22, 14, 0.98));
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  .app-shell::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at top right, rgba(221, 237, 0, 0.09), transparent 35%);
+    pointer-events: none;
+  }
+
+  .page-title {
+    position: absolute;
+    top: 26px;
+    left: 26px;
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.42);
+  }
+
+  .page-block {
+    position: absolute;
+    left: 26px;
+    right: 26px;
+    top: 66px;
+    height: 120px;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .modal {
+    position: absolute;
+    left: 50%;
+    top: 40px;
+    transform: translateX(-50%);
+    width: min(88%, 500px);
+    border-radius: 28px;
+    border: 1px solid rgba(221, 237, 0, 0.16);
+    background:
+      linear-gradient(180deg, rgba(31, 38, 24, 0.98), rgba(22, 28, 18, 0.98));
+    box-shadow:
+      0 26px 80px rgba(0, 0, 0, 0.42),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    padding: 22px;
+    color: #f6f7f0;
+  }
+
+  .modal.compact {
+    width: min(84%, 430px);
+    top: 72px;
+  }
+
+  .modal.soft {
+    background:
+      linear-gradient(180deg, rgba(246, 248, 238, 0.96), rgba(234, 240, 216, 0.94));
+    color: #182012;
+    border: 1px solid rgba(24, 32, 18, 0.12);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.2);
+  }
+
+  .close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    display: grid;
+    place-items: center;
+    font-size: 18px;
+    color: inherit;
+    opacity: 0.72;
+  }
+
+  .soft .close {
+    border-color: rgba(24, 32, 18, 0.14);
+  }
+
+  .eyebrow {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: rgba(221, 237, 0, 0.7);
+    margin-bottom: 12px;
+  }
+
+  .soft .eyebrow {
+    color: rgba(74, 93, 29, 0.72);
+  }
+
+  .headline {
+    font-size: 28px;
+    line-height: 1.08;
+    font-weight: 700;
+    margin: 0 32px 10px 0;
+  }
+
+  .compact .headline {
+    font-size: 22px;
+  }
+
+  .body {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 14px;
+    line-height: 1.55;
+    margin-bottom: 8px;
+  }
+
+  .soft .body {
+    color: rgba(24, 32, 18, 0.72);
+  }
+
+  .helper {
+    color: rgba(255, 255, 255, 0.48);
+    font-size: 14px;
+    font-style: italic;
+    margin-bottom: 18px;
+  }
+
+  .soft .helper {
+    color: rgba(24, 32, 18, 0.54);
+  }
+
+  .actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .cta {
+    padding: 12px 18px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 14px;
+    border: 1px solid rgba(221, 237, 0, 0.3);
+    background: rgba(221, 237, 0, 0.95);
+    color: #15180f;
+  }
+
+  .cta.secondary {
+    background: transparent;
+    color: #ddec4d;
+  }
+
+  .soft .cta {
+    background: #243115;
+    color: #eff6d0;
+    border-color: #243115;
+  }
+
+  .soft .cta.secondary {
+    background: transparent;
+    color: #243115;
+    border-color: rgba(36, 49, 21, 0.22);
+  }
+
+  .meta {
+    position: absolute;
+    left: 26px;
+    right: 26px;
+    bottom: 24px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .stat {
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 14px;
+    min-height: 66px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.44);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 6px;
+  }
+
+  .stat-value {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.88);
+    font-weight: 600;
+  }
+</style>
+
+<h2>Homepage Welcome Modal</h2>
+<p class="subtitle">Three directions for turning the current full-width bar into a dismissible floating modal. Click the option that feels closest.</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="app-shell">
+        <div class="page-title">Home</div>
+        <div class="page-block"></div>
+        <div class="modal">
+          <div class="close">×</div>
+          <div class="eyebrow">Daily check-in</div>
+          <div class="headline">Good morning, grantgustin005! 🌅</div>
+          <div class="body">You're on a 0-day streak. Let's keep the momentum going.</div>
+          <div class="helper">Ready to start your day strong?</div>
+          <div class="actions">
+            <div class="cta">+ Log Workout</div>
+            <div class="cta secondary">Start Training</div>
+          </div>
+        </div>
+        <div class="meta">
+          <div class="stat"><div class="stat-label">Targeted muscles</div><div class="stat-value">0 / 11</div></div>
+          <div class="stat"><div class="stat-label">Weekly sets</div><div class="stat-value">0 / 60</div></div>
+          <div class="stat"><div class="stat-label">Exercises</div><div class="stat-value">0 / 20</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. Elevated overlay</h3>
+      <p>Keeps the existing dark olive language, but turns the banner into a centered modal floating above the dashboard.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="app-shell">
+        <div class="page-title">Home</div>
+        <div class="page-block"></div>
+        <div class="modal compact">
+          <div class="close">×</div>
+          <div class="headline">Greeting message, user! 🌅</div>
+          <div class="body">You're on an x-day streak. Let's keep the momentum going.</div>
+          <div class="helper">Ready to start your day strong?</div>
+          <div class="actions">
+            <div class="cta">+ Log Workout</div>
+            <div class="cta secondary">Start Training</div>
+          </div>
+        </div>
+        <div class="meta">
+          <div class="stat"><div class="stat-label">Targeted muscles</div><div class="stat-value">0 / 11</div></div>
+          <div class="stat"><div class="stat-label">Weekly sets</div><div class="stat-value">0 / 60</div></div>
+          <div class="stat"><div class="stat-label">Exercises</div><div class="stat-value">0 / 20</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. Sketch-faithful card</h3>
+      <p>Closest to your wireframe: smaller card, simpler top line, stronger sense that this is a temporary welcome prompt.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="app-shell">
+        <div class="page-title">Home</div>
+        <div class="page-block"></div>
+        <div class="modal soft">
+          <div class="close">×</div>
+          <div class="eyebrow">Welcome back</div>
+          <div class="headline">Good morning, grantgustin005! 🌅</div>
+          <div class="body">You're on a 0-day streak. Let's keep the momentum going.</div>
+          <div class="helper">Ready to start your day strong?</div>
+          <div class="actions">
+            <div class="cta">+ Log Workout</div>
+            <div class="cta secondary">Start Training</div>
+          </div>
+        </div>
+        <div class="meta">
+          <div class="stat"><div class="stat-label">Targeted muscles</div><div class="stat-value">0 / 11</div></div>
+          <div class="stat"><div class="stat-label">Weekly sets</div><div class="stat-value">0 / 60</div></div>
+          <div class="stat"><div class="stat-label">Exercises</div><div class="stat-value">0 / 20</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C. Light contrast modal</h3>
+      <p>Uses a brighter panel so the greeting feels more like a popover and less like a permanent dashboard panel.</p>
+    </div>
+  </div>
+</div>

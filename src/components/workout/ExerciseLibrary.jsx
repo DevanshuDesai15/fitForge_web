@@ -20,7 +20,7 @@ import {
     Fade
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { MdFitnessCenter } from 'react-icons/md';
+import { Dumbbell as MdFitnessCenter } from 'lucide-react';
 import { fetchExercises, fetchExercisesByBodyPart } from '../../services/localExerciseService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';

@@ -13,7 +13,7 @@ import {
     Collapse,
     CircularProgress
 } from '@mui/material';
-import { MdWarning, MdPsychology, MdTimeline, MdExpandMore, MdExpandLess } from 'react-icons/md';
+import { AlertTriangle as MdWarning, Brain as MdPsychology, Activity as MdTimeline, ChevronDown as MdExpandMore, ChevronUp as MdExpandLess } from 'lucide-react';
 import { format } from 'date-fns';
 import { PlateauWarningCard } from './shared/StyledComponents';
 

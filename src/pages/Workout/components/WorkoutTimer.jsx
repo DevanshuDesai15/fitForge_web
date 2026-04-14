@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Box, Typography, Card, CardContent, Button } from '@mui/material';
-import { MdTimer, MdPlayArrow, MdStop } from 'react-icons/md';
+import { Timer, Play as MdPlayArrow, Square as MdStop } from 'lucide-react';
 import { useWorkoutTimer } from '../../../hooks/useWorkoutTimer';
 
 const WorkoutTimer = ({ workoutStarted, onTimerUpdate }) => {
@@ -40,7 +40,7 @@ const WorkoutTimer = ({ workoutStarted, onTimerUpdate }) => {
             <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <MdTimer style={{ color: '#dded00', fontSize: '24px' }} />
+                        <Timer size={24} style={{ color: "#dded00" }} />
                         <Typography variant="h5" sx={{ color: '#dded00', fontWeight: 'bold' }}>
                             {formatTime(elapsedTime)}
                         </Typography>

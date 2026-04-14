@@ -27,19 +27,18 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
-    MdExpandMore,
-    MdMerge,
-    MdEdit,
-    MdDelete,
-    MdWarning,
-    MdCheckCircle,
-    MdClose,
-    MdSave,
-    MdCleaningServices
-} from 'react-icons/md';
-import { collection, query, where, orderBy, getDocs, updateDoc, deleteDoc, doc, writeBatch } from 'firebase/firestore';
-import { db } from '../../firebase/config';
+    ChevronDown as MdExpandMore,
+    GitMerge as MdMerge,
+    Pencil as MdEdit,
+    Trash2 as MdDelete,
+    AlertTriangle as MdWarning,
+    CheckCircle as MdCheckCircle,
+    X as MdClose,
+    Save as MdSave,
+    Eraser as MdCleaningServices
+} from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useSupabase } from '../../hooks/useSupabase';
 import { groupSimilarExercises, validateExerciseName, autoCorrectExerciseName } from '../../utils/exerciseValidator';
 
 const StyledCard = styled(Card)(() => ({
@@ -74,32 +73,42 @@ export default function ExerciseManager() {
     const [newName, setNewName] = useState('');
 
     const { currentUser } = useAuth();
+    const supabase = useSupabase();
 
     useEffect(() => {
         loadExercises();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentUser]);
 
     const loadExercises = async () => {
         setLoading(true);
         setError('');
         try {
-            const exercisesQuery = query(
-                collection(db, 'exercises'),
-                where('userId', '==', currentUser.uid),
-                orderBy('timestamp', 'desc')
-            );
-            const exerciseDocs = await getDocs(exercisesQuery);
-            const exerciseData = exerciseDocs.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
+            const { data: workouts, error: queryError } = await supabase
+                .from('workouts')
+                .select('id, exercises, timestamp, created_at')
+                .eq('user_id', currentUser.uid)
+                .order('timestamp', { ascending: false });
+
+            if (queryError) throw queryError;
+
+            const exerciseData = [];
+            for (const workout of workouts || []) {
+                for (const exercise of workout.exercises || []) {
+                    exerciseData.push({
+                        id: `${workout.id}_${exercise.name}`,
+                        workoutId: workout.id,
+                        exerciseName: exercise.name,
+                        sets: exercise.sets || [],
+                        timestamp: workout.timestamp || workout.created_at,
+                        weight: Math.max(0, ...(exercise.sets || []).map(s => parseFloat(s.weight) || 0)),
+                        reps: Math.max(0, ...(exercise.sets || []).map(s => parseInt(s.reps) || 0)),
+                    });
+                }
+            }
 
             setExercises(exerciseData);
-
-            // Group similar exercises
-            const groups = groupSimilarExercises(exerciseData, 0.75);
-            setSimilarGroups(groups);
-
+            setSimilarGroups(groupSimilarExercises(exerciseData, 0.75));
         } catch (err) {
             console.error('Error loading exercises:', err);
             setError('Error loading exercises: ' + err.message);
@@ -108,20 +117,41 @@ export default function ExerciseManager() {
         }
     };
 
+    const renameExerciseAcrossWorkouts = async (oldName, newName) => {
+        const { data: workouts, error: fetchError } = await supabase
+            .from('workouts')
+            .select('id, exercises')
+            .eq('user_id', currentUser.uid);
+
+        if (fetchError) throw fetchError;
+
+        const toUpdate = (workouts || []).filter(w =>
+            (w.exercises || []).some(ex => ex.name === oldName)
+        );
+
+        await Promise.all(toUpdate.map(workout => {
+            const updatedExercises = workout.exercises.map(ex =>
+                ex.name === oldName ? { ...ex, name: newName } : ex
+            );
+            return supabase
+                .from('workouts')
+                .update({ exercises: updatedExercises })
+                .eq('id', workout.id)
+                .eq('user_id', currentUser.uid);
+        }));
+    };
+
     const handleMergeExercises = async () => {
         if (!selectedGroup || !mergeTarget || selectedExercises.length === 0) return;
 
         setLoading(true);
         try {
-            const batch = writeBatch(db);
-
-            // Update all selected exercises to use the target name
-            selectedExercises.forEach(exercise => {
-                const exerciseRef = doc(db, 'exercises', exercise.id);
-                batch.update(exerciseRef, { exerciseName: mergeTarget });
-            });
-
-            await batch.commit();
+            const namesToMerge = [...new Set(selectedExercises.map(ex => ex.exerciseName))];
+            for (const oldName of namesToMerge) {
+                if (oldName !== mergeTarget) {
+                    await renameExerciseAcrossWorkouts(oldName, mergeTarget);
+                }
+            }
 
             // Debug: Log merged exercise details
             console.log('🔄 Merged exercises:', {
@@ -169,8 +199,7 @@ export default function ExerciseManager() {
             // Auto-correct the name
             const correctedName = autoCorrectExerciseName(newName);
 
-            const exerciseRef = doc(db, 'exercises', editingExercise.id);
-            await updateDoc(exerciseRef, { exerciseName: correctedName });
+            await renameExerciseAcrossWorkouts(editingExercise.exerciseName, correctedName);
 
             setSuccess(`Exercise renamed to "${correctedName}"`);
             setEditDialog(false);
@@ -195,7 +224,26 @@ export default function ExerciseManager() {
 
         setLoading(true);
         try {
-            await deleteDoc(doc(db, 'exercises', exercise.id));
+            const { data: workouts, error: fetchError } = await supabase
+                .from('workouts')
+                .select('id, exercises')
+                .eq('user_id', currentUser.uid);
+
+            if (fetchError) throw fetchError;
+
+            const toUpdate = (workouts || []).filter(w =>
+                (w.exercises || []).some(ex => ex.name === exercise.exerciseName)
+            );
+
+            await Promise.all(toUpdate.map(workout => {
+                const updatedExercises = workout.exercises.filter(ex => ex.name !== exercise.exerciseName);
+                return supabase
+                    .from('workouts')
+                    .update({ exercises: updatedExercises })
+                    .eq('id', workout.id)
+                    .eq('user_id', currentUser.uid);
+            }));
+
             setSuccess(`Exercise "${exercise.exerciseName}" deleted successfully`);
             await loadExercises();
         } catch (err) {
@@ -213,25 +261,20 @@ export default function ExerciseManager() {
 
         setLoading(true);
         try {
-            const batch = writeBatch(db);
             let mergedCount = 0;
 
-            // Auto-merge exercises with very high similarity (>90%)
-            similarGroups.forEach(group => {
+            for (const group of similarGroups) {
                 const highSimilarity = group.similar.filter(s => s.similarity > 0.9);
                 if (highSimilarity.length > 0) {
                     const targetName = group.main.exerciseName;
-
-                    highSimilarity.forEach(similar => {
-                        const exerciseRef = doc(db, 'exercises', similar.exercise.id);
-                        batch.update(exerciseRef, { exerciseName: targetName });
+                    for (const similar of highSimilarity) {
+                        await renameExerciseAcrossWorkouts(similar.exercise.exerciseName, targetName);
                         mergedCount++;
-                    });
+                    }
                 }
-            });
+            }
 
             if (mergedCount > 0) {
-                await batch.commit();
                 setSuccess(`Auto-cleanup completed! Merged ${mergedCount} exercises.`);
                 await loadExercises();
             } else {

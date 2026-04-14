@@ -8,8 +8,9 @@ const AICoachTab = ({ exercise }) => {
     const { loading, analysis, error, getAIAnalysis } = useAICoach();
 
     const completedSets = exercise.sets?.filter(set => set.completed).length || 0;
+    const analyzableSets = exercise.sets?.filter(set => set.completed && set.reps) || [];
     const targetSets = exercise.targetSets || 0;
-    const isUnlocked = completedSets >= targetSets && targetSets > 0;
+    const isUnlocked = analyzableSets.length >= targetSets && targetSets > 0;
 
     // Calculate average weight from completed sets
     const avgWeight = exercise.sets
