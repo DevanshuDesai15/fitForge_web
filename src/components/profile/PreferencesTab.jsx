@@ -1,5 +1,6 @@
-import { Box, Card, CardContent, Typography, Grid, Switch, Button, LinearProgress, styled, Select, MenuItem, FormControl } from '@mui/material';
+import { Box, Card, CardContent, Typography, Grid, Button, LinearProgress, styled, Select, MenuItem, FormControl } from '@mui/material';
 import { Languages, Palette, Ruler, RefreshCw, HardDrive, Download, Trash2 } from 'lucide-react';
+import FitForgeSwitch from '../common/FitForgeSwitch';
 
 const PreferenceCard = styled(Card)(({ theme }) => ({
   backgroundColor: '#282828',
@@ -51,15 +52,6 @@ const PreferenceValue = styled(Typography)(({ theme }) => ({
   fontSize: '14px',
   color: theme.palette.text.secondary,
   marginRight: '16px',
-}));
-
-const StyledSwitch = styled(Switch)(({ theme }) => ({
-  '& .MuiSwitch-switchBase.Mui-checked': {
-    color: theme.palette.primary.main,
-  },
-  '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-    backgroundColor: theme.palette.primary.main,
-  },
 }));
 
 const StyledSelect = styled(Select)(({ theme }) => ({
@@ -216,9 +208,10 @@ const PreferencesTab = ({
                     <PreferenceSubtitle>Automatically sync workout data</PreferenceSubtitle>
                   </PreferenceInfo>
                 </PreferenceLabel>
-                <StyledSwitch
+                <FitForgeSwitch
                   checked={preferences?.autoSync !== false}
                   onChange={(e) => onPreferenceChange('autoSync', e.target.checked)}
+                  inputProps={{ 'aria-label': 'Auto-sync' }}
                 />
               </PreferenceRow>
             </Box>
@@ -240,9 +233,10 @@ const PreferencesTab = ({
                   <PreferenceTitle>Workout Reminders</PreferenceTitle>
                   <PreferenceSubtitle>Daily workout notifications</PreferenceSubtitle>
                 </PreferenceInfo>
-                <StyledSwitch
+                <FitForgeSwitch
                   checked={notifications?.workoutReminders !== false}
                   onChange={(e) => onNotificationChange('workoutReminders', e.target.checked)}
+                  inputProps={{ 'aria-label': 'Workout Reminders' }}
                 />
               </PreferenceRow>
 
@@ -251,9 +245,10 @@ const PreferencesTab = ({
                   <PreferenceTitle>Progress Updates</PreferenceTitle>
                   <PreferenceSubtitle>Weekly progress summaries</PreferenceSubtitle>
                 </PreferenceInfo>
-                <StyledSwitch
+                <FitForgeSwitch
                   checked={notifications?.progressUpdates !== false}
                   onChange={(e) => onNotificationChange('progressUpdates', e.target.checked)}
+                  inputProps={{ 'aria-label': 'Progress Updates' }}
                 />
               </PreferenceRow>
 
@@ -262,9 +257,10 @@ const PreferencesTab = ({
                   <PreferenceTitle>Achievements</PreferenceTitle>
                   <PreferenceSubtitle>Milestone celebrations</PreferenceSubtitle>
                 </PreferenceInfo>
-                <StyledSwitch
+                <FitForgeSwitch
                   checked={notifications?.achievements !== false}
                   onChange={(e) => onNotificationChange('achievements', e.target.checked)}
+                  inputProps={{ 'aria-label': 'Achievements' }}
                 />
               </PreferenceRow>
 
@@ -273,9 +269,10 @@ const PreferencesTab = ({
                   <PreferenceTitle>AI Recommendations</PreferenceTitle>
                   <PreferenceSubtitle>Personalized workout suggestions</PreferenceSubtitle>
                 </PreferenceInfo>
-                <StyledSwitch
+                <FitForgeSwitch
                   checked={notifications?.aiRecommendations !== false}
                   onChange={(e) => onNotificationChange('aiRecommendations', e.target.checked)}
+                  inputProps={{ 'aria-label': 'AI Recommendations' }}
                 />
               </PreferenceRow>
             </Box>

@@ -21,6 +21,12 @@ import ProfileTab from '../../components/profile/ProfileTab';
 import PreferencesTab from '../../components/profile/PreferencesTab';
 import AccountTab from '../../components/profile/AccountTab';
 import EditProfileModal from '../../components/profile/EditProfileModal';
+import {
+    buildProfileUpdatePayload,
+    getProfileNotifications,
+    getProfilePreferences,
+    mapProfileToUserData,
+} from './profileData';
 
 const PageHeader = styled(Box)(() => ({
     marginBottom: '32px',
@@ -77,38 +83,9 @@ export default function Profile() {
     const [success, setSuccess] = useState('');
 
     // Derived states
-    const userData = {
-        username: profile?.username || '',
-        fullName: profile?.full_name || '',
-        email: currentUser?.email || '',
-        age: profile?.age || '',
-        weight: profile?.weight || '',
-        weightUnit: profile?.weight_unit || 'lbs',
-        height: profile?.height || '',
-        heightUnit: profile?.height_unit || 'ft',
-        gender: profile?.gender || 'male',
-        bio: profile?.bio || '',
-        fitnessGoal: profile?.fitness_goal || '',
-        preferredWorkoutTime: profile?.preferred_workout_time || '',
-        experienceLevel: profile?.experience_level || '',
-        workoutFrequency: profile?.workout_frequency || '',
-        targetWeight: profile?.target_weight || '',
-        createdAt: profile?.created_at || null,
-    };
-
-    const preferences = profile?.preferences || {
-        units: 'imperial',
-        theme: 'dark',
-        language: 'english',
-        autoSync: true,
-    };
-
-    const notifications = profile?.notifications || {
-        workoutReminders: true,
-        progressUpdates: true,
-        achievements: true,
-        aiRecommendations: true,
-    };
+    const userData = mapProfileToUserData({ profile, currentUser });
+    const preferences = getProfilePreferences(profile);
+    const notifications = getProfileNotifications(profile);
 
     const weeklyStats = dashboardData?.weeklyStats;
     const stats = {
@@ -137,22 +114,11 @@ export default function Profile() {
         setSuccess('');
 
         try {
-            // Map modal field names to database field names (snake_case for Supabase)
-            const profileUpdate = {
-                username: formData.username || userData.username,
-                full_name: formData.fullName || `${formData.firstName} ${formData.lastName}`.trim() || userData.fullName,
-                age: formData.age || userData.age,
-                weight: formData.weight || userData.weight,
-                height: formData.height || userData.height,
-                height_unit: formData.heightUnit || userData.heightUnit,
-                bio: formData.bio || userData.bio,
-                fitness_goal: formData.primaryGoal || formData.fitnessGoal || userData.fitnessGoal,
-                preferred_workout_time: formData.preferredWorkoutTime || userData.preferredWorkoutTime,
-                experience_level: formData.experienceLevel || userData.experienceLevel,
-                workout_frequency: formData.workoutsPerWeek || formData.workoutFrequency || userData.workoutFrequency,
-                target_weight: formData.targetWeight || userData.targetWeight,
-                notifications: formData.notifications || notifications,
-            };
+            const profileUpdate = buildProfileUpdatePayload({
+                formData,
+                currentUser,
+                profile,
+            });
 
             await updateProfile(profileUpdate);
 
@@ -192,9 +158,13 @@ export default function Profile() {
 
     const handleNotificationChange = async (key, value) => {
         const newNotifications = { ...notifications, [key]: value };
+        const newPreferences = {
+            ...preferences,
+            notifications: newNotifications,
+        };
 
         try {
-            await updateProfile({ notifications: newNotifications });
+            await updateProfile({ preferences: newPreferences });
         } catch (error) {
             console.error('Error saving notification preference:', error);
         }

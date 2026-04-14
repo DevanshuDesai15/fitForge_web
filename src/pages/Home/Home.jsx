@@ -283,7 +283,7 @@ export default function Home() {
         };
     }, [isWelcomeModalOpen]);
 
-    const displayName = profile?.username || profile?.full_name || currentUser?.email?.split('@')[0] || 'Member';
+    const displayName = profile?.display_name || currentUser?.email?.split('@')[0] || 'Member';
 
     const isLoading = statsLoading || profileLoading;
 
