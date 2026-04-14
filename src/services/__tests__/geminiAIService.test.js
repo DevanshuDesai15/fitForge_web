@@ -22,18 +22,27 @@ vi.mock('../huggingFaceService', () => ({
   },
 }));
 
-vi.mock('../config/geminiConfig', () => ({
-  default: {
-    apiKey: 'hf_test_key',
-    useGeminiAI: true,
-    emergencyDisable: false,
-    model: 'test-model',
-    temperature: 0.4,
-    maxTokens: 1500,
-    maxRetries: 0,
-    requestTimeout: 20000,
-  },
-}));
+const enabledConfig = {
+  apiKey: 'hf_test_key',
+  useGeminiAI: true,
+  emergencyDisable: false,
+  model: 'test-model',
+  temperature: 0.4,
+  maxTokens: 1500,
+  maxRetries: 0,
+  requestTimeout: 20000,
+};
+
+const providerMock = {
+  generateProgressionSuggestions: mockGenerateProgressionSuggestions,
+  generateBatchProgressionSuggestions: mockGenerateBatchProgressionSuggestions,
+  generatePlateauInterventions: mockGeneratePlateauInterventions,
+  generateWorkoutRecommendations: mockGenerateWorkoutRecommendations,
+  generateWorkoutAnalysis: mockGenerateWorkoutAnalysis,
+  isAvailable: mockIsAvailable,
+  getUsageStats: mockGetUsageStats,
+  cleanup: mockCleanup,
+};
 
 describe('geminiAIService compatibility facade', () => {
   beforeEach(() => {
@@ -51,7 +60,7 @@ describe('geminiAIService compatibility facade', () => {
     mockGenerateProgressionSuggestions.mockResolvedValue(aiResult);
 
     const { GeminiAIService } = await import('../geminiAIService');
-    const service = new GeminiAIService();
+    const service = new GeminiAIService(enabledConfig, providerMock);
 
     const analysisData = {
       exerciseId: 'bench-press',
@@ -83,7 +92,7 @@ describe('geminiAIService compatibility facade', () => {
     );
 
     const { GeminiAIService } = await import('../geminiAIService');
-    const service = new GeminiAIService();
+    const service = new GeminiAIService(enabledConfig, providerMock);
 
     const analysesData = [
       {
@@ -117,7 +126,8 @@ describe('geminiAIService compatibility facade', () => {
     };
     mockGenerateWorkoutAnalysis.mockResolvedValue(analysis);
 
-    const { generateWorkoutAnalysis } = await import('../geminiAIService');
+    const { GeminiAIService } = await import('../geminiAIService');
+    const service = new GeminiAIService(enabledConfig, providerMock);
 
     const exercise = {
       name: 'Incline Dumbbell Press',
@@ -129,7 +139,7 @@ describe('geminiAIService compatibility facade', () => {
       { reps: 10, weight: 105, completed: true },
     ];
 
-    await expect(generateWorkoutAnalysis(exercise, completedSets)).resolves.toEqual(
+    await expect(service.generateWorkoutAnalysis(exercise, completedSets)).resolves.toEqual(
       analysis
     );
 
