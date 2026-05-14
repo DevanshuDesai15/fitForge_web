@@ -34,3 +34,7 @@ docs/
 .kiro
 
 *.md
+
+.codex/
+.claude/
+.kiro/

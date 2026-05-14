@@ -6,22 +6,18 @@ import {
     Grid2,
     Card,
     CardContent,
-    Avatar,
-    Chip,
     useTheme,
-    useMediaQuery,
-    CircularProgress
+    useMediaQuery
 } from '@mui/material';
+import { useRef } from 'react';
 import { styled } from '@mui/material/styles';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
 import {
-    Dumbbell as MdFitnessCenter,
-    LineChart as MdShowChart,
     History as MdHistory,
+    LineChart as MdShowChart,
     TrendingUp as MdTrendingUp,
-    Smartphone as MdPhoneAndroid,
-    Cloud as MdCloud,
-    ShieldCheck as MdSecurity,
-    Zap as MdSpeed,
     ArrowRight as MdArrowForward,
     CheckCircle as MdCheckCircle,
     Trophy as MdEmojiEvents
@@ -31,6 +27,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import appLogo from '../../assets/appLogo.svg';
 import appScreenshot from '../../assets/appScreenshot.png';
 
+gsap.registerPlugin(ScrollTrigger, useGSAP);
+
 const HeroSection = styled(Box)(({ theme }) => ({
     minHeight: '100vh',
     background: '#121212',
@@ -38,35 +36,31 @@ const HeroSection = styled(Box)(({ theme }) => ({
     overflow: 'hidden',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
     '&::before': {
         content: '""',
         position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'transparent',
+        inset: 0,
+        background: `
+            radial-gradient(circle at 18% 18%, ${theme.palette.primary.main}16 0%, transparent 34%),
+            radial-gradient(circle at 84% 22%, ${theme.palette.info.main}14 0%, transparent 32%),
+            linear-gradient(180deg, rgba(255,255,255,0.03), transparent 42%)
+        `,
         pointerEvents: 'none',
     },
     '&::after': {
         content: '""',
         position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
+        inset: 0,
         background: `
-            conic-gradient(from 0deg at 50% 50%, 
-                transparent 0deg, 
-                ${theme.palette.primary.main}10 60deg, 
-                transparent 120deg, 
-                ${theme.palette.secondary.main}10 180deg, 
-                transparent 240deg, 
-                ${theme.palette.info.main}10 300deg, 
-                transparent 360deg)
+            conic-gradient(from 0deg at 50% 50%,
+                transparent 0deg,
+                ${theme.palette.primary.main}08 70deg,
+                transparent 140deg,
+                ${theme.palette.secondary.main}08 210deg,
+                transparent 280deg,
+                ${theme.palette.info.main}08 360deg)
         `,
-        animation: 'rotate 20s linear infinite',
+        animation: 'rotate 24s linear infinite',
         pointerEvents: 'none',
     },
     '@keyframes rotate': {
@@ -75,17 +69,16 @@ const HeroSection = styled(Box)(({ theme }) => ({
     }
 }));
 
-// Phone mockup to showcase the timer in the hero section
 const PhoneMock = styled('div')(({ theme }) => ({
     width: 320,
-    maxWidth: '80vw',
-    height: 720,
+    maxWidth: '100%',
+    height: 680,
     borderRadius: 36,
     padding: 14,
     background:
         `radial-gradient(1200px 600px at -20% -10%, ${theme.palette.primary.main}30, transparent 60%),
          radial-gradient(800px 400px at 120% 110%, ${theme.palette.secondary.main}25, transparent 60%),
-         linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))`,
+         linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02))`,
     border: `1px solid ${theme.palette.border.strong}`,
     boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5), inset 0 0 0 2px rgba(255,255,255,0.05)',
     position: 'relative',
@@ -96,32 +89,27 @@ const PhoneMock = styled('div')(({ theme }) => ({
 }));
 
 const FeatureCard = styled(Card)(({ theme }) => ({
-    background: 'linear-gradient(145deg, rgba(21, 27, 38, 0.9) 0%, rgba(26, 34, 48, 0.85) 100%)',
+    background: 'linear-gradient(145deg, rgba(21, 27, 38, 0.92) 0%, rgba(26, 34, 48, 0.88) 100%)',
     backdropFilter: 'blur(20px)',
     borderRadius: '24px',
     border: `1px solid ${theme.palette.border.main}`,
-    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+    transition: 'transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease',
     height: '100%',
     position: 'relative',
     overflow: 'hidden',
+    boxShadow: '0 18px 45px rgba(0, 0, 0, 0.22)',
     '&::before': {
         content: '""',
         position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: '2px',
-        background: 'linear-gradient(90deg, transparent, rgba(221, 237, 0, 0.5), transparent)',
-        opacity: 0,
-        transition: 'opacity 0.3s ease',
+        inset: '0 0 auto 0',
+        height: '1px',
+        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+        opacity: 0.7
     },
     '&:hover': {
-        transform: 'translateY(-12px) scale(1.02)',
-        boxShadow: `0 25px 50px rgba(0, 0, 0, 0.35), 0 0 0 1px ${theme.palette.primary.main}30`,
-        border: `1px solid ${theme.palette.primary.main}40`,
-        '&::before': {
-            opacity: 1,
-        }
+        transform: 'translateY(-4px)',
+        borderColor: theme.palette.border.strong,
+        boxShadow: '0 24px 54px rgba(0, 0, 0, 0.28)'
     }
 }));
 
@@ -129,13 +117,13 @@ const GlowingButton = styled(Button)(({ theme }) => ({
     background: theme.palette.background.gradient.button,
     color: theme.palette.primary.contrastText,
     fontWeight: 'bold',
-    fontSize: '1.2rem',
-    padding: '16px 40px',
-    borderRadius: '50px',
+    fontSize: '1.1rem',
+    padding: '16px 36px',
+    borderRadius: '999px',
     textTransform: 'none',
     position: 'relative',
     overflow: 'hidden',
-    boxShadow: `0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08)`,
+    boxShadow: '0 12px 36px rgba(0, 0, 0, 0.28)',
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     '&::before': {
         content: '""',
@@ -144,77 +132,94 @@ const GlowingButton = styled(Button)(({ theme }) => ({
         left: '-100%',
         width: '100%',
         height: '100%',
-        background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)',
+        background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent)',
         transition: 'left 0.6s ease',
     },
     '&:hover': {
         background: theme.palette.background.gradient.buttonHover,
-        transform: 'translateY(-3px) scale(1.05)',
-        boxShadow: `0 15px 45px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1)`,
+        transform: 'translateY(-3px)',
+        boxShadow: '0 18px 42px rgba(0, 0, 0, 0.34)',
         '&::before': {
             left: '100%',
         }
-    },
-    '&:active': {
-        transform: 'translateY(-1px) scale(1.02)',
     }
 }));
-
-// StatsCard removed - not needed anymore
 
 export default function LandingPage() {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
     const { currentUser } = useAuth();
-    // No animated stats needed anymore
+    const rootRef = useRef(null);
 
-    const features = [
+    const transformationPanels = [
         {
-            icon: MdTrendingUp,
-            title: 'Progressive Overload Tracking',
-            description: 'Automatically track weight increases and get suggestions for when to progress',
-            color: theme.palette.primary.main
-        },
-        {
-            icon: MdEmojiEvents,
-            title: 'Auto PR Detection',
-            description: 'Celebrate personal records automatically - never miss a strength milestone',
-            color: '#ffc107'
-        },
-        {
-            icon: MdShowChart,
-            title: 'Smart Analytics',
-            description: 'Visual progress charts and insights that show your strength gains over time',
-            color: '#9c27b0'
-        },
-        {
-            icon: MdFitnessCenter,
-            title: '800+ Exercises',
-            description: 'Comprehensive exercise library with detailed instructions for proper form',
-            color: '#ff9800'
-        },
-        {
+            testId: 'landing-transformation-panel-baseline',
+            storyKey: 'baseline',
             icon: MdHistory,
-            title: 'Intelligent History',
-            description: 'Complete workout logs with progression insights and performance comparisons',
-            color: '#00bcd4'
+            eyebrow: 'Baseline',
+            title: 'See where effort turns into uncertainty',
+            description:
+                'You trained hard, but your notes still leave you wondering if your body is actually adapting.',
+            accent: theme.palette.secondary.main
         },
         {
-            icon: MdPhoneAndroid,
-            title: 'Better Than Notes',
-            description: 'Purpose-built for gym use - no more messy notes or forgotten weights',
-            color: '#4caf50'
+            testId: 'landing-transformation-panel-analysis',
+            storyKey: 'analysis',
+            icon: MdShowChart,
+            eyebrow: 'Analysis',
+            title: 'Let the coach read your progress signal',
+            description:
+                'FitForge interprets consistency, output, and recovery patterns so your next decision comes from evidence.',
+            accent: theme.palette.info.main
+        },
+        {
+            testId: 'landing-transformation-panel-momentum',
+            storyKey: 'momentum',
+            icon: MdTrendingUp,
+            eyebrow: 'Momentum',
+            title: 'Build visible transformation momentum',
+            description:
+                'Every session compounds into a clearer read on what is working and how to keep pushing forward.',
+            accent: theme.palette.primary.main
         }
     ];
 
-    const benefits = [
-        'Get stronger faster with progressive overload tracking',
-        'Never forget your previous weights again',
-        'Automatic personal record detection and celebration',
-        'Smart suggestions for when to increase weights',
-        'Visual progress charts that motivate you',
-        'Purpose-built for serious lifters'
+    const trustSignals = [
+        'Real session timelines',
+        'Progress snapshots',
+        'Coaching cues grounded in logged effort'
+    ];
+
+    const premiumCapabilities = [
+        {
+            title: 'Adaptive progression',
+            description: 'Weekly recommendations tighten volume, intensity, and exercise focus around the signal your body is actually sending.',
+            accent: theme.palette.primary.main
+        },
+        {
+            title: 'Recovery-aware coaching',
+            description: 'Momentum reads account for recent output and fatigue patterns so the next push feels deliberate instead of random.',
+            accent: theme.palette.info.main
+        },
+        {
+            title: 'Transformation proof',
+            description: 'Every phase keeps a visible trail of what changed, which blocks are working, and where momentum is accelerating.',
+            accent: theme.palette.secondary.main
+        }
+    ];
+
+    const proofMetrics = [
+        {
+            // Keep this synced with the current coached-session export or analytics snapshot.
+            // If the metric changes, update the copy here and in any launch/reporting materials.
+            value: '42K coached workouts',
+            detail: 'Logged sessions feeding live momentum reads across strength, volume, and consistency.'
+        },
+        {
+            value: 'Live progress timelines',
+            detail: 'Session history, performance context, and coach takeaways stitched into one clear signal.'
+        }
     ];
 
     const handleGetStarted = () => {
@@ -229,31 +234,270 @@ export default function LandingPage() {
         navigate('/signin');
     };
 
+    useGSAP(() => {
+        const mm = gsap.matchMedia();
+        const desktopQuery = `(min-width: ${theme.breakpoints.values.md}px)`;
+
+        mm.add('(prefers-reduced-motion: reduce)', () => {
+            gsap.set('[data-animate]', {
+                autoAlpha: 1,
+                clearProps: 'opacity,visibility,transform'
+            });
+        });
+
+        mm.add('(prefers-reduced-motion: no-preference)', () => {
+            const heroTimeline = gsap.timeline({
+                defaults: {
+                    duration: 0.75,
+                    ease: 'power2.out'
+                }
+            });
+
+            heroTimeline
+                .from('[data-animate="nav"]', { autoAlpha: 0, y: -18 })
+                .from('[data-animate="hero-badge"]', { autoAlpha: 0, y: 18 }, '-=0.45')
+                .from('[data-animate="hero-title"]', { autoAlpha: 0, y: 24 }, '-=0.4')
+                .from('[data-animate="hero-copy"]', { autoAlpha: 0, y: 20 }, '-=0.45')
+                .from('[data-animate="hero-cta"]', { autoAlpha: 0, y: 18 }, '-=0.4')
+                .from('[data-animate="hero-proof"]', {
+                    autoAlpha: 0,
+                    y: 14,
+                    stagger: 0.08
+                }, '-=0.35')
+                .from('[data-animate="hero-visual"]', {
+                    autoAlpha: 0,
+                    y: 28,
+                    scale: 0.97
+                }, '-=0.6')
+                .from('[data-animate="hero-floating-card"]', {
+                    autoAlpha: 0,
+                    y: 16,
+                    scale: 0.98,
+                    stagger: 0.08
+                }, '-=0.45');
+
+            gsap.to('[data-animate="hero-visual"]', {
+                y: -10,
+                rotation: -1,
+                duration: 4.8,
+                ease: 'sine.inOut',
+                repeat: -1,
+                yoyo: true
+            });
+
+            gsap.to('[data-animate-variant="hero-floating-card-top"]', {
+                y: -12,
+                duration: 4.2,
+                ease: 'sine.inOut',
+                repeat: -1,
+                yoyo: true
+            });
+
+            gsap.to('[data-animate-variant="hero-floating-card-bottom"]', {
+                y: 10,
+                duration: 5,
+                ease: 'sine.inOut',
+                repeat: -1,
+                yoyo: true
+            });
+
+            [
+                '[data-animate="problem-section"]',
+                '[data-animate="trust-section"]'
+            ].forEach((selector) => {
+                gsap.fromTo(
+                    selector,
+                    { autoAlpha: 0, y: isMobile ? 18 : 28 },
+                    {
+                        autoAlpha: 1,
+                        y: 0,
+                        duration: 0.8,
+                        ease: 'power2.out',
+                        scrollTrigger: {
+                            trigger: selector,
+                            start: 'top 82%',
+                            once: true
+                        }
+                    }
+                );
+            });
+
+            if (isMobile) {
+                gsap.fromTo(
+                    '[data-animate="transformation-section"]',
+                    { autoAlpha: 0, y: 18 },
+                    {
+                        autoAlpha: 1,
+                        y: 0,
+                        duration: 0.8,
+                        ease: 'power2.out',
+                        scrollTrigger: {
+                            trigger: '[data-animate="transformation-section"]',
+                            start: 'top 82%',
+                            once: true
+                        }
+                    }
+                );
+
+                gsap.fromTo(
+                    '[data-animate="transformation-panel"]',
+                    { autoAlpha: 0, y: 18 },
+                    {
+                        autoAlpha: 1,
+                        y: 0,
+                        duration: 0.72,
+                        ease: 'power2.out',
+                        stagger: 0.12,
+                        scrollTrigger: {
+                            trigger: '[data-animate="transformation-grid"]',
+                            start: 'top 78%',
+                            once: true
+                        }
+                    }
+                );
+
+                gsap.fromTo(
+                    '[data-animate="transformation-capability"]',
+                    { autoAlpha: 0, y: 18 },
+                    {
+                        autoAlpha: 1,
+                        y: 0,
+                        duration: 0.65,
+                        ease: 'power2.out',
+                        stagger: 0.1,
+                        scrollTrigger: {
+                            trigger: '[data-animate="transformation-capability-rail"]',
+                            start: 'top 82%',
+                            once: true
+                        }
+                    }
+                );
+            }
+
+            mm.add(desktopQuery, () => {
+                gsap.set('[data-animate="transformation-section"]', { autoAlpha: 1 });
+                gsap.set('[data-animate="transformation-intro"]', { autoAlpha: 1, y: 0 });
+                gsap.set('[data-animate="transformation-grid"]', { y: 0 });
+                gsap.set('[data-animate="transformation-capability-rail"]', { y: 0 });
+                gsap.set('[data-animate="transformation-panel"]', {
+                    autoAlpha: 0.3,
+                    y: 36,
+                    scale: 0.94
+                });
+                gsap.set('[data-animate="transformation-capability"]', {
+                    autoAlpha: 0.35,
+                    y: 24
+                });
+                gsap.set('[data-animate-variant="transformation-panel-baseline"]', {
+                    autoAlpha: 0.96,
+                    y: 0,
+                    scale: 1,
+                    xPercent: 0
+                });
+                gsap.set('[data-animate-variant="transformation-panel-analysis"]', {
+                    xPercent: 0
+                });
+                gsap.set('[data-animate-variant="transformation-panel-momentum"]', {
+                    xPercent: 0
+                });
+
+                const transformationTimeline = gsap.timeline({
+                    defaults: {
+                        duration: 0.42,
+                        ease: 'power2.out'
+                    },
+                    scrollTrigger: {
+                        trigger: '[data-animate="transformation-section"]',
+                        start: 'top top+=96',
+                        end: '+=150%',
+                        pin: true,
+                        scrub: true,
+                        anticipatePin: 1
+                    }
+                });
+
+                transformationTimeline
+                    .to('[data-animate="transformation-intro"]', {
+                        y: -30,
+                        autoAlpha: 0.45
+                    }, 0.08)
+                    .to('[data-animate-variant="transformation-panel-baseline"]', {
+                        autoAlpha: 0.58,
+                        xPercent: -8,
+                        y: 10,
+                        scale: 0.96
+                    }, 0.52)
+                    .to('[data-animate-variant="transformation-panel-analysis"]', {
+                        autoAlpha: 1,
+                        y: 0,
+                        scale: 1
+                    }, 0.52)
+                    .to('[data-animate="transformation-grid"]', {
+                        y: -10
+                    }, 0.52)
+                    .to('[data-animate-variant="transformation-panel-baseline"]', {
+                        autoAlpha: 0.24,
+                        xPercent: -14,
+                        y: 20,
+                        scale: 0.92
+                    }, 0.98)
+                    .to('[data-animate-variant="transformation-panel-analysis"]', {
+                        autoAlpha: 0.62,
+                        xPercent: -6,
+                        y: 10,
+                        scale: 0.96
+                    }, 0.98)
+                    .to('[data-animate-variant="transformation-panel-momentum"]', {
+                        autoAlpha: 1,
+                        y: 0,
+                        scale: 1
+                    }, 0.98)
+                    .to('[data-animate="transformation-capability"]', {
+                        autoAlpha: 1,
+                        y: 0,
+                        stagger: 0.1,
+                        duration: 0.28
+                    }, 1.24)
+                    .to('[data-animate="transformation-capability-rail"]', {
+                        y: -8,
+                        duration: 0.28
+                    }, 1.24);
+            });
+        });
+
+        return () => {
+            mm.revert();
+        };
+    }, { scope: rootRef, dependencies: [isMobile] });
+
     return (
-        <Box sx={{ minHeight: '100vh', backgroundColor: theme.palette.background.default }}>
-            {/* Hero Section */}
-            <HeroSection>
+        <Box
+            ref={rootRef}
+            data-testid="landing-root"
+            sx={{ minHeight: '100vh', backgroundColor: theme.palette.background.default }}
+        >
+            <HeroSection data-testid="landing-hero-section">
                 <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
-                    {/* Navigation */}
-                    <Box sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        py: 3
-                    }}>
+                    <Box
+                        data-animate="nav"
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            py: 3,
+                            gap: 2
+                        }}
+                    >
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                             <Box
                                 component="img"
                                 src={appLogo}
                                 alt="FitForge Logo"
-                                sx={{
-                                    height: 48,
-                                    width: 'auto'
-                                }}
+                                sx={{ height: 48, width: 'auto' }}
                             />
                         </Box>
 
-                        <Box sx={{ display: 'flex', gap: 2 }}>
+                        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                             {currentUser ? (
                                 <Button
                                     variant="outlined"
@@ -293,176 +537,164 @@ export default function LandingPage() {
                         </Box>
                     </Box>
 
-                    {/* Hero Content */}
-                    <Grid2 container spacing={4} sx={{ alignItems: 'center', py: { xs: 4, md: 8 } }}>
+                    <Grid2 container spacing={{ xs: 5, md: 6 }} sx={{ alignItems: 'center', py: { xs: 4, md: 8 } }}>
                         <Grid2 size={{ xs: 12, md: 7 }}>
                             <Box sx={{ position: 'relative', zIndex: 2 }}>
-                                <Box sx={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: 1,
-                                    background: 'linear-gradient(135deg, rgba(221, 237, 0, 0.2) 0%, rgba(227, 239, 63, 0.1) 100%)',
-                                    padding: '8px 20px',
-                                    borderRadius: '25px',
-                                    border: '1px solid rgba(221, 237, 0, 0.4)',
-                                    mb: 3,
-                                    backdropFilter: 'blur(10px)',
-                                    boxShadow: '0 8px 32px rgba(221, 237, 0, 0.2)'
-                                }}>
-                                    <Typography sx={{ fontSize: '1.2rem' }}>💪</Typography>
-                                    <Typography sx={{
-                                        color: theme.palette.primary.main,
-                                        fontWeight: 'bold',
-                                        fontSize: '0.95rem'
-                                    }}>
-                                        Smart Progressive Overload Tracking
+                                <Box
+                                    data-animate="hero-badge"
+                                    sx={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: 1,
+                                        background: 'linear-gradient(135deg, rgba(221, 237, 0, 0.18) 0%, rgba(227, 239, 63, 0.08) 100%)',
+                                        padding: '8px 18px',
+                                        borderRadius: '999px',
+                                        border: '1px solid rgba(221, 237, 0, 0.32)',
+                                        mb: 3
+                                    }}
+                                >
+                                    <Typography sx={{ color: theme.palette.primary.main, fontWeight: 700, fontSize: '0.9rem' }}>
+                                        Premium AI coaching for measurable change
                                     </Typography>
                                 </Box>
 
                                 <Typography
                                     variant={isMobile ? 'h2' : 'h1'}
+                                    data-animate="hero-title"
                                     sx={{
                                         fontWeight: 800,
                                         mb: 3,
-                                        background: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 40%, ${theme.palette.secondary.main} 100%)`,
-                                        backgroundSize: '200% 200%',
+                                        lineHeight: 1.02,
+                                        letterSpacing: { xs: '-0.6px', md: '-1.6px' },
+                                        maxWidth: 760,
+                                        background: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 42%, ${theme.palette.info.light || theme.palette.info.main} 100%)`,
                                         backgroundClip: 'text',
                                         WebkitBackgroundClip: 'text',
-                                        WebkitTextFillColor: 'transparent',
-                                        lineHeight: 1.05,
-                                        letterSpacing: { xs: '-0.5px', md: '-1.5px' },
-                                        animation: 'gradientShift 8s ease-in-out infinite',
-                                        '@keyframes gradientShift': {
-                                            '0%, 100%': { backgroundPosition: '0% 50%' },
-                                            '50%': { backgroundPosition: '100% 50%' }
-                                        }
+                                        WebkitTextFillColor: 'transparent'
                                     }}
                                 >
-                                    Track Your Strength Progress Like Never Before! 🏋️‍♂️
+                                    Transform your body with an AI coach that tracks momentum
                                 </Typography>
 
                                 <Typography
                                     variant={isMobile ? 'h6' : 'h5'}
+                                    data-animate="hero-copy"
                                     sx={{
                                         color: theme.palette.text.primary,
                                         mb: 4,
-                                        lineHeight: 1.7,
-                                        maxWidth: 720,
-                                        fontWeight: 500,
-                                        textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)'
+                                        lineHeight: 1.6,
+                                        maxWidth: 700,
+                                        fontWeight: 500
                                     }}
                                 >
-                                    Ditch the Notes app! Track your <span style={{
-                                        color: theme.palette.primary.main,
-                                        fontWeight: 'bold',
-                                        textShadow: `0 0 10px ${theme.palette.primary.main}50`
-                                    }}>progressive overload intelligently</span> — get personalized suggestions for when to increase weights, celebrate PRs automatically, and build muscle more effectively than ever.
+                                    Stop guessing. Start reading your body's progress signal.
                                 </Typography>
 
-                                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 4 }}>
+                                <Box
+                                    data-animate="hero-cta"
+                                    sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', mb: 4 }}
+                                >
                                     <GlowingButton size="large" endIcon={<MdArrowForward />} onClick={handleGetStarted}>
-                                        {currentUser ? 'Open FitForge' : 'Start Your Journey'}
+                                        {currentUser ? 'Open FitForge' : 'Start Transforming'}
                                     </GlowingButton>
-                                    <Button
-                                        variant="text"
-                                        onClick={handleSignIn}
-                                        sx={{ color: theme.palette.text.secondary }}
-                                    >
-                                        Already have an account? Sign In
-                                    </Button>
+                                    {!currentUser && (
+                                        <Button
+                                            variant="text"
+                                            onClick={handleSignIn}
+                                            sx={{ color: theme.palette.text.secondary }}
+                                        >
+                                            Already training? Sign In
+                                        </Button>
+                                    )}
                                 </Box>
 
-                                {/* Key Benefits */}
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
                                     {[
-                                        { icon: '📈', text: 'Progressive Overload' },
-                                        { icon: '🏆', text: 'Auto PR Detection' },
-                                        { icon: '💡', text: 'Smart Suggestions' },
-                                        { icon: '📱', text: 'Better Than Notes' }
-                                    ].map((item, index) => (
-                                        <Box key={index} sx={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: 1,
-                                            background: `${theme.palette.primary.main}18`,
-                                            padding: '10px 16px',
-                                            borderRadius: '20px',
-                                            border: `1px solid ${theme.palette.primary.main}30`,
-                                            backdropFilter: 'blur(10px)',
-                                            transition: 'all 0.3s ease',
-                                            '&:hover': {
-                                                background: `${theme.palette.primary.main}28`,
-                                                transform: 'translateY(-2px)',
-                                                boxShadow: `0 8px 25px ${theme.palette.primary.main}30`
-                                            }
-                                        }}>
-                                            <Typography sx={{ fontSize: '1.25rem' }}>{item.icon}</Typography>
-                                            <Typography sx={{ color: theme.palette.text.primary, fontWeight: 'bold', fontSize: '0.9rem' }}>
-                                                {item.text}
+                                        'Progress signal clarity',
+                                        'AI session analysis',
+                                        'Momentum you can measure'
+                                    ].map((signal) => (
+                                        <Box
+                                            key={signal}
+                                            data-animate="hero-proof"
+                                            sx={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: 1,
+                                                px: 2,
+                                                py: 1.25,
+                                                borderRadius: '999px',
+                                                background: 'rgba(255,255,255,0.05)',
+                                                border: `1px solid ${theme.palette.border.main}`
+                                            }}
+                                        >
+                                            <MdCheckCircle size={16} color={theme.palette.primary.main} />
+                                            <Typography sx={{ color: theme.palette.text.primary, fontSize: '0.9rem', fontWeight: 600 }}>
+                                                {signal}
                                             </Typography>
                                         </Box>
                                     ))}
                                 </Box>
                             </Box>
                         </Grid2>
-                        <Grid2 size={{ xs: 12, md: 5 }} sx={{ display: { xs: 'none', md: 'flex' }, justifyContent: 'center' }}>
-                            <Box sx={{ position: 'relative' }}>
-                                {/* Floating elements behind the phone */}
-                                <Box sx={{
-                                    position: 'absolute',
-                                    top: '10%',
-                                    right: '-45%',
-                                    background: `linear-gradient(135deg, ${theme.palette.secondary.main}20, transparent)`,
-                                    border: `1px solid ${theme.palette.secondary.main}40`,
-                                    backdropFilter: 'blur(10px)',
-                                    borderRadius: '16px',
-                                    padding: '12px 20px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 1.5,
-                                    animation: 'float 6s ease-in-out infinite',
-                                    zIndex: 2,
-                                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-                                    '@keyframes float': {
-                                        '0%, 100%': { transform: 'translateY(0)' },
-                                        '50%': { transform: 'translateY(-20px)' }
-                                    }
-                                }}>
-                                    <MdEmojiEvents style={{ color: theme.palette.secondary.main, fontSize: '1.5rem' }} />
-                                    <Box>
-                                        <Typography variant="caption" sx={{ color: theme.palette.text.muted, display: 'block', lineHeight: 1 }}>New PR!</Typography>
-                                        <Typography variant="body2" sx={{ color: 'white', fontWeight: 'bold' }}>Bench Press: 225 lbs</Typography>
-                                    </Box>
+
+                        <Grid2 size={{ xs: 12, md: 5 }} sx={{ display: 'flex', justifyContent: 'center' }}>
+                            <Box
+                                data-testid="landing-hero-visual"
+                                data-animate="hero-visual"
+                                sx={{ position: 'relative', width: '100%', maxWidth: 420, display: 'flex', justifyContent: 'center' }}
+                            >
+                                <Box
+                                    data-animate="hero-floating-card"
+                                    data-animate-variant="hero-floating-card-top"
+                                    sx={{
+                                        position: 'absolute',
+                                        top: '10%',
+                                        right: { xs: 12, md: -36 },
+                                        background: `linear-gradient(135deg, ${theme.palette.info.main}20, transparent)`,
+                                        border: `1px solid ${theme.palette.info.main}40`,
+                                        backdropFilter: 'blur(10px)',
+                                        borderRadius: '18px',
+                                        px: 2,
+                                        py: 1.5,
+                                        zIndex: 2,
+                                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35)'
+                                    }}
+                                >
+                                    <Typography variant="caption" sx={{ color: theme.palette.text.muted, display: 'block', mb: 0.5 }}>
+                                        Momentum signal
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ color: 'white', fontWeight: 700 }}>
+                                        +3 strong sessions
+                                    </Typography>
                                 </Box>
 
-                                <Box sx={{
-                                    position: 'absolute',
-                                    bottom: '15%',
-                                    left: '-25%',
-                                    background: `linear-gradient(135deg, ${theme.palette.primary.main}20, transparent)`,
-                                    border: `1px solid ${theme.palette.primary.main}40`,
-                                    backdropFilter: 'blur(10px)',
-                                    borderRadius: '16px',
-                                    padding: '12px 20px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 1.5,
-                                    animation: 'floatDelayed 7s ease-in-out infinite',
-                                    zIndex: 2,
-                                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-                                    '@keyframes floatDelayed': {
-                                        '0%, 100%': { transform: 'translateY(0)' },
-                                        '50%': { transform: 'translateY(15px)' }
-                                    }
-                                }}>
-                                    <MdTrendingUp style={{ color: theme.palette.primary.main, fontSize: '1.5rem' }} />
-                                    <Box>
-                                        <Typography variant="caption" sx={{ color: theme.palette.text.muted, display: 'block', lineHeight: 1 }}>Volume up</Typography>
-                                        <Typography variant="body2" sx={{ color: 'white', fontWeight: 'bold' }}>+15% this week</Typography>
-                                    </Box>
+                                <Box
+                                    data-animate="hero-floating-card"
+                                    data-animate-variant="hero-floating-card-bottom"
+                                    sx={{
+                                        position: 'absolute',
+                                        bottom: '14%',
+                                        left: { xs: 12, md: -28 },
+                                        background: `linear-gradient(135deg, ${theme.palette.primary.main}22, transparent)`,
+                                        border: `1px solid ${theme.palette.primary.main}40`,
+                                        backdropFilter: 'blur(10px)',
+                                        borderRadius: '18px',
+                                        px: 2,
+                                        py: 1.5,
+                                        zIndex: 2,
+                                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35)'
+                                    }}
+                                >
+                                    <Typography variant="caption" sx={{ color: theme.palette.text.muted, display: 'block', mb: 0.5 }}>
+                                        Coach insight
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ color: 'white', fontWeight: 700 }}>
+                                        Push lower-body volume
+                                    </Typography>
                                 </Box>
 
-                                <PhoneMock sx={{ zIndex: 1, p: 0, overflow: 'hidden' }}>
+                                <PhoneMock>
                                     <Box
                                         component="img"
                                         src={appScreenshot}
@@ -478,308 +710,264 @@ export default function LandingPage() {
                             </Box>
                         </Grid2>
                     </Grid2>
-
-                    {/* Problem Statement */}
-                    <Box sx={{
-                        mt: 10,
-                        textAlign: 'center',
-                        background: `linear-gradient(135deg, ${theme.palette.secondary.main}14 0%, ${theme.palette.info.main}14 100%)`,
-                        borderRadius: '24px',
-                        border: `1px solid ${theme.palette.secondary.main}30`,
-                        p: { xs: 4, md: 6 },
-                        position: 'relative',
-                        overflow: 'hidden'
-                    }}>
-                        <Box sx={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            background: 'radial-gradient(circle at 30% 70%, rgba(255, 0, 102, 0.15) 0%, transparent 50%)',
-                            pointerEvents: 'none'
-                        }} />
-
-                        <Typography variant="h3" sx={{
-                            color: theme.palette.secondary.light,
-                            fontWeight: 'bold',
-                            mb: 2,
-                            position: 'relative',
-                            zIndex: 1
-                        }}>
-                            Tired of Using Notes App for Gym Progress? 😤
-                        </Typography>
-
-                        <Typography variant="h6" sx={{
-                            color: theme.palette.text.muted,
-                            maxWidth: 700,
-                            mx: 'auto',
-                            mb: 3,
-                            position: 'relative',
-                            zIndex: 1
-                        }}>
-                            Scribbling weights in Notes, forgetting last session&apos;s numbers, no progress insights — there&apos;s a better way!
-                        </Typography>
-
-                        <Box sx={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            flexWrap: 'wrap',
-                            gap: 2.5,
-                            position: 'relative',
-                            zIndex: 1
-                        }}>
-                            {[
-                                '📝 Notes app = Messy tracking',
-                                '🤔 Forgot last weight = Guessing',
-                                '📊 No insights = Slow progress',
-                                '😵 Manual calculations = Wasted time'
-                            ].map((problem, index) => (
-                                <Box key={index} sx={{
-                                    background: 'rgba(255, 0, 102, 0.2)',
-                                    padding: '10px 16px',
-                                    borderRadius: '20px',
-                                    border: '1px solid rgba(255, 0, 102, 0.3)',
-                                    color: '#ff6b9d',
-                                    fontWeight: 'bold',
-                                    fontSize: '0.9rem'
-                                }}>
-                                    {problem}
-                                </Box>
-                            ))}
-                        </Box>
-                    </Box>
                 </Container>
             </HeroSection>
 
-            {/* Features Section */}
-            <Container maxWidth="lg" sx={{ py: 12 }}>
-                <Box sx={{ textAlign: 'center', mb: 10 }}>
-                    <Typography variant="h2" sx={{
-                        fontWeight: 'bold',
-                        mb: 3,
-                        background: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 50%, ${theme.palette.secondary.main} 100%)`,
-                        backgroundClip: 'text',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent'
-                    }}>
-                        Built for Progressive Overload 💪
+            <Container maxWidth="lg" sx={{ py: { xs: 8, md: 10 } }}>
+                <Box
+                    data-testid="landing-problem-progress-section"
+                    data-animate="problem-section"
+                    sx={{
+                        textAlign: 'center',
+                        background: `linear-gradient(135deg, ${theme.palette.secondary.main}12 0%, ${theme.palette.info.main}12 100%)`,
+                        borderRadius: '28px',
+                        border: `1px solid ${theme.palette.border.main}`,
+                        px: { xs: 3, md: 6 },
+                        py: { xs: 4, md: 5.5 },
+                        mb: { xs: 8, md: 10 }
+                    }}
+                >
+                    <Typography
+                        variant="h3"
+                        sx={{ color: theme.palette.text.primary, fontWeight: 800, mb: 2, maxWidth: 840, mx: 'auto' }}
+                    >
+                        From baseline confusion to visible transformation momentum
                     </Typography>
-                    <Typography variant="h6" sx={{
-                        color: theme.palette.text.primary,
-                        maxWidth: '700px',
-                        mx: 'auto',
-                        fontWeight: 500
-                    }}>
-                        Everything you need to track strength gains and build muscle more effectively than Notes app
+                    <Typography
+                        variant="h6"
+                        sx={{ color: theme.palette.text.muted, maxWidth: 760, mx: 'auto', lineHeight: 1.7 }}
+                    >
+                        Most training tools tell you what you did. FitForge is built to show whether that work is compounding into measurable change.
                     </Typography>
                 </Box>
 
-                <Grid2 container spacing={4}>
-                    {features.map((feature, index) => (
-                        <Grid2 size={{ xs: 12, md: 6, lg: 4 }} key={index}>
-                            <FeatureCard>
-                                <CardContent sx={{ p: 4 }}>
-                                    <Avatar sx={{
-                                        width: 64,
-                                        height: 64,
-                                        backgroundColor: `${feature.color}20`,
-                                        color: feature.color,
-                                        mb: 3
-                                    }}>
-                                        <feature.icon style={{ fontSize: '2rem' }} />
-                                    </Avatar>
+                <Box
+                    component="section"
+                    data-testid="landing-transformation-section"
+                    data-animate="transformation-section"
+                    sx={{ mb: { xs: 8, md: 10 } }}
+                >
+                    <Box data-animate="transformation-intro" sx={{ textAlign: 'center', mb: 5 }}>
+                        <Typography variant="h2" sx={{ color: theme.palette.text.primary, fontWeight: 800, mb: 2 }}>
+                            The transformation story
+                        </Typography>
+                        <Typography variant="body1" sx={{ color: theme.palette.text.muted, maxWidth: 720, mx: 'auto', lineHeight: 1.7 }}>
+                            A simple coaching loop: understand your starting point, interpret the signal, then build forward momentum with clarity.
+                        </Typography>
+                    </Box>
 
-                                    <Typography variant="h6" sx={{
-                                        color: theme.palette.text.primary,
-                                        fontWeight: 'bold',
-                                        mb: 2
-                                    }}>
-                                        {feature.title}
+                    <Grid2 data-animate="transformation-grid" container spacing={3}>
+                        {transformationPanels.map((panel) => {
+                            const Icon = panel.icon;
+
+                            return (
+                                <Grid2 key={panel.testId} size={{ xs: 12, md: 4 }}>
+                                    <FeatureCard
+                                        data-testid={panel.testId}
+                                        data-animate="transformation-panel"
+                                        data-animate-variant={`transformation-panel-${panel.storyKey}`}
+                                        sx={{
+                                            borderColor: `${panel.accent}35`,
+                                            background: `linear-gradient(145deg, rgba(21, 27, 38, 0.95) 0%, ${panel.accent}12 100%)`
+                                        }}
+                                    >
+                                        <CardContent sx={{ p: 4 }}>
+                                            <Box
+                                                sx={{
+                                                    width: 52,
+                                                    height: 52,
+                                                    borderRadius: '16px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    mb: 3,
+                                                    backgroundColor: `${panel.accent}20`,
+                                                    color: panel.accent
+                                                }}
+                                            >
+                                                <Icon size={24} />
+                                            </Box>
+                                            <Typography sx={{ color: panel.accent, fontWeight: 700, mb: 1, textTransform: 'uppercase', letterSpacing: '0.08em', fontSize: '0.78rem' }}>
+                                                {panel.eyebrow}
+                                            </Typography>
+                                            <Typography variant="h5" sx={{ color: theme.palette.text.primary, fontWeight: 700, mb: 2, lineHeight: 1.25 }}>
+                                                {panel.title}
+                                            </Typography>
+                                            <Typography sx={{ color: theme.palette.text.muted, lineHeight: 1.7 }}>
+                                                {panel.description}
+                                            </Typography>
+                                        </CardContent>
+                                    </FeatureCard>
+                                </Grid2>
+                            );
+                        })}
+                    </Grid2>
+
+                    <Grid2
+                        container
+                        spacing={2.5}
+                        sx={{ mt: 3.5 }}
+                        data-animate="transformation-capability-rail"
+                    >
+                        {premiumCapabilities.map((capability) => (
+                            <Grid2 key={capability.title} size={{ xs: 12, md: 4 }}>
+                                <Box
+                                    data-testid={`landing-premium-capability-${capability.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+                                    data-animate="transformation-capability"
+                                    sx={{
+                                        height: '100%',
+                                        px: 3,
+                                        py: 2.75,
+                                        borderRadius: '22px',
+                                        background: `linear-gradient(180deg, ${capability.accent}14 0%, rgba(10, 14, 20, 0.96) 100%)`,
+                                        border: `1px solid ${capability.accent}30`,
+                                        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)'
+                                    }}
+                                >
+                                    <Typography sx={{ color: capability.accent, fontWeight: 700, mb: 1.1, letterSpacing: '0.03em' }}>
+                                        {capability.title}
                                     </Typography>
+                                    <Typography sx={{ color: theme.palette.text.muted, lineHeight: 1.7 }}>
+                                        {capability.description}
+                                    </Typography>
+                                </Box>
+                            </Grid2>
+                        ))}
+                    </Grid2>
+                </Box>
 
-                                    <Typography variant="body2" sx={{
-                                        color: theme.palette.text.muted,
-                                        lineHeight: 1.6
-                                    }}>
-                                        {feature.description}
+                <Box
+                    component="section"
+                    data-testid="landing-final-cta"
+                    data-animate="trust-section"
+                    sx={{
+                        textAlign: 'center',
+                        background: `linear-gradient(135deg, ${theme.palette.surface.primary} 0%, ${theme.palette.surface.secondary} 100%)`,
+                        borderRadius: '28px',
+                        border: `1px solid ${theme.palette.border.main}`,
+                        px: { xs: 3, md: 6 },
+                        py: { xs: 4, md: 6 }
+                    }}
+                >
+                    <Typography variant="h2" sx={{ color: theme.palette.text.primary, fontWeight: 800, mb: 2 }}>
+                        Trusted by lifters building measurable momentum
+                    </Typography>
+                    <Typography variant="h6" sx={{ color: theme.palette.text.muted, maxWidth: 720, mx: 'auto', mb: 4, lineHeight: 1.7 }}>
+                        Real proof from real training sessions.
+                    </Typography>
+
+                    <Grid2 container spacing={3} sx={{ mb: 4 }}>
+                        <Grid2 size={{ xs: 12, md: 4 }}>
+                            <FeatureCard data-testid="landing-session-backed-wins-card">
+                                <CardContent sx={{ p: 3.5 }}>
+                                    <MdEmojiEvents size={24} color={theme.palette.primary.main} />
+                                    <Typography variant="h6" sx={{ color: theme.palette.text.primary, fontWeight: 700, mt: 2, mb: 1 }}>
+                                        Session-backed wins
+                                    </Typography>
+                                    <Typography sx={{ color: theme.palette.text.muted, lineHeight: 1.7 }}>
+                                        PR moments and consistency streaks are tied back to the training sessions that created them.
                                     </Typography>
                                 </CardContent>
                             </FeatureCard>
                         </Grid2>
-                    ))}
-                </Grid2>
-            </Container>
-
-            {/* Benefits Section */}
-            <Box sx={{
-                background: `linear-gradient(135deg, ${theme.palette.surface.primary} 0%, ${theme.palette.surface.secondary} 100%)`,
-                py: 12
-            }}>
-                <Container maxWidth="lg">
-                    <Grid2 container spacing={8} alignItems="center">
-                        <Grid2 size={{ xs: 12, md: 6 }}>
-                            <Typography variant="h2" sx={{
-                                color: theme.palette.text.primary,
-                                fontWeight: 'bold',
-                                mb: 3
-                            }}>
-                                Why Choose FitForge?
-                            </Typography>
-
-                            <Box sx={{ mb: 4 }}>
-                                {benefits.map((benefit, index) => (
-                                    <Box key={index} sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 2,
-                                        mb: 2
-                                    }}>
-                                        <MdCheckCircle style={{ color: theme.palette.primary.main, fontSize: '1.5rem' }} />
-                                        <Typography variant="body1" sx={{
-                                            color: theme.palette.text.primary
-                                        }}>
-                                            {benefit}
-                                        </Typography>
+                        <Grid2 size={{ xs: 12, md: 8 }}>
+                            <FeatureCard data-testid="landing-proof-metrics-card">
+                                <CardContent sx={{ p: 3.5 }}>
+                                    <Grid2 container spacing={2} sx={{ mb: 2.5 }} data-testid="landing-proof-metrics-grid">
+                                        {proofMetrics.map((metric) => (
+                                            <Grid2
+                                                key={metric.value}
+                                                size={{ xs: 12, md: 6 }}
+                                                data-testid={`landing-proof-metric-${metric.value.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+                                            >
+                                                <Box
+                                                    sx={{
+                                                        height: '100%',
+                                                        textAlign: 'left',
+                                                        px: 2.25,
+                                                        py: 2,
+                                                        borderRadius: '18px',
+                                                        background: 'rgba(255,255,255,0.04)',
+                                                        border: `1px solid ${theme.palette.border.main}`
+                                                    }}
+                                                >
+                                                    <Typography variant="h5" sx={{ color: theme.palette.text.primary, fontWeight: 800, mb: 1 }}>
+                                                        {metric.value}
+                                                    </Typography>
+                                                    <Typography sx={{ color: theme.palette.text.muted, lineHeight: 1.65 }}>
+                                                        {metric.detail}
+                                                    </Typography>
+                                                </Box>
+                                            </Grid2>
+                                        ))}
+                                    </Grid2>
+                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1.25, mb: 2.5 }}>
+                                        {trustSignals.map((signal) => (
+                                            <Box
+                                                key={signal}
+                                                sx={{
+                                                    px: 1.75,
+                                                    py: 0.9,
+                                                    borderRadius: '999px',
+                                                    background: 'rgba(255,255,255,0.05)',
+                                                    border: `1px solid ${theme.palette.border.main}`
+                                                }}
+                                            >
+                                                <Typography sx={{ color: theme.palette.text.primary, fontWeight: 600, fontSize: '0.88rem' }}>
+                                                    {signal}
+                                                </Typography>
+                                            </Box>
+                                        ))}
                                     </Box>
-                                ))}
-                            </Box>
-
-                            <GlowingButton
-                                size="large"
-                                endIcon={<MdArrowForward />}
-                                onClick={handleGetStarted}
-                            >
-                                Get Started Now
-                            </GlowingButton>
-                        </Grid2>
-
-                        <Grid2 size={{ xs: 12, md: 6 }}>
-                            <Box sx={{
-                                display: 'grid',
-                                gridTemplateColumns: '1fr 1fr',
-                                gap: 3
-                            }}>
-                                {[
-                                    { icon: MdSpeed, title: 'Fast & Reliable', desc: 'Optimized performance' },
-                                    { icon: MdSecurity, title: 'Secure', desc: 'Your data is protected' },
-                                    { icon: MdCloud, title: 'Cloud Sync', desc: 'Access anywhere' },
-                                    { icon: MdTrendingUp, title: 'Analytics', desc: 'Track your progress' }
-                                ].map((item, index) => (
-                                    <Card key={index} sx={{
-                                        background: 'rgba(255, 255, 255, 0.05)',
-                                        backdropFilter: 'blur(10px)',
-                                        border: `1px solid ${theme.palette.border.main}`,
-                                        p: 3,
-                                        textAlign: 'center'
-                                    }}>
-                                        <item.icon style={{
-                                            fontSize: '3rem',
-                                            color: theme.palette.primary.main,
-                                            marginBottom: '1rem'
-                                        }} />
-                                        <Typography variant="h6" sx={{
-                                            color: theme.palette.text.primary,
-                                            fontWeight: 'bold',
-                                            mb: 1
-                                        }}>
-                                            {item.title}
-                                        </Typography>
-                                        <Typography variant="body2" sx={{
-                                            color: theme.palette.text.muted
-                                        }}>
-                                            {item.desc}
-                                        </Typography>
-                                    </Card>
-                                ))}
-                            </Box>
+                                    <Typography sx={{ color: theme.palette.text.muted, lineHeight: 1.7, maxWidth: 640, mx: 'auto' }}>
+                                        FitForge closes on earned trust: premium coaching language backed by session history, measurable momentum, and proof that feels specific to lifters.
+                                    </Typography>
+                                </CardContent>
+                            </FeatureCard>
                         </Grid2>
                     </Grid2>
-                </Container>
-            </Box>
 
-            {/* CTA Section */}
-            <Container maxWidth="lg" sx={{ py: 12 }}>
-                <Box sx={{
-                    textAlign: 'center',
-                    background: `linear-gradient(135deg, ${theme.palette.primary.main}10 0%, ${theme.palette.primary.main}05 100%)`,
-                    borderRadius: '24px',
-                    border: `1px solid ${theme.palette.primary.main}20`,
-                    p: { xs: 4, md: 8 }
-                }}>
-                    <Typography
-                        variant="h2"
-                        sx={{
-                            color: theme.palette.text.primary,
-                            fontWeight: 'bold',
-                            mb: 2,
-                            fontSize: { xs: '2.5rem', md: '3.75rem' } // added responsive font sizing
-                        }}
-                    >
-                        Ready to Get Stronger?
+                    <Typography sx={{ color: theme.palette.text.secondary, fontWeight: 600, maxWidth: 680, mx: 'auto', mb: 3 }}>
+                        Turn every workout into a clearer read on what is changing, what is stalling, and where your next breakthrough is coming from.
                     </Typography>
 
-                    <Typography
-                        variant="h6"
-                        sx={{
-                            color: theme.palette.text.muted,
-                            mb: 4,
-                            maxWidth: '600px',
-                            mx: 'auto',
-                            fontSize: { xs: '1rem', md: '1.25rem' } // added responsive font sizing
-                        }}
-                    >
-                        Join serious lifters who track their progressive overload intelligently.
-                        Build muscle faster with FitForge&apos;s smart tracking system.
-                    </Typography>
-
-                    <GlowingButton
-                        size="large"
-                        endIcon={<MdArrowForward />}
-                        onClick={handleGetStarted}
-                        sx={{
-                            fontSize: { xs: '1rem', md: '1.2rem' },
-                            py: { xs: 1.5, md: 2 },
-                            px: { xs: 3, md: 4 },
-                            width: { xs: '100%', sm: 'auto' } // prevent weird text wrapping on small phones
-                        }}
-                    >
-                        {currentUser ? 'Open FitForge' : 'Start Free Today'}
+                    <GlowingButton size="large" endIcon={<MdArrowForward />} onClick={handleGetStarted}>
+                        {currentUser ? 'Open FitForge' : 'Begin Your Transformation'}
                     </GlowingButton>
                 </Box>
             </Container>
 
-            {/* Footer */}
-            <Box sx={{
-                borderTop: `1px solid ${theme.palette.border.main}`,
-                py: 4,
-                backgroundColor: theme.palette.background.dark
-            }}>
+            <Box
+                sx={{
+                    borderTop: `1px solid ${theme.palette.border.main}`,
+                    py: 4,
+                    backgroundColor: theme.palette.background.dark
+                }}
+            >
                 <Container maxWidth="lg">
-                    <Box sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        flexWrap: 'wrap',
-                        gap: 2
-                    }}>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: 2
+                        }}
+                    >
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                             <Box
                                 component="img"
                                 src={appLogo}
                                 alt="FitForge Logo"
-                                sx={{
-                                    height: 40,
-                                    width: 'auto'
-                                }}
+                                sx={{ height: 40, width: 'auto' }}
                             />
                             <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                                © 2024 FitForge. Built with ❤️ for fitness enthusiasts.
+                                © 2024 FitForge. Built for lifters chasing visible change.
                             </Typography>
                         </Box>
 
                         <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                            Free & Open Source
+                            Built to turn training data into visible momentum
                         </Typography>
                     </Box>
                 </Container>

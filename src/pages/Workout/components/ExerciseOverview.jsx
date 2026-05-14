@@ -3,7 +3,7 @@ import { CheckCircle, Trash2 as MdDelete } from 'lucide-react';
 import { UserPlus, Shuffle } from 'lucide-react';
 import PropTypes from 'prop-types';
 
-const ExerciseOverview = ({ exercises, currentExerciseIndex, onExerciseClick, onRemoveExercise, onAddExercise }) => {
+const ExerciseOverview = ({ exercises, currentExerciseIndex, onExerciseClick, onRemoveExercise, onAddExercise, onSwapExercise }) => {
     return (
         <Card sx={{
             background: 'rgba(40, 40, 40, 0.9)',
@@ -110,7 +110,15 @@ const ExerciseOverview = ({ exercises, currentExerciseIndex, onExerciseClick, on
                                     </Box>
                                     <IconButton
                                         size="small"
-                                        sx={{ color: '#dded00', padding: '4px' }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onSwapExercise?.(index);
+                                        }}
+                                        sx={{
+                                            color: '#dded00',
+                                            padding: '4px',
+                                            '&:hover': { backgroundColor: 'rgba(221, 237, 0, 0.1)' }
+                                        }}
                                     >
                                         <Shuffle size={14} />
                                     </IconButton>
@@ -145,7 +153,8 @@ ExerciseOverview.propTypes = {
     currentExerciseIndex: PropTypes.number.isRequired,
     onExerciseClick: PropTypes.func,
     onRemoveExercise: PropTypes.func,
-    onAddExercise: PropTypes.func
+    onAddExercise: PropTypes.func,
+    onSwapExercise: PropTypes.func
 };
 
 export default ExerciseOverview;

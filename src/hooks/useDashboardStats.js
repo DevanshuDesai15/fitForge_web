@@ -1,28 +1,28 @@
-import { useQuery } from '@tanstack/react-query';
-import { useSupabase } from './useSupabase';
-import { useAuth } from '../contexts/AuthContext';
+import { useQuery } from "@tanstack/react-query";
+import { useSupabase } from "./useSupabase";
+import { useAuth } from "../contexts/AuthContext";
 
 export function useDashboardStats() {
   const supabase = useSupabase();
   const { currentUser } = useAuth();
 
   return useQuery({
-    queryKey: ['dashboard_stats', currentUser?.uid],
+    queryKey: ["dashboard_stats", currentUser?.uid],
     queryFn: async () => {
       if (!currentUser?.uid) return null;
 
       // Parallel fetch for core dashboard building blocks
       const [programsResult, workoutsResult] = await Promise.all([
         supabase
-          .from('workout_programs')
-          .select('*')
-          .eq('user_id', currentUser.uid),
+          .from("workout_programs")
+          .select("*")
+          .eq("user_id", currentUser.uid),
         supabase
-          .from('workouts')
-          .select('*')
-          .eq('user_id', currentUser.uid)
-          .order('timestamp', { ascending: false })
-          .limit(50)
+          .from("workouts")
+          .select("*")
+          .eq("user_id", currentUser.uid)
+          .order("timestamp", { ascending: false })
+          .limit(50),
       ]);
 
       if (programsResult.error) throw programsResult.error;
@@ -43,26 +43,27 @@ export function useDashboardStats() {
       const uniqueExercises = new Set();
       const targetedMuscles = new Set();
 
-      const weekWorkoutData = completedWorkouts.filter(w => {
+      const weekWorkoutData = completedWorkouts.filter((w) => {
         const workoutDate = new Date(w.timestamp);
         return workoutDate >= sevenDaysAgo;
       });
 
-      weekWorkoutData.forEach(workout => {
+      weekWorkoutData.forEach((workout) => {
         weeklyWorkouts++;
-        weeklyMinutes += (workout.duration_seconds || 0);
-        weeklyVolume += (parseFloat(workout.total_volume_kg) || 0);
+        weeklyMinutes += workout.duration_seconds || 0;
+        weeklyVolume += parseFloat(workout.total_volume_kg) || 0;
 
         if (workout.exercises && Array.isArray(workout.exercises)) {
-          workout.exercises.forEach(ex => {
+          workout.exercises.forEach((ex) => {
             if (ex.name) uniqueExercises.add(ex.name.toLowerCase());
-            
+
             // Extract targets from JSONB exercises
             if (ex.body_part) targetedMuscles.add(ex.body_part.toLowerCase());
-            if (ex.target_muscle) targetedMuscles.add(ex.target_muscle.toLowerCase());
-            
+            if (ex.target_muscle)
+              targetedMuscles.add(ex.target_muscle.toLowerCase());
+
             if (ex.sets && Array.isArray(ex.sets)) {
-              totalSets += ex.sets.filter(s => s.completed).length;
+              totalSets += ex.sets.filter((s) => s.completed).length;
             }
           });
         }
@@ -70,13 +71,13 @@ export function useDashboardStats() {
 
       // Simple Streak Calculation
       let streakCount = 0;
-      const uniqueDates = new Set(completedWorkouts.map(w => 
-        new Date(w.timestamp).toDateString()
-      ));
+      const uniqueDates = new Set(
+        completedWorkouts.map((w) => new Date(w.timestamp).toDateString()),
+      );
 
       let tempDate = new Date();
-      tempDate.setHours(0,0,0,0);
-      
+      tempDate.setHours(0, 0, 0, 0);
+
       let checkStreak = true;
       // If no workout today, check yesterday to keep streak alive
       if (!uniqueDates.has(tempDate.toDateString())) {
@@ -100,7 +101,7 @@ export function useDashboardStats() {
       const lastRepeatableWorkout =
         completedWorkouts.find(
           (workout) =>
-            Array.isArray(workout.exercises) && workout.exercises.length > 0
+            Array.isArray(workout.exercises) && workout.exercises.length > 0,
         ) || null;
 
       // Check if worked out today
@@ -111,14 +112,20 @@ export function useDashboardStats() {
         const program = userPrograms[0]; // Logic matches Home.jsx legacy
         if (program.schedule && Array.isArray(program.schedule)) {
           const completedDayNames = completedWorkouts
-            .filter(w => w.program_id === program.id)
-            .map(w => w.day_name);
-          
-          nextWorkout = program.schedule.find(day => !completedDayNames.includes(day.name)) 
-                        || program.schedule[0];
-          
+            .filter((w) => w.program_id === program.id)
+            .map((w) => w.day_name);
+
+          nextWorkout =
+            program.schedule.find(
+              (day) => !completedDayNames.includes(day.name),
+            ) || program.schedule[0];
+
           if (nextWorkout) {
-            nextWorkout = { ...nextWorkout, programName: program.name, programId: program.id };
+            nextWorkout = {
+              ...nextWorkout,
+              programName: program.name,
+              programId: program.id,
+            };
           }
         }
       }
@@ -126,7 +133,7 @@ export function useDashboardStats() {
       return {
         weeklyStats: {
           totalVolume: Math.round(weeklyVolume),
-          volumeUnit: 'kg', 
+          volumeUnit: "kg",
           goalProgress: (weeklyWorkouts / 4) * 100, // Target is 4
           goalText: `${weeklyWorkouts}/4`,
           streakDays: streakCount,
@@ -134,7 +141,7 @@ export function useDashboardStats() {
           activeMinutes: Math.round(weeklyMinutes / 60),
           targetedMuscles: { current: targetedMuscles.size, target: 11 },
           weeklySets: { current: totalSets, target: 60 },
-          uniqueExercises: { current: uniqueExercises.size, target: 20 }
+          uniqueExercises: { current: uniqueExercises.size, target: 20 },
         },
         nextWorkout,
         isTomorrowFocus,

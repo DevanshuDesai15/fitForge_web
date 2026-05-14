@@ -19,6 +19,7 @@ import WorkoutTabs from './components/WorkoutTabs';
 import AICoachTab from './components/AICoachTab';
 import ExerciseNotesTab from './components/ExerciseNotesTab';
 import AddExerciseDialog from './components/AddExerciseDialog';
+import SwapExerciseDialog from './components/SwapExerciseDialog';
 
 // Hooks
 import { useWorkoutState } from './hooks/useWorkoutState';
@@ -115,6 +116,7 @@ const StartWorkout = () => {
     const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
     const [finishDialog, setFinishDialog] = useState(false);
     const [addExerciseDialog, setAddExerciseDialog] = useState(false);
+    const [swapExerciseDialog, setSwapExerciseDialog] = useState({ open: false, index: null });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -526,6 +528,33 @@ const StartWorkout = () => {
         });
     };
 
+    const handleOpenSwapExercise = (index) => {
+        setSwapExerciseDialog({ open: true, index });
+    };
+
+    const handleConfirmSwap = (exercise) => {
+        const { index } = swapExerciseDialog;
+        const original = exercises[index];
+        const exerciseData = {
+            name: exercise.name,
+            difficulty: exercise.difficulty || 'Intermediate',
+            muscles: exercise.primaryMuscles?.join(', ') || exercise.muscles || 'Various',
+            muscleGroups: exercise.primaryMuscles?.join(', ') || exercise.muscles || 'Various',
+            equipment: exercise.equipment || 'Bodyweight',
+            targetSets: original.targetSets || 3,
+            targetReps: original.targetReps || '8-12',
+            sets: Array(original.targetSets || 3).fill(null).map(() => ({ weight: '', reps: '', completed: false }))
+        };
+        const updatedExercises = [...exercises];
+        updatedExercises[index] = exerciseData;
+        setExercises(updatedExercises);
+        setSwapExerciseDialog({ open: false, index: null });
+        safeCapture(posthog, 'exercise_swapped', {
+            original_exercise: original.name,
+            new_exercise: exercise.name,
+        });
+    };
+
     // 🎯 NEW: Handle notes change for current exercise
     const handleNotesChange = (noteText) => {
         const updatedExercises = [...exercises];
@@ -826,6 +855,7 @@ const StartWorkout = () => {
                                     onExerciseClick={handleExerciseClick}
                                     onRemoveExercise={handleRemoveExercise}
                                     onAddExercise={handleOpenAddExercise}
+                                    onSwapExercise={handleOpenSwapExercise}
                                 />
                             </Box>
                         )}
@@ -888,6 +918,14 @@ const StartWorkout = () => {
                     open={addExerciseDialog}
                     onClose={() => setAddExerciseDialog(false)}
                     onAddExercise={handleAddExerciseToWorkout}
+                />
+
+                {/* Swap Exercise Dialog */}
+                <SwapExerciseDialog
+                    open={swapExerciseDialog.open}
+                    onClose={() => setSwapExerciseDialog({ open: false, index: null })}
+                    onSwapExercise={handleConfirmSwap}
+                    exerciseName={swapExerciseDialog.index !== null ? exercises[swapExerciseDialog.index]?.name : ''}
                 />
 
                 {/* Finish Workout Dialog */}
