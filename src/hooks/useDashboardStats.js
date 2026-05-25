@@ -21,6 +21,7 @@ export function useDashboardStats() {
           .from("workouts")
           .select("*")
           .eq("user_id", currentUser.uid)
+          .eq("completed", true)
           .order("timestamp", { ascending: false })
           .limit(50),
       ]);
@@ -111,14 +112,38 @@ export function useDashboardStats() {
       if (userPrograms.length > 0) {
         const program = userPrograms[0]; // Logic matches Home.jsx legacy
         if (program.schedule && Array.isArray(program.schedule)) {
-          const completedDayNames = completedWorkouts
-            .filter((w) => w.program_id === program.id)
-            .map((w) => w.day_name);
+          const programWorkouts = completedWorkouts.filter(
+            (w) => w.program_id === program.id,
+          );
 
-          nextWorkout =
-            program.schedule.find(
-              (day) => !completedDayNames.includes(day.name),
-            ) || program.schedule[0];
+          if (programWorkouts.length === 0) {
+            nextWorkout = program.schedule[0];
+          } else {
+            // Anchor to the most recently completed program day (workouts sorted desc)
+            const completedDayNames = new Set(
+              programWorkouts.map((w) => w.day_name),
+            );
+            const lastDayName = programWorkouts[0].day_name;
+            const lastIndex = program.schedule.findIndex(
+              (d) => d.name === lastDayName,
+            );
+            const startIndex = lastIndex === -1 ? 0 : lastIndex;
+            const len = program.schedule.length;
+
+            // Scan forward from last completed, skip already-done days
+            let candidate = null;
+            for (let i = 1; i <= len; i++) {
+              const idx = (startIndex + i) % len;
+              if (!completedDayNames.has(program.schedule[idx].name)) {
+                candidate = program.schedule[idx];
+                break;
+              }
+            }
+
+            // All days done → new cycle, advance one from last
+            nextWorkout =
+              candidate || program.schedule[(startIndex + 1) % len];
+          }
 
           if (nextWorkout) {
             nextWorkout = {

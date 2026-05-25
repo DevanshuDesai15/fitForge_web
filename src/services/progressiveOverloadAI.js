@@ -241,9 +241,8 @@ class ProgressiveOverloadAIService {
 
       // Process each exercise
       for (const exercise of exercises) {
-        // Use exerciseName as the key since exerciseId doesn't exist in your data
-        const exerciseKey = exercise.exerciseName;
-        // Skip exercises without valid exerciseName
+        // Support both "exerciseName" (AI service) and "name" (saved workout shape)
+        const exerciseKey = exercise.exerciseName || exercise.name;
         if (!exerciseKey || typeof exerciseKey !== "string") {
           continue;
         }

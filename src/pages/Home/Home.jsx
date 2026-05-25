@@ -467,7 +467,7 @@ export default function Home() {
                                                     }}>
                                                         {getRecommendationDescription(recommendation)}
                                                     </Typography>
-                                                    <Button
+                                                    {/* <Button
                                                         variant="text"
                                                         size="small"
                                                         sx={{
@@ -487,7 +487,7 @@ export default function Home() {
                                                         }}
                                                     >
                                                         Start Workout
-                                                    </Button>
+                                                    </Button> */}
                                                 </Box>
                                             </Box>
                                         </Box>
