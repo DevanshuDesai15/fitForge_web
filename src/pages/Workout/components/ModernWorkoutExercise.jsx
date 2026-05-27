@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Box, Typography, Card, CardContent, Button, Chip, IconButton, TextField } from '@mui/material';
 import { Info, Minus, Plus, CheckCircle, X } from 'lucide-react';
 import PropTypes from 'prop-types';
@@ -51,7 +52,8 @@ const ModernWorkoutExercise = ({
 }) => {
     const isCardio = exercise.exercise_type === 'cardio';
     const distanceUnit = weightUnit === 'lbs' ? 'mi' : 'km';
-    const distanceStep = weightUnit === 'lbs' ? 0.25 : 0.5;
+    const KM_PER_STEP = weightUnit === 'lbs' ? 0.25 / KM_TO_MI : 0.5;
+    const [distanceDisplay, setDistanceDisplay] = useState('');
 
     // Strength-specific derived values (unused for cardio)
     const completedSets = exercise.sets?.filter(set => set.completed) || [];
@@ -141,9 +143,9 @@ const ModernWorkoutExercise = ({
                                     Activity Logged!
                                 </Typography>
                                 <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                    {exercise.cardio.duration_minutes} min
-                                    {exercise.cardio.distance_km
-                                        ? ` · ${toDisplayDistance(exercise.cardio.distance_km, weightUnit)} ${distanceUnit}`
+                                    {exercise.cardio?.duration_minutes} min
+                                    {exercise.cardio?.distance_km
+                                        ? ` · ${toDisplayDistance(exercise.cardio?.distance_km, weightUnit)} ${distanceUnit}`
                                         : ''}
                                 </Typography>
                             </Card>
@@ -160,14 +162,14 @@ const ModernWorkoutExercise = ({
                                         </Typography>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                             <IconButton
-                                                onClick={() => onCardioChange(exerciseIndex, 'duration_minutes', Math.max(0, (exercise.cardio.duration_minutes || 0) - 1))}
+                                                onClick={() => onCardioChange(exerciseIndex, 'duration_minutes', Math.max(0, (exercise.cardio?.duration_minutes || 0) - 1))}
                                                 sx={stepperButtonSx}
                                             >
                                                 <Minus size={18} />
                                             </IconButton>
                                             <TextField
                                                 type="number"
-                                                value={exercise.cardio.duration_minutes ?? ''}
+                                                value={exercise.cardio?.duration_minutes ?? ''}
                                                 onChange={(e) => {
                                                     const v = e.target.value === '' ? null : parseInt(e.target.value, 10);
                                                     onCardioChange(exerciseIndex, 'duration_minutes', v);
@@ -175,7 +177,7 @@ const ModernWorkoutExercise = ({
                                                 sx={inputFieldSx}
                                             />
                                             <IconButton
-                                                onClick={() => onCardioChange(exerciseIndex, 'duration_minutes', (exercise.cardio.duration_minutes || 0) + 1)}
+                                                onClick={() => onCardioChange(exerciseIndex, 'duration_minutes', (exercise.cardio?.duration_minutes || 0) + 1)}
                                                 sx={stepperButtonSx}
                                             >
                                                 <Plus size={18} />
@@ -191,8 +193,8 @@ const ModernWorkoutExercise = ({
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                             <IconButton
                                                 onClick={() => {
-                                                    const cur = toDisplayDistance(exercise.cardio.distance_km, weightUnit) || 0;
-                                                    onCardioChange(exerciseIndex, 'distance_km', toStoredKm(Math.max(0, cur - distanceStep), weightUnit));
+                                                    onCardioChange(exerciseIndex, 'distance_km', Math.max(0, (exercise.cardio?.distance_km || 0) - KM_PER_STEP));
+                                                    setDistanceDisplay('');
                                                 }}
                                                 sx={stepperButtonSx}
                                             >
@@ -200,16 +202,21 @@ const ModernWorkoutExercise = ({
                                             </IconButton>
                                             <TextField
                                                 type="number"
-                                                value={exercise.cardio.distance_km !== null ? toDisplayDistance(exercise.cardio.distance_km, weightUnit) : ''}
+                                                value={distanceDisplay !== '' ? distanceDisplay : (exercise.cardio?.distance_km !== null && exercise.cardio?.distance_km !== undefined ? toDisplayDistance(exercise.cardio?.distance_km, weightUnit) : '')}
                                                 onChange={(e) => {
-                                                    onCardioChange(exerciseIndex, 'distance_km', toStoredKm(e.target.value, weightUnit));
+                                                    setDistanceDisplay(e.target.value);
+                                                }}
+                                                onBlur={() => {
+                                                    const stored = toStoredKm(distanceDisplay !== '' ? distanceDisplay : toDisplayDistance(exercise.cardio?.distance_km, weightUnit), weightUnit);
+                                                    onCardioChange(exerciseIndex, 'distance_km', stored);
+                                                    setDistanceDisplay('');
                                                 }}
                                                 sx={inputFieldSx}
                                             />
                                             <IconButton
                                                 onClick={() => {
-                                                    const cur = toDisplayDistance(exercise.cardio.distance_km, weightUnit) || 0;
-                                                    onCardioChange(exerciseIndex, 'distance_km', toStoredKm(cur + distanceStep, weightUnit));
+                                                    onCardioChange(exerciseIndex, 'distance_km', (exercise.cardio?.distance_km || 0) + KM_PER_STEP);
+                                                    setDistanceDisplay('');
                                                 }}
                                                 sx={stepperButtonSx}
                                             >
@@ -224,7 +231,7 @@ const ModernWorkoutExercise = ({
                                     fullWidth
                                     startIcon={<CheckCircle size={18} />}
                                     onClick={() => onCompleteCardio(exerciseIndex)}
-                                    disabled={!exercise.cardio.duration_minutes}
+                                    disabled={!exercise.cardio?.duration_minutes}
                                     sx={{
                                         background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
                                         color: '#000',
