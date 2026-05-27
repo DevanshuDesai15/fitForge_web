@@ -61,6 +61,51 @@ const normalizeWorkoutExercises = (exerciseList) =>
             : DEFAULT_EMPTY_SET.map(set => ({ ...set }))
     }));
 
+export function calcWorkoutProgress(exercises) {
+    let totalUnits = 0;
+    let completedUnits = 0;
+
+    for (const exercise of exercises) {
+        if (exercise.exercise_type === 'cardio') {
+            totalUnits += 1;
+            if (exercise.cardio?.completed) completedUnits += 1;
+        } else {
+            const sets = exercise.sets || [];
+            totalUnits += sets.length;
+            completedUnits += sets.filter(s => s.completed).length;
+        }
+    }
+
+    return { totalUnits, completedUnits };
+}
+
+export function buildWorkoutSaveExercises(exercises, weightUnit) {
+    return exercises.flatMap(exercise => {
+        if (exercise.exercise_type === 'cardio') {
+            if (!exercise.cardio?.completed) return [];
+            return [{
+                name: exercise.name,
+                exercise_type: 'cardio',
+                cardio: {
+                    duration_minutes: exercise.cardio.duration_minutes,
+                    distance_km: exercise.cardio.distance_km,
+                },
+                notes: exercise.notes || '',
+            }];
+        }
+        const completedSets = (exercise.sets || [])
+            .filter(set => set.completed && set.reps)
+            .map(set => ({ weight: set.weight || '0', weightUnit, reps: set.reps, completed: true }));
+        if (completedSets.length === 0) return [];
+        return [{
+            name: exercise.name,
+            exercise_type: 'strength',
+            sets: completedSets,
+            notes: exercise.notes || '',
+        }];
+    });
+}
+
 export function resolveProgramWorkoutSelection(programData, templateRows, requestedDayId = null) {
     const templateIds = toArray(programData?.template_ids ?? programData?.templateIds);
     const templateById = new Map(toArray(templateRows).map((template) => [template.id, template]));
