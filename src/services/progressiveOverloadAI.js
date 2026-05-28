@@ -246,6 +246,9 @@ class ProgressiveOverloadAIService {
         if (!exerciseKey || typeof exerciseKey !== "string") {
           continue;
         }
+        if (exercise.exercise_type === 'cardio') {
+          continue;
+        }
         if (!exerciseAnalyses.has(exerciseKey)) {
           exerciseAnalyses.set(exerciseKey, []);
         }

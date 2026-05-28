@@ -36,10 +36,13 @@ const ExerciseOverview = ({ exercises, currentExerciseIndex, onExerciseClick, on
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                     {exercises.map((exercise, index) => {
-                        const completedSets = exercise.sets?.filter(set => set.completed).length || 0;
-                        const targetSets = exercise.targetSets || 0;
+                        const isCardio = exercise.exercise_type === 'cardio';
+                        const completedSets = isCardio ? 0 : (exercise.sets?.filter(set => set.completed).length || 0);
+                        const targetSets = isCardio ? 0 : (exercise.targetSets || 0);
                         const isActive = index === currentExerciseIndex;
-                        const targetSetsMet = completedSets >= targetSets && targetSets > 0;
+                        const targetSetsMet = isCardio
+                            ? exercise.cardio?.completed === true
+                            : (completedSets >= targetSets && targetSets > 0);
 
                         return (
                             <Box
@@ -82,7 +85,9 @@ const ExerciseOverview = ({ exercises, currentExerciseIndex, onExerciseClick, on
                                             {exercise.name}
                                         </Typography>
                                         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                            {completedSets}/{targetSets} sets completed
+                                            {isCardio
+                                                ? (exercise.cardio?.completed ? 'Logged' : 'Not logged')
+                                                : `${completedSets}/${targetSets} sets completed`}
                                         </Typography>
                                     </Box>
                                 </Box>
@@ -108,20 +113,22 @@ const ExerciseOverview = ({ exercises, currentExerciseIndex, onExerciseClick, on
                                             <CheckCircle size={18} style={{ color: "#4caf50" }} />
                                         )}
                                     </Box>
-                                    <IconButton
-                                        size="small"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onSwapExercise?.(index);
-                                        }}
-                                        sx={{
-                                            color: '#dded00',
-                                            padding: '4px',
-                                            '&:hover': { backgroundColor: 'rgba(221, 237, 0, 0.1)' }
-                                        }}
-                                    >
-                                        <Shuffle size={14} />
-                                    </IconButton>
+                                    {!isCardio && (
+                                        <IconButton
+                                            size="small"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onSwapExercise?.(index);
+                                            }}
+                                            sx={{
+                                                color: '#dded00',
+                                                padding: '4px',
+                                                '&:hover': { backgroundColor: 'rgba(221, 237, 0, 0.1)' }
+                                            }}
+                                        >
+                                            <Shuffle size={14} />
+                                        </IconButton>
+                                    )}
                                     <IconButton
                                         size="small"
                                         onClick={(e) => {
