@@ -3,7 +3,7 @@ import {
     Dialog, DialogTitle, DialogContent, Box, TextField, Button,
     Card, CardContent, Typography, Chip, IconButton, CircularProgress,
     InputAdornment, Menu, MenuItem, FormControl, Select,
-    useMediaQuery, useTheme, Tabs, Tab
+    useMediaQuery, useTheme, Tabs, Tab, Collapse
 } from '@mui/material';
 import {
     X as MdClose,
@@ -21,8 +21,13 @@ import {
     Anchor,
     Activity,
     TrendingUp,
+    Plus,
+    ChevronDown,
+    ChevronUp,
 } from 'lucide-react';
 import { fetchExercises } from '../../../services/localExerciseService';
+import { useCustomExercises } from '../../../hooks/useCustomExercises';
+import CustomExerciseForm from './CustomExerciseForm';
 import PropTypes from 'prop-types';
 
 export const CARDIO_ACTIVITIES = [
@@ -50,6 +55,8 @@ const AddExerciseDialog = ({ open, onClose, onAddExercise }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
+    const { customExercises, saveCustomExercise } = useCustomExercises();
+
     const [activeTab, setActiveTab] = useState('strength');
     const [searchQuery, setSearchQuery] = useState('');
     const [exercises, setExercises] = useState([]);
@@ -58,6 +65,7 @@ const AddExerciseDialog = ({ open, onClose, onAddExercise }) => {
     const [filterAnchor, setFilterAnchor] = useState(null);
     const [selectedDifficulty, setSelectedDifficulty] = useState('all');
     const [selectedMuscleGroup, setSelectedMuscleGroup] = useState('all');
+    const [showCustomForm, setShowCustomForm] = useState(false);
 
     const muscleGroups = [
         'all','Chest','Back','Shoulders','Arms',
@@ -66,29 +74,31 @@ const AddExerciseDialog = ({ open, onClose, onAddExercise }) => {
     const difficultyLevels = ['all', 'Beginner', 'Intermediate', 'Advanced'];
 
     useEffect(() => {
-        if (open) loadExercises();
+        if (open) {
+            setShowCustomForm(false);
+            loadExercises();
+        }
     }, [open]);
 
     useEffect(() => {
-        let filtered = exercises;
+        const libraryNames = new Set(exercises.map(e => e.name.toLowerCase()));
+        const uniqueCustom = customExercises.filter(e => !libraryNames.has(e.name.toLowerCase()));
+        let all = [...uniqueCustom, ...exercises];
+
         if (searchQuery) {
-            filtered = filtered.filter(ex =>
-                ex.name.toLowerCase().includes(searchQuery.toLowerCase())
-            );
+            all = all.filter(ex => ex.name.toLowerCase().includes(searchQuery.toLowerCase()));
         }
         if (selectedDifficulty !== 'all') {
-            filtered = filtered.filter(ex =>
-                ex.difficulty?.toLowerCase() === selectedDifficulty.toLowerCase()
-            );
+            all = all.filter(ex => ex.difficulty?.toLowerCase() === selectedDifficulty.toLowerCase());
         }
         if (selectedMuscleGroup !== 'all') {
-            filtered = filtered.filter(ex =>
+            all = all.filter(ex =>
                 ex.primaryMuscles?.some(m => m.toLowerCase().includes(selectedMuscleGroup.toLowerCase())) ||
                 ex.muscles?.toLowerCase().includes(selectedMuscleGroup.toLowerCase())
             );
         }
-        setFilteredExercises(filtered);
-    }, [searchQuery, selectedDifficulty, selectedMuscleGroup, exercises]);
+        setFilteredExercises(all);
+    }, [searchQuery, selectedDifficulty, selectedMuscleGroup, exercises, customExercises]);
 
     const loadExercises = async () => {
         setLoading(true);
@@ -120,6 +130,17 @@ const AddExerciseDialog = ({ open, onClose, onAddExercise }) => {
             ],
         });
         onClose();
+    };
+
+    const handleAddCustom = async ({ name, muscleGroup }) => {
+        await saveCustomExercise({ name, muscleGroup });
+        handleAddStrengthExercise({
+            name,
+            difficulty: 'Intermediate',
+            primaryMuscles: muscleGroup ? [muscleGroup] : [],
+            muscles: muscleGroup || 'Various',
+            equipment: 'Various',
+        });
     };
 
     const handleAddCardioActivity = (activity) => {
@@ -245,22 +266,43 @@ const AddExerciseDialog = ({ open, onClose, onAddExercise }) => {
                                     <CircularProgress sx={{ color: '#dded00' }} />
                                 </Box>
                             ) : filteredExercises.length === 0 ? (
-                                <Box sx={{ textAlign: 'center', p: 4 }}>
-                                    <Typography variant="body1" sx={{ color: 'text.secondary' }}>No exercises found</Typography>
+                                <Box sx={{ p: 2 }}>
+                                    <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center', mb: 3 }}>
+                                        No exercises found{searchQuery ? ` for "${searchQuery}"` : ''}.
+                                    </Typography>
+                                    <Box sx={{
+                                        p: 2.5, borderRadius: '12px',
+                                        border: '1px dashed rgba(221, 237, 0, 0.4)',
+                                        backgroundColor: 'rgba(221, 237, 0, 0.04)',
+                                    }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                                            <Plus size={16} color="#dded00" />
+                                            <Typography variant="subtitle2" sx={{ color: '#dded00', fontWeight: 'bold' }}>
+                                                Add as custom exercise
+                                            </Typography>
+                                        </Box>
+                                        <CustomExerciseForm initialName={searchQuery} onAdd={handleAddCustom} />
+                                    </Box>
                                 </Box>
                             ) : (
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                                     {filteredExercises.map((exercise, index) => (
                                         <Card key={index} onClick={() => handleAddStrengthExercise(exercise)}
                                             sx={{
-                                                background: 'rgba(40, 40, 40, 0.6)', border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                background: exercise.isCustom ? 'rgba(221, 237, 0, 0.04)' : 'rgba(40, 40, 40, 0.6)',
+                                                border: exercise.isCustom ? '1px solid rgba(221, 237, 0, 0.25)' : '1px solid rgba(255, 255, 255, 0.1)',
                                                 borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s ease',
                                                 '&:hover': { borderColor: '#dded00', backgroundColor: 'rgba(221, 237, 0, 0.05)', transform: 'translateY(-2px)' }
                                             }}>
                                             <CardContent sx={{ p: 2.5 }}>
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                                     <Box sx={{ flex: 1 }}>
-                                                        <Typography variant="h6" sx={{ color: '#fff', fontWeight: 'bold', mb: 1 }}>{exercise.name}</Typography>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                                            <Typography variant="h6" sx={{ color: '#fff', fontWeight: 'bold' }}>{exercise.name}</Typography>
+                                                            {exercise.isCustom && (
+                                                                <Chip label="Custom" size="small" sx={{ backgroundColor: 'rgba(221, 237, 0, 0.15)', color: '#dded00', fontSize: '0.7rem', height: '20px', fontWeight: 'bold' }} />
+                                                            )}
+                                                        </Box>
                                                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1.5 }}>
                                                             {exercise.primaryMuscles?.slice(0, 3).map((muscle, idx) => (
                                                                 <Chip key={idx} label={muscle} size="small" sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', color: '#fff', fontSize: '0.75rem', height: '24px' }} />
@@ -290,6 +332,43 @@ const AddExerciseDialog = ({ open, onClose, onAddExercise }) => {
                                             </CardContent>
                                         </Card>
                                     ))}
+
+                                    {/* Always-available custom creator at the bottom */}
+                                    <Card sx={{
+                                        background: 'rgba(221, 237, 0, 0.03)',
+                                        border: '1px dashed rgba(221, 237, 0, 0.3)',
+                                        borderRadius: '12px',
+                                        overflow: 'hidden',
+                                    }}>
+                                        <CardContent
+                                            onClick={() => setShowCustomForm(v => !v)}
+                                            sx={{
+                                                p: 2, cursor: 'pointer',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                                '&:last-child': { pb: showCustomForm ? 1 : 2 },
+                                                '&:hover': { backgroundColor: 'rgba(221, 237, 0, 0.05)' },
+                                            }}
+                                        >
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <Plus size={16} color="#dded00" />
+                                                <Typography variant="body2" sx={{ color: '#dded00', fontWeight: 'bold' }}>
+                                                    Can&apos;t find it? Add custom exercise
+                                                </Typography>
+                                            </Box>
+                                            {showCustomForm
+                                                ? <ChevronUp size={16} color="#dded00" />
+                                                : <ChevronDown size={16} color="#dded00" />}
+                                        </CardContent>
+                                        <Collapse in={showCustomForm}>
+                                            <Box sx={{ px: 2, pb: 2 }}>
+                                                <CustomExerciseForm
+                                                    initialName={searchQuery}
+                                                    onAdd={handleAddCustom}
+                                                    compact
+                                                />
+                                            </Box>
+                                        </Collapse>
+                                    </Card>
                                 </Box>
                             )}
                         </Box>
