@@ -53,13 +53,21 @@ const deriveMuscleGroups = (exercises = []) => {
 };
 
 const normalizeWorkoutExercises = (exerciseList) =>
-    toArray(exerciseList).map(exercise => ({
-        ...exercise,
-        targetSets: exercise.targetSets || exercise.sets?.length || 3,
-        sets: Array.isArray(exercise.sets) && exercise.sets.length > 0
-            ? exercise.sets
-            : DEFAULT_EMPTY_SET.map(set => ({ ...set }))
-    }));
+    toArray(exerciseList).map(exercise => {
+        if (exercise.exercise_type === 'cardio') {
+            return {
+                ...exercise,
+                cardio: exercise.cardio || { duration_minutes: null, distance_km: null, completed: false },
+            };
+        }
+        return {
+            ...exercise,
+            targetSets: exercise.targetSets || exercise.sets?.length || 3,
+            sets: Array.isArray(exercise.sets) && exercise.sets.length > 0
+                ? exercise.sets
+                : DEFAULT_EMPTY_SET.map(set => ({ ...set })),
+        };
+    });
 
 export function calcWorkoutProgress(exercises) {
     let totalUnits = 0;
@@ -492,6 +500,30 @@ const StartWorkout = () => {
         setShowRestTimer(true);
     };
 
+    const handleCardioChange = (exerciseIndex, field, value) => {
+        const updatedExercises = [...exercises];
+        updatedExercises[exerciseIndex] = {
+            ...updatedExercises[exerciseIndex],
+            cardio: {
+                ...updatedExercises[exerciseIndex].cardio,
+                [field]: value,
+            },
+        };
+        setExercises(updatedExercises);
+    };
+
+    const handleCompleteCardio = (exerciseIndex) => {
+        const updatedExercises = [...exercises];
+        updatedExercises[exerciseIndex] = {
+            ...updatedExercises[exerciseIndex],
+            cardio: {
+                ...updatedExercises[exerciseIndex].cardio,
+                completed: true,
+            },
+        };
+        setExercises(updatedExercises);
+    };
+
     // 🎯 NEW: Handle adding an extra set
     const handleAddExtraSet = (exerciseIndex) => {
         const updatedExercises = [...exercises];
@@ -628,7 +660,9 @@ const StartWorkout = () => {
 
             // Check if we have exercises with completed sets
             const hasCompletedSets = exercises.some(ex =>
-                ex.sets?.some(set => set.completed && set.reps)
+                ex.exercise_type === 'cardio'
+                    ? ex.cardio?.completed
+                    : ex.sets?.some(set => set.completed && set.reps)
             );
 
             console.log('💪 Has completed sets:', hasCompletedSets);
@@ -643,16 +677,7 @@ const StartWorkout = () => {
                 templateName: resolvedTemplateName,
                 dayName: resolvedDayName,
                 weightUnit,
-                exercises: exercises.map(exercise => ({
-                    name: exercise.name,
-                    sets: (exercise.sets || []).filter(set => set.completed && set.reps).map(set => ({
-                        weight: set.weight || '0',
-                        weightUnit,
-                        reps: set.reps,
-                        completed: true
-                    })),
-                    notes: exercise.notes || ''
-                })).filter(ex => ex.sets.length > 0),
+                exercises: buildWorkoutSaveExercises(exercises, weightUnit),
                 duration: elapsedTime,
                 completed: true,
                 completedAt,
@@ -668,7 +693,7 @@ const StartWorkout = () => {
                 template_name: workoutData.templateName,
                 duration_seconds: elapsedTime,
                 exercise_count: workoutData.exercises.length,
-                total_sets: workoutData.exercises.reduce((acc, ex) => acc + ex.sets.length, 0),
+                total_sets: workoutData.exercises.reduce((acc, ex) => acc + (ex.sets?.length || 0), 0),
                 weight_unit: weightUnit,
             });
 
@@ -694,10 +719,9 @@ const StartWorkout = () => {
     };
 
     // Calculate workout progress
-    const totalSets = exercises.reduce((total, exercise) => total + (exercise.sets?.length || 0), 0);
-    const completedSets = exercises.reduce((total, exercise) =>
-        total + (exercise.sets?.filter(set => set.completed).length || 0), 0
-    );
+    const { totalUnits, completedUnits } = calcWorkoutProgress(exercises);
+    const totalSets = totalUnits;
+    const completedSets = completedUnits;
     const workoutProgress = totalSets > 0 ? (completedSets / totalSets) * 100 : 0;
 
     return (
@@ -874,11 +898,13 @@ const StartWorkout = () => {
                             <ModernWorkoutExercise
                                 exercise={exercises[currentExerciseIndex]}
                                 exerciseIndex={currentExerciseIndex}
-                                currentSetIndex={exercises[currentExerciseIndex].sets?.findIndex(set => !set.completed) || 0}
+                                currentSetIndex={exercises[currentExerciseIndex].exercise_type === 'cardio' ? 0 : (exercises[currentExerciseIndex].sets?.findIndex(set => !set.completed) || 0)}
                                 onSetChange={handleSetChange}
                                 onCompleteSet={handleCompleteSet}
                                 onRemoveSet={handleRemoveCompletedSet}
                                 onAddExtraSet={handleAddExtraSet}
+                                onCardioChange={handleCardioChange}
+                                onCompleteCardio={handleCompleteCardio}
                                 weightUnit={weightUnit}
                                 aiTip="Solid set! Maintain or slightly increase weight."
                                 totalExercises={exercises.length}
