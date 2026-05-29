@@ -20,13 +20,16 @@ import {
     CardContent,
     Chip,
     IconButton,
-    Grid
+    Grid,
+    Collapse,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { X as MdClose, Plus as MdAdd, Timer as MdTimer, Dumbbell as MdFitnessCenter, Minus as MdRemove } from 'lucide-react';
+import { X as MdClose, Plus as MdAdd, Timer as MdTimer, Dumbbell as MdFitnessCenter, Minus as MdRemove, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { fetchAllExercises } from '../../../services/localExerciseService';
 import { useWorkoutMutations } from '../hooks/useWorkoutMutations';
+import { useCustomExercises } from '../../../hooks/useCustomExercises';
+import CustomExerciseForm from './CustomExerciseForm';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
     '& .MuiDialog-paper': {
@@ -105,6 +108,8 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated, editData }) => {
 
     const { currentUser } = useAuth();
     const { createTemplate, updateTemplate } = useWorkoutMutations();
+    const { customExercises, saveCustomExercise } = useCustomExercises();
+    const [showCustomForm, setShowCustomForm] = useState(false);
     const isEditMode = !!editData;
 
     useEffect(() => {
@@ -363,13 +368,43 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated, editData }) => {
         );
     };
 
-    const filteredExercises = exercises.filter(exercise => {
+    const normalizedCustom = customExercises.map(ex => ({
+        id: ex.name,
+        name: ex.name,
+        muscleGroup: ex.muscleGroups || ex.muscles || ex.primaryMuscles?.[0] || 'Various',
+        equipment: ex.equipment || 'Various',
+        description: '',
+        isCustom: true,
+    }));
+
+    const filteredCustom = normalizedCustom.filter(ex =>
+        ex.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        (selectedMuscleGroup === 'All' || ex.muscleGroup.toLowerCase().includes(selectedMuscleGroup.toLowerCase()))
+    );
+
+    const filteredLibrary = exercises.filter(exercise => {
         const matchesSearch = exercise.name.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesMuscleGroup = selectedMuscleGroup === 'All' ||
             exercise.muscleGroup.toLowerCase().includes(selectedMuscleGroup.toLowerCase()) ||
             exercise.target?.toLowerCase().includes(selectedMuscleGroup.toLowerCase());
         return matchesSearch && matchesMuscleGroup;
     });
+
+    const filteredExercises = [...filteredCustom, ...filteredLibrary];
+
+    const handleAddCustom = async ({ name, muscleGroup }) => {
+        await saveCustomExercise({ name, muscleGroup });
+        const newExercise = {
+            id: name,
+            name,
+            muscleGroup: muscleGroup || 'Various',
+            equipment: 'Various',
+            description: '',
+            isCustom: true,
+        };
+        handleExerciseToggle(newExercise);
+        setShowCustomForm(false);
+    };
 
     const handleCreateWorkout = async () => {
         try {
@@ -746,6 +781,17 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated, editData }) => {
                                     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
                                         <Typography sx={{ color: 'text.secondary' }}>Loading exercises...</Typography>
                                     </Box>
+                                ) : filteredExercises.length === 0 ? (
+                                    <Box sx={{ pt: 2 }}>
+                                        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', mb: 2 }}>
+                                            No exercises found. Add a custom one:
+                                        </Typography>
+                                        <CustomExerciseForm
+                                            initialName={searchTerm}
+                                            onAdd={handleAddCustom}
+                                            compact
+                                        />
+                                    </Box>
                                 ) : (
                                     <Grid container spacing={2}>
                                         {filteredExercises.map((exercise) => {
@@ -755,7 +801,7 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated, editData }) => {
                                                     <ExerciseCard
                                                         onClick={() => handleExerciseToggle(exercise)}
                                                         sx={{
-                                                            border: isSelected ? '1px solid #dded00' : '1px solid rgba(255, 255, 255, 0.1)',
+                                                            border: isSelected ? '1px solid #dded00' : exercise.isCustom ? '1px solid rgba(221, 237, 0, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)',
                                                             backgroundColor: isSelected ? 'rgba(221, 237, 0, 0.1)' : 'rgba(40, 40, 40, 0.6)',
                                                             cursor: 'pointer',
                                                         }}
@@ -763,9 +809,14 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated, editData }) => {
                                                         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                                 <Box>
-                                                                    <Typography variant="subtitle1" sx={{ color: '#fff', fontWeight: 'bold' }}>
-                                                                        {exercise.name}
-                                                                    </Typography>
+                                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                        <Typography variant="subtitle1" sx={{ color: '#fff', fontWeight: 'bold' }}>
+                                                                            {exercise.name}
+                                                                        </Typography>
+                                                                        {exercise.isCustom && (
+                                                                            <Chip label="Custom" size="small" sx={{ height: 18, fontSize: '0.65rem', backgroundColor: 'rgba(221,237,0,0.15)', color: '#dded00', border: '1px solid rgba(221,237,0,0.3)' }} />
+                                                                        )}
+                                                                    </Box>
                                                                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                                                                         {exercise.muscleGroup} • {exercise.equipment}
                                                                     </Typography>
@@ -785,6 +836,32 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated, editData }) => {
                                                 </Grid>
                                             );
                                         })}
+                                        <Grid item xs={12}>
+                                            <Box
+                                                onClick={() => setShowCustomForm(v => !v)}
+                                                sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: 1,
+                                                    cursor: 'pointer',
+                                                    color: 'rgba(255,255,255,0.5)',
+                                                    py: 1,
+                                                    '&:hover': { color: '#dded00' },
+                                                }}
+                                            >
+                                                {showCustomForm ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                                <Typography variant="body2">Can&apos;t find it? Add custom exercise</Typography>
+                                            </Box>
+                                            <Collapse in={showCustomForm}>
+                                                <Box sx={{ pt: 1, pb: 2 }}>
+                                                    <CustomExerciseForm
+                                                        initialName={searchTerm}
+                                                        onAdd={handleAddCustom}
+                                                        compact
+                                                    />
+                                                </Box>
+                                            </Collapse>
+                                        </Grid>
                                     </Grid>
                                 )}
                             </Box>

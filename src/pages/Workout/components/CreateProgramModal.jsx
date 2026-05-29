@@ -22,13 +22,16 @@ import {
     IconButton,
     Grid,
     TextareaAutosize,
+    Collapse,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { X as MdClose, Plus as MdAdd, Calendar as MdCalendarToday, Trash2 as MdDeleteOutline, Dumbbell as MdFitnessCenter } from 'lucide-react';
+import { X as MdClose, Plus as MdAdd, Calendar as MdCalendarToday, Trash2 as MdDeleteOutline, Dumbbell as MdFitnessCenter, ChevronDown, ChevronUp } from 'lucide-react';
 import { fetchAllExercises } from '../../../services/localExerciseService';
 import { useAuth } from '../../../contexts/AuthContext';
 import { syncProgramTemplateIds, useWorkoutMutations } from '../hooks/useWorkoutMutations';
 import { programTemplates as defaultProgramTemplates } from './programTemplates';
+import { useCustomExercises } from '../../../hooks/useCustomExercises';
+import CustomExerciseForm from './CustomExerciseForm';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
     '& .MuiDialog-paper': {
@@ -91,6 +94,8 @@ const CreateProgramModal = ({ open, onClose, onProgramCreated, editData }) => {
         createProgram,
         updateProgram,
     } = useWorkoutMutations();
+    const { customExercises, saveCustomExercise } = useCustomExercises();
+    const [showCustomForm, setShowCustomForm] = useState(false);
 
     const [programData, setProgramData] = useState({
         name: '',
@@ -141,9 +146,36 @@ const CreateProgramModal = ({ open, onClose, onProgramCreated, editData }) => {
         }
     }, [editData]);
 
-    const filteredExercises = exercises.filter(ex =>
+    const normalizedCustom = customExercises.map(ex => ({
+        id: ex.name,
+        name: ex.name,
+        muscleGroup: ex.muscleGroups || ex.muscles || ex.primaryMuscles?.[0] || 'Various',
+        equipment: ex.equipment || 'Various',
+        isCustom: true,
+    }));
+
+    const filteredCustom = normalizedCustom.filter(ex =>
         ex.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const filteredLibrary = exercises.filter(ex =>
+        ex.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const filteredExercises = [...filteredCustom, ...filteredLibrary];
+
+    const handleAddCustom = async ({ name, muscleGroup }) => {
+        await saveCustomExercise({ name, muscleGroup });
+        const newExercise = {
+            id: name,
+            name,
+            muscleGroup: muscleGroup || 'Various',
+            equipment: 'Various',
+            isCustom: true,
+        };
+        handleAddExerciseToDay(newExercise);
+        setShowCustomForm(false);
+    };
 
     const steps = ['Template', 'Details', 'Days'];
 
@@ -924,26 +956,71 @@ const CreateProgramModal = ({ open, onClose, onProgramCreated, editData }) => {
                                                 onChange={(e) => setSearchTerm(e.target.value)}
                                             />
                                             <Box sx={{ flex: 1, overflowY: 'auto', pr: 1 }}>
-                                                {exercisesLoading ? <Typography sx={{ color: 'text.secondary' }}>Loading...</Typography> :
-                                                    filteredExercises.map(ex => (
-                                                        <Card
-                                                            key={ex.id}
-                                                            onClick={() => handleAddExerciseToDay(ex)}
+                                                {exercisesLoading ? (
+                                                    <Typography sx={{ color: 'text.secondary' }}>Loading...</Typography>
+                                                ) : filteredExercises.length === 0 ? (
+                                                    <Box sx={{ pt: 1 }}>
+                                                        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', mb: 2 }}>
+                                                            No exercises found. Add a custom one:
+                                                        </Typography>
+                                                        <CustomExerciseForm
+                                                            initialName={searchTerm}
+                                                            onAdd={handleAddCustom}
+                                                            compact
+                                                        />
+                                                    </Box>
+                                                ) : (
+                                                    <>
+                                                        {filteredExercises.map(ex => (
+                                                            <Card
+                                                                key={ex.id}
+                                                                onClick={() => handleAddExerciseToDay(ex)}
+                                                                sx={{
+                                                                    p: 1.5,
+                                                                    mb: 1,
+                                                                    cursor: 'pointer',
+                                                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                                                    border: ex.isCustom ? '1px solid rgba(221,237,0,0.3)' : '1px solid transparent',
+                                                                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' }
+                                                                }}
+                                                            >
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                    <Typography sx={{ color: '#fff' }}>{ex.name}</Typography>
+                                                                    {ex.isCustom && (
+                                                                        <Chip label="Custom" size="small" sx={{ height: 18, fontSize: '0.65rem', backgroundColor: 'rgba(221,237,0,0.15)', color: '#dded00', border: '1px solid rgba(221,237,0,0.3)' }} />
+                                                                    )}
+                                                                </Box>
+                                                                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                                                    {ex.muscleGroup} • {ex.equipment}
+                                                                </Typography>
+                                                            </Card>
+                                                        ))}
+                                                        <Box
+                                                            onClick={() => setShowCustomForm(v => !v)}
                                                             sx={{
-                                                                p: 1.5,
-                                                                mb: 1,
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: 1,
                                                                 cursor: 'pointer',
-                                                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                                                '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' }
+                                                                color: 'rgba(255,255,255,0.5)',
+                                                                py: 1,
+                                                                '&:hover': { color: '#dded00' },
                                                             }}
                                                         >
-                                                            <Typography sx={{ color: '#fff' }}>{ex.name}</Typography>
-                                                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                                                {ex.muscleGroup} • {ex.equipment}
-                                                            </Typography>
-                                                        </Card>
-                                                    ))
-                                                }
+                                                            {showCustomForm ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                                            <Typography variant="body2">Can&apos;t find it? Add custom exercise</Typography>
+                                                        </Box>
+                                                        <Collapse in={showCustomForm}>
+                                                            <Box sx={{ pt: 1, pb: 2 }}>
+                                                                <CustomExerciseForm
+                                                                    initialName={searchTerm}
+                                                                    onAdd={handleAddCustom}
+                                                                    compact
+                                                                />
+                                                            </Box>
+                                                        </Collapse>
+                                                    </>
+                                                )}
                                             </Box>
                                         </Box>
                                     </Box>
