@@ -745,42 +745,42 @@ const CreateProgramModal = ({ open, onClose, onProgramCreated, editData }) => {
                 return (
                     <Box sx={{
                         display: 'flex',
-                        gap: 4,
+                        gap: 2,
                         height: { xs: 'auto', md: '65vh' },
                         flexDirection: { xs: 'column', md: 'row' }
                     }}>
                         {/* Left Panel: Program Days List */}
                         <Box sx={{
-                            width: { xs: '100%', md: '300px' },
+                            width: { xs: '100%', md: '180px' },
+                            flexShrink: 0,
                             display: 'flex',
                             flexDirection: 'column',
-                            gap: 2,
+                            gap: 1.5,
                             borderRight: { xs: 'none', md: '1px solid rgba(255, 255, 255, 0.1)' },
-                            pr: { xs: 0, md: 4 },
+                            pr: { xs: 0, md: 2 },
                             borderBottom: { xs: '1px solid rgba(255, 255, 255, 0.1)', md: 'none' },
                             pb: { xs: 2, md: 0 },
                             mb: { xs: 2, md: 0 }
                         }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Typography variant="h6" sx={{ color: '#fff' }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
+                                <Typography variant="body1" sx={{ color: '#fff', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                                     Program Days
                                 </Typography>
-                                <Button
-                                    variant="contained"
-                                    startIcon={<MdAdd />}
+                                <IconButton
                                     onClick={handleAddDay}
                                     size="small"
+                                    title="Add Day"
                                     sx={{
-                                        background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
+                                        backgroundColor: '#dded00',
                                         color: '#000',
-                                        fontWeight: 'bold',
-                                        '&:hover': {
-                                            background: 'linear-gradient(45deg, #e8f15d 30%, #dded00 90%)',
-                                        },
+                                        borderRadius: '6px',
+                                        p: 0.5,
+                                        flexShrink: 0,
+                                        '&:hover': { backgroundColor: '#c8d800' },
                                     }}
                                 >
-                                    Add Day
-                                </Button>
+                                    <MdAdd size={18} />
+                                </IconButton>
                             </Box>
 
                             {programData.days.length === 0 ? (
@@ -800,8 +800,8 @@ const CreateProgramModal = ({ open, onClose, onProgramCreated, editData }) => {
                                             key={day.id}
                                             onClick={() => setSelectedDayId(day.id)}
                                             sx={{
-                                                p: 2,
-                                                mb: 1.5,
+                                                p: 1,
+                                                mb: 1,
                                                 cursor: 'pointer',
                                                 backgroundColor: selectedDayId === day.id ? 'rgba(221, 237, 0, 0.1)' : 'rgba(40, 40, 40, 0.6)',
                                                 border: selectedDayId === day.id ? '1px solid #dded00' : '1px solid rgba(255, 255, 255, 0.1)',
@@ -812,21 +812,23 @@ const CreateProgramModal = ({ open, onClose, onProgramCreated, editData }) => {
                                             }}
                                         >
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <Box>
-                                                    <Typography variant="subtitle1" sx={{ color: '#fff', fontWeight: 'bold' }}>{day.name}</Typography>
-                                                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                                        {day.exercises?.length || 0} exercises
+                                                <Box sx={{ minWidth: 0 }}>
+                                                    <Typography variant="body2" sx={{ color: '#fff', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{day.name}</Typography>
+                                                    <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
+                                                        {day.exercises?.length || 0} ex
                                                     </Typography>
                                                 </Box>
                                                 <IconButton
                                                     size="small"
                                                     onClick={(e) => { e.stopPropagation(); handleDeleteDay(day.id); }}
                                                     sx={{
-                                                        color: 'rgba(255, 255, 255, 0.5)',
+                                                        p: 0.25,
+                                                        color: 'rgba(255, 255, 255, 0.4)',
+                                                        flexShrink: 0,
                                                         '&:hover': { color: '#f44336', backgroundColor: 'rgba(244, 67, 54, 0.1)' }
                                                     }}
                                                 >
-                                                    <MdClose size={16} />
+                                                    <MdClose size={14} />
                                                 </IconButton>
                                             </Box>
                                         </Card>
