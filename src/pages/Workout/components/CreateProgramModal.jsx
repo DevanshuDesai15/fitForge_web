@@ -917,25 +917,26 @@ const CreateProgramModal = ({ open, onClose, onProgramCreated, editData }) => {
                                                                 {ex.sets.map((set, setIndex) => (
                                                                     <Box key={setIndex} sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 1 }}>
                                                                         <Typography sx={{ color: 'text.secondary', minWidth: '35px', fontSize: '0.8rem' }}>Set {set.setNumber}</Typography>
-                                                                        <TextField
-                                                                            placeholder="Reps"
-                                                                            value={set.reps}
-                                                                            onChange={(e) => handleSetChange(ex.id, setIndex, e.target.value)}
-                                                                            size="small"
-                                                                            type="number"
-                                                                            inputProps={{ min: 1 }}
-                                                                            sx={{
-                                                                                flex: 1,
-                                                                                '& .MuiOutlinedInput-root': {
-                                                                                    height: '32px',
-                                                                                    color: '#fff',
-                                                                                    '& fieldset': { borderColor: 'rgba(255,255,255,0.15)' },
-                                                                                    '&:hover fieldset': { borderColor: 'rgba(221,237,0,0.5)' },
-                                                                                    '&.Mui-focused fieldset': { borderColor: '#dded00' },
-                                                                                    '& input': { padding: '6px 8px', textAlign: 'center' },
-                                                                                },
-                                                                            }}
-                                                                        />
+                                                                        <Box sx={{ flex: 1 }}>
+                                                                            <TextField
+                                                                                fullWidth
+                                                                                placeholder="Reps"
+                                                                                value={set.reps}
+                                                                                onChange={(e) => handleSetChange(ex.id, setIndex, e.target.value)}
+                                                                                size="small"
+                                                                                inputProps={{ min: 1, inputMode: 'numeric', pattern: '[0-9]*' }}
+                                                                                sx={{
+                                                                                    '& .MuiOutlinedInput-root': {
+                                                                                        height: '32px',
+                                                                                        color: '#fff',
+                                                                                        '& fieldset': { borderColor: 'rgba(255,255,255,0.15)' },
+                                                                                        '&:hover fieldset': { borderColor: 'rgba(221,237,0,0.5)' },
+                                                                                        '&.Mui-focused fieldset': { borderColor: '#dded00' },
+                                                                                        '& input': { padding: '6px 8px', textAlign: 'center', color: '#fff' },
+                                                                                    },
+                                                                                }}
+                                                                            />
+                                                                        </Box>
                                                                         {ex.sets.length > 1 && (
                                                                             <IconButton
                                                                                 size="small"
