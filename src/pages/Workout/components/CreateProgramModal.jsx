@@ -905,25 +905,48 @@ const CreateProgramModal = ({ open, onClose, onProgramCreated, editData }) => {
                                                                     <Typography sx={{ color: '#fff' }}>{ex.name}</Typography>
                                                                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>{ex.muscleGroup}</Typography>
                                                                 </Box>
-                                                                <IconButton size="small" onClick={() => handleRemoveExerciseFromDay(ex.id)}>
-                                                                    <MdDeleteOutline sx={{ color: 'rgba(255, 255, 255, 0.5)', '&:hover': { color: '#f44336' } }} />
+                                                                <IconButton
+                                                                    size="small"
+                                                                    onClick={() => handleRemoveExerciseFromDay(ex.id)}
+                                                                    sx={{ color: 'rgba(255,255,255,0.5)', '&:hover': { color: '#f44336', backgroundColor: 'rgba(244,67,54,0.1)' } }}
+                                                                >
+                                                                    <MdDeleteOutline size={16} />
                                                                 </IconButton>
                                                             </Box>
                                                             <Box sx={{ mt: 1.5 }}>
                                                                 {ex.sets.map((set, setIndex) => (
-                                                                    <Box key={setIndex} sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 1 }}>
-                                                                        <Typography sx={{ color: 'text.secondary', minWidth: '40px' }}>Set {set.setNumber}</Typography>
+                                                                    <Box key={setIndex} sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 1 }}>
+                                                                        <Typography sx={{ color: 'text.secondary', minWidth: '35px', fontSize: '0.8rem' }}>Set {set.setNumber}</Typography>
                                                                         <TextField
-                                                                            label="Reps"
+                                                                            placeholder="Reps"
                                                                             value={set.reps}
                                                                             onChange={(e) => handleSetChange(ex.id, setIndex, e.target.value)}
                                                                             size="small"
-                                                                            variant="filled"
-                                                                            sx={{ flex: 1 }}
+                                                                            type="number"
+                                                                            inputProps={{ min: 1 }}
+                                                                            sx={{
+                                                                                flex: 1,
+                                                                                '& .MuiOutlinedInput-root': {
+                                                                                    height: '32px',
+                                                                                    color: '#fff',
+                                                                                    '& fieldset': { borderColor: 'rgba(255,255,255,0.15)' },
+                                                                                    '&:hover fieldset': { borderColor: 'rgba(221,237,0,0.5)' },
+                                                                                    '&.Mui-focused fieldset': { borderColor: '#dded00' },
+                                                                                    '& input': { padding: '6px 8px', textAlign: 'center' },
+                                                                                },
+                                                                            }}
                                                                         />
                                                                         {ex.sets.length > 1 && (
-                                                                            <IconButton size="small" onClick={() => handleRemoveSet(ex.id, setIndex)}>
-                                                                                <MdDeleteOutline sx={{ color: 'rgba(255, 255, 255, 0.5)', '&:hover': { color: '#f44336' } }} />
+                                                                            <IconButton
+                                                                                size="small"
+                                                                                onClick={() => handleRemoveSet(ex.id, setIndex)}
+                                                                                sx={{
+                                                                                    p: 0.5,
+                                                                                    color: 'rgba(255,255,255,0.35)',
+                                                                                    '&:hover': { color: '#f44336', backgroundColor: 'rgba(244,67,54,0.1)' },
+                                                                                }}
+                                                                            >
+                                                                                <MdDeleteOutline size={14} />
                                                                             </IconButton>
                                                                         )}
                                                                     </Box>
