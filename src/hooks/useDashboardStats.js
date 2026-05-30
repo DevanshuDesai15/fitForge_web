@@ -49,6 +49,31 @@ export function useDashboardStats() {
         return workoutDate >= sevenDaysAgo;
       });
 
+      // Collect all exercise names from this week to look up muscle info for old records
+      const exerciseNamesInWeek = new Set();
+      weekWorkoutData.forEach((workout) => {
+        (workout.exercises || []).forEach((ex) => {
+          if (ex.name && !ex.body_part && !ex.bodyPart && !ex.target_muscle && !ex.target && !Array.isArray(ex.muscles)) {
+            exerciseNamesInWeek.add(ex.name);
+          }
+        });
+      });
+
+      // Batch lookup muscle info from exercises catalog for names missing muscle fields
+      const exerciseMuscleMap = new Map();
+      if (exerciseNamesInWeek.size > 0) {
+        const { data: catalogRows } = await supabase
+          .from("exercises")
+          .select("name, primary_muscle, body_part")
+          .in("name", [...exerciseNamesInWeek]);
+        (catalogRows || []).forEach((row) => {
+          exerciseMuscleMap.set(row.name, {
+            body_part: row.body_part || null,
+            target_muscle: row.primary_muscle || null,
+          });
+        });
+      }
+
       weekWorkoutData.forEach((workout) => {
         weeklyWorkouts++;
         weeklyMinutes += workout.duration_seconds || 0;
@@ -58,10 +83,18 @@ export function useDashboardStats() {
           workout.exercises.forEach((ex) => {
             if (ex.name) uniqueExercises.add(ex.name.toLowerCase());
 
-            // Extract targets from JSONB exercises
-            if (ex.body_part) targetedMuscles.add(ex.body_part.toLowerCase());
-            if (ex.target_muscle)
-              targetedMuscles.add(ex.target_muscle.toLowerCase());
+            // Extract muscle targets — use saved fields first, fall back to catalog lookup
+            const catalog = exerciseMuscleMap.get(ex.name) || {};
+            const bodyPart = ex.body_part || ex.bodyPart || ex.muscle_group || ex.category || catalog.body_part;
+            const targetMuscle = ex.target_muscle || ex.target || catalog.target_muscle;
+            if (bodyPart) targetedMuscles.add(bodyPart.toLowerCase());
+            if (targetMuscle) targetedMuscles.add(targetMuscle.toLowerCase());
+            if (Array.isArray(ex.muscles)) {
+              ex.muscles.forEach((m) => {
+                const name = typeof m === 'string' ? m : m?.name_en || m?.name;
+                if (name) targetedMuscles.add(name.toLowerCase());
+              });
+            }
 
             if (ex.sets && Array.isArray(ex.sets)) {
               totalSets += ex.sets.filter((s) => s.completed).length;

@@ -110,6 +110,8 @@ export function buildWorkoutSaveExercises(exercises, weightUnit) {
             exercise_type: 'strength',
             sets: completedSets,
             notes: exercise.notes || '',
+            body_part: exercise.bodyPart || exercise.body_part || exercise.muscle_group || null,
+            target_muscle: exercise.target || exercise.target_muscle || (Array.isArray(exercise.muscles) ? exercise.muscles[0] : exercise.muscles) || null,
         }];
     });
 }
