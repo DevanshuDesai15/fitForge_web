@@ -116,6 +116,20 @@ export function buildWorkoutSaveExercises(exercises, weightUnit) {
     });
 }
 
+export function buildPreviousSetsMap(workoutRows) {
+    const map = {};
+    for (const row of (workoutRows || [])) {
+        for (const exercise of (row.exercises || [])) {
+            if (!exercise.name) continue;
+            if (exercise.exercise_type === 'cardio') continue;
+            if (!map[exercise.name] && Array.isArray(exercise.sets)) {
+                map[exercise.name] = exercise.sets;
+            }
+        }
+    }
+    return map;
+}
+
 export function resolveProgramWorkoutSelection(programData, templateRows, requestedDayId = null) {
     const templateIds = toArray(programData?.template_ids ?? programData?.templateIds);
     const templateById = new Map(toArray(templateRows).map((template) => [template.id, template]));

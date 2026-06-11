@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveProgramWorkoutSelection, calcWorkoutProgress, buildWorkoutSaveExercises } from '../StartWorkout';
+import { resolveProgramWorkoutSelection, calcWorkoutProgress, buildWorkoutSaveExercises, buildPreviousSetsMap } from '../StartWorkout';
 
 describe('resolveProgramWorkoutSelection', () => {
   it('rebuilds program days from template rows and selects the requested template id', () => {
@@ -166,5 +166,75 @@ describe('buildWorkoutSaveExercises', () => {
       { name: 'Squat', exercise_type: 'strength', sets: [{ weight: '', reps: '', completed: false }], notes: '' },
     ];
     expect(buildWorkoutSaveExercises(exercises, 'kg')).toHaveLength(0);
+  });
+});
+
+describe('buildPreviousSetsMap', () => {
+  it('returns empty object for empty input', () => {
+    expect(buildPreviousSetsMap([])).toEqual({});
+  });
+
+  it('returns empty object for null input', () => {
+    expect(buildPreviousSetsMap(null)).toEqual({});
+  });
+
+  it('maps exercise name to sets from the most recent workout', () => {
+    const rows = [
+      {
+        completed_at: '2026-06-10T10:00:00Z',
+        exercises: [
+          { name: 'Bench Press', exercise_type: 'strength', sets: [{ reps: 10, weight: '60' }] },
+        ],
+      },
+    ];
+    expect(buildPreviousSetsMap(rows)).toEqual({
+      'Bench Press': [{ reps: 10, weight: '60' }],
+    });
+  });
+
+  it('uses the first (most recent) row when exercise appears in multiple workouts', () => {
+    const rows = [
+      {
+        completed_at: '2026-06-10T10:00:00Z',
+        exercises: [{ name: 'Squat', exercise_type: 'strength', sets: [{ reps: 5, weight: '100' }] }],
+      },
+      {
+        completed_at: '2026-06-03T10:00:00Z',
+        exercises: [{ name: 'Squat', exercise_type: 'strength', sets: [{ reps: 5, weight: '90' }] }],
+      },
+    ];
+    expect(buildPreviousSetsMap(rows)['Squat']).toEqual([{ reps: 5, weight: '100' }]);
+  });
+
+  it('skips cardio exercises', () => {
+    const rows = [
+      {
+        exercises: [{ name: 'Running', exercise_type: 'cardio', cardio: {} }],
+      },
+    ];
+    expect(buildPreviousSetsMap(rows)).toEqual({});
+  });
+
+  it('skips exercises without a sets array', () => {
+    const rows = [
+      {
+        exercises: [{ name: 'Plank', exercise_type: 'strength' }],
+      },
+    ];
+    expect(buildPreviousSetsMap(rows)).toEqual({});
+  });
+
+  it('builds map across multiple exercises in one workout', () => {
+    const rows = [
+      {
+        exercises: [
+          { name: 'Bench Press', exercise_type: 'strength', sets: [{ reps: 10, weight: '60' }] },
+          { name: 'Tricep Pushdown', exercise_type: 'strength', sets: [{ reps: 12, weight: '30' }] },
+        ],
+      },
+    ];
+    const map = buildPreviousSetsMap(rows);
+    expect(map['Bench Press']).toEqual([{ reps: 10, weight: '60' }]);
+    expect(map['Tricep Pushdown']).toEqual([{ reps: 12, weight: '30' }]);
   });
 });
