@@ -17,6 +17,12 @@ export function toStoredKm(displayValue, weightUnit) {
     return weightUnit === 'lbs' ? num / KM_TO_MI : num;
 }
 
+export function formatPreviousSet(set, weightUnit = 'kg') {
+    const reps = set.reps ?? '—';
+    const weight = set.weight || '0';
+    return `${reps} reps @ ${weight} ${weightUnit}`;
+}
+
 const inputFieldSx = {
     flex: 1,
     '& input': { textAlign: 'center', color: '#fff', fontSize: '1.25rem', fontWeight: 'bold', padding: '12px' },

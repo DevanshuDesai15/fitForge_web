@@ -53,3 +53,27 @@ describe('toStoredKm', () => {
     expect(toStoredKm('', 'kg')).toBeNull();
   });
 });
+
+import { formatPreviousSet } from '../components/ModernWorkoutExercise';
+
+describe('formatPreviousSet', () => {
+  it('formats reps and weight in metric', () => {
+    expect(formatPreviousSet({ reps: 10, weight: '60' }, 'kg')).toBe('10 reps @ 60 kg');
+  });
+
+  it('formats reps and weight in imperial', () => {
+    expect(formatPreviousSet({ reps: 8, weight: '135' }, 'lbs')).toBe('8 reps @ 135 lbs');
+  });
+
+  it('shows 0 when weight is missing', () => {
+    expect(formatPreviousSet({ reps: 10 }, 'kg')).toBe('10 reps @ 0 kg');
+  });
+
+  it('shows — when reps is missing', () => {
+    expect(formatPreviousSet({ weight: '60' }, 'kg')).toBe('— reps @ 60 kg');
+  });
+
+  it('defaults weightUnit to kg', () => {
+    expect(formatPreviousSet({ reps: 5, weight: '80' })).toBe('5 reps @ 80 kg');
+  });
+});
