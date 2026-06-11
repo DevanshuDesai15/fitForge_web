@@ -60,6 +60,55 @@ export const useCustomExercises = () => {
         refresh();
     }, [refresh]);
 
+    const deleteCustomExercise = useCallback(async (name) => {
+        if (!currentUser || !name) return;
+
+        setCustomExercises((prev) => {
+            const updated = prev.filter((e) => e.name.toLowerCase() !== name.toLowerCase());
+            writeCache(updated);
+            return updated;
+        });
+
+        try {
+            const { error: sbError } = await supabase
+                .from('user_custom_exercises')
+                .delete()
+                .eq('user_id', currentUser.uid)
+                .eq('name', name);
+            if (sbError) throw sbError;
+        } catch (err) {
+            console.error('useCustomExercises: delete failed', err);
+            refresh();
+        }
+    }, [supabase, currentUser, refresh]);
+
+    const editCustomExercise = useCallback(async (oldName, { name, muscleGroup }) => {
+        if (!currentUser || !name?.trim()) return;
+        const trimmed = name.trim();
+
+        setCustomExercises((prev) => {
+            const updated = prev.map((e) =>
+                e.name.toLowerCase() === oldName.toLowerCase()
+                    ? rowToExercise({ name: trimmed, muscle_group: muscleGroup || null, equipment: 'Various', difficulty: 'Intermediate' })
+                    : e
+            );
+            writeCache(updated);
+            return updated;
+        });
+
+        try {
+            const { error: sbError } = await supabase
+                .from('user_custom_exercises')
+                .update({ name: trimmed, muscle_group: muscleGroup || null })
+                .eq('user_id', currentUser.uid)
+                .eq('name', oldName);
+            if (sbError) throw sbError;
+        } catch (err) {
+            console.error('useCustomExercises: edit failed', err);
+            refresh();
+        }
+    }, [supabase, currentUser, refresh]);
+
     const saveCustomExercise = useCallback(async ({ name, muscleGroup }) => {
         if (!currentUser || !name?.trim()) return;
 
@@ -104,5 +153,5 @@ export const useCustomExercises = () => {
         }
     }, [supabase, currentUser]);
 
-    return { customExercises, loading, error, saveCustomExercise, refresh };
+    return { customExercises, loading, error, saveCustomExercise, editCustomExercise, deleteCustomExercise, refresh };
 };

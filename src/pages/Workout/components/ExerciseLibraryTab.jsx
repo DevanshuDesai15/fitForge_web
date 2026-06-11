@@ -8,7 +8,14 @@ import {
     TextField,
     Button,
     Chip,
-    IconButton
+    IconButton,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions,
+    Snackbar,
+    Alert,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -19,13 +26,17 @@ import {
     Target,
     Weight,
     BarChart3,
-    Search
+    Search,
+    Pencil,
+    Trash2,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useSupabase } from '../../../hooks/useSupabase';
 import { getWeightUnit } from '../../../utils/weightUnit';
 import { getExerciseLibraryStatsFromWorkouts } from '../../../utils/workoutExerciseHistory';
 import { useExerciseCatalog } from '../hooks/useExerciseCatalog';
+import { useCustomExercises } from '../../../hooks/useCustomExercises';
+import CustomExerciseForm from './CustomExerciseForm';
 
 const EMPTY_LIBRARY_STATS = {
     exercisesTried: 0,
@@ -123,6 +134,44 @@ const ExerciseLibraryTab = () => {
     const [detailOpen, setDetailOpen] = useState(false);
     const [libraryStats, setLibraryStats] = useState(EMPTY_LIBRARY_STATS);
     const [workouts, setWorkouts] = useState([]);
+    const [addExerciseOpen, setAddExerciseOpen] = useState(false);
+    const [addSuccessOpen, setAddSuccessOpen] = useState(false);
+    const [addDuplicateOpen, setAddDuplicateOpen] = useState(false);
+    const [editingExercise, setEditingExercise] = useState(null);
+    const [deletingExercise, setDeletingExercise] = useState(null);
+    const [searchInput, setSearchInput] = useState('');
+    const { saveCustomExercise, editCustomExercise, deleteCustomExercise, customExercises } = useCustomExercises();
+
+    const handleEditExercise = async ({ name, muscleGroup }) => {
+        await editCustomExercise(editingExercise.name, { name, muscleGroup });
+        setEditingExercise(null);
+    };
+
+    const handleDeleteConfirm = async () => {
+        await deleteCustomExercise(deletingExercise.name);
+        setDeletingExercise(null);
+    };
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            handleFilterChange('searchTerm', searchInput);
+        }, 300);
+        return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchInput]);
+
+    const handleAddCustomExercise = async ({ name, muscleGroup }) => {
+        const isDuplicate = customExercises.some(
+            (ex) => ex.name.toLowerCase() === name.trim().toLowerCase()
+        );
+        if (isDuplicate) {
+            setAddDuplicateOpen(true);
+            return;
+        }
+        await saveCustomExercise({ name, muscleGroup });
+        setAddExerciseOpen(false);
+        setAddSuccessOpen(true);
+    };
 
     const handleFilterChange = (key, value) => {
         setFilters((current) => ({
@@ -275,8 +324,43 @@ const ExerciseLibraryTab = () => {
     // Replace old uniqueCategories with filterOptions from Supabase hook
     const categories = ['All', ...filterOptions.primaryMuscles];
 
-    // For display
-    const filteredExercises = exerciseStats;
+    // Merge custom exercises (stored in user_custom_exercises, not the exercises table)
+    const filteredCustomExercises = customExercises
+        .filter((ex) => {
+            const term = searchInput.toLowerCase();
+            const matchesSearch = !term || ex.name.toLowerCase().includes(term);
+            const matchesMuscle = !filters.primaryMuscle ||
+                (ex.primaryMuscles || []).includes(filters.primaryMuscle) ||
+                ex.muscles === filters.primaryMuscle;
+            return matchesSearch && matchesMuscle;
+        })
+        .map((ex) => {
+            const userStats = userWorkoutHistory[normalizeExerciseKey(ex.name)] || {
+                setsCompleted: 0,
+                totalReps: 0,
+                volume: null,
+                lastPerformed: null,
+                isNew: true,
+                hasData: false,
+            };
+            return {
+                id: `custom-${ex.name}`,
+                name: ex.name,
+                category: ex.muscles || 'Custom',
+                difficulty: ex.difficulty || 'Intermediate',
+                primaryMuscle: ex.muscles || 'Various',
+                secondaryMuscles: [],
+                equipment: ex.equipment ? [ex.equipment] : [],
+                description: 'Custom exercise',
+                videoUrls: {},
+                raw: { ...ex, id: `custom-${ex.name}`, isCustom: true },
+                isCustom: true,
+                ...userStats,
+            };
+        });
+
+    // For display — custom exercises shown first
+    const filteredExercises = [...filteredCustomExercises, ...exerciseStats];
     const totalExercises = totalCount;
     const historyStats = [
         {
@@ -395,8 +479,8 @@ const ExerciseLibraryTab = () => {
                     />
                     <TextField
                         placeholder="Search exercises..."
-                        value={filters.searchTerm}
-                        onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
                         fullWidth
                         sx={{
                             '& .MuiOutlinedInput-root': {
@@ -449,6 +533,7 @@ const ExerciseLibraryTab = () => {
                     <Button
                         variant="contained"
                         startIcon={<MdAdd />}
+                        onClick={() => setAddExerciseOpen(true)}
                         sx={{
                             background: 'linear-gradient(45deg, #dded00 30%, #e8f15d 90%)',
                             color: '#000',
@@ -536,11 +621,13 @@ const ExerciseLibraryTab = () => {
                                             display: { xs: 'none', sm: 'inline-flex' }
                                         }}
                                     />
-                                    <ViewDetailsChip
-                                        className="view-details-chip"
-                                        label="View Details"
-                                        size="small"
-                                    />
+                                    {!exercise.isCustom && (
+                                        <ViewDetailsChip
+                                            className="view-details-chip"
+                                            label="View Details"
+                                            size="small"
+                                        />
+                                    )}
                                     {exercise.isNew && (
                                         <Chip
                                             label="New"
@@ -554,9 +641,28 @@ const ExerciseLibraryTab = () => {
                                         />
                                     )}
                                 </Box>
-                                <IconButton size="small" sx={{ color: 'text.secondary' }}>
-                                    <MdInfo />
-                                </IconButton>
+                                {exercise.isCustom ? (
+                                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                        <IconButton
+                                            size="small"
+                                            onClick={(e) => { e.stopPropagation(); setEditingExercise(exercise); }}
+                                            sx={{ color: 'rgba(255,255,255,0.4)', '&:hover': { color: '#dded00' } }}
+                                        >
+                                            <Pencil size={15} />
+                                        </IconButton>
+                                        <IconButton
+                                            size="small"
+                                            onClick={(e) => { e.stopPropagation(); setDeletingExercise(exercise); }}
+                                            sx={{ color: 'rgba(255,255,255,0.4)', '&:hover': { color: '#f44336' } }}
+                                        >
+                                            <Trash2 size={15} />
+                                        </IconButton>
+                                    </Box>
+                                ) : (
+                                    <IconButton size="small" sx={{ color: 'text.secondary' }}>
+                                        <MdInfo />
+                                    </IconButton>
+                                )}
                             </Box>
 
                             {/* Bottom Row: Performance Data */}
@@ -739,6 +845,112 @@ const ExerciseLibraryTab = () => {
                 onClose={() => { setDetailOpen(false); setSelectedExercise(null); }}
                 exercise={selectedExercise}
             />
+
+            {/* Add Custom Exercise Dialog */}
+            <Dialog
+                open={addExerciseOpen}
+                onClose={() => setAddExerciseOpen(false)}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        background: '#1a1a1a',
+                        borderRadius: '16px',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                    }
+                }}
+            >
+                <DialogTitle sx={{ pb: 1 }}>
+                    <Typography variant="h6" sx={{ color: '#fff', fontWeight: 'bold' }}>
+                        Add Custom Exercise
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', mt: 0.5 }}>
+                        Create a custom exercise and save it to your library
+                    </Typography>
+                </DialogTitle>
+                <DialogContent sx={{ pt: 1 }}>
+                    <CustomExerciseForm onAdd={handleAddCustomExercise} />
+                </DialogContent>
+            </Dialog>
+
+            <Snackbar
+                open={addSuccessOpen}
+                autoHideDuration={3000}
+                onClose={() => setAddSuccessOpen(false)}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert severity="success" onClose={() => setAddSuccessOpen(false)} sx={{ width: '100%' }}>
+                    Exercise added to your library!
+                </Alert>
+            </Snackbar>
+
+            <Snackbar
+                open={addDuplicateOpen}
+                autoHideDuration={3000}
+                onClose={() => setAddDuplicateOpen(false)}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert severity="warning" onClose={() => setAddDuplicateOpen(false)} sx={{ width: '100%' }}>
+                    An exercise with this name already exists in your library.
+                </Alert>
+            </Snackbar>
+
+            {/* Edit Custom Exercise Dialog */}
+            <Dialog
+                open={!!editingExercise}
+                onClose={() => setEditingExercise(null)}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    sx: { background: '#1a1a1a', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }
+                }}
+            >
+                <DialogTitle sx={{ pb: 1 }}>
+                    <Typography variant="h6" sx={{ color: '#fff', fontWeight: 'bold' }}>Edit Exercise</Typography>
+                    <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', mt: 0.5 }}>
+                        Update the name or muscle group for this exercise
+                    </Typography>
+                </DialogTitle>
+                <DialogContent sx={{ pt: 1 }}>
+                    <CustomExerciseForm
+                        initialName={editingExercise?.name}
+                        onAdd={handleEditExercise}
+                    />
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Confirm Dialog */}
+            <Dialog
+                open={!!deletingExercise}
+                onClose={() => setDeletingExercise(null)}
+                maxWidth="xs"
+                fullWidth
+                PaperProps={{
+                    sx: { background: '#1a1a1a', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }
+                }}
+            >
+                <DialogTitle sx={{ color: '#fff', fontWeight: 'bold' }}>Delete Exercise?</DialogTitle>
+                <DialogContent>
+                    <Typography sx={{ color: 'rgba(255,255,255,0.7)' }}>
+                        &quot;{deletingExercise?.name}&quot; will be permanently removed from your library.
+                    </Typography>
+                </DialogContent>
+                <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
+                    <Button
+                        onClick={() => setDeletingExercise(null)}
+                        sx={{ color: 'rgba(255,255,255,0.6)', '&:hover': { color: '#fff' } }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={handleDeleteConfirm}
+                        sx={{ background: '#f44336', color: '#fff', '&:hover': { background: '#d32f2f' } }}
+                    >
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };

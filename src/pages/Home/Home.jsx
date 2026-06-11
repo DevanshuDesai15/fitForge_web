@@ -27,7 +27,6 @@ import QuickAddExerciseModal from '../../components/workout/QuickAddExerciseModa
 
 // Components
 import AIUnlockProgress from './components/AIUnlockProgress';
-import WelcomeModal from './components/WelcomeModal';
 import TodaysFocusCard from './components/TodaysFocusCard';
 import WeeklyStatsGrid from './components/WeeklyStatsGrid';
 import RecentAchievementsList from './components/RecentAchievementsList';
@@ -87,36 +86,6 @@ const getRecommendationDescription = (recommendation) => {
     }
 };
 
-// Dynamic greeting function
-const getDynamicGreeting = () => {
-    const hour = new Date().getHours();
-
-    if (hour >= 5 && hour < 12) {
-        return {
-            text: "Good morning",
-            emoji: "🌅",
-            message: "Ready to start your day strong?"
-        };
-    } else if (hour >= 12 && hour < 17) {
-        return {
-            text: "Good afternoon",
-            emoji: "☀️",
-            message: "Time for that midday energy boost?"
-        };
-    } else if (hour >= 17 && hour < 21) {
-        return {
-            text: "Good evening",
-            emoji: "🌆",
-            message: "Perfect time for an evening workout!"
-        };
-    } else {
-        return {
-            text: "Good night",
-            emoji: "🌙",
-            message: "Late night session? You're dedicated!"
-        };
-    }
-};
 
 const DEFAULT_WEEKLY_STATS = {
     totalVolume: 0,
@@ -139,7 +108,6 @@ export default function Home() {
     const [aiLoading, setAiLoading] = useState(false);
     const [aiError, setAiError] = useState('');
     const [quickAddModalOpen, setQuickAddModalOpen] = useState(false);
-    const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(true);
 
     const { currentUser } = useAuth();
     const supabase = useSupabase();
@@ -149,7 +117,7 @@ export default function Home() {
     const userId = currentUser?.uid;
 
     // React Query Hooks (Supabase)
-    const { profile, isLoading: profileLoading } = useProfile();
+    const { isLoading: profileLoading } = useProfile();
     const { 
         data: statsData,
         isLoading: statsLoading,
@@ -177,8 +145,6 @@ export default function Home() {
     );
     const isAiUnlocked = completedWorkoutsCount >= AI_RECOMMENDATION_UNLOCK_WORKOUTS;
 
-    // Set greeting state
-    const [greeting, setGreeting] = useState(getDynamicGreeting());
 
 
 
@@ -260,35 +226,8 @@ export default function Home() {
         }
     }, [userId, supabase, statsLoading, profileLoading, loadAIRecommendations]);
 
-    // Update greeting every minute to keep it current
-    useEffect(() => {
-        const updateGreeting = () => {
-            setGreeting(getDynamicGreeting());
-        };
 
-        // Update immediately
-        updateGreeting();
 
-        // Set up interval to update every minute
-        const interval = setInterval(updateGreeting, 60000);
-
-        return () => clearInterval(interval);
-    }, []);
-
-    useEffect(() => {
-        if (!isWelcomeModalOpen) {
-            return undefined;
-        }
-
-        const previousOverflow = document.body.style.overflow;
-        document.body.style.overflow = 'hidden';
-
-        return () => {
-            document.body.style.overflow = previousOverflow;
-        };
-    }, [isWelcomeModalOpen]);
-
-    const displayName = profile?.display_name || currentUser?.email?.split('@')[0] || 'Member';
 
     const isLoading = statsLoading || profileLoading;
 
@@ -297,16 +236,6 @@ export default function Home() {
             minHeight: '100vh',
             background: '#121212',
         }}>
-            {isWelcomeModalOpen ? (
-                <WelcomeModal
-                    greeting={greeting}
-                    displayName={displayName}
-                    streakDays={safeWeeklyStats.streakDays}
-                    onClose={() => setIsWelcomeModalOpen(false)}
-                    onLogWorkout={() => setQuickAddModalOpen(true)}
-                    onStartTraining={() => navigate('/workout')}
-                />
-            ) : null}
 
             <Box sx={{
                 maxWidth: '1400px',
@@ -320,7 +249,7 @@ export default function Home() {
                 )}
 
                 {/* Weekly Targets (Prominently displayed) */}
-                <Box sx={{ mb: 4, mt: isWelcomeModalOpen ? { xs: 2.5, md: 1.5 } : { xs: 5, md: 4 } }}>
+                <Box sx={{ mb: 4, mt: { xs: 5, md: 4 } }}>
                     <Typography variant="h5" sx={{ color: 'text.primary', fontWeight: 'bold', mb: 2 }}>
                         Weekly Targets
                     </Typography>

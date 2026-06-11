@@ -282,7 +282,7 @@ const PreferencesTab = ({
 
       <Grid item xs={12}>
         {/* Data & Storage Card */}
-        <PreferenceCard>
+        {/* <PreferenceCard>
           <CardContent sx={{ p: 3 }}>
             <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
               Data & Storage
@@ -321,7 +321,7 @@ const PreferencesTab = ({
               </Box>
             </Box>
           </CardContent>
-        </PreferenceCard>
+        </PreferenceCard> */}
       </Grid>
     </Grid>
   );
