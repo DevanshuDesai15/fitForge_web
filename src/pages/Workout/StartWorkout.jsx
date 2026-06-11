@@ -192,6 +192,7 @@ const StartWorkout = () => {
     const [showRestTimer, setShowRestTimer] = useState(false);
     const [restDuration] = useState(180); // 3 minutes default - can be adjusted later
     const [bottomTab, setBottomTab] = useState('overview'); // 'overview', 'ai-coach', 'suggestions', 'variations'
+    const [previousSetsMap, setPreviousSetsMap] = useState({});
 
     // Hooks
     const navigate = useNavigate();
@@ -238,6 +239,28 @@ const StartWorkout = () => {
     }, []);
 
     // Weight unit is now automatically provided by UnitsContext
+
+    // Fetch previous session data once when user is authenticated
+    useEffect(() => {
+        if (!currentUser?.uid) return;
+
+        (async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('workouts')
+                    .select('exercises, completed_at')
+                    .eq('user_id', currentUser.uid)
+                    .eq('completed', true)
+                    .order('completed_at', { ascending: false })
+                    .limit(10);
+
+                if (error) throw error;
+                setPreviousSetsMap(buildPreviousSetsMap(data || []));
+            } catch (err) {
+                console.warn('Could not load previous session data:', err);
+            }
+        })();
+    }, [currentUser?.uid]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Load AI suggestions when exercises are set
     useEffect(() => {
@@ -926,6 +949,7 @@ const StartWorkout = () => {
                                 totalExercises={exercises.length}
                                 onPreviousExercise={handlePreviousExercise}
                                 onNextExercise={handleNextExercise}
+                                previousSets={previousSetsMap[exercises[currentExerciseIndex]?.name]}
                             />
                         )}
 
