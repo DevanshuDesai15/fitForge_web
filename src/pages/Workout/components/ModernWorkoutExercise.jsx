@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Box, Typography, Card, CardContent, Button, Chip, IconButton, TextField } from '@mui/material';
-import { Info, Minus, Plus, CheckCircle, X } from 'lucide-react';
+import { Box, Typography, Card, CardContent, Button, Chip, IconButton, TextField, Collapse } from '@mui/material';
+import { Info, Minus, Plus, CheckCircle, X, ChevronRight } from 'lucide-react';
 import PropTypes from 'prop-types';
 
 const KM_TO_MI = 0.621371;
@@ -55,11 +55,13 @@ const ModernWorkoutExercise = ({
     totalExercises,
     onPreviousExercise,
     onNextExercise,
+    previousSets,
 }) => {
     const isCardio = exercise.exercise_type === 'cardio';
     const distanceUnit = weightUnit === 'lbs' ? 'mi' : 'km';
     const KM_PER_STEP = weightUnit === 'lbs' ? 0.25 / KM_TO_MI : 0.5;
     const [distanceDisplay, setDistanceDisplay] = useState('');
+    const [showPrevious, setShowPrevious] = useState(false);
 
     // Strength-specific derived values (unused for cardio)
     const completedSets = exercise.sets?.filter(set => set.completed) || [];
@@ -132,6 +134,48 @@ const ModernWorkoutExercise = ({
                         </>
                     )}
                 </Box>
+
+                {/* Last Session */}
+                {!isCardio && previousSets != null && (
+                    <Box sx={{ mb: 2 }}>
+                        <Button
+                            variant="text"
+                            size="small"
+                            onClick={() => setShowPrevious(prev => !prev)}
+                            startIcon={
+                                <ChevronRight
+                                    size={14}
+                                    style={{
+                                        transform: showPrevious ? 'rotate(90deg)' : 'rotate(0deg)',
+                                        transition: 'transform 0.2s',
+                                    }}
+                                />
+                            }
+                            sx={{ color: 'text.secondary', textTransform: 'none', p: 0, minWidth: 0 }}
+                        >
+                            Last session
+                        </Button>
+                        <Collapse in={showPrevious}>
+                            <Box sx={{ pl: 0.5, pt: 0.5 }}>
+                                {previousSets.length === 0 ? (
+                                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                        No sets recorded
+                                    </Typography>
+                                ) : (
+                                    previousSets.map((set, i) => (
+                                        <Typography
+                                            key={i}
+                                            variant="caption"
+                                            sx={{ color: 'text.secondary', display: 'block' }}
+                                        >
+                                            Set {i + 1}: {formatPreviousSet(set, weightUnit)}
+                                        </Typography>
+                                    ))
+                                )}
+                            </Box>
+                        </Collapse>
+                    </Box>
+                )}
 
                 {/* ─── CARDIO SECTION ─── */}
                 {isCardio && (
@@ -430,6 +474,10 @@ ModernWorkoutExercise.propTypes = {
     totalExercises: PropTypes.number.isRequired,
     onPreviousExercise: PropTypes.func.isRequired,
     onNextExercise: PropTypes.func.isRequired,
+    previousSets: PropTypes.arrayOf(PropTypes.shape({
+        reps: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+        weight: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+    })),
 };
 
 export default ModernWorkoutExercise;
