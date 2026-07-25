@@ -223,7 +223,7 @@ src/
 │   ├── workout/         # Workout-specific components
 │   └── [pages].jsx      # Main page components
 ├── contexts/            # React Context providers
-├── firebase/            # Firebase configuration
+├── pages/               # Route implementations and page-specific UI
 ├── services/            # API services and utilities
 ├── theme/              # Material-UI theming
 └── utils/              # Helper functions
@@ -238,38 +238,29 @@ src/
 
 ## 🚀 Deployment
 
-### Firebase Hosting
+### Vercel
 
-1. **Install Firebase CLI**
-
-   ```bash
-   npm install -g firebase-tools
-   ```
-
-2. **Login to Firebase**
-
-   ```bash
-   firebase login
-   ```
-
-3. **Build the project**
+1. **Build and verify the production bundle**
 
    ```bash
    npm run build
    ```
 
-4. **Deploy**
-   ```bash
-   firebase deploy
-   ```
+2. **Import the repository into Vercel**
+
+   Vercel reads the Vite build settings and SPA rewrites from `vercel.json`.
+
+3. **Configure production environment variables**
+
+   Add the required `VITE_*` values in the Vercel project settings before deploying.
+
+4. **Deploy from Vercel**
+
+   Use a preview deployment for review, then promote the approved deployment to production.
 
 ### Environment Variables for Production
 
-Make sure to set up environment variables in your hosting platform:
-
-- Vercel: Add variables in project settings
-- Netlify: Configure in site settings
-- Firebase: Use Firebase Functions config
+Add production environment variables in the Vercel project settings. Do not commit `.env` or `.env.local`.
 
 ## 🔧 Troubleshooting
 
