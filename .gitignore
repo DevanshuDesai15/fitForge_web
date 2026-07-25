@@ -30,10 +30,14 @@ dist-ssr
 .firebase/
 firebase-debug.log
 firebaseAuth.json
-docs/
-.kiro
 
+# Private project documentation
+docs/
+.kiro/
 *.md
+
+# README is the only public, tracked Markdown document
+!README.md
 
 .codex/
 .claude/
