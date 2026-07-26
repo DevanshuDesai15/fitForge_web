@@ -153,12 +153,20 @@ const ExerciseLibraryTab = () => {
     };
 
     useEffect(() => {
+        if (searchInput === filters.searchTerm) {
+            return undefined;
+        }
+
         const timer = setTimeout(() => {
-            handleFilterChange('searchTerm', searchInput);
+            setFilters((current) => ({
+                ...current,
+                searchTerm: searchInput,
+                page: 1,
+            }));
         }, 300);
+
         return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchInput]);
+    }, [filters.searchTerm, searchInput]);
 
     const handleAddCustomExercise = async ({ name, muscleGroup }) => {
         const isDuplicate = customExercises.some(

@@ -1,6 +1,8 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
+const nodeMajorVersion = Number.parseInt(process.versions.node.split('.')[0], 10);
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   return {
@@ -9,6 +11,9 @@ export default defineConfig(({ mode }) => {
       environment: 'jsdom',
       setupFiles: './src/test/setup.js',
       globals: true,
+      // Node 25+ exposes its own Web Storage global. Disable it in test
+      // workers so jsdom remains the browser-storage implementation.
+      execArgv: nodeMajorVersion >= 25 ? ['--no-experimental-webstorage'] : [],
     },
     build: {
       rollupOptions: {

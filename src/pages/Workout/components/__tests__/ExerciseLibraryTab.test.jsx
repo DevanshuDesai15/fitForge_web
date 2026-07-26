@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import ExerciseLibraryTab from '../ExerciseLibraryTab';
 import ExerciseDetailDialog from '../ExerciseDetailDialog';
@@ -71,7 +71,12 @@ describe('ExerciseLibraryTab', () => {
     fireEvent.click(screen.getByRole('button', { name: /Next/i }));
 
     expect(await screen.findByText('Barbell Bench Press')).toBeInTheDocument();
-    expect(screen.getByText(/^Page 2$/i)).toBeInTheDocument();
+    await new Promise((resolve) => setTimeout(resolve, 350));
+
+    await waitFor(() => {
+      expect(screen.getByText(/^Page 2$/i)).toBeInTheDocument();
+      expect(screen.getByText('Barbell Bench Press')).toBeInTheDocument();
+    });
   });
 
   it('renders pagination controls before the performance insights section', async () => {
