@@ -17,12 +17,50 @@ import {
   getSubstitutionReason,
 } from "./progressiveOverload/substitutionEngine";
 import {
+  analyzeConsistency,
   analyzeExerciseFrequency,
+  analyzePersonalRecords,
+  analyzeTrends,
   analyzeVolumeProgression,
   calculateConsistencyScore,
   calculateDurationTrend,
+  generateHistoryBasedRecommendations,
   getEmptyWorkoutAnalysis,
 } from "./progressiveOverload/historyAnalytics";
+import {
+  calculateConfidenceLevel,
+  calculateProgressionAnalysis,
+  calculateProgressionRate,
+  calculateProgressionTrend,
+  findLastProgressDate,
+  generateAlternativeOptions,
+  generateProgressionSuggestion,
+  getMaxReps,
+  getMaxWeight,
+} from "./progressiveOverload/progressionEngine";
+import {
+  analyzeSessionsForPlateau,
+  assessPlateauSeverity,
+  calculatePlateauConfidence,
+  calculatePlateauDuration,
+  calculateTotalVolume,
+  checkRepStagnation,
+  checkVolumeStagnation,
+  checkWeightStagnation,
+  classifyPlateauType,
+  getAverageWeight,
+  getCurrentPerformanceMetrics,
+} from "./progressiveOverload/plateauAnalysis";
+import {
+  calculateDeloadDuration,
+  calculateDeloadPercentage,
+  calculateInterventionEffectiveness,
+  calculateTransferWeight,
+  getExerciseVariations,
+  getMinimumWeight,
+  getReplacementExercises,
+  prioritizeInterventions,
+} from "./progressiveOverload/plateauInterventions";
 
 /**
  * @typedef {Object} ProgressionAnalysis
@@ -662,54 +700,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _calculateProgressionAnalysis(exerciseId, sessions) {
-    if (sessions.length === 0) {
-      return {
-        exerciseId,
-        exerciseName: exerciseId
-          ? exerciseId.replace("-", " ")
-          : "Unknown Exercise",
-        currentWeight: 0,
-        currentReps: 0,
-        currentSets: 0,
-        progressionTrend: "maintaining",
-        progressionRate: 0,
-        confidenceLevel: 0,
-        lastProgressDate: null,
-        totalSessions: 0,
-      };
-    }
-
-    // Sort sessions by date (newest first)
-    sessions.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    const latestSession = sessions[0];
-    const currentWeight = this._getMaxWeight(latestSession.sets || []);
-    const currentReps = this._getMaxReps(latestSession.sets || []);
-    const currentSets =
-      latestSession.sets && Array.isArray(latestSession.sets)
-        ? latestSession.sets.length
-        : 0;
-
-    // Calculate progression trend
-    const progressionTrend = this._calculateProgressionTrend(sessions);
-    const progressionRate = this._calculateProgressionRate(sessions);
-    const lastProgressDate = this._findLastProgressDate(sessions);
-    const confidenceLevel = this._calculateConfidenceLevel(sessions);
-
-    return {
-      exerciseId,
-      exerciseName: exerciseId
-        ? exerciseId.replace("-", " ")
-        : "Unknown Exercise",
-      currentWeight,
-      currentReps,
-      currentSets,
-      progressionTrend,
-      progressionRate,
-      confidenceLevel,
-      lastProgressDate,
-      totalSessions: sessions.length,
-    };
+    return calculateProgressionAnalysis(exerciseId, sessions);
   }
 
   /**
@@ -719,8 +710,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _getMaxWeight(sets) {
-    if (!sets || !Array.isArray(sets) || sets.length === 0) return 0;
-    return Math.max(...sets.map((set) => set.weight || 0));
+    return getMaxWeight(sets);
   }
 
   /**
@@ -730,8 +720,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _getMaxReps(sets) {
-    if (!sets || !Array.isArray(sets) || sets.length === 0) return 0;
-    return Math.max(...sets.map((set) => set.reps || 0));
+    return getMaxReps(sets);
   }
 
   /**
@@ -741,19 +730,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _calculateProgressionTrend(sessions) {
-    if (sessions.length < 2) return "maintaining";
-
-    const recentSessions = sessions.slice(0, 3);
-    const weights = recentSessions.map((session) =>
-      this._getMaxWeight(session.sets || [])
-    );
-
-    const isImproving = weights[0] > weights[weights.length - 1];
-    const isDeclining = weights[0] < weights[weights.length - 1];
-
-    if (isImproving) return "improving";
-    if (isDeclining) return "declining";
-    return "maintaining";
+    return calculateProgressionTrend(sessions);
   }
 
   /**
@@ -763,19 +740,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _calculateProgressionRate(sessions) {
-    if (sessions.length < 2) return 0;
-
-    const firstSession = sessions[sessions.length - 1];
-    const lastSession = sessions[0];
-
-    const firstWeight = this._getMaxWeight(firstSession.sets || []);
-    const lastWeight = this._getMaxWeight(lastSession.sets || []);
-
-    const weightDiff = lastWeight - firstWeight;
-    const timeDiff = new Date(lastSession.date) - new Date(firstSession.date);
-    const weeksDiff = timeDiff / (1000 * 60 * 60 * 24 * 7);
-
-    return weeksDiff > 0 ? weightDiff / weeksDiff : 0;
+    return calculateProgressionRate(sessions);
   }
 
   /**
@@ -785,18 +750,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _findLastProgressDate(sessions) {
-    if (sessions.length < 2) return null;
-
-    for (let i = 0; i < sessions.length - 1; i++) {
-      const currentWeight = this._getMaxWeight(sessions[i].sets || []);
-      const previousWeight = this._getMaxWeight(sessions[i + 1].sets || []);
-
-      if (currentWeight > previousWeight) {
-        return new Date(sessions[i].date);
-      }
-    }
-
-    return null;
+    return findLastProgressDate(sessions);
   }
 
   /**
@@ -806,10 +760,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _calculateConfidenceLevel(sessions) {
-    if (sessions.length === 0) return 0;
-    if (sessions.length < 3) return 0.3;
-    if (sessions.length < 5) return 0.6;
-    return Math.min(0.95, 0.6 + (sessions.length - 5) * 0.05);
+    return calculateConfidenceLevel(sessions);
   }
 
   /**
@@ -820,68 +771,11 @@ class ProgressiveOverloadAIService {
    * @private
    */
   async _generateProgressionSuggestion(analysis) {
-    const isCompound = this.compoundExercises.includes(analysis.exerciseId);
-    const baseIncrease = isCompound
-      ? this.config.compoundWeightIncrease
-      : this.config.isolationWeightIncrease;
-
-    let suggestedWeight = analysis.currentWeight;
-    let suggestedReps = analysis.currentReps;
-    let suggestedSets = analysis.currentSets;
-    let progressionType = "weight";
-    let reasoning = "";
-
-    // Determine progression strategy
-    if (
-      analysis.progressionTrend === "improving" &&
-      analysis.confidenceLevel > this.config.confidenceThreshold
-    ) {
-      suggestedWeight = analysis.currentWeight + baseIncrease;
-      reasoning = `Progressive overload: increase weight by ${baseIncrease}kg based on recent improvements`;
-    } else if (analysis.progressionTrend === "maintaining") {
-      // Check if we should increase reps first
-      if (analysis.currentReps < (isCompound ? 8 : 12)) {
-        suggestedReps = Math.min(
-          analysis.currentReps + 2,
-          isCompound ? 10 : 15
-        );
-        progressionType = "reps";
-        reasoning = `Increase reps to ${suggestedReps} before adding weight`;
-      } else {
-        suggestedWeight = analysis.currentWeight + baseIncrease;
-        suggestedReps = isCompound ? 6 : 8; // Reset reps when increasing weight
-        reasoning = `Ready for weight progression: increase to ${suggestedWeight}kg`;
-      }
-    } else {
-      // Declining trend - suggest deload
-      suggestedWeight = Math.max(
-        analysis.currentWeight * (1 - this.config.deloadPercentage),
-        baseIncrease
-      );
-      progressionType = "deload";
-      reasoning = `Deload recommended: reduce weight by ${Math.round(
-        this.config.deloadPercentage * 100
-      )}% to break plateau`;
-    }
-
-    // Generate alternative options
-    const alternativeOptions = this._generateAlternativeOptions(
+    return generateProgressionSuggestion(
       analysis,
-      baseIncrease
+      this.config,
+      this.compoundExercises
     );
-
-    return {
-      exerciseId: analysis.exerciseId,
-      exerciseName: analysis.exerciseName,
-      currentWeight: analysis.currentWeight,
-      suggestedWeight,
-      suggestedReps,
-      suggestedSets,
-      progressionType,
-      reasoning,
-      confidenceLevel: analysis.confidenceLevel,
-      alternativeOptions,
-    };
   }
 
   /**
@@ -892,33 +786,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _generateAlternativeOptions(analysis, baseIncrease) {
-    const options = [];
-
-    // Conservative option
-    options.push({
-      weight: analysis.currentWeight + baseIncrease * 0.5,
-      reps: analysis.currentReps,
-      reasoning: "Conservative progression - smaller weight increase",
-    });
-
-    // Rep-focused option
-    options.push({
-      weight: analysis.currentWeight,
-      reps: Math.min(analysis.currentReps + 2, 15),
-      reasoning: "Rep progression - increase volume before weight",
-    });
-
-    // Aggressive option (if confidence is high)
-    if (analysis.confidenceLevel > 0.8) {
-      options.push({
-        weight: analysis.currentWeight + baseIncrease * 1.5,
-        reps: Math.max(analysis.currentReps - 1, 5),
-        reasoning:
-          "Aggressive progression - larger weight increase with fewer reps",
-      });
-    }
-
-    return options;
+    return generateAlternativeOptions(analysis, baseIncrease);
   }
 
   /**
@@ -1301,21 +1169,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _calculateDeloadPercentage(plateauData) {
-    let baseDeload = 0.1; // 10% base deload
-
-    // Increase deload for severe plateaus
-    if (plateauData.severity === "severe") {
-      baseDeload = 0.2; // 20%
-    } else if (plateauData.severity === "moderate") {
-      baseDeload = 0.15; // 15%
-    }
-
-    // Adjust based on plateau duration
-    if (plateauData.plateauDuration >= 6) {
-      baseDeload += 0.05; // Additional 5%
-    }
-
-    return Math.min(baseDeload, 0.25); // Cap at 25%
+    return calculateDeloadPercentage(plateauData);
   }
 
   /**
@@ -1325,9 +1179,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _calculateDeloadDuration(plateauData) {
-    if (plateauData.severity === "severe") return 2;
-    if (plateauData.severity === "moderate") return 1;
-    return 1; // Default 1 week
+    return calculateDeloadDuration(plateauData);
   }
 
   /**
@@ -1337,8 +1189,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _getMinimumWeight(exerciseId) {
-    const isCompound = this.compoundExercises.includes(exerciseId);
-    return isCompound ? 20 : 5; // 20kg for compounds, 5kg for isolation
+    return getMinimumWeight(exerciseId, this.compoundExercises);
   }
 
   /**
@@ -1349,27 +1200,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _calculateInterventionEffectiveness(interventionType, plateauData) {
-    const baseEffectiveness = {
-      deload: 0.85,
-      rep_range: 0.75,
-      strength_focus: 0.7,
-      volume_increase: 0.65,
-      variation: 0.8,
-      technique_refinement: 0.6,
-      frequency_modification: 0.75,
-      periodization_change: 0.9,
-    };
-
-    let effectiveness = baseEffectiveness[interventionType] || 0.7;
-
-    // Adjust based on plateau severity
-    if (plateauData.severity === "severe") {
-      effectiveness *= 1.1; // More effective for severe plateaus
-    } else if (plateauData.severity === "mild") {
-      effectiveness *= 0.9; // Less critical for mild plateaus
-    }
-
-    return Math.min(effectiveness, 0.95);
+    return calculateInterventionEffectiveness(interventionType, plateauData);
   }
 
   /**
@@ -1379,78 +1210,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _getExerciseVariations(exerciseId) {
-    const variations = {
-      "bench-press": [
-        {
-          exerciseId: "incline-bench-press",
-          name: "Incline Bench Press",
-          description: "Switch to incline angle to target upper chest",
-          difficulty: 0.9, // 90% of flat bench weight
-          reasoning: "Different angle provides novel stimulus",
-          expectedOutcome: "Upper chest development and renewed progress",
-        },
-        {
-          exerciseId: "dumbbell-bench-press",
-          name: "Dumbbell Bench Press",
-          description: "Use dumbbells for greater range of motion",
-          difficulty: 0.8, // 80% of barbell weight (per dumbbell)
-          reasoning: "Unilateral loading and stability challenge",
-          expectedOutcome: "Improved stability and muscle balance",
-        },
-      ],
-      "shoulder-press": [
-        {
-          exerciseId: "dumbbell-shoulder-press",
-          name: "Dumbbell Shoulder Press",
-          description: "Switch to dumbbells for unilateral training",
-          difficulty: 0.8,
-          reasoning: "Independent arm movement and stability challenge",
-          expectedOutcome: "Better shoulder stability and balance",
-        },
-        {
-          exerciseId: "seated-shoulder-press",
-          name: "Seated Shoulder Press",
-          description: "Remove leg drive by sitting",
-          difficulty: 0.85,
-          reasoning: "Isolates shoulders by removing lower body assistance",
-          expectedOutcome: "Pure shoulder strength development",
-        },
-      ],
-      squat: [
-        {
-          exerciseId: "front-squat",
-          name: "Front Squat",
-          description: "Move bar to front position",
-          difficulty: 0.75,
-          reasoning: "Different loading pattern emphasizes quads and core",
-          expectedOutcome: "Improved quad strength and posture",
-        },
-        {
-          exerciseId: "goblet-squat",
-          name: "Goblet Squat",
-          description: "Hold weight at chest level",
-          difficulty: 0.6,
-          reasoning: "Teaches proper squat mechanics with front loading",
-          expectedOutcome: "Better squat form and core engagement",
-        },
-      ],
-    };
-
-    return (
-      variations[exerciseId] || [
-        {
-          exerciseId: `${exerciseId}-variation`,
-          name: `${
-            exerciseId ? exerciseId.replace("-", " ") : "Unknown Exercise"
-          } Variation`,
-          description:
-            "Try a similar exercise with different equipment or angle",
-          difficulty: 0.85,
-          reasoning: "Novel stimulus can break plateau",
-          expectedOutcome: "Renewed progress and motivation",
-        },
-      ]
-    );
+    return getExerciseVariations(exerciseId);
   }
 
   /**
@@ -1461,7 +1221,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _calculateTransferWeight(currentWeight, difficulty) {
-    return Math.round(currentWeight * difficulty * 2) / 2; // Round to nearest 0.5kg
+    return calculateTransferWeight(currentWeight, difficulty);
   }
 
   /**
@@ -1471,23 +1231,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _getReplacementExercises(exerciseId) {
-    const replacements = {
-      "bench-press": ["Push-ups", "Dips", "Chest Fly"],
-      "shoulder-press": [
-        "Lateral Raises",
-        "Pike Push-ups",
-        "Handstand Push-ups",
-      ],
-      squat: ["Lunges", "Step-ups", "Bulgarian Split Squats"],
-      deadlift: ["Romanian Deadlifts", "Hip Thrusts", "Good Mornings"],
-    };
-
-    return (
-      replacements[exerciseId] || [
-        "Similar movement patterns",
-        "Bodyweight alternatives",
-      ]
-    );
+    return getReplacementExercises(exerciseId);
   }
 
   /**
@@ -1498,16 +1242,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _prioritizeInterventions(interventions) {
-    return interventions.sort((a, b) => {
-      // Primary sort: priority (high > medium > low)
-      const priorityOrder = { high: 3, medium: 2, low: 1 };
-      const priorityDiff =
-        priorityOrder[b.priority] - priorityOrder[a.priority];
-      if (priorityDiff !== 0) return priorityDiff;
-
-      // Secondary sort: effectiveness
-      return b.estimatedEffectiveness - a.estimatedEffectiveness;
-    });
+    return prioritizeInterventions(interventions);
   }
 
   /**
@@ -1664,9 +1399,9 @@ class ProgressiveOverloadAIService {
       // Perform comprehensive analysis
       const exerciseFrequencyAnalysis =
         this._analyzeExerciseFrequency(workouts);
-      const personalRecordAnalysis = this._analyzePersonalRecords(workouts);
-      const trendAnalysis = this._analyzeTrends(workouts);
-      const consistencyAnalysis = this._analyzeConsistency(workouts);
+      const personalRecordAnalysis = analyzePersonalRecords(workouts);
+      const trendAnalysis = analyzeTrends(workouts);
+      const consistencyAnalysis = analyzeConsistency(workouts);
       const volumeAnalysis = this._analyzeVolumeProgression(workouts);
 
       return {
@@ -1680,7 +1415,7 @@ class ProgressiveOverloadAIService {
         trends: trendAnalysis,
         consistency: consistencyAnalysis,
         volume: volumeAnalysis,
-        recommendations: this._generateHistoryBasedRecommendations(workouts),
+        recommendations: generateHistoryBasedRecommendations(workouts),
       };
     } catch (error) {
       this._logError("Error analyzing comprehensive workout history", error);
@@ -1705,91 +1440,8 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _analyzePersonalRecords(workouts) {
-    const personalRecords = new Map();
-    const recordProgression = new Map();
-
-    workouts.forEach((workout) => {
-      if (workout.exercises && Array.isArray(workout.exercises)) {
-        workout.exercises.forEach((exercise) => {
-          const exerciseId = exercise.exerciseId;
-          // Skip exercises without valid exerciseId
-          if (!exerciseId || typeof exerciseId !== "string") {
-            return;
-          }
-
-          if (exercise.sets && Array.isArray(exercise.sets)) {
-            exercise.sets.forEach((set) => {
-              const volume = (set.weight || 0) * (set.reps || 0);
-              const maxWeight = set.weight || 0;
-
-              if (!personalRecords.has(exerciseId)) {
-                personalRecords.set(exerciseId, {
-                  exerciseId,
-                  exerciseName: exerciseId
-                    ? exerciseId.replace("-", " ")
-                    : "Unknown Exercise",
-                  maxWeight: 0,
-                  maxVolume: 0,
-                  maxReps: 0,
-                  firstSeen: workout.timestamp,
-                  lastImprovement: null,
-                });
-              }
-
-              const current = personalRecords.get(exerciseId);
-              let improved = false;
-
-              if (maxWeight > current.maxWeight) {
-                current.maxWeight = maxWeight;
-                current.lastImprovement = workout.timestamp;
-                improved = true;
-              }
-
-              if (volume > current.maxVolume) {
-                current.maxVolume = volume;
-                if (!improved) current.lastImprovement = workout.timestamp;
-                improved = true;
-              }
-
-              if ((set.reps || 0) > current.maxReps) {
-                current.maxReps = set.reps || 0;
-                if (!improved) current.lastImprovement = workout.timestamp;
-              }
-
-              // Track progression over time
-              if (!recordProgression.has(exerciseId)) {
-                recordProgression.set(exerciseId, []);
-              }
-              recordProgression.get(exerciseId).push({
-                date: workout.timestamp,
-                weight: maxWeight,
-                volume: volume,
-                reps: set.reps || 0,
-              });
-            });
-          }
-        });
-      }
-    });
-
-    const recordsArray = Array.from(personalRecords.values());
-
-    return {
-      totalRecords: recordsArray.length,
-      recentRecords: recordsArray.filter(
-        (record) =>
-          record.lastImprovement &&
-          Date.now() - new Date(record.lastImprovement).getTime() <
-            30 * 24 * 60 * 60 * 1000 // Last 30 days
-      ),
-      topPerformers: recordsArray
-        .filter((record) => record.maxWeight > 0)
-        .sort((a, b) => b.maxWeight - a.maxWeight)
-        .slice(0, 5),
-      progressionData: Object.fromEntries(recordProgression),
-    };
+    return analyzePersonalRecords(workouts);
   }
-
   /**
    * Analyze workout trends and patterns
    * @param {Array} workouts - Workout data
@@ -1797,79 +1449,8 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _analyzeTrends(workouts) {
-    const sortedWorkouts = [...workouts].sort(
-      (a, b) => new Date(a.date) - new Date(b.date)
-    );
-
-    // Calculate workout frequency trend
-    const workoutDates = sortedWorkouts.map((w) => new Date(w.date));
-    const daysBetweenWorkouts = [];
-
-    for (let i = 1; i < workoutDates.length; i++) {
-      const daysDiff =
-        (workoutDates[i] - workoutDates[i - 1]) / (1000 * 60 * 60 * 24);
-      daysBetweenWorkouts.push(daysDiff);
-    }
-
-    const averageDaysBetween =
-      daysBetweenWorkouts.length > 0
-        ? daysBetweenWorkouts.reduce((sum, days) => sum + days, 0) /
-          daysBetweenWorkouts.length
-        : 0;
-
-    // Calculate volume trend
-    const volumeTrend = sortedWorkouts.map((workout) => ({
-      date: workout.timestamp,
-      totalVolume: workout.totalVolume || 0,
-      duration: workout.duration || 0,
-      exerciseCount: workout.exercises?.length || 0,
-    }));
-
-    // Determine overall trends
-    const recentWorkouts = volumeTrend.slice(-5);
-    const earlierWorkouts = volumeTrend.slice(0, 5);
-
-    const recentAvgVolume =
-      recentWorkouts.reduce((sum, w) => sum + w.totalVolume, 0) /
-      recentWorkouts.length;
-    const earlierAvgVolume =
-      earlierWorkouts.reduce((sum, w) => sum + w.totalVolume, 0) /
-      earlierWorkouts.length;
-
-    const volumeChange = recentAvgVolume - earlierAvgVolume;
-    const volumeTrendDirection =
-      volumeChange > 0
-        ? "increasing"
-        : volumeChange < 0
-        ? "decreasing"
-        : "stable";
-
-    return {
-      workoutFrequency: {
-        averageDaysBetween: Math.round(averageDaysBetween * 10) / 10,
-        weeklyFrequency: 7 / averageDaysBetween,
-        consistency: this._calculateConsistencyScore(daysBetweenWorkouts),
-      },
-      volume: {
-        trend: volumeTrendDirection,
-        changeAmount: Math.round(volumeChange),
-        changePercentage:
-          earlierAvgVolume > 0
-            ? Math.round((volumeChange / earlierAvgVolume) * 100)
-            : 0,
-        currentAverage: Math.round(recentAvgVolume),
-        progression: volumeTrend,
-      },
-      duration: {
-        average: Math.round(
-          sortedWorkouts.reduce((sum, w) => sum + (w.duration || 0), 0) /
-            sortedWorkouts.length
-        ),
-        trend: this._calculateDurationTrend(sortedWorkouts),
-      },
-    };
+    return analyzeTrends(workouts);
   }
-
   /**
    * Analyze workout consistency
    * @param {Array} workouts - Workout data
@@ -1877,45 +1458,8 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _analyzeConsistency(workouts) {
-    const sortedWorkouts = [...workouts].sort(
-      (a, b) => new Date(a.date) - new Date(b.date)
-    );
-
-    if (sortedWorkouts.length < 2) {
-      return { score: 0, rating: "insufficient_data" };
-    }
-
-    const workoutDates = sortedWorkouts.map((w) => new Date(w.date));
-    const daysBetweenWorkouts = [];
-
-    for (let i = 1; i < workoutDates.length; i++) {
-      const daysDiff =
-        (workoutDates[i] - workoutDates[i - 1]) / (1000 * 60 * 60 * 24);
-      daysBetweenWorkouts.push(daysDiff);
-    }
-
-    const consistencyScore =
-      this._calculateConsistencyScore(daysBetweenWorkouts);
-
-    let rating = "poor";
-    if (consistencyScore >= 0.8) rating = "excellent";
-    else if (consistencyScore >= 0.6) rating = "good";
-    else if (consistencyScore >= 0.4) rating = "fair";
-
-    return {
-      score: Math.round(consistencyScore * 100) / 100,
-      rating,
-      averageDaysBetween:
-        Math.round(
-          (daysBetweenWorkouts.reduce((sum, days) => sum + days, 0) /
-            daysBetweenWorkouts.length) *
-            10
-        ) / 10,
-      longestGap: Math.max(...daysBetweenWorkouts),
-      shortestGap: Math.min(...daysBetweenWorkouts),
-    };
+    return analyzeConsistency(workouts);
   }
-
   /**
    * Analyze volume progression patterns
    * @param {Array} workouts - Workout data
@@ -1933,70 +1477,8 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _generateHistoryBasedRecommendations(workouts) {
-    const recommendations = [];
-
-    // Analyze workout frequency
-    const sortedWorkouts = [...workouts].sort(
-      (a, b) => new Date(a.date) - new Date(b.date)
-    );
-    const workoutDates = sortedWorkouts.map((w) => new Date(w.date));
-    const daysBetweenWorkouts = [];
-
-    for (let i = 1; i < workoutDates.length; i++) {
-      const daysDiff =
-        (workoutDates[i] - workoutDates[i - 1]) / (1000 * 60 * 60 * 24);
-      daysBetweenWorkouts.push(daysDiff);
-    }
-
-    const averageDaysBetween =
-      daysBetweenWorkouts.reduce((sum, days) => sum + days, 0) /
-      daysBetweenWorkouts.length;
-
-    if (averageDaysBetween > 4) {
-      recommendations.push(
-        "Consider increasing workout frequency - aim for 3-4 sessions per week for optimal progress"
-      );
-    }
-
-    if (averageDaysBetween < 1.5) {
-      recommendations.push(
-        "You might be overtraining - consider adding rest days between sessions"
-      );
-    }
-
-    // Analyze exercise variety
-    const uniqueExercises = new Set();
-    workouts.forEach((workout) => {
-      if (workout.exercises) {
-        workout.exercises.forEach((ex) => uniqueExercises.add(ex.exerciseId));
-      }
-    });
-
-    if (uniqueExercises.size < 8) {
-      recommendations.push(
-        "Add more exercise variety to target different muscle groups and movement patterns"
-      );
-    }
-
-    // Analyze volume progression
-    const recentVolume =
-      sortedWorkouts
-        .slice(-3)
-        .reduce((sum, w) => sum + (w.totalVolume || 0), 0) / 3;
-    const earlierVolume =
-      sortedWorkouts
-        .slice(0, 3)
-        .reduce((sum, w) => sum + (w.totalVolume || 0), 0) / 3;
-
-    if (recentVolume <= earlierVolume) {
-      recommendations.push(
-        "Your training volume has plateaued - consider progressive overload by increasing weights or reps"
-      );
-    }
-
-    return recommendations;
+    return generateHistoryBasedRecommendations(workouts);
   }
-
   /**
    * Calculate consistency score based on workout intervals
    * @param {Array<number>} daysBetweenWorkouts - Days between workouts
@@ -2170,45 +1652,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _analyzeSessionsForPlateau(sessions) {
-    const metrics = sessions.map((session) => {
-      const sets = session.sets || [];
-      return {
-        date: session.date,
-        maxWeight: this._getMaxWeight(sets),
-        maxReps: this._getMaxReps(sets),
-        totalVolume: this._calculateTotalVolume(sets),
-        averageWeight: this._getAverageWeight(sets),
-        totalSets: sets.length,
-      };
-    });
-
-    // Check for stagnation in weight progression
-    const weightStagnation = this._checkWeightStagnation(metrics);
-
-    // Check for stagnation in rep progression
-    const repStagnation = this._checkRepStagnation(metrics);
-
-    // Check for stagnation in volume progression
-    const volumeStagnation = this._checkVolumeStagnation(metrics);
-
-    // Determine if plateaued (any 2 of 3 metrics stagnant)
-    const stagnationCount = [
-      weightStagnation,
-      repStagnation,
-      volumeStagnation,
-    ].filter(Boolean).length;
-    const isPlateaued = stagnationCount >= 2;
-
-    return {
-      isPlateaued,
-      metrics: {
-        weight: weightStagnation,
-        reps: repStagnation,
-        volume: volumeStagnation,
-        stagnationCount,
-      },
-      sessionMetrics: metrics,
-    };
+    return analyzeSessionsForPlateau(sessions);
   }
 
   /**
@@ -2218,14 +1662,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _checkWeightStagnation(metrics) {
-    if (metrics.length < 3) return false;
-
-    const weights = metrics.map((m) => m.maxWeight);
-    const weightVariation = Math.max(...weights) - Math.min(...weights);
-
-    // Consider stagnant if weight variation is less than minimum progression increment
-    const minIncrement = 1.0; // 1kg minimum for any exercise
-    return weightVariation < minIncrement;
+    return checkWeightStagnation(metrics);
   }
 
   /**
@@ -2235,13 +1672,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _checkRepStagnation(metrics) {
-    if (metrics.length < 3) return false;
-
-    const reps = metrics.map((m) => m.maxReps);
-    const repVariation = Math.max(...reps) - Math.min(...reps);
-
-    // Consider stagnant if rep variation is less than 2 reps
-    return repVariation < 2;
+    return checkRepStagnation(metrics);
   }
 
   /**
@@ -2251,18 +1682,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _checkVolumeStagnation(metrics) {
-    if (metrics.length < 3) return false;
-
-    const volumes = metrics.map((m) => m.totalVolume);
-    const avgVolume = volumes.reduce((sum, v) => sum + v, 0) / volumes.length;
-
-    if (avgVolume === 0) return true;
-
-    const volumeVariation =
-      (Math.max(...volumes) - Math.min(...volumes)) / avgVolume;
-
-    // Consider stagnant if volume variation is less than 5%
-    return volumeVariation < 0.05;
+    return checkVolumeStagnation(metrics);
   }
 
   /**
@@ -2272,11 +1692,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _calculateTotalVolume(sets) {
-    if (!sets || !Array.isArray(sets) || sets.length === 0) return 0;
-    return sets.reduce(
-      (total, set) => total + (set.weight || 0) * (set.reps || 0),
-      0
-    );
+    return calculateTotalVolume(sets);
   }
 
   /**
@@ -2286,9 +1702,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _getAverageWeight(sets) {
-    if (!sets || !Array.isArray(sets) || sets.length === 0) return 0;
-    const totalWeight = sets.reduce((sum, set) => sum + (set.weight || 0), 0);
-    return totalWeight / sets.length;
+    return getAverageWeight(sets);
   }
 
   /**
@@ -2298,24 +1712,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _calculatePlateauDuration(sessions) {
-    let duration = 0;
-
-    for (let i = 0; i < sessions.length - 1; i++) {
-      const currentSession = sessions[i];
-      const previousSession = sessions[i + 1];
-
-      const currentMax = this._getMaxWeight(currentSession.sets || []);
-      const previousMax = this._getMaxWeight(previousSession.sets || []);
-
-      if (currentMax > previousMax) {
-        // Found progress, stop counting
-        break;
-      }
-
-      duration++;
-    }
-
-    return Math.max(duration, 3); // Minimum 3 sessions for plateau detection
+    return calculatePlateauDuration(sessions);
   }
 
   /**
@@ -2326,20 +1723,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _assessPlateauSeverity(duration, analysis) {
-    const stagnationCount = analysis.metrics.stagnationCount;
-
-    // Severe: 6+ sessions OR all 3 metrics stagnant
-    if (duration >= 6 || stagnationCount === 3) {
-      return "severe";
-    }
-
-    // Moderate: 4-5 sessions OR 2 metrics stagnant for 3+ sessions
-    if (duration >= 4 || (stagnationCount === 2 && duration >= 3)) {
-      return "moderate";
-    }
-
-    // Mild: 3 sessions with limited stagnation
-    return "mild";
+    return assessPlateauSeverity(duration, analysis);
   }
 
   /**
@@ -2349,30 +1733,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _classifyPlateauType(sessions) {
-    const weightStagnant = this._checkWeightStagnation(
-      sessions.map((s) => ({
-        maxWeight: this._getMaxWeight(s.sets || []),
-      }))
-    );
-
-    const repStagnant = this._checkRepStagnation(
-      sessions.map((s) => ({
-        maxReps: this._getMaxReps(s.sets || []),
-      }))
-    );
-
-    const volumeStagnant = this._checkVolumeStagnation(
-      sessions.map((s) => ({
-        totalVolume: this._calculateTotalVolume(s.sets || []),
-      }))
-    );
-
-    // Prioritize weight plateau as most critical
-    if (weightStagnant) return "weight";
-    if (volumeStagnant) return "volume";
-    if (repStagnant) return "reps";
-
-    return "weight"; // Default
+    return classifyPlateauType(sessions);
   }
 
   /**
@@ -2382,13 +1743,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _getCurrentPerformanceMetrics(session) {
-    const sets = session.sets || [];
-    return {
-      weight: this._getMaxWeight(sets),
-      reps: this._getMaxReps(sets),
-      volume: this._calculateTotalVolume(sets),
-      sets: sets.length,
-    };
+    return getCurrentPerformanceMetrics(session);
   }
 
   /**
@@ -2399,17 +1754,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _calculatePlateauConfidence(analysis, duration) {
-    let confidence = 0.5; // Base confidence
-
-    // Higher confidence with more stagnant metrics
-    confidence += analysis.metrics.stagnationCount * 0.15;
-
-    // Higher confidence with longer duration
-    if (duration >= 6) confidence += 0.2;
-    else if (duration >= 4) confidence += 0.1;
-
-    // Cap at 0.95
-    return Math.min(0.95, confidence);
+    return calculatePlateauConfidence(analysis, duration);
   }
 
   /**

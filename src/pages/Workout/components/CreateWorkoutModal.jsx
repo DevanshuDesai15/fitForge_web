@@ -31,6 +31,7 @@ import { useWorkoutMutations } from '../hooks/useWorkoutMutations';
 import { useCustomExercises } from '../../../hooks/useCustomExercises';
 import CustomExerciseForm from './CustomExerciseForm';
 import { useSupabase } from '../../../hooks/useSupabase';
+import { buildExercisePickerOptions } from './exercisePickerUtils';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
     '& .MuiDialog-paper': {
@@ -370,29 +371,12 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated, editData }) => {
         );
     };
 
-    const normalizedCustom = customExercises.map(ex => ({
-        id: ex.name,
-        name: ex.name,
-        muscleGroup: ex.muscleGroups || ex.muscles || ex.primaryMuscles?.[0] || 'Various',
-        equipment: ex.equipment || 'Various',
-        description: '',
-        isCustom: true,
-    }));
-
-    const filteredCustom = normalizedCustom.filter(ex =>
-        ex.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        (selectedMuscleGroup === 'All' || ex.muscleGroup.toLowerCase().includes(selectedMuscleGroup.toLowerCase()))
-    );
-
-    const filteredLibrary = exercises.filter(exercise => {
-        const matchesSearch = exercise.name.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesMuscleGroup = selectedMuscleGroup === 'All' ||
-            exercise.muscleGroup.toLowerCase().includes(selectedMuscleGroup.toLowerCase()) ||
-            exercise.target?.toLowerCase().includes(selectedMuscleGroup.toLowerCase());
-        return matchesSearch && matchesMuscleGroup;
+    const filteredExercises = buildExercisePickerOptions({
+        customExercises,
+        catalogExercises: exercises,
+        searchTerm,
+        selectedMuscleGroup,
     });
-
-    const filteredExercises = [...filteredCustom, ...filteredLibrary];
 
     const handleAddCustom = async ({ name, muscleGroup }) => {
         await saveCustomExercise({ name, muscleGroup });

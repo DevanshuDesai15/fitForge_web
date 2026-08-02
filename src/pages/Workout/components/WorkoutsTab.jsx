@@ -16,14 +16,26 @@ import PropTypes from 'prop-types';
 import { Collapse } from '@mui/material';
 import { useWorkoutState } from '../hooks/useWorkoutState';
 import {
-    buildStarterWorkoutRecommendations,
     buildStarterWorkoutStartState,
 } from './starterWorkoutRecommendations';
 import progressiveOverloadAI from '../../../services/progressiveOverloadAI';
 import { Brain, TrendingUp, Clock } from 'lucide-react';
-import { listWorkouts } from '../../../services/workoutRepository';
 import { useWorkoutReader } from '../../../hooks/useWorkouts';
 import AIUnlockProgress from '../../Home/components/AIUnlockProgress';
+import {
+    buildWorkoutStartState,
+    calculateWorkoutRecommendations,
+    estimateTemplateDuration,
+    findNextDayInProgram,
+    getPersistedTemplateId,
+    getTotalExercises,
+    loadCompletedWorkouts,
+} from './workoutRecommendationEngine';
+
+export {
+    buildWorkoutStartState,
+    findNextDayInProgram,
+} from './workoutRecommendationEngine';
 
 const WorkoutCard = styled(Card)(() => ({
     background: 'rgba(40, 40, 40, 0.9)',
@@ -114,72 +126,7 @@ CustomTooltip.propTypes = {
 
 // eslint-disable-next-line react-refresh/only-export-components
 export async function loadCompletedWorkoutsFromSupabase({ supabase, userId, readWorkouts }) {
-    if (!userId) {
-        return [];
-    }
-
-    const options = {
-        completed: true,
-        limit: 50,
-    };
-    return readWorkouts
-        ? readWorkouts(options)
-        : listWorkouts({ supabase, userId, ...options });
-}
-
-function getPersistedTemplateId(day, fallbackTemplateId) {
-    return day?.templateId || day?.id || fallbackTemplateId || null;
-}
-
-// eslint-disable-next-line react-refresh/only-export-components
-export function buildWorkoutStartState(program, day) {
-    const templateId = day?.templateId || day?.id || null;
-    const dayId = templateId;
-
-    return {
-        templateId,
-        dayId,
-        workout: {
-            name: `${program?.name || 'Program'} - ${day?.name || 'Workout'}`,
-            programName: program?.name || 'Program',
-            dayName: day?.name || 'Workout',
-            exercises: day?.exercises || [],
-        },
-    };
-}
-
-// eslint-disable-next-line react-refresh/only-export-components
-export function findNextDayInProgram(program, completedWorkouts) {
-    const days = Array.isArray(program?.days) ? [...program.days] : [];
-
-    if (days.length <= 1) {
-        return null;
-    }
-
-    const completedTemplateIds = new Set(
-        completedWorkouts
-            .map(workout => workout.templateId)
-            .filter(Boolean)
-    );
-    const completedDayNames = new Set(
-        completedWorkouts
-            .map(workout => workout.dayName)
-            .filter(Boolean)
-    );
-
-    for (const day of days) {
-        const dayTemplateId = day?.templateId || day?.id || null;
-
-        if (dayTemplateId && !completedTemplateIds.has(dayTemplateId)) {
-            return day;
-        }
-
-        if (!dayTemplateId && day?.name && !completedDayNames.has(day.name)) {
-            return day;
-        }
-    }
-
-    return days[0] || null;
+    return loadCompletedWorkouts({ supabase, userId, readWorkouts });
 }
 
 const WorkoutsTab = () => {
@@ -283,58 +230,7 @@ const WorkoutsTab = () => {
     }, [workoutStarted, exercises]);
 
     const calculateRecommendations = useCallback((userPrograms, completedWorkouts, userTemplates = []) => {
-        const recommendations = [];
-
-        for (const program of userPrograms) {
-            if (program.days && program.days.length > 1) {
-                const nextDay = findNextDayInProgram(program, completedWorkouts);
-                if (nextDay) {
-                    recommendations.push({
-                        id: `program-${program.id}-${nextDay.id}`,
-                        title: `${program.name} - ${nextDay.name}`,
-                        category: getTemplateCategory(nextDay),
-                        duration: estimateDuration(nextDay),
-                        exercises: nextDay.exercises?.length || 0,
-                        difficulty: nextDay.difficulty || program.difficulty || 'Intermediate',
-                        progress: 0,
-                        isAIPick: false,
-                        templateId: getPersistedTemplateId(nextDay, program.id),
-                        dayId: nextDay.id || getPersistedTemplateId(nextDay, program.id),
-                        dayData: nextDay,
-                        programId: program.id,
-                        programName: program.name,
-                        type: 'nextDay',
-                    });
-                }
-            }
-        }
-
-        const defaultRecommendations = recommendations.length > 0
-            ? recommendations.slice(0, 3)
-            : buildStarterWorkoutRecommendations();
-
-        // 🎯 Override starter recommendations with custom user templates matching the same name
-        return defaultRecommendations.map(rec => {
-            if (rec.type === 'starter' || rec.isAIPick) {
-                const matchingTemplate = userTemplates.find(t => t.name.toLowerCase() === rec.title.toLowerCase());
-                if (matchingTemplate) {
-                    return {
-                        ...rec,
-                        id: matchingTemplate.id,
-                        duration: estimateTemplateDuration(matchingTemplate) || rec.duration,
-                        exercises: getTotalExercises(matchingTemplate) || rec.exercises,
-                        difficulty: matchingTemplate.difficulty || rec.difficulty,
-                        dayData: {
-                            ...rec.dayData,
-                            id: matchingTemplate.id,
-                            templateId: matchingTemplate.id,
-                            exercises: matchingTemplate.workoutDays?.[0]?.exercises || matchingTemplate.exercises || [],
-                        }
-                    };
-                }
-            }
-            return rec;
-        });
+        return calculateWorkoutRecommendations(userPrograms, completedWorkouts, userTemplates);
     }, []);
 
     // Load user's completed workouts and calculate recommendations
@@ -493,46 +389,6 @@ const WorkoutsTab = () => {
             loadAIRecommendations();
         }
     }, [currentUser?.uid, supabase, loading, loadAIRecommendations]);
-
-    const getTemplateCategory = (day) => {
-        if (!day.muscleGroups || day.muscleGroups.length === 0) return 'General';
-
-        const muscleGroupNames = day.muscleGroups.map(mg => mg.name.toLowerCase());
-
-        if (muscleGroupNames.includes('chest') || muscleGroupNames.includes('back') || muscleGroupNames.includes('shoulders')) {
-            return 'Upper Body';
-        } else if (muscleGroupNames.includes('legs') || muscleGroupNames.includes('glutes')) {
-            return 'Lower Body';
-        } else if (muscleGroupNames.includes('cardio')) {
-            return 'Cardio';
-        }
-
-        return 'Strength Training';
-    };
-
-    const estimateDuration = (day) => {
-        const exerciseCount = day.exercises?.length || 0;
-        const estimatedMinutes = exerciseCount * 5 + 10; // Rough estimate
-        return `${estimatedMinutes} min`;
-    };
-
-    const estimateTemplateDuration = (template) => {
-        if (!template.workoutDays || template.workoutDays.length === 0) return '30 min';
-
-        // Get average duration across all days
-        const totalExercises = template.workoutDays.reduce((sum, day) => sum + (day.exercises?.length || 0), 0);
-        const avgExercises = totalExercises / template.workoutDays.length;
-        const estimatedMinutes = Math.round(avgExercises * 5 + 10);
-        return `${estimatedMinutes} min`;
-    };
-
-    const getTotalExercises = (template) => {
-        if (!template.workoutDays || template.workoutDays.length === 0) return 0;
-
-        // Get average exercises per day
-        const totalExercises = template.workoutDays.reduce((sum, day) => sum + (day.exercises?.length || 0), 0);
-        return Math.round(totalExercises / template.workoutDays.length);
-    };
 
     const handleSuggestionAccept = (suggestion) => {
         console.log('Accepted suggestion:', suggestion);

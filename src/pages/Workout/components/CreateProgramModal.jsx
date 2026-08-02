@@ -33,6 +33,7 @@ import { programTemplates as defaultProgramTemplates } from './programTemplates'
 import { useCustomExercises } from '../../../hooks/useCustomExercises';
 import CustomExerciseForm from './CustomExerciseForm';
 import { useSupabase } from '../../../hooks/useSupabase';
+import { buildExercisePickerOptions } from './exercisePickerUtils';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
     '& .MuiDialog-paper': {
@@ -148,23 +149,11 @@ const CreateProgramModal = ({ open, onClose, onProgramCreated, editData }) => {
         }
     }, [editData]);
 
-    const normalizedCustom = customExercises.map(ex => ({
-        id: ex.name,
-        name: ex.name,
-        muscleGroup: ex.muscleGroups || ex.muscles || ex.primaryMuscles?.[0] || 'Various',
-        equipment: ex.equipment || 'Various',
-        isCustom: true,
-    }));
-
-    const filteredCustom = normalizedCustom.filter(ex =>
-        ex.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    const filteredLibrary = exercises.filter(ex =>
-        ex.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    const filteredExercises = [...filteredCustom, ...filteredLibrary];
+    const filteredExercises = buildExercisePickerOptions({
+        customExercises,
+        catalogExercises: exercises,
+        searchTerm,
+    });
 
     const handleAddCustom = async ({ name, muscleGroup }) => {
         await saveCustomExercise({ name, muscleGroup });

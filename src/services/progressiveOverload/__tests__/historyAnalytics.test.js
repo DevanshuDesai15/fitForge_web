@@ -1,13 +1,61 @@
 import { describe, expect, it } from 'vitest';
 import {
+  analyzeConsistency,
   analyzeExerciseFrequency,
+  analyzePersonalRecords,
+  analyzeTrends,
   analyzeVolumeProgression,
   calculateConsistencyScore,
   calculateDurationTrend,
+  generateHistoryBasedRecommendations,
   getEmptyWorkoutAnalysis,
 } from '../historyAnalytics';
 
 describe('progressive overload history analytics', () => {
+  const history = [
+    {
+      date: '2026-01-01',
+      timestamp: '2026-01-01T12:00:00.000Z',
+      duration: 30,
+      totalVolume: 100,
+      exercises: [{ exerciseId: 'squat', sets: [{ weight: 50, reps: 5 }] }],
+    },
+    {
+      date: '2026-01-03',
+      timestamp: '2026-01-03T12:00:00.000Z',
+      duration: 40,
+      totalVolume: 200,
+      exercises: [{ exerciseId: 'squat', sets: [{ weight: 60, reps: 6 }] }],
+    },
+  ];
+
+  it('identifies personal records from exercise sets', () => {
+    expect(analyzePersonalRecords(history)).toEqual(
+      expect.objectContaining({
+        totalRecords: 1,
+        topPerformers: [expect.objectContaining({ exerciseId: 'squat', maxWeight: 60 })],
+      })
+    );
+  });
+
+  it('summarizes workout trends and consistency', () => {
+    expect(analyzeTrends(history)).toEqual(
+      expect.objectContaining({
+        workoutFrequency: expect.objectContaining({ averageDaysBetween: 2 }),
+        duration: expect.objectContaining({ average: 35 }),
+      })
+    );
+    expect(analyzeConsistency(history)).toEqual(
+      expect.objectContaining({ score: 1, rating: 'excellent', averageDaysBetween: 2 }),
+    );
+  });
+
+  it('recommends more variety when history uses few exercises', () => {
+    expect(generateHistoryBasedRecommendations(history)).toContain(
+      'Add more exercise variety to target different muscle groups and movement patterns'
+    );
+  });
+
   it('summarizes exercise frequency while ignoring invalid exercise IDs', () => {
     const workouts = [
       { exercises: [{ exerciseId: 'bench-press' }, { exerciseId: null }] },

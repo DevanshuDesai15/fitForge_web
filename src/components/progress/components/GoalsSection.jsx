@@ -31,10 +31,17 @@ import {
     X,
     Info,
 } from 'lucide-react';
-import { format } from 'date-fns';
 import { calculateGoalProgress } from '../utils/progressUtils';
 import { useGoalMutations } from '../hooks/useGoalMutations';
 import PropTypes from 'prop-types';
+import {
+    buildGoalPayload,
+    createEmptyGoal,
+    describeGoal,
+    getPriorityStyle,
+    isGoalOverdue,
+    summarizeGoals,
+} from '../utils/goalPresentation';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -397,17 +404,7 @@ const GoalsSection = ({
     const [editingGoal, setEditingGoal] = useState(null);
     const [dialogTab, setDialogTab] = useState('templates'); // 'templates' | 'custom'
     const [selectedTemplate, setSelectedTemplate] = useState(null);
-    const [newGoal, setNewGoal] = useState({
-        title: '',
-        category: 'exercise',
-        type: 'personal_record',
-        targetValue: '',
-        unit: weightUnit,
-        description: '',
-        exerciseName: '',
-        priority: 'medium',
-        deadline: '',
-    });
+    const [newGoal, setNewGoal] = useState(() => createEmptyGoal(weightUnit));
     const [customExerciseName, setCustomExerciseName] = useState('');
     const [menuAnchor, setMenuAnchor] = useState(null);
     const [menuGoal, setMenuGoal] = useState(null);
@@ -433,17 +430,7 @@ const GoalsSection = ({
     // -----------------------------------------------------------------------
 
     const openNewGoalDialog = () => {
-        setNewGoal({
-            title: '',
-            category: 'exercise',
-            type: 'personal_record',
-            targetValue: '',
-            unit: weightUnit,
-            description: '',
-            exerciseName: '',
-            priority: 'medium',
-            deadline: '',
-        });
+        setNewGoal(createEmptyGoal(weightUnit));
         setSelectedTemplate(null);
         setDialogTab('templates');
         setCustomExerciseName('');
@@ -455,17 +442,7 @@ const GoalsSection = ({
         setEditingGoal(null);
         setSelectedTemplate(null);
         setDialogTab('templates');
-        setNewGoal({
-            title: '',
-            category: 'exercise',
-            type: 'personal_record',
-            targetValue: '',
-            unit: weightUnit,
-            description: '',
-            exerciseName: '',
-            priority: 'medium',
-            deadline: '',
-        });
+        setNewGoal(createEmptyGoal(weightUnit));
         setCustomExerciseName('');
     };
 
@@ -495,23 +472,7 @@ const GoalsSection = ({
 
     const handleGoalSave = async () => {
         try {
-            const payload = {
-                title: newGoal.title,
-                exerciseName: newGoal.exerciseName || newGoal.title,
-                targetValue: newGoal.targetValue,
-                currentValue: editingGoal?.currentValue ?? editingGoal?.current_value ?? 0,
-                unit: newGoal.unit,
-                category: newGoal.category,
-                type: newGoal.type,
-                description: newGoal.description,
-                priority: newGoal.priority,
-                deadline: newGoal.deadline,
-                completed: editingGoal?.completed ?? false,
-                // backward compatibility fields
-                targetWeight: ['lbs', 'kg'].includes(newGoal.unit) ? newGoal.targetValue : '',
-                targetReps: '',
-                targetSets: '',
-            };
+            const payload = buildGoalPayload(newGoal, editingGoal);
 
             if (editingGoal) {
                 await updateGoal(editingGoal.id, payload);
@@ -553,42 +514,16 @@ const GoalsSection = ({
     // Derived data
     // -----------------------------------------------------------------------
 
-    const activeGoals = goals.filter(g => !g.completed);
-    const completedGoals = goals.filter(g => g.completed);
-    const goalsWithDeadlines = goals.filter(g => g.deadline);
-    const almostDone = activeGoals.filter(g => {
-        const p = calculateGoalProgress(g, exercises);
-        return p >= 70 && p < 100;
-    });
-    const completedPct = goals.length > 0
-        ? Math.round((completedGoals.length / goals.length) * 100)
-        : 0;
+    const {
+        activeGoals,
+        completedGoals,
+        goalsWithDeadlines,
+        almostDone,
+        completedPct,
+    } = summarizeGoals(goals, exercises, calculateGoalProgress);
 
     const filteredGoals = activeFilter === 'active' ? activeGoals : completedGoals;
 
-    const isOverdue = (goal) => {
-        if (!goal.deadline || goal.completed) return false;
-        return new Date(goal.deadline) < new Date();
-    };
-
-    const getGoalDescription = (goal) => {
-        if (goal.description) return goal.description;
-        const parts = [];
-        if (goal.targetValue) parts.push(`${goal.targetValue} ${goal.unit || ''} target`.trim());
-        else if (goal.targetWeight) parts.push(`${goal.targetWeight}${weightUnit} target weight`);
-        if (goal.targetReps) parts.push(`${goal.targetReps} reps`);
-        if (goal.targetSets) parts.push(`${goal.targetSets} sets`);
-        if (goal.deadline) parts.push(`by ${format(new Date(goal.deadline), 'MMM d, yyyy')}`);
-        return parts.length > 0 ? parts.join(' · ') : 'No specific target set';
-    };
-
-    const getPriorityStyle = (priority) => {
-        switch (priority) {
-            case 'high': return { bg: 'rgba(244, 67, 54, 0.15)', text: '#f44336' };
-            case 'low': return { bg: 'rgba(76, 175, 80, 0.15)', text: '#4caf50' };
-            default: return { bg: 'rgba(255, 193, 7, 0.15)', text: '#ffc107' };
-        }
-    };
 
     const statCards = [
         {
@@ -750,7 +685,7 @@ const GoalsSection = ({
                 >
                     {filteredGoals.map((goal) => {
                         const progress = calculateGoalProgress(goal, exercises);
-                        const overdue = isOverdue(goal);
+                        const overdue = isGoalOverdue(goal);
                         const priorityStyle = getPriorityStyle(goal.priority);
                         const clampedProgress = Math.min(progress, 100);
                         const goalTitle = goal.title || goal.exerciseName || 'Unnamed Goal';
@@ -836,7 +771,7 @@ const GoalsSection = ({
                                     variant="caption"
                                     sx={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.78rem', lineHeight: 1.5 }}
                                 >
-                                    {getGoalDescription(goal)}
+                                    {describeGoal(goal, weightUnit)}
                                 </Typography>
 
                                 {/* Category + Exercise chips */}
