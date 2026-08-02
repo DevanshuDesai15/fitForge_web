@@ -1,322 +1,184 @@
-# 🏋️‍♂️ FitForge - Modern Fitness Tracking Web App
+# FitForge
 
-**FitForge** is a comprehensive, modern fitness tracking web application built with React and Firebase. Track your workouts, monitor progress, and achieve your fitness goals with an intuitive, mobile-first design.
+FitForge is a mobile-first workout tracker for planning training, logging sessions, and reviewing progress. It uses Clerk for sign-in, Supabase for user-scoped fitness data, and an authenticated Vercel function for optional Hugging Face-powered suggestions.
 
-[![Built with React](https://img.shields.io/badge/React-18.3.1-61DAFB?logo=react&logoColor=white)](https://react.dev/)
-[![Powered by Firebase](https://img.shields.io/badge/Firebase-11.1.0-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com/)
-[![Material-UI](https://img.shields.io/badge/Material--UI-6.3.1-0081CB?logo=mui&logoColor=white)](https://mui.com/)
+[![React](https://img.shields.io/badge/React-18.3-61DAFB?logo=react&logoColor=white)](https://react.dev/)
+[![Supabase](https://img.shields.io/badge/Supabase-Postgres-3FCF8E?logo=supabase&logoColor=white)](https://supabase.com/)
+[![Clerk](https://img.shields.io/badge/Auth-Clerk-6C47FF?logo=clerk&logoColor=white)](https://clerk.com/)
+[![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
 
-## ✨ Features
+## What you can do
 
-### 🔐 **User Management**
+- Sign in securely and maintain a fitness profile with metric or imperial units.
+- Browse the shared exercise catalog and create personal exercises.
+- Build reusable multi-day workout templates and start a workout from a template or Quick Add.
+- Log sets, reps, weight, notes, and completed workouts.
+- Pause and resume the persisted workout timer without counting paused time; refreshes preserve the active session on the same browser.
+- Keep the screen awake during an active workout when the browser supports the Screen Wake Lock API.
+- Review workout history, personal records, volume trends, goals, and progress charts.
+- Receive optional AI-assisted exercise search and progressive-overload suggestions when the server-side AI endpoint is configured.
 
-- Secure authentication with Firebase Auth
-- User registration and login
-- Profile management with personal stats
+FitForge requires a network connection for account and Supabase-backed data. It does not currently provide offline workout synchronization or push notifications.
 
-### 🏃‍♂️ **Workout Tracking**
+## Architecture
 
-- **Start Workout**: Real-time workout tracking with background timer
-- **Background Timer**: Timer continues running even when app is closed or phone is locked
-- **Exercise Library**: Access to 800+ exercises via wger API
-- **Quick Add**: Rapidly log exercises and sets
-- **Workout Templates**: Save and reuse favorite workout routines
+| Area | Technology | Responsibility |
+|---|---|---|
+| Web app | React 18, Vite 6, React Router 7 | Routes, workout flows, and responsive UI |
+| UI | Material UI 6, GSAP, Recharts | Components, motion, and progress visualizations |
+| Authentication | Clerk | User sessions and JWTs |
+| Data | Supabase Postgres, Row Level Security | Profiles, exercises, templates, workouts, goals, and AI records |
+| Server state | TanStack Query | Queries, mutations, cache updates, and invalidation |
+| AI | Vercel function, Hugging Face Inference | Authenticated chat and embedding operations; secrets remain server-side |
+| Observability | Sentry and PostHog | Optional error monitoring and product analytics |
+| Hosting | Vercel | Vite build, SPA routing, and `/api/ai` |
 
-### 📊 **Progress & Analytics**
+Clerk issues a token from the `supabase` JWT template. The browser passes that token to Supabase, where Row Level Security restricts user-owned rows by the Clerk subject. Public exercise-catalog reads are the intentional exception.
 
-- **History**: Complete workout history with detailed logs
-- **Progress Tracking**: Visual charts and statistics
-- **Performance Metrics**: Track personal records and improvements
-- **Weekly/Monthly Summaries**: Analyze your fitness journey
-
-### 🎯 **Exercise Management**
-
-- **Custom Exercises**: Create and manage personal exercises
-- **Exercise Details**: Comprehensive exercise information
-- **Muscle Group Filtering**: Find exercises by target muscles
-- **Equipment-Based Search**: Filter by available equipment
-
-### 📱 **Modern UI/UX**
-
-- **Mobile-First Design**: Optimized for all devices
-- **Dark Theme**: Easy on the eyes with modern aesthetics
-- **Bottom Navigation**: Intuitive mobile navigation
-- **Background Timer**: Web Worker-based timer that survives app switching
-- **Wake Lock**: Keeps screen awake during workouts (when supported)
-- **Push Notifications**: Workout reminders and completion alerts
-- **Real-time Updates**: Live sync across devices
-- **Offline Support**: Continue tracking without internet
-
-## 🛠 Tech Stack
-
-- **Frontend**: React 18, Vite, JavaScript (ES6+)
-- **UI Framework**: Material-UI (MUI) with custom theming
-- **Backend**: Firebase (Authentication + Firestore)
-- **Routing**: React Router DOM v7
-- **State Management**: React Context API
-- **API**: wger Exercise Database (Free & Open Source)
-- **Icons**: React Icons (Material Design)
-- **Date Handling**: date-fns
-- **Build Tool**: Vite for fast development and builds
-
-## 🚀 Quick Start
+## Local setup
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
-- npm or yarn package manager
-- Firebase account
-- Git
+- Node.js 20 or newer
+- npm
+- A Clerk application
+- A Supabase project linked to Clerk authentication
+- Optional: a Hugging Face token and a Vercel-compatible local or deployed environment for AI features
 
-### Installation
-
-1. **Clone the repository**
-
-   ```bash
-   git clone https://github.com/yourusername/fitForge_web.git
-   cd fitForge_web
-   ```
-
-2. **Install dependencies**
-
-   ```bash
-   npm install
-   ```
-
-3. **Set up Firebase**
-
-   - Create a new Firebase project at [Firebase Console](https://console.firebase.google.com/)
-   - Enable Authentication (Email/Password)
-   - Create a Firestore database
-   - Get your Firebase configuration
-
-4. **Environment Setup**
-   Create a `.env` file in the root directory:
-
-   ```env
-   VITE_FIREBASE_API_KEY=your_api_key_here
-   VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-   VITE_FIREBASE_PROJECT_ID=your_project_id
-   VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-   VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-   VITE_FIREBASE_APP_ID=your_app_id
-   ```
-
-5. **Start development server**
-
-   ```bash
-   npm run dev
-   ```
-
-6. **Open your browser**
-   Navigate to `http://localhost:5173`
-
-## 🔥 Firebase Configuration
-
-### Firestore Database Structure
-
-```
-users/{userId}
-├── email: string
-├── displayName: string
-├── createdAt: timestamp
-└── preferences: object
-
-workouts/{workoutId}
-├── userId: string
-├── name: string
-├── date: timestamp
-├── duration: number
-├── exercises: array
-└── completed: boolean
-
-exercises/{exerciseId}
-├── userId: string
-├── name: string
-├── category: string
-├── muscleGroups: array
-├── equipment: string
-└── isCustom: boolean
-
-workoutSessions/{sessionId}
-├── userId: string
-├── workoutId: string
-├── startTime: timestamp
-├── endTime: timestamp
-├── exercises: array
-└── totalVolume: number
-```
-
-### Security Rules
-
-The app includes comprehensive Firestore security rules that ensure:
-
-- Users can only access their own data
-- Proper authentication is required for all operations
-- Data validation and sanitization
-
-## 📖 User Guide
-
-### Getting Started
-
-1. **Sign Up**: Create your account with email and password
-2. **Complete Profile**: Add your personal information and fitness goals
-3. **Explore**: Browse the exercise library to familiarize yourself with available exercises
-
-### Creating Your First Workout
-
-1. **Start Workout**: Tap the "Start Workout" button from the home screen
-2. **Add Exercises**:
-   - Use "Add Exercise" to browse the exercise library
-   - Search by name, muscle group, or equipment
-   - Select exercises and configure sets/reps/weight
-3. **Track Progress**:
-   - Use the built-in timer between sets
-   - Log your actual performance for each set
-   - Add notes for future reference
-4. **Complete Workout**: Save your session when finished
-
-### Using Workout Templates
-
-1. **Create Template**: During or after a workout, save it as a template
-2. **Quick Start**: Use templates to quickly start familiar routines
-3. **Customize**: Modify templates as your fitness level improves
-
-### Monitoring Progress
-
-1. **History**: View all past workouts with detailed breakdowns
-2. **Progress Charts**: Track improvements over time
-3. **Personal Records**: See your best performances for each exercise
-4. **Statistics**: Weekly and monthly summaries of your activity
-
-### Managing Exercises
-
-1. **Exercise Library**: Browse 800+ exercises with instructions
-2. **Custom Exercises**: Create exercises specific to your routine
-3. **Exercise Details**: View muscle groups, equipment needed, and instructions
-4. **Favorites**: Mark frequently used exercises for quick access
-
-## 💻 Development
-
-### Available Scripts
+### 1. Install the project
 
 ```bash
-# Development server with hot reload
+git clone https://github.com/DevanshuDesai15/fitForge_web.git
+cd fitForge_web
+npm install
+```
+
+### 2. Prepare Clerk and Supabase
+
+1. In Clerk, create a JWT template named `supabase`.
+2. Configure Supabase to accept the Clerk JWT and ensure its signing configuration matches the Clerk integration.
+3. Apply the SQL files in `supabase/migrations/` in filename order to a new database.
+4. Review the resulting Row Level Security policies before using real user data.
+
+The repository also contains `supabase/functions/clerk-webhook/` for profile synchronization when a Clerk webhook workflow is desired. The app itself additionally syncs the signed-in profile from the browser.
+
+### 3. Configure environment variables
+
+Copy the example file and replace its placeholders:
+
+```bash
+cp .env.example .env.local
+```
+
+The core browser app requires:
+
+```env
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=...
+```
+
+`VITE_*` values are embedded in the browser bundle. Never put a service-role key, Clerk secret, or Hugging Face token in a `VITE_*` variable.
+
+These values are optional for local browser development:
+
+- `VITE_SENTRY_DSN` and `VITE_SENTRY_ENVIRONMENT`
+- `VITE_POSTHOG_KEY` and `VITE_POSTHOG_HOST`
+- The browser-safe Hugging Face feature controls documented in `.env.example`
+
+`SUPABASE_SERVICE_ROLE_KEY` is not used by the browser app. Reserve it for trusted administrative scripts, including exercise-catalog imports, and never expose it to client code.
+
+### 4. Start the app
+
+```bash
 npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
-
-# Run ESLint
-npm run lint
 ```
 
-### Project Structure
+Vite prints the local URL, normally `http://localhost:5173`. Core authentication, workout, and progress features run through Vite once Clerk and Supabase are configured.
 
+The AI client calls `/api/ai`, which is implemented as a Vercel function. To exercise AI features, run or deploy the app in an environment that serves that function and configure these server-only variables there:
+
+```env
+HUGGINGFACE_API_KEY=hf_...
+HUGGINGFACE_MODEL=Qwen/Qwen2.5-72B-Instruct
+HUGGINGFACE_EMBEDDING_MODEL=intfloat/multilingual-e5-large
+CLERK_SECRET_KEY=sk_test_...
+# Or use CLERK_JWT_KEY instead of CLERK_SECRET_KEY
+CLERK_AUTHORIZED_PARTIES=http://localhost:5173,https://your-domain.example
 ```
+
+`CLERK_AUTHORIZED_PARTIES` must include every origin allowed to call the endpoint. The API rejects unauthenticated requests and supports only its fixed `chat` and `embedding` operations.
+
+## Development commands
+
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Start the Vite development server |
+| `npm run build` | Create the production bundle in `dist/` |
+| `npm run preview` | Preview the production bundle locally |
+| `npm run test` | Run the Vitest suite once |
+| `npm run test:watch` | Run Vitest in watch mode |
+| `npm run lint` | Run ESLint across the repository |
+
+Pull requests targeting `main` run install, lint, and test checks through `.github/workflows/main.yml`.
+
+## Project layout
+
+```text
+api/                         Vercel server functions
+scripts/                     Maintenance and exercise-import scripts
 src/
-├── components/           # React components
-│   ├── common/          # Reusable components
-│   ├── workout/         # Workout-specific components
-│   └── [pages].jsx      # Main page components
-├── contexts/            # React Context providers
-├── pages/               # Route implementations and page-specific UI
-├── services/            # API services and utilities
-├── theme/              # Material-UI theming
-└── utils/              # Helper functions
+  components/                Shared and feature UI
+  contexts/                  Authentication and unit preferences
+  hooks/                     Supabase and TanStack Query hooks
+  pages/                     Route-level features
+  services/                  Data repositories, analytics, and AI services
+  utils/                     Pure utilities and browser integrations
+supabase/
+  functions/                 Supabase Edge Functions
+  migrations/                Ordered schema and RLS migrations
 ```
 
-### Code Style
+## Deployment
 
-- Follow React best practices and hooks patterns
-- Use Material-UI components and theming system
-- Implement proper error handling and loading states
-- Write clean, documented code
+FitForge is configured for Vercel in `vercel.json`.
 
-## 🚀 Deployment
+1. Run `npm run test`, `npm run lint`, and `npm run build` locally.
+2. Import the repository into Vercel.
+3. Add the required browser variables and any optional observability variables.
+4. Add the server-only Hugging Face and Clerk variables if AI features are enabled.
+5. Review a preview deployment before promoting it to production.
 
-### Vercel
+Do not commit `.env` or `.env.local`. After changing any browser-facing environment variable, rebuild and redeploy because Vite substitutes those values at build time.
 
-1. **Build and verify the production bundle**
+## Troubleshooting
 
-   ```bash
-   npm run build
-   ```
+### The app reports a missing Clerk publishable key
 
-2. **Import the repository into Vercel**
+Confirm `VITE_CLERK_PUBLISHABLE_KEY` is present in `.env.local`, then restart the development server.
 
-   Vercel reads the Vite build settings and SPA rewrites from `vercel.json`.
+### Sign-in works but Supabase requests fail
 
-3. **Configure production environment variables**
+- Confirm `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` point to the same project.
+- Confirm Clerk has a JWT template named `supabase`.
+- Inspect the applied migrations and live Row Level Security policies.
+- Verify the authenticated Clerk subject matches the `user_id` or profile identifier stored by the app.
 
-   Add the required `VITE_*` values in the Vercel project settings before deploying.
+### AI suggestions are unavailable
 
-4. **Deploy from Vercel**
+- Confirm the app is running somewhere that serves `api/ai.js`; plain Vite development serves the browser app but not the Vercel function.
+- Check the server-only Hugging Face and Clerk variables in that environment.
+- Ensure `CLERK_AUTHORIZED_PARTIES` contains the exact calling origin.
+- Check `VITE_HUGGINGFACE_EMERGENCY_DISABLE`; setting it to `true` intentionally disables AI calls.
 
-   Use a preview deployment for review, then promote the approved deployment to production.
+### Production routes return 404
 
-### Environment Variables for Production
+Confirm the deployment uses `vercel.json`, whose SPA rewrite sends client routes to `index.html`.
 
-Add production environment variables in the Vercel project settings. Do not commit `.env` or `.env.local`.
+## Contributing
 
-## 🔧 Troubleshooting
+Create a focused feature branch, follow the existing React and Material UI patterns, add or update tests for behavior changes, and run the test, lint, and build commands before opening a pull request. Update this README whenever a change affects setup, public behavior, configuration, or deployment.
 
-### Common Issues
+## Acknowledgments
 
-**Firebase Connection Issues**
-
-- Verify your Firebase configuration in `.env`
-- Check Firebase project settings
-- Ensure Firestore rules are properly configured
-
-**Exercise API Not Loading**
-
-- wger API is free but may have rate limits
-- Check network connectivity
-- Review browser console for API errors
-
-**Build Errors**
-
-- Clear node_modules and reinstall: `rm -rf node_modules && npm install`
-- Update dependencies: `npm update`
-- Check for ESLint errors: `npm run lint`
-
-**Authentication Issues**
-
-- Verify Firebase Auth is enabled
-- Check email/password provider is configured
-- Review browser console for auth errors
-
-## 🤝 Contributing
-
-We welcome contributions! Please:
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Make your changes with proper commit messages
-4. Add tests if applicable
-5. Submit a pull request
-
-### Development Guidelines
-
-- Follow the existing code style and patterns
-- Add proper error handling
-- Update documentation for new features
-- Test on multiple devices/browsers
-
-<!-- ## 📝 License
-
-This project is licensed under the MIT License - see the LICENSE file for details. -->
-
-## 🙏 Acknowledgments
-
-- [Firebase](https://firebase.google.com/) for backend infrastructure
-- [Material-UI](https://mui.com/) for beautiful React components
-- The open-source community for inspiration and tools
-
----
-
-**Built with ❤️ for fitness enthusiasts worldwide**
+FitForge is built with React, Material UI, Clerk, Supabase, Hugging Face, and the broader open-source ecosystem.
