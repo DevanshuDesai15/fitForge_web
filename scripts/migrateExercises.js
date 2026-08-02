@@ -24,7 +24,8 @@ const BATCH_SIZE = Number.parseInt(runtimeProcess?.env.EXERCISE_IMPORT_BATCH_SIZ
 const EMBEDDING_MODEL =
   runtimeProcess?.env.VITE_HUGGINGFACE_EMBEDDING_MODEL || DEFAULT_EMBEDDING_MODEL;
 const EXERCISE_IMPORT_FILE =
-  runtimeProcess?.env.EXERCISE_IMPORT_FILE || "./UpdatedExerciseData.json";
+  runtimeProcess?.env.EXERCISE_IMPORT_FILE ||
+  new URL("./data/UpdatedExerciseData.json", import.meta.url);
 
 const args = new Set(runtimeProcess?.argv.slice(2) || []);
 const startBatchArg = (runtimeProcess?.argv.slice(2) || []).find((arg) => arg.startsWith("--start-batch="));
