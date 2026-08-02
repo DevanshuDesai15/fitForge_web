@@ -19,7 +19,6 @@ import {
     Search,
     Filter,
     Flame,
-    ChevronDown,
     MoveDown,
     Weight,
     Trophy,
@@ -63,7 +62,7 @@ const SummaryCard = styled(Box)(({ theme }) => ({
     }
 }));
 
-const IconContainer = styled(Box)(({ theme }) => ({
+const IconContainer = styled(Box)(() => ({
     width: '48px',
     height: '48px',
     borderRadius: '12px',
@@ -78,8 +77,6 @@ export default function ExerciseHistory() {
     const [activeTab, setActiveTab] = useState(0);
     const [workouts, setWorkouts] = useState([]);
     const [exerciseStats, setExerciseStats] = useState([]);
-    const [expandedExercises, setExpandedExercises] = useState(new Set());
-    const [expandedWorkouts, setExpandedWorkouts] = useState(new Set());
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -102,30 +99,7 @@ export default function ExerciseHistory() {
         return convertWeight(numWeight, storedUnit, weightUnit);
     };
 
-    const loadWorkouts = useCallback(async () => {
-        if (!currentUser) return;
-
-        setLoading(true);
-        setError('');
-        try {
-            const workoutData = await readWorkouts();
-            setWorkouts(workoutData || []);
-            processExerciseStats(workoutData || []);
-        } catch (err) {
-            console.error('Error loading workouts:', err);
-            setError('Error loading history: ' + err.message);
-        } finally {
-            setLoading(false);
-        }
-    }, [currentUser, readWorkouts]);
-
-    useEffect(() => {
-        if (currentUser) {
-            loadWorkouts();
-        }
-    }, [currentUser, loadWorkouts]);
-
-    const processExerciseStats = (workoutData) => {
+    const processExerciseStats = useCallback((workoutData) => {
         const exerciseMap = new Map();
 
         workoutData.forEach(workout => {
@@ -175,7 +149,30 @@ export default function ExerciseHistory() {
             .sort((a, b) => b.lastPerformed - a.lastPerformed);
 
         setExerciseStats(statsArray);
-    };
+    }, [convertWeight, weightUnit]);
+
+    const loadWorkouts = useCallback(async () => {
+        if (!currentUser) return;
+
+        setLoading(true);
+        setError('');
+        try {
+            const workoutData = await readWorkouts();
+            setWorkouts(workoutData || []);
+            processExerciseStats(workoutData || []);
+        } catch (err) {
+            console.error('Error loading workouts:', err);
+            setError('Error loading history: ' + err.message);
+        } finally {
+            setLoading(false);
+        }
+    }, [currentUser, processExerciseStats, readWorkouts]);
+
+    useEffect(() => {
+        if (currentUser) {
+            loadWorkouts();
+        }
+    }, [currentUser, loadWorkouts]);
 
     const getTrendDirection = (exerciseName) => {
         const sessions = exerciseStats.find(e => e.name === exerciseName)?.sessions || [];
@@ -189,29 +186,9 @@ export default function ExerciseHistory() {
         return 'neutral';
     };
 
-    const toggleExerciseExpanded = (exerciseName) => {
-        setExpandedExercises(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(exerciseName)) {
-                newSet.delete(exerciseName);
-            } else {
-                newSet.add(exerciseName);
-            }
-            return newSet;
-        });
-    };
 
-    const toggleWorkoutExpanded = (workoutId) => {
-        setExpandedWorkouts(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(workoutId)) {
-                newSet.delete(workoutId);
-            } else {
-                newSet.add(workoutId);
-            }
-            return newSet;
-        });
-    };
+
+
 
     const getOverallStats = () => {
         const totalSessions = workouts.length;
@@ -296,11 +273,7 @@ export default function ExerciseHistory() {
         exercise.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const filteredWorkouts = workouts.filter(workout =>
-        workout.exercises?.some(ex =>
-            ex.name.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-    );
+
 
     const formatVolume = (volume) => {
         if (volume >= 1000) {

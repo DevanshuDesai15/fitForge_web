@@ -1,6 +1,7 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { UnitsProvider, useUnits } from '../UnitsContext';
+import { UnitsProvider } from '../UnitsContext';
+import { useUnits } from '../UnitsContext';
 
 const authState = {
   currentUser: null,

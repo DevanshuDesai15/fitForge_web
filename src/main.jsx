@@ -1,16 +1,15 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter, useNavigate } from 'react-router-dom'
-import PropTypes from 'prop-types'
+import { BrowserRouter } from 'react-router-dom'
 import * as Sentry from '@sentry/react'
 import './index.css'
 import App from './App.jsx'
 
-import { ClerkProvider } from '@clerk/clerk-react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import posthog from 'posthog-js'
 import { PostHogProvider } from 'posthog-js/react'
+import ClerkProviderWithRouter from './components/ClerkProviderWithRouter.jsx'
 
 // Create a client
 const queryClient = new QueryClient();
@@ -52,25 +51,6 @@ if (POSTHOG_KEY) {
     },
   })
 }
-
-// Wrapper to provide React Router context to Clerk
-function ClerkProviderWithRouter({ children }) {
-  const navigate = useNavigate();
-  return (
-    <ClerkProvider 
-      publishableKey={PUBLISHABLE_KEY} 
-      afterSignOutUrl="/"
-      routerPush={(to) => navigate(to)}
-      routerReplace={(to) => navigate(to, { replace: true })}
-    >
-      {children}
-    </ClerkProvider>
-  );
-}
-
-ClerkProviderWithRouter.propTypes = {
-  children: PropTypes.node.isRequired,
-};
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

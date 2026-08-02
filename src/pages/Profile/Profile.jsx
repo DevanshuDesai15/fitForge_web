@@ -1,11 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Alert,
     Box,
     Typography,
     Button,
-    useMediaQuery,
-    useTheme,
     Container,
     styled
 } from '@mui/material';
@@ -44,7 +42,7 @@ const HeaderInfo = styled(Box)({
     flex: 1,
 });
 
-const Title = styled(Typography)(({ theme }) => ({
+const Title = styled(Typography)(() => ({
     fontSize: '32px',
     fontWeight: 700,
     color: '#ffffff',
@@ -78,7 +76,7 @@ export default function Profile() {
 
     // State Management
     // User Data State (Supabase Hooks)
-    const { profile, isLoading: profileLoading, error: profileError, updateProfile, isUpdating } = useProfile();
+    const { profile, error: profileError, updateProfile, isUpdating } = useProfile();
     const { data: dashboardData, isLoading: statsLoading } = useDashboardStats();
 
     const [activeTab, setActiveTab] = useState('profile');
@@ -99,7 +97,7 @@ export default function Profile() {
         personalRecords: 0,
     };
 
-    const [storageUsed, setStorageUsed] = useState(2.4 * 1024 * 1024);
+    const [storageUsed] = useState(2.4 * 1024 * 1024);
     const supabase = useSupabase();
 
     useEffect(() => {

@@ -1,7 +1,7 @@
 import { Box, Card, CardContent, Typography, Grid, Button, styled } from '@mui/material';
 import { Shield, Smartphone, Download, LogOut, ChevronRight, Info, Lock, HelpCircle, Mail } from 'lucide-react';
 
-const AccountCard = styled(Card)(({ theme }) => ({
+const AccountCard = styled(Card)(() => ({
   backgroundColor: '#282828',
   border: '1px solid rgba(255, 255, 255, 0.1)',
   borderRadius: '16px',
@@ -81,7 +81,7 @@ const ActionButton = styled(Button)(({ theme }) => ({
   },
 }));
 
-const SignOutButton = styled(Button)(({ theme }) => ({
+const SignOutButton = styled(Button)(() => ({
   width: '100%',
   marginTop: '16px',
   backgroundColor: 'rgba(244, 67, 54, 0.1)',
@@ -97,7 +97,7 @@ const SignOutButton = styled(Button)(({ theme }) => ({
   },
 }));
 
-const InfoRow = styled(Box)(({ theme }) => ({
+const InfoRow = styled(Box)(() => ({
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',

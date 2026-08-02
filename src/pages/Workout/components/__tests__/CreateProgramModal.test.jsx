@@ -7,8 +7,8 @@ import WorkoutsTab from '../WorkoutsTab';
 import {
   buildWorkoutStartState,
   findNextDayInProgram,
-  loadCompletedWorkoutsFromSupabase,
-} from '../WorkoutsTab';
+} from '../workoutRecommendationEngine';
+import { loadCompletedWorkoutsFromSupabase } from '../workoutDataLoaders';
 import {
   buildStarterWorkoutRecommendations,
   buildStarterWorkoutStartState,

@@ -1,4 +1,4 @@
-import React from 'react';
+import 'react';
 import { Card, CardContent, Typography, Box, Button } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { Clock, Target, TrendingUp } from 'lucide-react';

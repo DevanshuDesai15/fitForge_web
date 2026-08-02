@@ -1,18 +1,13 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { useSupabase } from '../hooks/useSupabase';
 import PropTypes from 'prop-types';
 import { convertWeight as convertWeightUtil, formatWeight as formatWeightUtil, getWeightLabel as getWeightLabelUtil } from '../utils/unitConversions';
+import { UnitsContext, useUnits } from './unitsContextValue';
 
-const UnitsContext = createContext();
-
-export const useUnits = () => {
-    const context = useContext(UnitsContext);
-    if (!context) {
-        throw new Error('useUnits must be used within a UnitsProvider');
-    }
-    return context;
-};
+// Kept as the public hook export for existing consumers and test mocks.
+// eslint-disable-next-line react-refresh/only-export-components
+export { useUnits };
 
 export const UnitsProvider = ({ children }) => {
     const { currentUser } = useAuth();
@@ -77,7 +72,7 @@ export const UnitsProvider = ({ children }) => {
         };
 
         loadUserPreference();
-    }, [currentUser]);
+    }, [currentUser, supabase]);
 
     // Persist the preference to Supabase and mirror it into localStorage.
     const updateUnitPreference = async (newPreference) => {

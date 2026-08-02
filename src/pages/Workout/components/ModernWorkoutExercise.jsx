@@ -2,26 +2,7 @@ import { useState } from 'react';
 import { Box, Typography, Card, CardContent, Button, Chip, IconButton, TextField, Collapse } from '@mui/material';
 import { Info, Minus, Plus, CheckCircle, X, ChevronRight } from 'lucide-react';
 import PropTypes from 'prop-types';
-
-const KM_TO_MI = 0.621371;
-
-export function toDisplayDistance(km, weightUnit) {
-    if (km === null || km === undefined) return '';
-    return weightUnit === 'lbs' ? parseFloat((km * KM_TO_MI).toFixed(2)) : km;
-}
-
-export function toStoredKm(displayValue, weightUnit) {
-    if (displayValue === '' || displayValue === null || displayValue === undefined) return null;
-    const num = parseFloat(displayValue);
-    if (isNaN(num)) return null;
-    return weightUnit === 'lbs' ? num / KM_TO_MI : num;
-}
-
-export function formatPreviousSet(set, weightUnit = 'kg') {
-    const reps = set.reps ?? '—';
-    const weight = set.weight || '0';
-    return `${reps} reps @ ${weight} ${weightUnit}`;
-}
+import { KM_TO_MI, formatPreviousSet, toDisplayDistance, toStoredKm } from './exerciseComponentUtils';
 
 const inputFieldSx = {
     flex: 1,

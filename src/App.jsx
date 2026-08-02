@@ -1,6 +1,6 @@
 // App.jsx
 import { lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import {  Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { UnitsProvider } from './contexts/UnitsContext';
 import { ThemeProvider } from '@mui/material';

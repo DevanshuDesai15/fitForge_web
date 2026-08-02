@@ -6,6 +6,7 @@ import { Plus, LineChart as MdShowChart, BookOpen as MdLibraryBooks } from 'luci
 import WorkoutsTab from './WorkoutsTab';
 import ExerciseLibraryTab from './ExerciseLibraryTab';
 import CreateWorkoutModal from './CreateWorkoutModal';
+import { getWorkoutTabFromSearchParams } from './workoutDashboardUtils';
 
 const TabButton = styled(Button)(({ active, theme }) => ({
     background: active
@@ -53,10 +54,6 @@ const TabButton = styled(Button)(({ active, theme }) => ({
         color: active ? '#fff' : 'rgba(255, 255, 255, 0.8)',
     },
 }));
-
-export const getWorkoutTabFromSearchParams = (searchParams) => (
-    searchParams.get('tab') === 'library' ? 1 : 0
-);
 
 const WorkoutDashboard = () => {
     const [searchParams, setSearchParams] = useSearchParams();

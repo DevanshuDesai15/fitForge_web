@@ -1,4 +1,4 @@
-import React from 'react';
+import 'react';
 import { Card, CardContent, Typography, Box, Grid } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { Zap, Activity, Target } from 'lucide-react';

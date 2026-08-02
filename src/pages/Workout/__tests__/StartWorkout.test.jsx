@@ -5,7 +5,7 @@ import {
   buildWorkoutSaveExercises,
   buildPreviousSetsMap,
   resolvePreviousSets,
-} from '../StartWorkout';
+} from '../utils/workoutSession';
 
 describe('resolveProgramWorkoutSelection', () => {
   it('rebuilds program days from template rows and selects the requested template id', () => {

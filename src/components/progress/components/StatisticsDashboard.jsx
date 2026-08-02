@@ -19,7 +19,7 @@ const StatisticsDashboard = ({
 }) => {
     // Calculate key statistics
     const totalSessions = exercises.length;
-    const improvingExercises = progressionAnalyses.filter(a => a.progressionTrend === 'improving').length;
+
     const avgConfidence = progressionAnalyses.length > 0 ?
         progressionAnalyses.reduce((sum, a) => sum + a.confidenceLevel, 0) / progressionAnalyses.length : 0;
 

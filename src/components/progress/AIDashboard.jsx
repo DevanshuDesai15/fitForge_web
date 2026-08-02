@@ -11,8 +11,7 @@ const OverviewDashboard = ({
     plateauAlerts,
     progressData,
     selectedExercise,
-    setSelectedExercise,
-    weightUnit
+    setSelectedExercise
 }) => {
     const exerciseNames = Object.keys(progressData);
 

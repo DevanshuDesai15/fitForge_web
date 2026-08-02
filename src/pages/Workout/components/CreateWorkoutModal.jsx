@@ -243,7 +243,7 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated, editData }) => {
         };
 
         loadExercises();
-    }, []);
+    }, [supabase]);
 
     const handleNext = () => {
         setActiveStep((prevActiveStep) => prevActiveStep + 1);

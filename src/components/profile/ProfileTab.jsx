@@ -3,7 +3,7 @@ import { Mail, Calendar } from 'lucide-react';
 import QuickStatsCard from './QuickStatsCard';
 import { convertWeight, formatHeight, formatWeight } from '../../utils/unitConversions';
 
-const ProfileCard = styled(Card)(({ theme }) => ({
+const ProfileCard = styled(Card)(() => ({
   backgroundColor: '#282828',
   border: '1px solid rgba(255, 255, 255, 0.1)',
   borderRadius: '16px',
@@ -19,7 +19,7 @@ const AvatarCircle = styled(Avatar)(({ theme }) => ({
   marginBottom: '16px',
 }));
 
-const InfoRow = styled(Box)(({ theme }) => ({
+const InfoRow = styled(Box)(() => ({
   display: 'flex',
   gap: '24px',
   marginTop: '24px',
@@ -27,7 +27,7 @@ const InfoRow = styled(Box)(({ theme }) => ({
   borderTop: '1px solid rgba(255, 255, 255, 0.05)',
 }));
 
-const InfoItem = styled(Box)(({ theme }) => ({
+const InfoItem = styled(Box)(() => ({
   flex: 1,
 }));
 

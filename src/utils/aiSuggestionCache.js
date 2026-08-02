@@ -139,7 +139,7 @@ export const clearExpiredCache = () => {
               cleared++;
             }
           }
-        } catch (error) {
+        } catch {
           // Invalid cache entry, remove it
           localStorage.removeItem(key);
           cleared++;
@@ -183,7 +183,7 @@ export const getCacheStats = (userId) => {
               validEntries++;
             }
           }
-        } catch (error) {
+        } catch {
           expiredEntries++;
         }
       }

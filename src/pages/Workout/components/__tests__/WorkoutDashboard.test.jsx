@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getWorkoutTabFromSearchParams } from '../WorkoutDashboard';
+import { getWorkoutTabFromSearchParams } from '../workoutDashboardUtils';
 
 describe('getWorkoutTabFromSearchParams', () => {
   it('opens the canonical exercise library tab from the URL', () => {

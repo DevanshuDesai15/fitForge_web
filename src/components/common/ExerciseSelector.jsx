@@ -169,20 +169,47 @@ export default function ExerciseSelector({
         }
     }, [includeHistory, currentUser, loadRecentExercises]);
 
-    useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            if (searchTerm.length >= 2 && isDropdownOpen) {
-                searchExercises(searchTerm);
-            } else if (searchTerm.length < 2) {
-                setSuggestions([]);
-                setShowSuggestions(false);
-            }
-        }, 300);
+    const findExerciseVariations = useCallback(async (selectedExercise) => {
+        if (!currentUser || !selectedExercise) return [];
 
-        return () => clearTimeout(timeoutId);
-    }, [searchTerm, isDropdownOpen]);
+        try {
+            const similarResults = await fetchExerciseCatalogList(supabase, {
+                searchTerm: selectedExercise.target,
+                limit: 50,
+            });
+            const variations = similarResults
+                .filter(exercise =>
+                    exercise.target === selectedExercise.target &&
+                    exercise.name !== selectedExercise.name &&
+                    (exercise.equipment !== selectedExercise.equipment || exercise.bodyPart === selectedExercise.bodyPart)
+                )
+                .slice(0, 3)
+                .map(exercise => ({
+                    id: exercise.id, name: exercise.name, target: exercise.target,
+                    equipment: exercise.equipment, bodyPart: exercise.bodyPart,
+                    type: 'variation', originalExercise: selectedExercise.name
+                }));
+            return Promise.all(variations.map(async (variation) => {
+                try {
+                    const progression = await progressiveOverloadAI.calculateNextProgression(currentUser.uid, variation.name);
+                    return {
+                        ...variation,
+                        hasProgressionData: progression && progression.confidenceLevel > 0.3,
+                        suggestedWeight: progression?.suggestedWeight,
+                        suggestedReps: progression?.suggestedReps,
+                        progressionReasoning: progression?.reasoning
+                    };
+                } catch {
+                    return { ...variation, hasProgressionData: false };
+                }
+            }));
+        } catch (error) {
+            console.error('Error finding exercise variations:', error);
+            return [];
+        }
+    }, [currentUser, supabase]);
 
-    const searchExercises = async (term) => {
+    const searchExercises = useCallback(async (term) => {
         console.log('🔍 Searching exercises for term:', term);
         setLoading(true);
         try {
@@ -224,67 +251,18 @@ export default function ExerciseSelector({
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentUser, findExerciseVariations, supabase]);
 
-    const findExerciseVariations = async (selectedExercise) => {
-        if (!currentUser || !selectedExercise) return [];
-
-        try {
-            // Get similar exercises based on target muscle and equipment
-            const similarResults = await fetchExerciseCatalogList(supabase, {
-                searchTerm: selectedExercise.target,
-                limit: 50,
-            });
-
-            // Filter for exercises with same target muscle but different equipment/name
-            const variations = similarResults
-                .filter(exercise =>
-                    exercise.target === selectedExercise.target &&
-                    exercise.name !== selectedExercise.name &&
-                    (exercise.equipment !== selectedExercise.equipment ||
-                        exercise.bodyPart === selectedExercise.bodyPart)
-                )
-                .slice(0, 3) // Limit to 3 variations
-                .map(exercise => ({
-                    id: exercise.id,
-                    name: exercise.name,
-                    target: exercise.target,
-                    equipment: exercise.equipment,
-                    bodyPart: exercise.bodyPart,
-                    type: 'variation',
-                    originalExercise: selectedExercise.name
-                }));
-
-            // Try to get progression data for variations
-            const variationsWithProgression = await Promise.all(
-                variations.map(async (variation) => {
-                    try {
-                        const progression = await progressiveOverloadAI.calculateNextProgression(
-                            currentUser.uid,
-                            variation.name
-                        );
-                        return {
-                            ...variation,
-                            hasProgressionData: progression && progression.confidenceLevel > 0.3,
-                            suggestedWeight: progression?.suggestedWeight,
-                            suggestedReps: progression?.suggestedReps,
-                            progressionReasoning: progression?.reasoning
-                        };
-                    } catch (error) {
-                        return {
-                            ...variation,
-                            hasProgressionData: false
-                        };
-                    }
-                })
-            );
-
-            return variationsWithProgression;
-        } catch (error) {
-            console.error('Error finding exercise variations:', error);
-            return [];
-        }
-    };
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            if (searchTerm.length >= 2 && isDropdownOpen) searchExercises(searchTerm);
+            else if (searchTerm.length < 2) {
+                setSuggestions([]);
+                setShowSuggestions(false);
+            }
+        }, 300);
+        return () => clearTimeout(timeoutId);
+    }, [searchTerm, isDropdownOpen, searchExercises]);
 
     const handleExerciseSelect = async (exercise) => {
         console.log('🏋️ Exercise selected:', exercise.name);

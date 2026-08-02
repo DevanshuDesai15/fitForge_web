@@ -1,7 +1,7 @@
 import { Skeleton } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
-const StyledSkeleton = styled(Skeleton)(({ theme }) => ({
+const StyledSkeleton = styled(Skeleton)(() => ({
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     '&::after': {
         background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)',

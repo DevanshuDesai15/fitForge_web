@@ -17,7 +17,6 @@ import {
     Chip,
     Alert,
     CircularProgress,
-    Divider,
     TextField,
     Accordion,
     AccordionSummary,
@@ -32,8 +31,6 @@ import {
     Pencil as MdEdit,
     Trash2 as MdDelete,
     AlertTriangle as MdWarning,
-    CheckCircle as MdCheckCircle,
-    X as MdClose,
     Save as MdSave,
     Eraser as MdCleaningServices
 } from 'lucide-react';

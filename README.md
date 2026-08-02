@@ -35,6 +35,18 @@ FitForge requires a network connection for account and Supabase-backed data. It 
 
 Clerk issues a token from the `supabase` JWT template. The browser passes that token to Supabase, where Row Level Security restricts user-owned rows by the Clerk subject. Public exercise-catalog reads are the intentional exception.
 
+RLS convention: `profiles` is the identity row and compares the Clerk subject to
+`profiles.id`. User-owned child tables store the same subject in `user_id` and
+compare against that column. New policies should copy the current patterns in
+`supabase/migrations/20260406_phase3_schema_alignment_and_rls.sql`; do not use
+`profiles.user_id`, because that column does not exist.
+
+The app currently retains Clerk's legacy `supabase` JWT template for deployment
+compatibility. Migrating the live Clerk/Supabase projects to Supabase's current
+first-class Clerk integration requires dashboard configuration and production
+verification, so it is intentionally tracked as an external follow-up rather
+than an automatic repository change.
+
 ## Local setup
 
 ### Prerequisites

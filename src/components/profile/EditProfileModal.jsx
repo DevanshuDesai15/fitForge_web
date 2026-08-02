@@ -9,7 +9,6 @@ import {
   Grid,
   styled,
   FormControl,
-  InputLabel,
   Select,
   MenuItem,
   IconButton,
@@ -153,7 +152,7 @@ const StyledSelect = styled(Select)(() => ({
   },
 }));
 
-const SaveButton = styled(Button)(({ theme }) => ({
+const SaveButton = styled(Button)(() => ({
   background: 'linear-gradient(135deg, #dded00 0%, #c4d600 100%)',
   color: '#000',
   fontWeight: 600,
@@ -295,7 +294,7 @@ const EditProfileModal = ({ open, onClose, userData, onSave, loading, preference
         emailNotifications: userData?.notifications?.emailNotifications !== false,
       });
     }
-  }, [open, userData]);
+  }, [open, userData, unitPreference]);
 
   const handleChange = (field, value) => {
     setFormData(prev => ({

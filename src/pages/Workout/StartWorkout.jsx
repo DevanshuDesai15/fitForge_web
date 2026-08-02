@@ -20,15 +20,6 @@ import {
     toArray,
 } from './utils/workoutSession';
 
-export {
-    beginWorkoutSession,
-    buildPreviousSetsMap,
-    buildWorkoutSaveExercises,
-    calcWorkoutProgress,
-    resolvePreviousSets,
-    resolveProgramWorkoutSelection,
-} from './utils/workoutSession';
-
 // Components
 import TemplateSelector from './components/TemplateSelector';
 import DaySelector from './components/DaySelector';

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Box, Typography, Card, CardContent, Button, Accordion, AccordionSummary, AccordionDetails, Chip } from '@mui/material';
+
+import { Box, Typography, Card, Button, Accordion, AccordionSummary, AccordionDetails, Chip } from '@mui/material';
 import { ChevronDown as MdExpandMore, Dumbbell as MdFitnessCenter, Plus as MdAdd, Trash2 as MdDelete } from 'lucide-react';
 import ExerciseSet from './ExerciseSet';
 

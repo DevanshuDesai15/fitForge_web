@@ -56,15 +56,7 @@ export default function Navigation() {
         setValue(activeTab);
     }, [location.pathname]);
 
-    const handleChange = (event, newValue) => {
-        setValue(newValue);
-        navigate(newValue);
 
-        // Add haptic feedback for mobile devices
-        if (navigator.vibrate) {
-            navigator.vibrate(50);
-        }
-    };
 
     const handleSidebarItemClick = (path) => {
         setValue(path);

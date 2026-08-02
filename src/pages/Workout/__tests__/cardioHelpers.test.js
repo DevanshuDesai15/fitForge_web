@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildCardioExercise } from '../components/AddExerciseDialog';
+import { buildCardioExercise } from '../components/exerciseComponentUtils';
 
 describe('buildCardioExercise', () => {
   it('returns an object with exercise_type cardio', () => {
@@ -24,7 +24,7 @@ describe('buildCardioExercise', () => {
   });
 });
 
-import { toDisplayDistance, toStoredKm } from '../components/ModernWorkoutExercise';
+import { toDisplayDistance, toStoredKm } from '../components/exerciseComponentUtils';
 
 describe('toDisplayDistance', () => {
   it('returns km as-is for metric (kg) users', () => {
@@ -54,7 +54,7 @@ describe('toStoredKm', () => {
   });
 });
 
-import { formatPreviousSet } from '../components/ModernWorkoutExercise';
+import { formatPreviousSet } from '../components/exerciseComponentUtils';
 
 describe('formatPreviousSet', () => {
   it('formats reps and weight in metric', () => {

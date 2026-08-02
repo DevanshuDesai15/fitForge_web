@@ -9,7 +9,6 @@ import {
   Grid,
   styled,
   FormControl,
-  InputLabel,
   Select,
   MenuItem,
   IconButton,
@@ -87,7 +86,7 @@ const StyledSelect = styled(Select)(() => ({
   },
 }));
 
-const AddButton = styled(Button)(({ theme }) => ({
+const AddButton = styled(Button)(() => ({
   background: 'linear-gradient(135deg, #dded00 0%, #c4d600 100%)',
   color: '#000',
   fontWeight: 600,

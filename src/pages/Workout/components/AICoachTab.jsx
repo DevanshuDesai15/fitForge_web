@@ -1,7 +1,7 @@
-import { useState } from 'react';
+
 import PropTypes from 'prop-types';
 import { Box, Typography, Button, Card, CardContent, CircularProgress, Alert, Chip } from '@mui/material';
-import { Brain, Sparkles, Zap, ShieldCheck, Activity, CheckCircle2 } from 'lucide-react';
+import { Brain, Sparkles, Zap, Activity, CheckCircle2 } from 'lucide-react';
 import { useAICoach } from '../hooks/useAICoach';
 
 const AICoachTab = ({ exercise }) => {

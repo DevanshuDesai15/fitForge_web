@@ -1,14 +1,14 @@
-import { createContext, useContext, useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useUser, useAuth as useClerkAuth, useClerk } from '@clerk/clerk-react';
 import posthog from 'posthog-js';
 import { identifyUser, resetAnalytics } from '../services/analyticsService';
 import { registerAiTokenProvider } from '../services/aiApiClient';
+import LoadingFallback from '../components/common/LoadingFallback';
+import { AuthContext, useAuth } from './authContextValue';
 
-const AuthContext = createContext();
-
-export function useAuth() {
-    return useContext(AuthContext);
-}
+// Kept as the public hook export for existing consumers and test mocks.
+// eslint-disable-next-line react-refresh/only-export-components
+export { useAuth };
 
 export function AuthProvider({ children }) {
     const { user, isLoaded: isUserLoaded } = useUser();
@@ -58,7 +58,7 @@ export function AuthProvider({ children }) {
 
     return (
         <AuthContext.Provider value={value}>
-            {!loading && children}
+            {loading ? <LoadingFallback /> : children}
         </AuthContext.Provider>
     );
 }

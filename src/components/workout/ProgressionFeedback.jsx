@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     Box,
     Typography,
@@ -12,12 +12,11 @@ import {
     TrendingUp as MdTrendingUp,
     TrendingDown as MdTrendingDown,
     Minus as MdTrendingFlat,
-    Lightbulb as MdLightbulb,
-    Timer as MdTimer
+    Lightbulb as MdLightbulb
 } from 'lucide-react';
 import progressiveOverloadAI from '../../services/progressiveOverloadAI';
 
-const ProgressionCard = styled(Box)(({ theme }) => ({
+const ProgressionCard = styled(Box)(() => ({
     background: 'linear-gradient(135deg, rgba(221, 237, 0, 0.08) 0%, rgba(221, 237, 0, 0.04) 100%)',
     borderRadius: '12px',
     border: '1px solid rgba(221, 237, 0, 0.2)',
@@ -26,18 +25,12 @@ const ProgressionCard = styled(Box)(({ theme }) => ({
     transition: 'all 0.3s ease',
 }));
 
-const ProgressionFeedback = ({ exercise, exerciseIndex, userId, weightUnit }) => {
+const ProgressionFeedback = ({ exercise, userId, weightUnit }) => {
     const [progressionData, setProgressionData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [showFeedback, setShowFeedback] = useState(false);
 
-    useEffect(() => {
-        if (userId && exercise.name) {
-            loadProgressionData();
-        }
-    }, [userId, exercise.name, exercise.sets]);
-
-    const loadProgressionData = async () => {
+    const loadProgressionData = useCallback(async () => {
         setLoading(true);
         try {
             const progression = await progressiveOverloadAI.calculateNextProgression(
@@ -57,7 +50,13 @@ const ProgressionFeedback = ({ exercise, exerciseIndex, userId, weightUnit }) =>
         } finally {
             setLoading(false);
         }
-    };
+    }, [userId, exercise.name]);
+
+    useEffect(() => {
+        if (userId && exercise.name) {
+            loadProgressionData();
+        }
+    }, [userId, exercise.name, exercise.sets, loadProgressionData]);
 
     const getCurrentPerformance = () => {
         if (!exercise.sets || exercise.sets.length === 0) return null;
@@ -92,7 +91,7 @@ const ProgressionFeedback = ({ exercise, exerciseIndex, userId, weightUnit }) =>
         const current = getCurrentPerformance();
         if (!current) return null;
 
-        const { maxWeight, maxReps, totalVolume } = current;
+        const { maxWeight, maxReps } = current;
 
         // Compare current performance with AI suggestions
         const weightDiff = maxWeight - progressionData.currentWeight;

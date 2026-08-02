@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { beginWorkoutSession } from '../StartWorkout';
+import { beginWorkoutSession } from '../utils/workoutSession';
 
 describe('beginWorkoutSession', () => {
   it('tracks workout_started for a user-initiated workout start', () => {

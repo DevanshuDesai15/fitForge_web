@@ -35,7 +35,7 @@ const Progress = () => {
     } = useProgressData(activeMainTab);
 
     const {
-        aiInsights,
+
         progressionAnalyses,
         loadAIInsights
     } = useAIInsights();

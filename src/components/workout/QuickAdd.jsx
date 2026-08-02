@@ -121,17 +121,7 @@ export default function QuickAdd() {
                 completed: false
             }));
 
-            const exerciseData = {
-                exerciseName,
-                weightUnit: weightUnit, // Store unit used
-                sets: setsArray,
-                weight: parseFloat(weight), // Store max weight
-                reps: parseInt(reps), // Store max reps
-                notes: notes.trim(),
-                timestamp: new Date().toISOString(),
-                userId: currentUser.uid,
-                type: 'quickAdd'
-            };
+
 
             await createWorkout({
                 name: exerciseName,

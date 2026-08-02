@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     Dialog, DialogTitle, DialogContent, Box, TextField, Button,
     Card, CardContent, Typography, Chip, IconButton, CircularProgress,
@@ -12,15 +12,6 @@ import {
     Timer as MdTimer,
     Dumbbell as MdFitnessCenter,
     Target,
-    Footprints,
-    PersonStanding,
-    Mountain,
-    Bike,
-    Waves,
-    Zap,
-    Anchor,
-    Activity,
-    TrendingUp,
     Plus,
     ChevronDown,
     ChevronUp,
@@ -30,27 +21,7 @@ import { useCustomExercises } from '../../../hooks/useCustomExercises';
 import { useSupabase } from '../../../hooks/useSupabase';
 import CustomExerciseForm from './CustomExerciseForm';
 import PropTypes from 'prop-types';
-
-export const CARDIO_ACTIVITIES = [
-    { name: 'Running',       Icon: Footprints },
-    { name: 'Jogging',       Icon: Footprints },
-    { name: 'Walking',       Icon: PersonStanding },
-    { name: 'Hiking',        Icon: Mountain },
-    { name: 'Cycling',       Icon: Bike },
-    { name: 'Swimming',      Icon: Waves },
-    { name: 'Jump Rope',     Icon: Zap },
-    { name: 'Rowing',        Icon: Anchor },
-    { name: 'Elliptical',    Icon: Activity },
-    { name: 'Stair Climber', Icon: TrendingUp },
-];
-
-export function buildCardioExercise(activityName) {
-    return {
-        name: activityName,
-        exercise_type: 'cardio',
-        cardio: { duration_minutes: null, distance_km: null, completed: false },
-    };
-}
+import { CARDIO_ACTIVITIES, buildCardioExercise } from './exerciseComponentUtils';
 
 const AddExerciseDialog = ({ open, onClose, onAddExercise }) => {
     const theme = useTheme();
@@ -75,12 +46,25 @@ const AddExerciseDialog = ({ open, onClose, onAddExercise }) => {
     ];
     const difficultyLevels = ['all', 'Beginner', 'Intermediate', 'Advanced'];
 
+    const loadExercises = useCallback(async () => {
+        setLoading(true);
+        try {
+            const data = await fetchExerciseCatalogList(supabase, { limit: 50 });
+            setExercises(data);
+            setFilteredExercises(data);
+        } catch (error) {
+            console.error('Error loading exercises:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, [supabase]);
+
     useEffect(() => {
         if (open) {
             setShowCustomForm(false);
             loadExercises();
         }
-    }, [open]);
+    }, [open, loadExercises]);
 
     useEffect(() => {
         const libraryNames = new Set(exercises.map(e => e.name.toLowerCase()));
@@ -103,19 +87,6 @@ const AddExerciseDialog = ({ open, onClose, onAddExercise }) => {
         }
         setFilteredExercises(all);
     }, [searchQuery, selectedDifficulty, selectedMuscleGroup, exercises, customExercises]);
-
-    const loadExercises = async () => {
-        setLoading(true);
-        try {
-            const data = await fetchExerciseCatalogList(supabase, { limit: 50 });
-            setExercises(data);
-            setFilteredExercises(data);
-        } catch (error) {
-            console.error('Error loading exercises:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleAddStrengthExercise = (exercise) => {
         onAddExercise({

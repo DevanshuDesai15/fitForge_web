@@ -147,7 +147,7 @@ const CreateProgramModal = ({ open, onClose, onProgramCreated, editData }) => {
             });
             setActiveStep(1); // Skip template selection for editing
         }
-    }, [editData]);
+    }, [editData, supabase]);
 
     const filteredExercises = buildExercisePickerOptions({
         customExercises,

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Box, Typography, Grid, Card, CardContent, Button, Chip, LinearProgress, TextField, InputAdornment, Select, MenuItem, FormControl, Menu, IconButton, Skeleton, Alert } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { Play, Timer, Sparkles, Zap, FolderOpen, Plus, Search, ChevronDown, ChevronDown as ExpandMore, MoreVertical, Pencil, Copy, Trash2 } from 'lucide-react';
+import { Play, Timer, Sparkles, Zap, FolderOpen, Plus, Search, ChevronDown, MoreVertical, Pencil, Copy, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useSupabase } from '../../../hooks/useSupabase';
@@ -26,16 +26,10 @@ import {
     buildWorkoutStartState,
     calculateWorkoutRecommendations,
     estimateTemplateDuration,
-    findNextDayInProgram,
     getPersistedTemplateId,
     getTotalExercises,
-    loadCompletedWorkouts,
 } from './workoutRecommendationEngine';
-
-export {
-    buildWorkoutStartState,
-    findNextDayInProgram,
-} from './workoutRecommendationEngine';
+import { loadCompletedWorkoutsFromSupabase } from './workoutDataLoaders';
 
 const WorkoutCard = styled(Card)(() => ({
     background: 'rgba(40, 40, 40, 0.9)',
@@ -123,11 +117,6 @@ CustomTooltip.propTypes = {
     })),
     label: PropTypes.string
 };
-
-// eslint-disable-next-line react-refresh/only-export-components
-export async function loadCompletedWorkoutsFromSupabase({ supabase, userId, readWorkouts }) {
-    return loadCompletedWorkouts({ supabase, userId, readWorkouts });
-}
 
 const WorkoutsTab = () => {
     const navigate = useNavigate();
@@ -390,15 +379,9 @@ const WorkoutsTab = () => {
         }
     }, [currentUser?.uid, supabase, loading, loadAIRecommendations]);
 
-    const handleSuggestionAccept = (suggestion) => {
-        console.log('Accepted suggestion:', suggestion);
-        // Handle suggestion acceptance logic here
-    };
 
-    const handleSuggestionDismiss = (suggestion) => {
-        console.log('Dismissed suggestion:', suggestion);
-        // Handle suggestion dismissal logic here
-    };
+
+
 
     const handleStarterWorkoutStart = () => {
         if (!selectedRecommendedWorkout) return;
@@ -471,10 +454,7 @@ const WorkoutsTab = () => {
     };
 
 
-    const handleWorkoutCreated = () => {
-        setCreateModalOpen(false);
-        loadTemplates();
-    };
+
 
     const handleCreateProgram = () => {
         setCreateProgramModalOpen(true);

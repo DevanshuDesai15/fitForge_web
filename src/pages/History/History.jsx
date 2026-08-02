@@ -38,8 +38,7 @@ import { flattenExercisesFromWorkouts } from '../../utils/workoutExerciseHistory
 // Date utils no longer needed for new calendar
 import WorkoutCalendar from '../Workout/WorkoutCalendar';
 import {
-    format,
-    isSameDay
+    format
 } from 'date-fns';
 
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -62,13 +61,13 @@ export default function History() {
     const [activeTab, setActiveTab] = useState(0);
     const [workouts, setWorkouts] = useState([]);
     const [exerciseHistory, setExerciseHistory] = useState([]);
-    const [workoutDates, setWorkoutDates] = useState([]);
+    const [, setWorkoutDates] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [weightUnit, setWeightUnitState] = useState('kg');
     const [dialogOpen, setDialogOpen] = useState(false);
-    const [selectedDate, setSelectedDate] = useState(null);
-    const [selectedDateWorkouts, setSelectedDateWorkouts] = useState([]);
+    const [selectedDate] = useState(null);
+    const [selectedDateWorkouts] = useState([]);
     // Old calendar state variables removed - now using WorkoutCalendar component
     const { currentUser } = useAuth();
     const readWorkouts = useWorkoutReader();

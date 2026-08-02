@@ -1,14 +1,14 @@
 import { Box, Card, CardContent, Typography, styled, CircularProgress } from '@mui/material';
 import { Dumbbell, Flame, TrendingUp, Trophy } from 'lucide-react';
 
-const StatsCard = styled(Card)(({ theme }) => ({
+const StatsCard = styled(Card)(() => ({
   backgroundColor: '#282828',
   border: '1px solid rgba(255, 255, 255, 0.1)',
   borderRadius: '16px',
   height: '100%',
 }));
 
-const StatRow = styled(Box)(({ theme }) => ({
+const StatRow = styled(Box)(() => ({
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',

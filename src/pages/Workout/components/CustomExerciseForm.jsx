@@ -1,11 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Box, TextField, Button, Typography, FormControl, Select, MenuItem } from '@mui/material';
 import PropTypes from 'prop-types';
-
-const MUSCLE_GROUPS = [
-    'Chest', 'Back', 'Shoulders', 'Arms', 'Legs', 'Core',
-    'Glutes', 'Hamstrings', 'Quadriceps', 'Calves'
-];
+import { MUSCLE_GROUPS } from './exerciseComponentUtils';
 
 const CustomExerciseForm = ({ initialName, onAdd, compact = false }) => {
     const [name, setName] = useState(initialName || '');
@@ -96,5 +92,4 @@ CustomExerciseForm.propTypes = {
     compact: PropTypes.bool,
 };
 
-export { MUSCLE_GROUPS };
 export default CustomExerciseForm;

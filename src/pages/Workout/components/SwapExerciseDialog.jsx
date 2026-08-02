@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -35,7 +35,8 @@ import {
 import { fetchExerciseCatalogList } from '../../../services/exerciseCatalogService';
 import { useCustomExercises } from '../../../hooks/useCustomExercises';
 import { useSupabase } from '../../../hooks/useSupabase';
-import CustomExerciseForm, { MUSCLE_GROUPS } from './CustomExerciseForm';
+import CustomExerciseForm from './CustomExerciseForm';
+import { MUSCLE_GROUPS } from './exerciseComponentUtils';
 import PropTypes from 'prop-types';
 
 const SwapExerciseDialog = ({ open, onClose, onSwapExercise, exerciseName }) => {
@@ -56,17 +57,7 @@ const SwapExerciseDialog = ({ open, onClose, onSwapExercise, exerciseName }) => 
     const muscleGroupOptions = ['all', ...MUSCLE_GROUPS];
     const difficultyLevels = ['all', 'Beginner', 'Intermediate', 'Advanced'];
 
-    useEffect(() => {
-        if (open) {
-            setSearchQuery('');
-            setSelectedDifficulty('all');
-            setSelectedMuscleGroup('all');
-            setShowCustomForm(false);
-            loadLibrary();
-        }
-    }, [open]);
-
-    const loadLibrary = async () => {
+    const loadLibrary = useCallback(async () => {
         setLibraryLoading(true);
         try {
             const data = await fetchExerciseCatalogList(supabase, { limit: 50 });
@@ -76,7 +67,17 @@ const SwapExerciseDialog = ({ open, onClose, onSwapExercise, exerciseName }) => 
         } finally {
             setLibraryLoading(false);
         }
-    };
+    }, [supabase]);
+
+    useEffect(() => {
+        if (open) {
+            setSearchQuery('');
+            setSelectedDifficulty('all');
+            setSelectedMuscleGroup('all');
+            setShowCustomForm(false);
+            loadLibrary();
+        }
+    }, [open, loadLibrary]);
 
     // Merge custom (Supabase-backed) + library, custom exercises shown first.
     const allExercises = useMemo(() => {

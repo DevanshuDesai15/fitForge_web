@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Box, Fab, Typography, useTheme } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard as MdDashboard,

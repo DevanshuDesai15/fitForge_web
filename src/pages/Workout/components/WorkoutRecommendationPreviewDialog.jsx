@@ -14,7 +14,7 @@ import {
 import { Sparkles as MdAutoAwesome, Play as MdPlayArrow, Pencil as MdEdit, X as MdClose } from 'lucide-react';
 import { styled } from '@mui/material/styles';
 
-const StyledDialog = styled(Dialog)(({ theme }) => ({
+const StyledDialog = styled(Dialog)(() => ({
     '& .MuiDialog-paper': {
         background: '#1a1a1a',
         border: '1px solid rgba(221, 237, 0, 0.2)',

@@ -8,6 +8,8 @@ const clerkMocks = vi.hoisted(() => ({
   signOut: vi.fn(),
   openSignIn: vi.fn(),
   openSignUp: vi.fn(),
+  isUserLoaded: true,
+  isAuthLoaded: true,
 }));
 
 const aiClientMocks = vi.hoisted(() => ({
@@ -18,10 +20,10 @@ const aiClientMocks = vi.hoisted(() => ({
 vi.mock("@clerk/clerk-react", () => ({
   useUser: () => ({
     user: null,
-    isLoaded: true,
+    isLoaded: clerkMocks.isUserLoaded,
   }),
   useAuth: () => ({
-    isLoaded: true,
+    isLoaded: clerkMocks.isAuthLoaded,
     getToken: clerkMocks.getToken,
   }),
   useClerk: () => ({
@@ -47,6 +49,26 @@ describe("AuthProvider AI authentication", () => {
       aiClientMocks.cleanup
     );
     clerkMocks.getToken.mockResolvedValue("session_token");
+    clerkMocks.isUserLoaded = true;
+    clerkMocks.isAuthLoaded = true;
+  });
+
+  it("shows the shared loading fallback while Clerk initializes", () => {
+    clerkMocks.isUserLoaded = false;
+    clerkMocks.isAuthLoaded = false;
+
+    render(
+      <AuthProvider>
+        <div>authenticated application</div>
+      </AuthProvider>
+    );
+
+    expect(
+      screen.getByRole("status", { name: /loading content/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("authenticated application")
+    ).not.toBeInTheDocument();
   });
 
   it("registers Clerk's default session-token provider and cleans it up", async () => {

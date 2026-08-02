@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
     Box,
-    Typography,
     Button,
     List,
     ListItem,
@@ -41,18 +40,7 @@ const BrandSection = styled(Box)(() => ({
     borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
 }));
 
-const QuickAddButton = styled(Button)(() => ({
-    backgroundColor: 'var(--primary-a0)',
-    color: '#121212',
-    borderRadius: '12px',
-    textTransform: 'none',
-    padding: '12px 16px',
-    margin: '1.5rem',
-    width: 'calc(100% - 3rem)',
-    '&:hover': {
-        backgroundColor: 'var(--primary-a10)',
-    },
-}));
+
 
 const NavigationSection = styled(Box)(() => ({
     flex: 1,
@@ -87,15 +75,11 @@ const NavListItemButton = styled(ListItemButton)(({ active }) => ({
 export default function ModernSidebar() {
     const navigate = useNavigate();
     const location = useLocation();
-    const { currentUser, logout } = useAuth();
+    const { logout } = useAuth();
     const [activeTab, setActiveTab] = useState('/');
 
     // Get user display name
-    const getUserName = () => {
-        if (currentUser?.displayName) return currentUser.displayName;
-        if (currentUser?.email) return currentUser.email.split('@')[0];
-        return 'John Doe';
-    };
+
 
     // Function to determine which navigation tab should be active based on current path
     const getActiveTab = (pathname) => {

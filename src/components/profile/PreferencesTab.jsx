@@ -1,14 +1,14 @@
-import { Box, Card, CardContent, Typography, Grid, Button, LinearProgress, styled, Select, MenuItem, FormControl } from '@mui/material';
-import { Languages, Palette, Ruler, RefreshCw, HardDrive, Download, Trash2 } from 'lucide-react';
+import { Box, Card, CardContent, Typography, Grid, styled, Select, MenuItem, FormControl } from '@mui/material';
+import { Languages, Palette, Ruler, RefreshCw } from 'lucide-react';
 import FitForgeSwitch from '../common/FitForgeSwitch';
 
-const PreferenceCard = styled(Card)(({ theme }) => ({
+const PreferenceCard = styled(Card)(() => ({
   backgroundColor: '#282828',
   border: '1px solid rgba(255, 255, 255, 0.1)',
   borderRadius: '16px',
 }));
 
-const PreferenceRow = styled(Box)(({ theme }) => ({
+const PreferenceRow = styled(Box)(() => ({
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
@@ -20,7 +20,7 @@ const PreferenceRow = styled(Box)(({ theme }) => ({
   },
 }));
 
-const PreferenceLabel = styled(Box)(({ theme }) => ({
+const PreferenceLabel = styled(Box)(() => ({
   display: 'flex',
   alignItems: 'center',
   gap: '12px',
@@ -48,11 +48,7 @@ const PreferenceSubtitle = styled(Typography)(({ theme }) => ({
   marginTop: '2px',
 }));
 
-const PreferenceValue = styled(Typography)(({ theme }) => ({
-  fontSize: '14px',
-  color: theme.palette.text.secondary,
-  marginRight: '16px',
-}));
+
 
 const StyledSelect = styled(Select)(({ theme }) => ({
   minWidth: '120px',
@@ -74,39 +70,16 @@ const StyledSelect = styled(Select)(({ theme }) => ({
   },
 }));
 
-const StorageBar = styled(LinearProgress)(({ theme }) => ({
-  height: '8px',
-  borderRadius: '4px',
-  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-  '& .MuiLinearProgress-bar': {
-    backgroundColor: theme.palette.primary.main,
-    borderRadius: '4px',
-  },
-}));
 
-const ActionButton = styled(Button)(({ theme }) => ({
-  borderColor: 'rgba(255, 255, 255, 0.2)',
-  color: theme.palette.text.primary,
-  textTransform: 'none',
-  fontWeight: 500,
 
-  '&:hover': {
-    borderColor: theme.palette.primary.main,
-    backgroundColor: 'rgba(221, 237, 0, 0.05)',
-  },
-}));
+
 
 const PreferencesTab = ({
   preferences,
   notifications,
-  storageUsed,
   onPreferenceChange,
-  onNotificationChange,
-  onExportData,
-  onClearCache
+  onNotificationChange
 }) => {
-  const storagePercentage = (storageUsed / (15 * 1024 * 1024)) * 100; // Assuming 15MB limit
-
   const selectMenuProps = {
     PaperProps: {
       sx: {
