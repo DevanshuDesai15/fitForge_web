@@ -31,8 +31,8 @@ import {
     Play as MdPlayArrow,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useSupabase } from '../../hooks/useSupabase';
 import { useNavigate } from 'react-router-dom';
+import { useWorkoutReader } from '../../hooks/useWorkouts';
 import { getWeightUnit } from '../../utils/weightUnit';
 import { flattenExercisesFromWorkouts } from '../../utils/workoutExerciseHistory';
 // Date utils no longer needed for new calendar
@@ -71,7 +71,7 @@ export default function History() {
     const [selectedDateWorkouts, setSelectedDateWorkouts] = useState([]);
     // Old calendar state variables removed - now using WorkoutCalendar component
     const { currentUser } = useAuth();
-    const supabase = useSupabase();
+    const readWorkouts = useWorkoutReader();
     const navigate = useNavigate();
     const theme = useTheme();
 
@@ -83,13 +83,7 @@ export default function History() {
         }
 
         try {
-            const { data: workoutData, error: queryError } = await supabase
-                .from('workouts')
-                .select('*')
-                .eq('user_id', currentUser.uid)
-                .order('timestamp', { ascending: false });
-
-            if (queryError) throw queryError;
+            const workoutData = await readWorkouts();
 
             const dates = (workoutData || []).map(workout => new Date(workout.timestamp).toDateString());
             setWorkoutDates([...new Set(dates)]);
@@ -98,7 +92,7 @@ export default function History() {
             console.error('Error loading workout dates:', err);
             setError('Error loading workout dates: ' + err.message);
         }
-    }, [currentUser, supabase]);
+    }, [currentUser, readWorkouts]);
 
     const loadData = useCallback(async () => {
         if (!currentUser) {
@@ -113,22 +107,12 @@ export default function History() {
             if (activeTab === 0) { // Calendar - load workout dates
                 await loadWorkoutDates();
             } else if (activeTab === 1) { // Past Workouts
-                const { data: workoutData, error: queryError } = await supabase
-                    .from('workouts')
-                    .select('*')
-                    .eq('user_id', currentUser.uid)
-                    .order('timestamp', { ascending: false });
-
-                if (queryError) throw queryError;
+                const workoutData = await readWorkouts();
                 setWorkouts(workoutData || []);
             } else if (activeTab === 2) { // Exercise History — derived from workouts
-                const { data: workoutData, error: queryError } = await supabase
-                    .from('workouts')
-                    .select('exercises, timestamp, created_at')
-                    .eq('user_id', currentUser.uid)
-                    .order('timestamp', { ascending: false });
-
-                if (queryError) throw queryError;
+                const workoutData = await readWorkouts({
+                    columns: 'exercises, timestamp, created_at',
+                });
 
                 setExerciseHistory(flattenExercisesFromWorkouts(workoutData || []));
             }
@@ -144,7 +128,7 @@ export default function History() {
         } finally {
             setLoading(false);
         }
-    }, [currentUser, activeTab, loadWorkoutDates]);
+    }, [currentUser, activeTab, loadWorkoutDates, readWorkouts]);
 
     // useEffects after function definitions
     useEffect(() => {

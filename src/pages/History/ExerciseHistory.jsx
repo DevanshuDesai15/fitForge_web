@@ -35,9 +35,9 @@ import {
     BarChart3,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useSupabase } from '../../hooks/useSupabase';
 import { useUnits } from '../../contexts/UnitsContext';
 import { format } from 'date-fns';
+import { useWorkoutReader } from '../../hooks/useWorkouts';
 
 const StyledCard = styled(Card)(({ theme }) => ({
     background: '#2a2a2a',
@@ -84,7 +84,7 @@ export default function ExerciseHistory() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const { currentUser } = useAuth();
-    const supabase = useSupabase();
+    const readWorkouts = useWorkoutReader();
     const { weightUnit, convertWeight } = useUnits();
     const theme = useTheme();
 
@@ -108,13 +108,7 @@ export default function ExerciseHistory() {
         setLoading(true);
         setError('');
         try {
-            const { data: workoutData, error: queryError } = await supabase
-                .from('workouts')
-                .select('*')
-                .eq('user_id', currentUser.uid)
-                .order('timestamp', { ascending: false });
-
-            if (queryError) throw queryError;
+            const workoutData = await readWorkouts();
             setWorkouts(workoutData || []);
             processExerciseStats(workoutData || []);
         } catch (err) {
@@ -123,7 +117,7 @@ export default function ExerciseHistory() {
         } finally {
             setLoading(false);
         }
-    }, [currentUser, supabase]);
+    }, [currentUser, readWorkouts]);
 
     useEffect(() => {
         if (currentUser) {

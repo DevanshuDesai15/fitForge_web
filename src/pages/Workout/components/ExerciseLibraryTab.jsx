@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useSupabase } from '../../../hooks/useSupabase';
+import { useWorkoutReader } from '../../../hooks/useWorkouts';
 import { getWeightUnit } from '../../../utils/weightUnit';
 import { getExerciseLibraryStatsFromWorkouts } from '../../../utils/workoutExerciseHistory';
 import { useExerciseCatalog } from '../hooks/useExerciseCatalog';
@@ -114,6 +115,7 @@ import ExerciseDetailDialog from './ExerciseDetailDialog';
 const ExerciseLibraryTab = () => {
     const { currentUser } = useAuth();
     const supabase = useSupabase();
+    const readWorkouts = useWorkoutReader();
     
     const [filters, setFilters] = useState({
         searchTerm: '',
@@ -198,15 +200,11 @@ const ExerciseLibraryTab = () => {
             }
 
             try {
-                const { data, error } = await supabase
-                    .from('workouts')
-                    .select('id, exercises, weight_unit, timestamp, created_at')
-                    .eq('user_id', currentUser.uid)
-                    .order('timestamp', { ascending: false });
+                const data = await readWorkouts({
+                    columns: 'id, exercises, weight_unit, timestamp, created_at',
+                });
 
-                if (error) throw error;
-
-                setWorkouts(data || []);
+                setWorkouts(data);
                 const displayUnit = getWeightUnit() === 'kg' ? 'kg' : 'lbs';
                 setLibraryStats(getExerciseLibraryStatsFromWorkouts(data || [], displayUnit));
             } catch (error) {
@@ -217,14 +215,14 @@ const ExerciseLibraryTab = () => {
         };
 
         loadLibraryStats();
-    }, [currentUser, supabase]);
+    }, [currentUser, readWorkouts]);
 
     const userWorkoutHistory = useMemo(() => {
         const historyByExercise = {};
         const displayUnit = getWeightUnit() === 'kg' ? 'kg' : 'lbs';
 
         workouts.forEach((workout) => {
-            const performedAt = workout?.timestamp || workout?.created_at;
+            const performedAt = workout?.timestamp || workout?.createdAt;
             const formattedDate = performedAt
                 ? new Date(performedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                 : null;
@@ -256,7 +254,7 @@ const ExerciseLibraryTab = () => {
 
                     const weight = Number(set?.weight);
                     if (Number.isFinite(weight) && Number.isFinite(reps)) {
-                        const setWeightUnit = set?.weightUnit || workout?.weight_unit || displayUnit;
+                        const setWeightUnit = set?.weightUnit || workout?.weightUnit || displayUnit;
                         const normalizedSetUnit = setWeightUnit === 'kg' ? 'kg' : 'lbs';
                         const convertedWeight = normalizedSetUnit === displayUnit
                             ? weight

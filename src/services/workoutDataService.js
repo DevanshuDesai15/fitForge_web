@@ -1,6 +1,19 @@
 const toArray = (value) => (Array.isArray(value) ? value : []);
 const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
 
+const WORKOUT_DB_TO_APP_FIELDS = {
+  user_id: 'userId',
+  template_id: 'templateId',
+  template_name: 'templateName',
+  day_name: 'dayName',
+  weight_unit: 'weightUnit',
+  completed_at: 'completedAt',
+  created_at: 'createdAt',
+  updated_at: 'updatedAt',
+  duration_seconds: 'durationSeconds',
+  total_volume_kg: 'totalVolumeKg',
+};
+
 const setIfPresent = (target, source, sourceKey, targetKey = sourceKey, transform = (value) => value) => {
   if (hasOwn(source, sourceKey)) {
     target[targetKey] = transform(source[sourceKey]);
@@ -56,6 +69,8 @@ export function mapWorkoutToDb(workout = {}, userId, options = {}) {
     weight_unit: workout.weightUnit ?? workout.weight_unit ?? null,
     exercises: toArray(workout.exercises),
     duration: workout.duration ?? null,
+    duration_seconds: workout.durationSeconds ?? workout.duration_seconds ?? null,
+    total_volume_kg: workout.totalVolumeKg ?? workout.total_volume_kg ?? null,
     completed: workout.completed ?? false,
     completed_at: workout.completedAt ?? workout.completed_at ?? null,
     timestamp: workout.timestamp ?? null,
@@ -63,6 +78,16 @@ export function mapWorkoutToDb(workout = {}, userId, options = {}) {
     ...(options.createdAt !== undefined ? { created_at: options.createdAt } : {}),
     ...(options.updatedAt !== undefined ? { updated_at: options.updatedAt } : {}),
   };
+}
+
+export function mapWorkoutFromDb(row = {}) {
+  const workout = {};
+
+  for (const [key, value] of Object.entries(row)) {
+    workout[WORKOUT_DB_TO_APP_FIELDS[key] ?? key] = value;
+  }
+
+  return workout;
 }
 
 export function mapTemplateUpdateToDb(template = {}) {
@@ -119,6 +144,10 @@ export function mapWorkoutUpdateToDb(workout = {}) {
   setIfPresent(patch, workout, 'weight_unit', 'weight_unit');
   setIfPresent(patch, workout, 'exercises', 'exercises', toArray);
   setIfPresent(patch, workout, 'duration');
+  setIfPresent(patch, workout, 'durationSeconds', 'duration_seconds');
+  setIfPresent(patch, workout, 'duration_seconds', 'duration_seconds');
+  setIfPresent(patch, workout, 'totalVolumeKg', 'total_volume_kg');
+  setIfPresent(patch, workout, 'total_volume_kg', 'total_volume_kg');
   setIfPresent(patch, workout, 'completed');
   setIfPresent(patch, workout, 'completedAt', 'completed_at');
   setIfPresent(patch, workout, 'completed_at', 'completed_at');

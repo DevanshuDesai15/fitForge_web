@@ -26,7 +26,7 @@ class GeminiAIService {
   constructor(config = geminiConfig, provider = huggingFaceService) {
     this.config = config;
     this.provider = provider;
-    this.disabled = !config.apiKey || config.emergencyDisable;
+    this.disabled = config.emergencyDisable;
   }
 
   setSupabase(supabase) {

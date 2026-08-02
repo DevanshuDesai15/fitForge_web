@@ -23,6 +23,7 @@ import PreferencesTab from '../../components/profile/PreferencesTab';
 import AccountTab from '../../components/profile/AccountTab';
 import EditProfileModal from '../../components/profile/EditProfileModal';
 import { safeCapture } from '../../services/analyticsService';
+import { listWorkouts } from '../../services/workoutRepository';
 import {
     buildProfileUpdatePayload,
     getProfileNotifications,
@@ -180,12 +181,11 @@ export default function Profile() {
     const handleExportData = async () => {
         try {
             // Fetch workouts from Supabase
-            const { data: workouts, error: workoutError } = await supabase
-                .from('workouts')
-                .select('*')
-                .eq('user_id', profile.id);
-
-            if (workoutError) throw workoutError;
+            const workouts = await listWorkouts({
+                supabase,
+                userId: profile.id,
+                orderBy: null,
+            });
 
             const exportData = {
                 profile: userData,

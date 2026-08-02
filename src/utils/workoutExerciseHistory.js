@@ -5,7 +5,7 @@ const toArray = (value) => (Array.isArray(value) ? value : []);
 function normalizeWorkoutExercise(workout, exercise, index) {
   const sets = toArray(exercise?.sets);
   const firstSet = sets[0] || {};
-  const timestamp = workout?.timestamp || workout?.created_at || null;
+  const timestamp = workout?.timestamp || workout?.createdAt || workout?.created_at || null;
   const weightUnit = firstSet.weightUnit || workout?.weight_unit || workout?.weightUnit || 'lbs';
   const exerciseName = exercise?.name || exercise?.exerciseName || 'Unknown Exercise';
 
@@ -20,7 +20,7 @@ function normalizeWorkoutExercise(workout, exercise, index) {
     weightUnit,
     notes: exercise?.notes || '',
     timestamp,
-    createdAt: workout?.created_at || timestamp,
+    createdAt: workout?.createdAt || workout?.created_at || timestamp,
     workoutId: workout?.id || null,
   };
 }

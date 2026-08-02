@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSupabase } from "./useSupabase";
 import { useAuth } from "../contexts/AuthContext";
+import { listWorkouts } from "../services/workoutRepository";
 
 export function useDashboardStats() {
   const supabase = useSupabase();
@@ -17,20 +18,17 @@ export function useDashboardStats() {
           .from("workout_programs")
           .select("*")
           .eq("user_id", currentUser.uid),
-        supabase
-          .from("workouts")
-          .select("*")
-          .eq("user_id", currentUser.uid)
-          .eq("completed", true)
-          .order("timestamp", { ascending: false })
-          .limit(50),
+        listWorkouts({
+          supabase,
+          userId: currentUser.uid,
+          completed: true,
+          limit: 50,
+        }),
       ]);
 
       if (programsResult.error) throw programsResult.error;
-      if (workoutsResult.error) throw workoutsResult.error;
-
       const userPrograms = programsResult.data;
-      const completedWorkouts = workoutsResult.data;
+      const completedWorkouts = workoutsResult;
 
       // Stats Processing (Trailing 7 days)
       const today = new Date();
@@ -76,8 +74,8 @@ export function useDashboardStats() {
 
       weekWorkoutData.forEach((workout) => {
         weeklyWorkouts++;
-        weeklyMinutes += workout.duration_seconds || 0;
-        weeklyVolume += parseFloat(workout.total_volume_kg) || 0;
+        weeklyMinutes += workout.durationSeconds || 0;
+        weeklyVolume += parseFloat(workout.totalVolumeKg) || 0;
 
         if (workout.exercises && Array.isArray(workout.exercises)) {
           workout.exercises.forEach((ex) => {

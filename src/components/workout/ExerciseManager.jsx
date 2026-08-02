@@ -38,8 +38,9 @@ import {
     Eraser as MdCleaningServices
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useSupabase } from '../../hooks/useSupabase';
 import { groupSimilarExercises, validateExerciseName, autoCorrectExerciseName } from '../../utils/exerciseValidator';
+import { useWorkoutReader } from '../../hooks/useWorkouts';
+import { useWorkoutMutations } from '../../pages/Workout/hooks/useWorkoutMutations';
 
 const StyledCard = styled(Card)(() => ({
     background: 'rgba(40, 40, 40, 0.9)',
@@ -73,7 +74,8 @@ export default function ExerciseManager() {
     const [newName, setNewName] = useState('');
 
     const { currentUser } = useAuth();
-    const supabase = useSupabase();
+    const readWorkouts = useWorkoutReader();
+    const { updateWorkout } = useWorkoutMutations();
 
     useEffect(() => {
         loadExercises();
@@ -84,13 +86,9 @@ export default function ExerciseManager() {
         setLoading(true);
         setError('');
         try {
-            const { data: workouts, error: queryError } = await supabase
-                .from('workouts')
-                .select('id, exercises, timestamp, created_at')
-                .eq('user_id', currentUser.uid)
-                .order('timestamp', { ascending: false });
-
-            if (queryError) throw queryError;
+            const workouts = await readWorkouts({
+                columns: 'id, exercises, timestamp, created_at',
+            });
 
             const exerciseData = [];
             for (const workout of workouts || []) {
@@ -100,7 +98,7 @@ export default function ExerciseManager() {
                         workoutId: workout.id,
                         exerciseName: exercise.name,
                         sets: exercise.sets || [],
-                        timestamp: workout.timestamp || workout.created_at,
+                        timestamp: workout.timestamp || workout.createdAt,
                         weight: Math.max(0, ...(exercise.sets || []).map(s => parseFloat(s.weight) || 0)),
                         reps: Math.max(0, ...(exercise.sets || []).map(s => parseInt(s.reps) || 0)),
                     });
@@ -118,12 +116,10 @@ export default function ExerciseManager() {
     };
 
     const renameExerciseAcrossWorkouts = async (oldName, newName) => {
-        const { data: workouts, error: fetchError } = await supabase
-            .from('workouts')
-            .select('id, exercises')
-            .eq('user_id', currentUser.uid);
-
-        if (fetchError) throw fetchError;
+        const workouts = await readWorkouts({
+            columns: 'id, exercises',
+            orderBy: null,
+        });
 
         const toUpdate = (workouts || []).filter(w =>
             (w.exercises || []).some(ex => ex.name === oldName)
@@ -133,11 +129,7 @@ export default function ExerciseManager() {
             const updatedExercises = workout.exercises.map(ex =>
                 ex.name === oldName ? { ...ex, name: newName } : ex
             );
-            return supabase
-                .from('workouts')
-                .update({ exercises: updatedExercises })
-                .eq('id', workout.id)
-                .eq('user_id', currentUser.uid);
+            return updateWorkout(workout.id, { exercises: updatedExercises });
         }));
     };
 
@@ -224,12 +216,10 @@ export default function ExerciseManager() {
 
         setLoading(true);
         try {
-            const { data: workouts, error: fetchError } = await supabase
-                .from('workouts')
-                .select('id, exercises')
-                .eq('user_id', currentUser.uid);
-
-            if (fetchError) throw fetchError;
+            const workouts = await readWorkouts({
+                columns: 'id, exercises',
+                orderBy: null,
+            });
 
             const toUpdate = (workouts || []).filter(w =>
                 (w.exercises || []).some(ex => ex.name === exercise.exerciseName)
@@ -237,11 +227,7 @@ export default function ExerciseManager() {
 
             await Promise.all(toUpdate.map(workout => {
                 const updatedExercises = workout.exercises.filter(ex => ex.name !== exercise.exerciseName);
-                return supabase
-                    .from('workouts')
-                    .update({ exercises: updatedExercises })
-                    .eq('id', workout.id)
-                    .eq('user_id', currentUser.uid);
+                return updateWorkout(workout.id, { exercises: updatedExercises });
             }));
 
             setSuccess(`Exercise "${exercise.exerciseName}" deleted successfully`);

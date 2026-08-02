@@ -1,4 +1,4 @@
-import { parseHeight } from '../../utils/unitConversion';
+import { parseHeight } from '../../utils/unitConversions';
 
 const DEFAULT_PREFERENCES = {
   units: 'imperial',

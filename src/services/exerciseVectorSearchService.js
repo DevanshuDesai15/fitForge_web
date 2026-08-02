@@ -1,47 +1,20 @@
-import { HfInference } from "@huggingface/inference";
-
-import geminiConfig from "../config/geminiConfig";
 import {
   buildExerciseSearchQuery,
-  DEFAULT_EMBEDDING_MODEL,
   toVectorLiteral,
 } from "../../scripts/lib/exerciseMigration.js";
+import aiApiClient from "./aiApiClient";
 
 class ExerciseVectorSearchService {
-  constructor(config = geminiConfig) {
-    this.config = config;
+  constructor() {
     this.supabase = null;
-    this.client = null;
-    this.embeddingModel =
-      (typeof import.meta !== "undefined" &&
-        import.meta.env?.VITE_HUGGINGFACE_EMBEDDING_MODEL) ||
-      DEFAULT_EMBEDDING_MODEL;
   }
 
   setSupabase(supabase) {
     this.supabase = supabase;
   }
 
-  _getClient() {
-    if (this.client) {
-      return this.client;
-    }
-
-    if (!this.config.apiKey) {
-      throw new Error("Hugging Face API key is missing");
-    }
-
-    this.client = new HfInference(this.config.apiKey);
-    return this.client;
-  }
-
   async _generateQueryEmbedding(query) {
-    const response = await this._getClient().featureExtraction({
-      model: this.embeddingModel,
-      inputs: `query: ${query}`,
-    });
-
-    return Array.isArray(response[0]) ? response[0] : response;
+    return aiApiClient.embedding(`query: ${query}`);
   }
 
   async searchRelevantExercises(context, options = {}) {

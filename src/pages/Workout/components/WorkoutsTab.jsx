@@ -21,6 +21,8 @@ import {
 } from './starterWorkoutRecommendations';
 import progressiveOverloadAI from '../../../services/progressiveOverloadAI';
 import { Brain, TrendingUp, Clock } from 'lucide-react';
+import { listWorkouts } from '../../../services/workoutRepository';
+import { useWorkoutReader } from '../../../hooks/useWorkouts';
 import AIUnlockProgress from '../../Home/components/AIUnlockProgress';
 
 const WorkoutCard = styled(Card)(() => ({
@@ -111,34 +113,18 @@ CustomTooltip.propTypes = {
 };
 
 // eslint-disable-next-line react-refresh/only-export-components
-export async function loadCompletedWorkoutsFromSupabase({ supabase, userId }) {
+export async function loadCompletedWorkoutsFromSupabase({ supabase, userId, readWorkouts }) {
     if (!userId) {
         return [];
     }
 
-    const { data, error } = await supabase
-        .from('workouts')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('completed', true)
-        .order('timestamp', { ascending: false })
-        .limit(50);
-
-    if (error) {
-        throw error;
-    }
-
-    return (data || []).map(workout => ({
-        ...workout,
-        userId: workout.user_id,
-        templateId: workout.template_id,
-        templateName: workout.template_name,
-        dayName: workout.day_name,
-        weightUnit: workout.weight_unit,
-        completedAt: workout.completed_at,
-        createdAt: workout.created_at,
-        updatedAt: workout.updated_at,
-    }));
+    const options = {
+        completed: true,
+        limit: 50,
+    };
+    return readWorkouts
+        ? readWorkouts(options)
+        : listWorkouts({ supabase, userId, ...options });
 }
 
 function getPersistedTemplateId(day, fallbackTemplateId) {
@@ -200,10 +186,11 @@ const WorkoutsTab = () => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
     const supabase = useSupabase();
+    const readWorkouts = useWorkoutReader();
     const { templates, loading: templatesLoading, loadTemplates } = useWorkoutTemplates();
     const { programs, loading: programsLoading, loadPrograms } = useWorkoutPrograms();
     const { createTemplate, createProgram, deleteTemplate, deleteProgram } = useWorkoutMutations();
-    const { workoutStarted, exercises } = useWorkoutState();
+    const { workoutStarted, exercises, clearWorkoutState } = useWorkoutState();
 
     const [activeSubTab, setActiveSubTab] = useState(0); // 0 = Quick Start, 1 = Programs
     const [recommendedWorkouts, setRecommendedWorkouts] = useState([]);
@@ -242,7 +229,7 @@ const WorkoutsTab = () => {
 
     const handleClearOngoingWorkout = (e) => {
         e.stopPropagation();
-        localStorage.removeItem('workoutState');
+        clearWorkoutState();
         setHasOngoingWorkout(false);
         setWorkoutInfo(null);
     };
@@ -358,6 +345,7 @@ const WorkoutsTab = () => {
                 const workouts = await loadCompletedWorkoutsFromSupabase({
                     supabase,
                     userId: currentUser.uid,
+                    readWorkouts,
                 });
 
                 // Track total completed workouts for AI unlock
@@ -411,7 +399,7 @@ const WorkoutsTab = () => {
         if (currentUser && !programsLoading) {
             loadWorkoutData();
         }
-    }, [currentUser, programs, programsLoading, templates, calculateRecommendations, supabase]);
+    }, [currentUser, programs, programsLoading, templates, calculateRecommendations, supabase, readWorkouts]);
 
     // AI Recommendation utility functions (matching Home page)
     const getPriorityColor = (priority) => {
@@ -814,6 +802,7 @@ const WorkoutsTab = () => {
                                                 />
                                                 <IconButton
                                                     size="small"
+                                                    aria-label="Discard ongoing workout"
                                                     onClick={handleClearOngoingWorkout}
                                                     sx={{
                                                         color: 'rgba(255, 255, 255, 0.5)',

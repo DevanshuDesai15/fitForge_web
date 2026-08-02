@@ -509,8 +509,13 @@ const Progress = () => {
 
                 {/* Main Navigation */}
                 <Box
+                    role="tablist"
+                    aria-label="Progress sections"
                     sx={{
-                        display: 'inline-flex',
+                        display: 'flex',
+                        width: '100%',
+                        maxWidth: '100%',
+                        boxSizing: 'border-box',
                         background: '#1e1e1e',
                         borderRadius: '50px',
                         p: '5px',
@@ -525,14 +530,22 @@ const Progress = () => {
                         { label: 'AI Dashboard', icon: <MdPsychology size={16} /> },
                     ].map((tab, index) => (
                         <Box
+                            component="button"
+                            type="button"
+                            role="tab"
+                            aria-selected={activeMainTab === index}
+                            aria-label={tab.label}
                             key={tab.label}
                             onClick={() => setActiveMainTab(index)}
                             sx={{
+                                flex: '1 1 0',
+                                minWidth: 0,
+                                border: 0,
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 gap: '6px',
-                                px: 2,
+                                px: { xs: 1, sm: 2 },
                                 py: '8px',
                                 borderRadius: '50px',
                                 cursor: 'pointer',
@@ -543,6 +556,7 @@ const Progress = () => {
                                 transition: 'all 0.2s',
                                 userSelect: 'none',
                                 whiteSpace: 'nowrap',
+                                overflow: 'hidden',
                                 '&:hover': {
                                     color: activeMainTab === index ? '#fff' : 'rgba(255,255,255,0.7)',
                                     background: activeMainTab === index ? '#2e2e2e' : 'rgba(255,255,255,0.05)',
@@ -550,7 +564,16 @@ const Progress = () => {
                             }}
                         >
                             {tab.icon}
-                            {tab.label}
+                            <Box
+                                component="span"
+                                sx={{
+                                    display: { xs: 'none', sm: 'inline' },
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                }}
+                            >
+                                {tab.label}
+                            </Box>
                         </Box>
                     ))}
                 </Box>

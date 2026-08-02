@@ -1,7 +1,7 @@
 import { Box, Card, CardContent, Typography, Grid, Avatar, styled, Chip } from '@mui/material';
 import { Mail, Calendar } from 'lucide-react';
 import QuickStatsCard from './QuickStatsCard';
-import { formatWeight, formatHeight } from '../../utils/unitConversion';
+import { convertWeight, formatHeight, formatWeight } from '../../utils/unitConversions';
 
 const ProfileCard = styled(Card)(({ theme }) => ({
   backgroundColor: '#282828',
@@ -103,16 +103,8 @@ const ProfileTab = ({ userData, stats, statsLoading, preferences }) => {
     const currentWeightUnit = userData.weightUnit || 'lbs';
     const targetWeightUnit = unitPreference === 'metric' ? 'kg' : 'lbs';
 
-    let displayWeight = userData.weight;
-    if (currentWeightUnit !== targetWeightUnit) {
-      if (currentWeightUnit === 'lbs' && targetWeightUnit === 'kg') {
-        displayWeight = Math.round(userData.weight / 2.20462);
-      } else if (currentWeightUnit === 'kg' && targetWeightUnit === 'lbs') {
-        displayWeight = Math.round(userData.weight * 2.20462);
-      }
-    }
-
-    return `${displayWeight} ${targetWeightUnit}`;
+    const displayWeight = convertWeight(userData.weight, currentWeightUnit, targetWeightUnit);
+    return formatWeight(displayWeight, targetWeightUnit);
   };
 
   return (

@@ -1,15 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mockChatCompletion = vi.fn();
+const mockChat = vi.fn();
 const mockSearchRelevantExercises = vi.fn();
 const mockFetchExerciseForRAG = vi.fn();
 
-vi.mock("@huggingface/inference", () => ({
-  HfInference: vi.fn().mockImplementation(function MockHfInference() {
-    return {
-      chatCompletion: mockChatCompletion,
-    };
-  }),
+vi.mock("../aiApiClient", () => ({
+  default: {
+    chat: mockChat,
+  },
 }));
 
 vi.mock("../exerciseVectorSearchService", () => ({
@@ -46,17 +44,19 @@ describe("HuggingFaceService safeguards", () => {
     });
     service._sleep = vi.fn().mockResolvedValue(undefined);
 
-    mockChatCompletion
+    mockChat
       .mockRejectedValueOnce(Object.assign(new Error("rate limit"), { status: 429 }))
-      .mockResolvedValueOnce({
-        choices: [{ message: { content: "{\"ok\":true}" } }],
-      });
+      .mockResolvedValueOnce("{\"ok\":true}");
 
     await expect(service.generateWorkoutAnalysis(
       { name: "Bench Press" },
       [{ weight: 135, reps: 8 }]
     )).resolves.toEqual({ ok: true });
-    expect(mockChatCompletion).toHaveBeenCalledTimes(2);
+    expect(mockChat).toHaveBeenCalledTimes(2);
+    expect(mockChat).toHaveBeenCalledWith(
+      expect.stringMatching(/fitness ai coach/i),
+      expect.stringContaining("Bench Press")
+    );
   });
 
   it("surfaces a timeout when the provider never responds", async () => {
@@ -73,7 +73,7 @@ describe("HuggingFaceService safeguards", () => {
       useGeminiAI: true,
     });
 
-    mockChatCompletion.mockImplementation(
+    mockChat.mockImplementation(
       () => new Promise(() => {})
     );
 

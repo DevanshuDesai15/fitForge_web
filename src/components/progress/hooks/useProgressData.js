@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useSupabase } from "../../../hooks/useSupabase";
+import { listWorkouts } from "../../../services/workoutRepository";
+import { workoutQueryKeys } from "../../../hooks/useWorkouts";
 
 export const useProgressData = () => {
   const { currentUser } = useAuth();
@@ -54,17 +56,14 @@ export const useProgressData = () => {
     error: workoutsError,
     refetch: loadData
   } = useQuery({
-    queryKey: ['historicalWorkouts', currentUser?.uid],
+    queryKey: workoutQueryKeys.list(currentUser?.uid, { view: 'progress-history' }),
     queryFn: async () => {
       if (!currentUser) return [];
-      const { data, error } = await supabase
-        .from("workouts")
-        .select("timestamp, exercises")
-        .eq("user_id", currentUser.uid)
-        .order("timestamp", { ascending: false });
-
-      if (error) throw error;
-      return data;
+      return listWorkouts({
+        supabase,
+        userId: currentUser.uid,
+        columns: 'timestamp, exercises',
+      });
     },
     enabled: !!currentUser,
     staleTime: 5 * 60 * 1000,

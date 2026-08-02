@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo } from 'react';
 import { useUser, useAuth as useClerkAuth, useClerk } from '@clerk/clerk-react';
 import posthog from 'posthog-js';
 import { identifyUser, resetAnalytics } from '../services/analyticsService';
+import { registerAiTokenProvider } from '../services/aiApiClient';
 
 const AuthContext = createContext();
 
@@ -11,7 +12,7 @@ export function useAuth() {
 
 export function AuthProvider({ children }) {
     const { user, isLoaded: isUserLoaded } = useUser();
-    const { isLoaded: isAuthLoaded } = useClerkAuth();
+    const { isLoaded: isAuthLoaded, getToken } = useClerkAuth();
     const { signOut, openSignIn, openSignUp } = useClerk();
 
     const loading = !isUserLoaded || !isAuthLoaded;
@@ -34,6 +35,11 @@ export function AuthProvider({ children }) {
             identifyUser(posthog, user);
         }
     }, [user]);
+
+    useEffect(() => {
+        if (!isAuthLoaded) return undefined;
+        return registerAiTokenProvider(() => getToken());
+    }, [getToken, isAuthLoaded]);
 
     const logout = async () => {
         resetAnalytics(posthog);

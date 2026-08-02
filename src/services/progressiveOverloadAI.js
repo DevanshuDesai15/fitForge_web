@@ -6,6 +6,7 @@
 
 import aiDatabaseService from "./aiDatabaseService";
 import geminiAIService from "./geminiAIService";
+import { listWorkouts } from "./workoutRepository";
 
 /**
  * @typedef {Object} ProgressionAnalysis
@@ -200,14 +201,12 @@ class ProgressiveOverloadAIService {
       }
 
       // Fetch workouts to extract flattened exercises in Postgres
-      const { data: workouts, error } = await this.supabase
-        .from("workouts")
-        .select("id, timestamp, exercises")
-        .eq("user_id", userId)
-        .order("timestamp", { ascending: false })
-        .limit(20);
-
-      if (error) throw error;
+      const workouts = await listWorkouts({
+        supabase: this.supabase,
+        userId,
+        columns: 'id, timestamp, exercises',
+        limit: 20,
+      });
 
       const exercises = [];
       workouts.forEach(workout => {
@@ -804,14 +803,12 @@ class ProgressiveOverloadAIService {
    */
   async _analyzeExerciseHistory(userId, exerciseId) {
     // Fetch recent workouts from Supabase to extract exercises
-    const { data: workouts, error } = await this.supabase
-        .from("workouts")
-        .select("id, timestamp, exercises")
-        .eq("user_id", userId)
-        .order("timestamp", { ascending: false })
-        .limit(20);
-
-    if (error) throw error;
+    const workouts = await listWorkouts({
+      supabase: this.supabase,
+      userId,
+      columns: 'id, timestamp, exercises',
+      limit: 20,
+    });
 
     const allExercises = [];
     workouts.forEach(workout => {
@@ -1837,15 +1834,11 @@ class ProgressiveOverloadAIService {
       this._log("Analyzing comprehensive workout history", { userId });
 
       // Get last 16 workouts as per requirements
-      const { data: workoutsData, error } = await this.supabase
-        .from("workouts")
-        .select("*")
-        .eq("user_id", userId)
-        .order("timestamp", { ascending: false })
-        .limit(16);
-
-      if (error) throw error;
-      const workouts = workoutsData.map(w => ({ ...w, userId: w.user_id }));
+      const workouts = await listWorkouts({
+        supabase: this.supabase,
+        userId,
+        limit: 16,
+      });
 
       if (workouts.length === 0) {
         return this._getEmptyAnalysis();
@@ -2365,15 +2358,11 @@ class ProgressiveOverloadAIService {
       this._log("Running advanced plateau detection", { userId });
 
       // Get recent workout history for detailed analysis
-      const { data: workoutsData, error } = await this.supabase
-        .from("workouts")
-        .select("*")
-        .eq("user_id", userId)
-        .order("timestamp", { ascending: false })
-        .limit(20);
-
-      if (error) throw error;
-      const workouts = workoutsData.map(w => ({ ...w, userId: w.user_id }));
+      const workouts = await listWorkouts({
+        supabase: this.supabase,
+        userId,
+        limit: 20,
+      });
 
       if (workouts.length < 3) {
         this._log("Insufficient workout data for plateau detection");
@@ -3451,15 +3440,11 @@ class ProgressiveOverloadAIService {
         limitCount = 5;
       }
 
-      const { data: workoutsData, error } = await this.supabase
-        .from("workouts")
-        .select("*")
-        .eq("user_id", userId)
-        .order("timestamp", { ascending: false })
-        .limit(limitCount);
-
-      if (error) throw error;
-      const workouts = workoutsData.map(w => ({ ...w, userId: w.user_id }));
+      const workouts = await listWorkouts({
+        supabase: this.supabase,
+        userId,
+        limit: limitCount,
+      });
 
       this._log("Retrieved workout history", {
         userId,

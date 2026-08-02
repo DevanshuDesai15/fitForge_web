@@ -1,5 +1,5 @@
-import { HfInference } from "@huggingface/inference";
 import geminiConfig from "../config/geminiConfig";
+import aiApiClient from "./aiApiClient";
 import exerciseVectorSearchService from "./exerciseVectorSearchService";
 import { fetchExerciseForRAG } from "./localExerciseService";
 
@@ -11,7 +11,6 @@ const RETRYABLE_STATUS_CODES = new Set([408, 409, 425, 429, 500, 502, 503, 504])
 class HuggingFaceService {
   constructor(config = geminiConfig) {
     this.config = config;
-    this.client = null;
     this.supabase = null;
     this.requestCache = new Map();
     this.pendingRequests = new Map();
@@ -35,21 +34,8 @@ class HuggingFaceService {
     exerciseVectorSearchService.setSupabase(supabase);
   }
 
-  _getClient() {
-    if (this.client) {
-      return this.client;
-    }
-
-    if (!this.config.apiKey) {
-      throw new Error("Hugging Face API key is missing");
-    }
-
-    this.client = new HfInference(this.config.apiKey);
-    return this.client;
-  }
-
   _isEnabled() {
-    return !!this.config.apiKey && !this.config.emergencyDisable && this.config.useGeminiAI;
+    return !this.config.emergencyDisable && this.config.useGeminiAI;
   }
 
   _isCircuitOpen() {
@@ -204,23 +190,13 @@ class HuggingFaceService {
     for (let attempt = 1; attempt <= totalAttempts; attempt += 1) {
       try {
         this._incrementRequestCount();
-        const client = this._getClient();
         const response = await this._withTimeout(
-          client.chatCompletion({
-            model: this.config.model,
-            messages: [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: userPrompt },
-            ],
-            temperature: this.config.temperature,
-            max_tokens: this.config.maxTokens,
-            response_format: { type: "json_object" },
-          }),
+          aiApiClient.chat(systemPrompt, userPrompt),
           this.config.requestTimeout
         );
 
         this._resetCircuitBreaker();
-        return response.choices?.[0]?.message?.content ?? "{}";
+        return response ?? "{}";
       } catch (error) {
         const shouldRetry =
           attempt < totalAttempts && this._isRetryableError(error);

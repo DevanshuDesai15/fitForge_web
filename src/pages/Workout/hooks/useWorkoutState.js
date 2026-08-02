@@ -1,109 +1,182 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
+import {
+  TIMER_STATUS,
+  clearPersistedWorkoutState,
+  createRunningTimerState,
+  getElapsedWorkoutSeconds,
+  normalizePersistedTimerState,
+  pauseWorkoutTimer as pauseTimerState,
+  resumeWorkoutTimer as resumeTimerState,
+} from "../utils/workoutTimerState";
+
+const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
+const TIMER_HEARTBEAT_MS = 60 * 1000;
+
+const idleTimerState = () => ({
+  elapsedTime: 0,
+  timerStatus: TIMER_STATUS.IDLE,
+  timerStartedAt: null,
+});
 
 export const useWorkoutState = () => {
   const [workoutStarted, setWorkoutStarted] = useState(false);
   const [exercises, setExercises] = useState([]);
   const [currentTemplate, setCurrentTemplate] = useState(null);
   const [selectedDay, setSelectedDay] = useState(null);
-  const [elapsedTime, setElapsedTime] = useState(0);
   const [workoutStartTime, setWorkoutStartTime] = useState(null);
+  const [timerState, setTimerState] = useState(idleTimerState);
+  const [displayNow, setDisplayNow] = useState(() => Date.now());
 
   const { currentUser } = useAuth();
 
+  const elapsedTime = useMemo(
+    () => getElapsedWorkoutSeconds(timerState, displayNow),
+    [displayNow, timerState]
+  );
+
   const saveWorkoutState = useCallback(() => {
-    if (workoutStarted && currentUser) {
-      const state = {
-        userId: currentUser.uid,
-        workoutStarted,
-        exercises,
-        currentTemplate,
-        selectedDay,
-        elapsedTime,
-        workoutStartTime,
-        timestamp: Date.now(),
-      };
-      localStorage.setItem("workoutState", JSON.stringify(state));
+    if (
+      !workoutStarted ||
+      !currentUser ||
+      timerState.timerStatus === TIMER_STATUS.IDLE
+    ) {
+      return false;
     }
+
+    const state = {
+      userId: currentUser.uid,
+      workoutStarted,
+      exercises,
+      currentTemplate,
+      selectedDay,
+      elapsedTime: timerState.elapsedTime,
+      timerStatus: timerState.timerStatus,
+      timerStartedAt: timerState.timerStartedAt,
+      workoutStartTime,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem("workoutState", JSON.stringify(state));
+    return true;
   }, [
     workoutStarted,
     exercises,
     currentTemplate,
     selectedDay,
-    elapsedTime,
+    timerState,
     workoutStartTime,
     currentUser,
   ]);
 
   const restoreWorkoutState = useCallback(() => {
     const savedState = localStorage.getItem("workoutState");
-    if (savedState && currentUser) {
-      try {
-        const state = JSON.parse(savedState);
+    if (!savedState || !currentUser) {
+      return false;
+    }
 
-        // Verify the state belongs to the current user
-        if (state.userId !== currentUser.uid) {
-          localStorage.removeItem("workoutState");
-          return false;
-        }
+    try {
+      const state = JSON.parse(savedState);
 
-        // Check if the saved state is not too old (2 hours)
-        const timeDiff = Date.now() - state.timestamp;
-        const twoHours = 2 * 60 * 60 * 1000;
-
-        if (timeDiff > twoHours) {
-          localStorage.removeItem("workoutState");
-          return false;
-        }
-
-        // Restore state
-        setWorkoutStarted(state.workoutStarted || false);
-        setExercises(state.exercises || []);
-        setCurrentTemplate(state.currentTemplate || null);
-        setSelectedDay(state.selectedDay || null);
-        setElapsedTime(state.elapsedTime || 0);
-        setWorkoutStartTime(state.workoutStartTime || null);
-
-        return true;
-      } catch (error) {
-        console.error("Error restoring workout state:", error);
-        localStorage.removeItem("workoutState");
+      if (state.userId !== currentUser.uid) {
+        clearPersistedWorkoutState();
         return false;
       }
+
+      const timestamp = Number(state.timestamp);
+      if (!Number.isFinite(timestamp) || Date.now() - timestamp > TWO_HOURS_MS) {
+        clearPersistedWorkoutState();
+        return false;
+      }
+
+      const now = Date.now();
+      setExercises(Array.isArray(state.exercises) ? state.exercises : []);
+      setCurrentTemplate(state.currentTemplate || null);
+      setSelectedDay(state.selectedDay || null);
+      setWorkoutStartTime(state.workoutStartTime || null);
+      setTimerState(normalizePersistedTimerState(state, now));
+      setDisplayNow(now);
+      setWorkoutStarted(Boolean(state.workoutStarted));
+
+      return true;
+    } catch (error) {
+      console.error("Error restoring workout state:", error);
+      clearPersistedWorkoutState();
+      return false;
     }
-    return false;
   }, [currentUser]);
 
   const clearWorkoutState = useCallback(() => {
-    localStorage.removeItem("workoutState");
+    clearPersistedWorkoutState();
     setWorkoutStarted(false);
     setExercises([]);
     setCurrentTemplate(null);
     setSelectedDay(null);
-    setElapsedTime(0);
     setWorkoutStartTime(null);
+    setTimerState(idleTimerState());
+    setDisplayNow(Date.now());
   }, []);
 
-  // Auto-save workout state when it changes
-  useEffect(() => {
-    if (workoutStarted) {
-      saveWorkoutState();
-    }
-  }, [
-    workoutStarted,
-    exercises,
-    currentTemplate,
-    selectedDay,
-    elapsedTime,
-    saveWorkoutState,
-  ]);
+  const pauseWorkoutTimer = useCallback(() => {
+    const now = Date.now();
+    setTimerState((current) => pauseTimerState(current, now));
+    setDisplayNow(now);
+  }, []);
 
-  // Restore workout state on component mount
+  const resumeWorkoutTimer = useCallback(() => {
+    const now = Date.now();
+    setTimerState((current) => resumeTimerState(current, now));
+    setDisplayNow(now);
+  }, []);
+
   useEffect(() => {
     if (currentUser) {
       restoreWorkoutState();
     }
   }, [currentUser, restoreWorkoutState]);
+
+  useEffect(() => {
+    if (workoutStarted && timerState.timerStatus === TIMER_STATUS.IDLE) {
+      const now = Date.now();
+      setTimerState(createRunningTimerState(now));
+      setDisplayNow(now);
+    }
+  }, [timerState.timerStatus, workoutStarted]);
+
+  useEffect(() => {
+    if (workoutStarted) {
+      saveWorkoutState();
+    }
+  }, [workoutStarted, saveWorkoutState]);
+
+  useEffect(() => {
+    if (
+      !workoutStarted ||
+      timerState.timerStatus !== TIMER_STATUS.RUNNING
+    ) {
+      return undefined;
+    }
+
+    const interval = setInterval(() => {
+      setDisplayNow(Date.now());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timerState.timerStatus, workoutStarted]);
+
+  useEffect(() => {
+    if (
+      !workoutStarted ||
+      timerState.timerStatus !== TIMER_STATUS.RUNNING
+    ) {
+      return undefined;
+    }
+
+    const heartbeat = setInterval(() => {
+      saveWorkoutState();
+    }, TIMER_HEARTBEAT_MS);
+
+    return () => clearInterval(heartbeat);
+  }, [saveWorkoutState, timerState.timerStatus, workoutStarted]);
 
   return {
     workoutStarted,
@@ -115,7 +188,9 @@ export const useWorkoutState = () => {
     selectedDay,
     setSelectedDay,
     elapsedTime,
-    setElapsedTime,
+    timerStatus: timerState.timerStatus,
+    pauseWorkoutTimer,
+    resumeWorkoutTimer,
     workoutStartTime,
     setWorkoutStartTime,
     saveWorkoutState,

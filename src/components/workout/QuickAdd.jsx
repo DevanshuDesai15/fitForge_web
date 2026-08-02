@@ -21,11 +21,12 @@ import {
     Plus as MdAdd
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useSupabase } from '../../hooks/useSupabase';
 import { useUnits } from '../../contexts/UnitsContext';
 import { useNavigate } from 'react-router-dom';
 import ExerciseSelector from '../common/ExerciseSelector';
 import { getRecentExercisesFromWorkouts } from '../../utils/workoutExerciseHistory';
+import { useWorkoutReader } from '../../hooks/useWorkouts';
+import { useWorkoutMutations } from '../../pages/Workout/hooks/useWorkoutMutations';
 
 const StyledCard = styled(Card)(({ theme }) => ({
     background: '#282828',
@@ -73,7 +74,8 @@ export default function QuickAdd() {
     const [recentExercises, setRecentExercises] = useState([]);
 
     const { currentUser } = useAuth();
-    const supabase = useSupabase();
+    const readWorkouts = useWorkoutReader();
+    const { createWorkout } = useWorkoutMutations();
     const { weightUnit } = useUnits();
     const navigate = useNavigate();
     const theme = useTheme();
@@ -88,14 +90,11 @@ export default function QuickAdd() {
         if (!currentUser) return;
 
         try {
-            const { data: recentWorkouts, error } = await supabase
-                .from('workouts')
-                .select('exercises, created_at')
-                .eq('user_id', currentUser.uid)
-                .order('created_at', { ascending: false })
-                .limit(10);
-
-            if (error) throw error;
+            const recentWorkouts = await readWorkouts({
+                columns: 'exercises, created_at',
+                orderBy: 'created_at',
+                limit: 10,
+            });
             setRecentExercises(getRecentExercisesFromWorkouts(recentWorkouts || []));
         } catch (error) {
             console.error('Error loading recent exercises:', error);
@@ -134,16 +133,14 @@ export default function QuickAdd() {
                 type: 'quickAdd'
             };
 
-            const { error: insertError } = await supabase.from('workouts').insert([{
-                user_id: currentUser.uid,
+            await createWorkout({
                 name: exerciseName,
                 exercises: [{ name: exerciseName, sets: setsArray, notes: notes.trim() }],
-                weight_unit: weightUnit,
+                weightUnit,
                 completed: true,
-                completed_at: new Date().toISOString(),
+                completedAt: new Date().toISOString(),
                 timestamp: new Date().toISOString(),
-            }]);
-            if (insertError) throw insertError;
+            });
 
             setSuccess('Exercise logged successfully!');
 
@@ -155,7 +152,7 @@ export default function QuickAdd() {
             setNotes('');
 
             // Reload recent exercises
-            loadRecentExercises();
+            await loadRecentExercises();
 
         } catch (error) {
             console.error('Error saving exercise:', error);

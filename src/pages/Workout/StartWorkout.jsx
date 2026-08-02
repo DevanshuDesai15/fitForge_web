@@ -8,6 +8,7 @@ import { useSupabase } from '../../hooks/useSupabase';
 import { useWorkoutMutations } from './hooks/useWorkoutMutations';
 import { useUnits } from '../../contexts/UnitsContext';
 import { safeCapture } from '../../services/analyticsService';
+import { useWorkoutReader } from '../../hooks/useWorkouts';
 
 // Components
 import TemplateSelector from './components/TemplateSelector';
@@ -20,6 +21,7 @@ import AICoachTab from './components/AICoachTab';
 import ExerciseNotesTab from './components/ExerciseNotesTab';
 import AddExerciseDialog from './components/AddExerciseDialog';
 import SwapExerciseDialog from './components/SwapExerciseDialog';
+import WorkoutTimerControl from './components/WorkoutTimerControl';
 
 // Hooks
 import { useWorkoutState } from './hooks/useWorkoutState';
@@ -201,6 +203,7 @@ const StartWorkout = () => {
     const { currentUser } = useAuth();
     const supabase = useSupabase();
     const { createWorkout } = useWorkoutMutations();
+    const readWorkouts = useWorkoutReader();
     const { weightUnit } = useUnits();
     const posthog = usePostHog();
 
@@ -214,7 +217,9 @@ const StartWorkout = () => {
         selectedDay,
         setSelectedDay,
         elapsedTime,
-        setElapsedTime,
+        timerStatus,
+        pauseWorkoutTimer,
+        resumeWorkoutTimer,
         workoutStartTime,
         setWorkoutStartTime,
         clearWorkoutState
@@ -246,21 +251,18 @@ const StartWorkout = () => {
 
         (async () => {
             try {
-                const { data, error } = await supabase
-                    .from('workouts')
-                    .select('exercises, completed_at')
-                    .eq('user_id', currentUser.uid)
-                    .eq('completed', true)
-                    .order('completed_at', { ascending: false })
-                    .limit(10);
-
-                if (error) throw error;
-                setPreviousSetsMap(buildPreviousSetsMap(data || []));
+                const data = await readWorkouts({
+                    columns: 'exercises, completed_at',
+                    completed: true,
+                    orderBy: 'completed_at',
+                    limit: 10,
+                });
+                setPreviousSetsMap(buildPreviousSetsMap(data));
             } catch (err) {
                 console.warn('Could not load previous session data:', err);
             }
         })();
-    }, [currentUser?.uid]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [currentUser?.uid, readWorkouts]);
 
     // Load AI suggestions when exercises are set
     useEffect(() => {
@@ -269,27 +271,6 @@ const StartWorkout = () => {
             loadAISuggestions(exerciseNames);
         }
     }, [exercises, loadAISuggestions]);
-
-    // 🎯 Background timer - tracks elapsed time during workout
-    useEffect(() => {
-        let interval;
-        let startTime;
-
-        if (workoutStarted) {
-            // Initialize start time based on existing elapsed time
-            startTime = Date.now() - (elapsedTime * 1000);
-
-            interval = setInterval(() => {
-                const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                setElapsedTime(elapsed);
-            }, 1000);
-        }
-
-        return () => {
-            if (interval) clearInterval(interval);
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [workoutStarted]); // Only re-run when workout starts/stops
 
     // 🎯 NEW: Auto-load workout from URL params or navigation state
     useEffect(() => {
@@ -718,6 +699,7 @@ const StartWorkout = () => {
                 weightUnit,
                 exercises: buildWorkoutSaveExercises(exercises, weightUnit),
                 duration: elapsedTime,
+                durationSeconds: elapsedTime,
                 completed: true,
                 completedAt,
                 timestamp: completedAt,
@@ -843,7 +825,14 @@ const StartWorkout = () => {
                             mb: 3
                         }}>
                             <CardContent sx={{ p: 3 }}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                <Box sx={{
+                                    display: 'flex',
+                                    flexDirection: { xs: 'column', sm: 'row' },
+                                    justifyContent: 'space-between',
+                                    alignItems: { xs: 'stretch', sm: 'flex-start' },
+                                    gap: 2,
+                                    mb: 2
+                                }}>
                                     <Box>
                                         <Typography variant="h5" sx={{ color: '#fff', fontWeight: 'bold', mb: 1 }}>
                                             {selectedDay?.name || currentTemplate?.name || 'Workout'}
@@ -859,6 +848,14 @@ const StartWorkout = () => {
                                             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                                                 {completedSets}/{totalSets} sets
                                             </Typography>
+                                        </Box>
+                                        <Box sx={{ mt: 1.5 }}>
+                                            <WorkoutTimerControl
+                                                elapsedTime={elapsedTime}
+                                                timerStatus={timerStatus}
+                                                onPause={pauseWorkoutTimer}
+                                                onResume={resumeWorkoutTimer}
+                                            />
                                         </Box>
                                     </Box>
                                     <Button
@@ -882,6 +879,7 @@ const StartWorkout = () => {
                                             py: 1,
                                             borderRadius: '8px',
                                             borderWidth: '1.5px',
+                                            alignSelf: { xs: 'stretch', sm: 'flex-start' },
                                             cursor: 'pointer',
                                             '&:hover': {
                                                 backgroundColor: 'rgba(244, 67, 54, 0.08)',

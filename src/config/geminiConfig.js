@@ -4,17 +4,37 @@
  * Hugging Face settings as the active generative provider.
  */
 
-// Get environment variables in a Vite-compatible way
+// Keep this list explicit. Dynamic access to import.meta.env causes Vite to
+// serialize every VITE_* variable into the browser bundle, including unrelated
+// legacy credentials that may still exist in a developer's local environment.
+const browserEnv = {
+  VITE_USE_HUGGINGFACE_AI: import.meta.env.VITE_USE_HUGGINGFACE_AI,
+  VITE_USE_GEMINI_AI: import.meta.env.VITE_USE_GEMINI_AI,
+  VITE_HUGGINGFACE_HYBRID_MODE:
+    import.meta.env.VITE_HUGGINGFACE_HYBRID_MODE,
+  VITE_HYBRID_MODE: import.meta.env.VITE_HYBRID_MODE,
+  VITE_HUGGINGFACE_EMERGENCY_DISABLE:
+    import.meta.env.VITE_HUGGINGFACE_EMERGENCY_DISABLE,
+  VITE_GEMINI_EMERGENCY_DISABLE:
+    import.meta.env.VITE_GEMINI_EMERGENCY_DISABLE,
+  VITE_GEMINI_PRIORITY: import.meta.env.VITE_GEMINI_PRIORITY,
+  VITE_HUGGINGFACE_TIMEOUT: import.meta.env.VITE_HUGGINGFACE_TIMEOUT,
+  VITE_GEMINI_TIMEOUT: import.meta.env.VITE_GEMINI_TIMEOUT,
+  VITE_HUGGINGFACE_MAX_RETRIES:
+    import.meta.env.VITE_HUGGINGFACE_MAX_RETRIES,
+  VITE_GEMINI_MAX_RETRIES: import.meta.env.VITE_GEMINI_MAX_RETRIES,
+  VITE_MAX_REQUESTS_PER_USER: import.meta.env.VITE_MAX_REQUESTS_PER_USER,
+  VITE_MAX_REQUESTS_PER_DAY: import.meta.env.VITE_MAX_REQUESTS_PER_DAY,
+  NODE_ENV: import.meta.env.MODE,
+};
+
 const getEnvVar = (key, defaultValue = "") => {
-  // Vite environment variables
-  if (typeof import.meta !== "undefined" && import.meta.env) {
-    return import.meta.env[key] || defaultValue;
+  if (browserEnv[key]) {
+    return browserEnv[key];
   }
 
   // Fallback for Node.js environment (SSR, build process)
-  // eslint-disable-next-line no-undef
   if (typeof process !== "undefined" && process?.env) {
-    // eslint-disable-next-line no-undef
     return process.env[key] || defaultValue;
   }
 
@@ -36,15 +56,6 @@ const getEnvVar = (key, defaultValue = "") => {
 };
 
 export const geminiConfig = {
-  // API Configuration
-  apiKey:
-    getEnvVar("VITE_HUGGINGFACE_API_KEY") ||
-    getEnvVar("VITE_HF_API_KEY") ||
-    getEnvVar("VITE_GEMINI_API_KEY"),
-  model:
-    getEnvVar("VITE_HUGGINGFACE_MODEL") ||
-    getEnvVar("VITE_HF_MODEL") ||
-    "Qwen/Qwen2.5-72B-Instruct",
   provider: "huggingface",
 
   // Feature Flags
@@ -70,11 +81,6 @@ export const geminiConfig = {
     getEnvVar("VITE_HUGGINGFACE_MAX_RETRIES") ||
       getEnvVar("VITE_GEMINI_MAX_RETRIES", "0")
   ),
-  temperature: parseFloat(
-    getEnvVar("VITE_HUGGINGFACE_TEMPERATURE", "0.4")
-  ),
-  maxTokens: parseInt(getEnvVar("VITE_HUGGINGFACE_MAX_TOKENS", "1500")),
-
   // Development Settings
   enableLogging: getEnvVar("NODE_ENV", "production") === "development",
 

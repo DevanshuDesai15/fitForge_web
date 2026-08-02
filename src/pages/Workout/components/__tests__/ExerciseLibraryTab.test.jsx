@@ -6,6 +6,7 @@ import ExerciseDetailDialog from '../ExerciseDetailDialog';
 import { useExerciseCatalog } from '../../hooks/useExerciseCatalog';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { useSupabase } from '../../../../hooks/useSupabase';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 vi.mock('../../hooks/useExerciseCatalog', () => ({
   useExerciseCatalog: vi.fn(),
@@ -33,6 +34,12 @@ const createSupabaseMock = () => ({
   })),
 });
 
+const renderLibrary = () => render(
+  <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+    <ExerciseLibraryTab />
+  </QueryClientProvider>
+);
+
 describe('ExerciseLibraryTab', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -59,12 +66,12 @@ describe('ExerciseLibraryTab', () => {
   });
 
   it('renders paginated exercises from the Supabase-backed catalog hook', async () => {
-    render(<ExerciseLibraryTab />);
+    renderLibrary();
     expect(await screen.findByText('Kettlebell Single Arm Row')).toBeInTheDocument();
   });
 
   it('moves to the next page when pagination is clicked', async () => {
-    render(<ExerciseLibraryTab />);
+    renderLibrary();
 
     expect(await screen.findByText('Kettlebell Single Arm Row')).toBeInTheDocument();
 
@@ -80,7 +87,7 @@ describe('ExerciseLibraryTab', () => {
   });
 
   it('renders pagination controls before the performance insights section', async () => {
-    render(<ExerciseLibraryTab />);
+    renderLibrary();
 
     const paginationLabel = await screen.findByText(/^Page 1$/i);
     const performanceInsightsHeading = screen.getByText(/Performance Insights/i);

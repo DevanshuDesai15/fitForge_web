@@ -14,6 +14,13 @@ import {
   buildStarterWorkoutStartState,
 } from '../starterWorkoutRecommendations';
 import { syncProgramTemplateIds } from '../../hooks/useWorkoutMutations';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const renderWorkoutsTab = () => render(
+  <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+    <WorkoutsTab />
+  </QueryClientProvider>
+);
 
 const mutationSpies = vi.hoisted(() => ({
   createTemplate: vi.fn(),
@@ -38,6 +45,7 @@ const workoutTemplatesState = vi.hoisted(() => ({
 const workoutState = vi.hoisted(() => ({
   workoutStarted: false,
   exercises: [],
+  clearWorkoutState: vi.fn(),
 }));
 const authState = vi.hoisted(() => ({
   currentUser: { uid: 'user_123' },
@@ -136,6 +144,7 @@ describe('CreateProgramModal', () => {
     workoutTemplatesState.loadTemplates.mockReset();
     workoutState.workoutStarted = false;
     workoutState.exercises = [];
+    workoutState.clearWorkoutState.mockReset();
     supabaseMock.from.mockClear();
     window.localStorage.clear();
 
@@ -422,8 +431,25 @@ describe('buildStarterWorkoutStartState', () => {
 });
 
 describe('WorkoutsTab starter recommendations', () => {
+  it('uses centralized workout cleanup when an ongoing workout is discarded', async () => {
+    window.localStorage.setItem('activeWorkout', 'legacy timer');
+    window.localStorage.setItem('workoutState', JSON.stringify({
+      workoutStarted: true,
+      exercises: [{ name: 'Squat', sets: [{ completed: false }] }],
+      selectedDay: { name: 'Leg Day' },
+    }));
+
+    renderWorkoutsTab();
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: /discard ongoing workout/i })
+    );
+
+    expect(workoutState.clearWorkoutState).toHaveBeenCalledTimes(1);
+  });
+
   it('renders starter recommendations when no program recommendations exist', async () => {
-    render(<WorkoutsTab />);
+    renderWorkoutsTab();
 
     expect(await screen.findByText('Full Body Foundation')).toBeInTheDocument();
     expect(screen.getByText('Upper Body Basics')).toBeInTheDocument();
@@ -431,7 +457,7 @@ describe('WorkoutsTab starter recommendations', () => {
   });
 
   it('opens the preview dialog instead of navigating immediately for starter cards', async () => {
-    render(<WorkoutsTab />);
+    renderWorkoutsTab();
 
     fireEvent.click(await screen.findByText('Full Body Foundation'));
 
@@ -440,7 +466,7 @@ describe('WorkoutsTab starter recommendations', () => {
   });
 
   it('navigates with populated starter workout state when start is chosen', async () => {
-    render(<WorkoutsTab />);
+    renderWorkoutsTab();
 
     fireEvent.click(await screen.findByText('Full Body Foundation'));
     fireEvent.click(await screen.findByRole('button', { name: /start workout/i }));

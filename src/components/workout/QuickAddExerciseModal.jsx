@@ -21,6 +21,7 @@ import { X, Plus } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSupabase } from '../../hooks/useSupabase';
 import { useProfile } from '../../hooks/useProfile';
+import { useWorkoutMutations } from '../../pages/Workout/hooks/useWorkoutMutations';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialog-paper': {
@@ -133,7 +134,8 @@ const exerciseTypes = [
 
 const QuickAddExerciseModal = ({ open, onClose, onSuccess }) => {
   const { currentUser } = useAuth();
-  const { supabase } = useSupabase();
+  const supabase = useSupabase();
+  const { createWorkout } = useWorkoutMutations();
   const { profile } = useProfile();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -220,10 +222,9 @@ const QuickAddExerciseModal = ({ open, onClose, onSuccess }) => {
 
       // 1. Save to workouts table
       const workoutData = {
-        user_id: profile.id,
-        template_id: null,
-        template_name: 'Quick Add Workout',
-        day_name: 'Quick Add Session',
+        templateId: null,
+        templateName: 'Quick Add Workout',
+        dayName: 'Quick Add Session',
         exercises: [{
           name: formData.exerciseName,
           type: formData.exerciseType,
@@ -233,17 +234,11 @@ const QuickAddExerciseModal = ({ open, onClose, onSuccess }) => {
         }],
         duration: formData.duration ? parseInt(formData.duration) : null,
         completed: true,
-        completed_at: now,
-        created_at: now
+        completedAt: now,
+        createdAt: now
       };
 
-      const { data: workout, error: workoutError } = await supabase
-        .from('workouts')
-        .insert([workoutData])
-        .select()
-        .single();
-
-      if (workoutError) throw workoutError;
+      const workout = await createWorkout(workoutData);
       console.log('✅ Workout saved with ID:', workout.id);
 
       // 2. Save to exercises table (individual exercise record)

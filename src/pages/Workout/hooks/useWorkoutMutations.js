@@ -9,14 +9,17 @@ import {
   mapProgramUpdateToDb,
   mapTemplateToDb,
   mapTemplateUpdateToDb,
-  mapWorkoutToDb,
-  mapWorkoutUpdateToDb,
 } from '../../../services/workoutDataService';
+import {
+  createWorkoutRecord,
+  deleteWorkoutRecord,
+  updateWorkoutRecord,
+} from '../../../services/workoutRepository';
+import { workoutQueryKeys } from '../../../hooks/useWorkouts';
 
 const QUERY_KEYS = {
   templates: (userId) => ['workoutTemplates', userId],
   programs: (userId) => ['workoutPrograms', userId],
-  workouts: (userId) => ['workouts', userId],
 };
 
 const toArray = (value) => (Array.isArray(value) ? value : []);
@@ -241,15 +244,31 @@ export function createWorkoutMutationLayer({ supabase, queryClient, userId }) {
     queryKey: QUERY_KEYS.programs(userId),
   });
 
-  const workouts = createEntityMutations({
-    supabase,
-    queryClient,
-    userId,
-    table: 'workouts',
-    mapToDb: mapWorkoutToDb,
-    mapUpdateToDb: mapWorkoutUpdateToDb,
-    queryKey: QUERY_KEYS.workouts(userId),
-  });
+  const invalidateWorkouts = async () => {
+    await Promise.all([
+      invalidateWorkoutQueries(queryClient, workoutQueryKeys.all(userId)),
+      invalidateWorkoutQueries(queryClient, ['dashboard_stats', userId]),
+      invalidateWorkoutQueries(queryClient, ['historicalWorkouts', userId]),
+    ]);
+  };
+
+  const workouts = {
+    create: async (workout) => {
+      const data = await createWorkoutRecord({ supabase, userId, workout });
+      await invalidateWorkouts();
+      return data;
+    },
+    update: async (id, workout) => {
+      const data = await updateWorkoutRecord({ supabase, userId, id, workout });
+      await invalidateWorkouts();
+      return data;
+    },
+    remove: async (id) => {
+      const data = await deleteWorkoutRecord({ supabase, userId, id });
+      if (data.deleted) await invalidateWorkouts();
+      return data;
+    },
+  };
 
   return {
     createTemplate: templates.create,

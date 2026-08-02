@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSupabase } from '../../hooks/useSupabase';
+import { useWorkoutReader } from '../../hooks/useWorkouts';
 import { fetchExercisesByName } from '../../services/localExerciseService';
 import progressiveOverloadAI from '../../services/progressiveOverloadAI';
 import { getRecentExercisesFromWorkouts } from '../../utils/workoutExerciseHistory';
@@ -139,20 +140,18 @@ export default function ExerciseSelector({
 
     const { currentUser } = useAuth();
     const supabase = useSupabase();
+    const readWorkouts = useWorkoutReader();
     const theme = useTheme();
 
     const loadRecentExercises = useCallback(async () => {
         if (!currentUser) return;
 
         try {
-            const { data: recentWorkouts, error } = await supabase
-                .from('workouts')
-                .select('exercises, created_at')
-                .eq('user_id', currentUser.uid)
-                .order('created_at', { ascending: false })
-                .limit(10);
-
-            if (error) throw error;
+            const recentWorkouts = await readWorkouts({
+                columns: 'exercises, created_at',
+                orderBy: 'created_at',
+                limit: 10,
+            });
             setRecentExercises(
                 getRecentExercisesFromWorkouts(recentWorkouts || []).map((exercise) => ({
                     ...exercise,
@@ -162,7 +161,7 @@ export default function ExerciseSelector({
         } catch (error) {
             console.error('Error loading recent exercises:', error);
         }
-    }, [currentUser, supabase]);
+    }, [currentUser, readWorkouts]);
 
     useEffect(() => {
         if (includeHistory && currentUser) {

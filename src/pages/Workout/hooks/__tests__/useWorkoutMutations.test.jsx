@@ -3,11 +3,42 @@ import {
   mapTemplateToDb,
   mapProgramToDb,
   mapWorkoutToDb,
+  mapWorkoutFromDb,
   mapTemplateUpdateToDb,
 } from '../../../../services/workoutDataService';
 import { createWorkoutMutationLayer } from '../useWorkoutMutations';
 
 describe('workoutDataService', () => {
+  it('maps a Supabase workout row to the canonical application shape', () => {
+    expect(mapWorkoutFromDb({
+      id: 'workout_1',
+      user_id: 'user_123',
+      template_id: 'template_1',
+      template_name: 'Push',
+      day_name: 'Monday',
+      weight_unit: 'lbs',
+      completed_at: '2026-08-01T12:00:00.000Z',
+      created_at: '2026-08-01T11:00:00.000Z',
+      updated_at: '2026-08-01T12:00:00.000Z',
+      duration_seconds: 1800,
+      total_volume_kg: 1250.5,
+      exercises: [{ name: 'Bench Press' }],
+    })).toEqual({
+      id: 'workout_1',
+      userId: 'user_123',
+      templateId: 'template_1',
+      templateName: 'Push',
+      dayName: 'Monday',
+      weightUnit: 'lbs',
+      completedAt: '2026-08-01T12:00:00.000Z',
+      createdAt: '2026-08-01T11:00:00.000Z',
+      updatedAt: '2026-08-01T12:00:00.000Z',
+      durationSeconds: 1800,
+      totalVolumeKg: 1250.5,
+      exercises: [{ name: 'Bench Press' }],
+    });
+  });
+
   it('maps a template payload into Supabase fields', () => {
     const timestamps = {
       createdAt: '2026-04-03T12:00:00.000Z',

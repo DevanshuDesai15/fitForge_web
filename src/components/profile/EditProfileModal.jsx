@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 import { X, Save, User, Activity, Target, Bell } from 'lucide-react';
 import FitForgeSwitch from '../common/FitForgeSwitch';
-import { formatHeight } from '../../utils/unitConversion';
+import { formatHeight } from '../../utils/unitConversions';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialog-paper': {
