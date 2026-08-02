@@ -19,8 +19,6 @@ import {
 } from '@mui/material';
 import { X, Plus } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useSupabase } from '../../hooks/useSupabase';
-import { useProfile } from '../../hooks/useProfile';
 import { useWorkoutMutations } from '../../pages/Workout/hooks/useWorkoutMutations';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
@@ -134,9 +132,7 @@ const exerciseTypes = [
 
 const QuickAddExerciseModal = ({ open, onClose, onSuccess }) => {
   const { currentUser } = useAuth();
-  const supabase = useSupabase();
   const { createWorkout } = useWorkoutMutations();
-  const { profile } = useProfile();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -240,26 +236,6 @@ const QuickAddExerciseModal = ({ open, onClose, onSuccess }) => {
 
       const workout = await createWorkout(workoutData);
       console.log('✅ Workout saved with ID:', workout.id);
-
-      // 2. Save to exercises table (individual exercise record)
-      const exerciseRecord = {
-        user_id: profile.id,
-        workout_id: workout.id,
-        exercise_name: formData.exerciseName,
-        exercise_type: formData.exerciseType,
-        sets: sets,
-        weight: parseFloat(weightValue) || 0,
-        reps: repsCount,
-        duration: formData.duration ? parseInt(formData.duration) : null,
-        created_at: now
-      };
-
-      const { error: exerciseError } = await supabase
-        .from('exercises')
-        .insert([exerciseRecord]);
-
-      if (exerciseError) throw exerciseError;
-      console.log('✅ Exercise record saved');
 
       // Success callback
       if (onSuccess) {

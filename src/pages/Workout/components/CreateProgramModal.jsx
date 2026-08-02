@@ -26,12 +26,13 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { X as MdClose, Plus as MdAdd, Calendar as MdCalendarToday, Trash2 as MdDeleteOutline, Dumbbell as MdFitnessCenter, ChevronDown, ChevronUp } from 'lucide-react';
-import { fetchAllExercises } from '../../../services/localExerciseService';
+import { fetchAllExerciseCatalog } from '../../../services/exerciseCatalogService';
 import { useAuth } from '../../../contexts/AuthContext';
 import { syncProgramTemplateIds, useWorkoutMutations } from '../hooks/useWorkoutMutations';
 import { programTemplates as defaultProgramTemplates } from './programTemplates';
 import { useCustomExercises } from '../../../hooks/useCustomExercises';
 import CustomExerciseForm from './CustomExerciseForm';
+import { useSupabase } from '../../../hooks/useSupabase';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
     '& .MuiDialog-paper': {
@@ -87,6 +88,7 @@ const CreateProgramModal = ({ open, onClose, onProgramCreated, editData }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [programTemplates, setProgramTemplates] = useState([]);
     const { currentUser } = useAuth();
+    const supabase = useSupabase();
     const {
         createTemplate,
         updateTemplate,
@@ -112,7 +114,7 @@ const CreateProgramModal = ({ open, onClose, onProgramCreated, editData }) => {
         const loadExercises = async () => {
             try {
                 setExercisesLoading(true);
-                const exerciseData = await fetchAllExercises();
+                const exerciseData = await fetchAllExerciseCatalog(supabase);
                 const transformedExercises = exerciseData.map(exercise => ({
                     id: exercise.id,
                     name: exercise.name || exercise.title,

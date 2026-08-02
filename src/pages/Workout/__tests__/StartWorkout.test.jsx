@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { resolveProgramWorkoutSelection, calcWorkoutProgress, buildWorkoutSaveExercises, buildPreviousSetsMap } from '../StartWorkout';
+import {
+  resolveProgramWorkoutSelection,
+  calcWorkoutProgress,
+  buildWorkoutSaveExercises,
+  buildPreviousSetsMap,
+  resolvePreviousSets,
+} from '../StartWorkout';
 
 describe('resolveProgramWorkoutSelection', () => {
   it('rebuilds program days from template rows and selects the requested template id', () => {
@@ -161,6 +167,17 @@ describe('buildWorkoutSaveExercises', () => {
     expect(result[0].sets[0]).toMatchObject({ weight: '60', reps: '8', completed: true, weightUnit: 'kg' });
   });
 
+  it('persists a stable exercise identifier with completed exercises', () => {
+    const [saved] = buildWorkoutSaveExercises([{
+      id: 'catalog_bench_press',
+      name: 'Bench Press',
+      exercise_type: 'strength',
+      sets: [{ weight: '60', reps: '8', completed: true }],
+    }], 'kg');
+
+    expect(saved.exerciseId).toBe('catalog_bench_press');
+  });
+
   it('excludes strength exercises with no completed sets', () => {
     const exercises = [
       { name: 'Squat', exercise_type: 'strength', sets: [{ weight: '', reps: '', completed: false }], notes: '' },
@@ -171,11 +188,11 @@ describe('buildWorkoutSaveExercises', () => {
 
 describe('buildPreviousSetsMap', () => {
   it('returns empty object for empty input', () => {
-    expect(buildPreviousSetsMap([])).toEqual({});
+    expect(buildPreviousSetsMap([])).toEqual({ byId: {}, byName: {} });
   });
 
   it('returns empty object for null input', () => {
-    expect(buildPreviousSetsMap(null)).toEqual({});
+    expect(buildPreviousSetsMap(null)).toEqual({ byId: {}, byName: {} });
   });
 
   it('maps exercise name to sets from the most recent workout', () => {
@@ -187,8 +204,8 @@ describe('buildPreviousSetsMap', () => {
         ],
       },
     ];
-    expect(buildPreviousSetsMap(rows)).toEqual({
-      'Bench Press': [{ reps: 10, weight: '60' }],
+    expect(buildPreviousSetsMap(rows).byName).toEqual({
+      'bench press': [{ reps: 10, weight: '60' }],
     });
   });
 
@@ -203,7 +220,7 @@ describe('buildPreviousSetsMap', () => {
         exercises: [{ name: 'Squat', exercise_type: 'strength', sets: [{ reps: 5, weight: '90' }] }],
       },
     ];
-    expect(buildPreviousSetsMap(rows)['Squat']).toEqual([{ reps: 5, weight: '100' }]);
+    expect(buildPreviousSetsMap(rows).byName.squat).toEqual([{ reps: 5, weight: '100' }]);
   });
 
   it('skips cardio exercises', () => {
@@ -212,7 +229,7 @@ describe('buildPreviousSetsMap', () => {
         exercises: [{ name: 'Running', exercise_type: 'cardio', cardio: {} }],
       },
     ];
-    expect(buildPreviousSetsMap(rows)).toEqual({});
+    expect(buildPreviousSetsMap(rows)).toEqual({ byId: {}, byName: {} });
   });
 
   it('skips exercises without a sets array', () => {
@@ -221,7 +238,7 @@ describe('buildPreviousSetsMap', () => {
         exercises: [{ name: 'Plank', exercise_type: 'strength' }],
       },
     ];
-    expect(buildPreviousSetsMap(rows)).toEqual({});
+    expect(buildPreviousSetsMap(rows)).toEqual({ byId: {}, byName: {} });
   });
 
   it('builds map across multiple exercises in one workout', () => {
@@ -234,7 +251,60 @@ describe('buildPreviousSetsMap', () => {
       },
     ];
     const map = buildPreviousSetsMap(rows);
-    expect(map['Bench Press']).toEqual([{ reps: 10, weight: '60' }]);
-    expect(map['Tricep Pushdown']).toEqual([{ reps: 12, weight: '30' }]);
+    expect(map.byName['bench press']).toEqual([{ reps: 10, weight: '60' }]);
+    expect(map.byName['tricep pushdown']).toEqual([{ reps: 12, weight: '30' }]);
+  });
+
+  it('resolves by stable ID before display name after a rename', () => {
+    const history = buildPreviousSetsMap([{
+      exercises: [{
+        exerciseId: 'catalog_bench',
+        name: 'Barbell Bench Press',
+        exercise_type: 'strength',
+        sets: [{ reps: 8, weight: '70' }],
+      }],
+    }]);
+
+    expect(resolvePreviousSets(history, {
+      id: 'catalog_bench',
+      name: 'Competition Bench Press',
+    })).toEqual([{ reps: 8, weight: '70' }]);
+  });
+
+  it('falls back to a normalized legacy name when no ID was stored', () => {
+    const history = buildPreviousSetsMap([{
+      exercises: [{
+        name: '  Bench Press ',
+        exercise_type: 'strength',
+        sets: [{ reps: 10, weight: '60' }],
+      }],
+    }]);
+
+    expect(resolvePreviousSets(history, { name: 'bench press' }))
+      .toEqual([{ reps: 10, weight: '60' }]);
+  });
+
+  it('does not let a name collision override an ID match', () => {
+    const history = buildPreviousSetsMap([{
+      exercises: [
+        {
+          exerciseId: 'stable-id',
+          name: 'Original Name',
+          exercise_type: 'strength',
+          sets: [{ reps: 5, weight: '100' }],
+        },
+        {
+          exerciseId: 'other-id',
+          name: 'Renamed Exercise',
+          exercise_type: 'strength',
+          sets: [{ reps: 12, weight: '30' }],
+        },
+      ],
+    }]);
+
+    expect(resolvePreviousSets(history, {
+      exerciseId: 'stable-id',
+      name: 'Renamed Exercise',
+    })).toEqual([{ reps: 5, weight: '100' }]);
   });
 });

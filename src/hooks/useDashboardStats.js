@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useSupabase } from "./useSupabase";
 import { useAuth } from "../contexts/AuthContext";
 import { listWorkouts } from "../services/workoutRepository";
+import { fetchExerciseMuscleMapByNames } from "../services/exerciseCatalogService";
 
 export function useDashboardStats() {
   const supabase = useSupabase();
@@ -58,19 +59,10 @@ export function useDashboardStats() {
       });
 
       // Batch lookup muscle info from exercises catalog for names missing muscle fields
-      const exerciseMuscleMap = new Map();
-      if (exerciseNamesInWeek.size > 0) {
-        const { data: catalogRows } = await supabase
-          .from("exercises")
-          .select("name, primary_muscle, body_part")
-          .in("name", [...exerciseNamesInWeek]);
-        (catalogRows || []).forEach((row) => {
-          exerciseMuscleMap.set(row.name, {
-            body_part: row.body_part || null,
-            target_muscle: row.primary_muscle || null,
-          });
-        });
-      }
+      const exerciseMuscleMap = await fetchExerciseMuscleMapByNames(
+        supabase,
+        [...exerciseNamesInWeek]
+      );
 
       weekWorkoutData.forEach((workout) => {
         weeklyWorkouts++;

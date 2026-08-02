@@ -2,7 +2,10 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   normalizeExerciseCatalogRow,
   getDistinctFilterOptions,
-  fetchExerciseCatalogPage
+  fetchExerciseCatalogPage,
+  fetchExerciseCatalogList,
+  fetchExerciseCatalogById,
+  formatExerciseCatalogRagContext,
 } from '../exerciseCatalogService';
 
 describe('normalizeExerciseCatalogRow', () => {
@@ -43,6 +46,57 @@ describe('normalizeExerciseCatalogRow', () => {
       variations: ['Single Arm Dumbbell Row'],
       safetyConsiderations: ['Brace your core'],
       tags: ['Beginner', 'Back'],
+      title: 'Kettlebell Single Arm Row',
+      bodyPart: 'Back',
+      target: 'Back',
+      equipment: 'Kettlebell',
+      muscles: ['Back', 'Rhomboids'],
+      primaryMuscles: ['Back'],
+      video_urls: { '720p': 'https://example.com/video.mp4' },
+    });
+  });
+});
+
+describe('catalog-wide operations', () => {
+  it('lists a bounded catalog range and supports search', async () => {
+    const supabase = createSupabaseMock();
+    await fetchExerciseCatalogList(supabase, { limit: 50, offset: 10, searchTerm: 'bench' });
+
+    expect(supabase.__calls).toContainEqual(['range', 10, 59]);
+    expect(supabase.__calls).toContainEqual([
+      'or',
+      'name.ilike.%bench%,description.ilike.%bench%,primary_muscle.ilike.%bench%',
+    ]);
+  });
+
+  it('loads one exercise by ID and formats compact AI context', async () => {
+    const row = {
+      id: 'catalog_bench',
+      name: 'Bench Press',
+      description: 'Press the bar',
+      difficulty: 'Intermediate',
+      primary_muscle: 'Chest',
+      equipment_needed: ['Barbell'],
+      steps: ['Unrack', 'Press'],
+      secondary_muscles: ['Triceps'],
+    };
+    const builder = {
+      select: vi.fn(() => builder),
+      eq: vi.fn(() => builder),
+      maybeSingle: vi.fn().mockResolvedValue({ data: row, error: null }),
+    };
+    const supabase = { from: vi.fn(() => builder) };
+
+    const exercise = await fetchExerciseCatalogById(supabase, 'catalog_bench');
+    expect(builder.eq).toHaveBeenCalledWith('id', 'catalog_bench');
+    expect(JSON.parse(formatExerciseCatalogRagContext(exercise))).toEqual({
+      name: 'Bench Press',
+      description: 'Press the bar',
+      difficulty: 'Intermediate',
+      target: 'Chest',
+      equipment: 'Barbell',
+      steps: ['Unrack', 'Press'],
+      muscle_groups: ['Chest', 'Triceps'],
     });
   });
 });

@@ -101,9 +101,13 @@ vi.mock('../../hooks/useWorkoutState', () => ({
   useWorkoutState: () => workoutState,
 }));
 
-vi.mock('../../../../services/localExerciseService', () => ({
-  fetchAllExercises: vi.fn().mockResolvedValue([]),
-}));
+vi.mock('../../../../services/exerciseCatalogService', async () => {
+  const actual = await vi.importActual('../../../../services/exerciseCatalogService');
+  return {
+    ...actual,
+    fetchAllExerciseCatalog: vi.fn().mockResolvedValue([]),
+  };
+});
 
 vi.mock('../../../../components/common/AISuggestionCards', () => ({
   default: () => null,

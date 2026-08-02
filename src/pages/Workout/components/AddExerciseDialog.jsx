@@ -25,8 +25,9 @@ import {
     ChevronDown,
     ChevronUp,
 } from 'lucide-react';
-import { fetchExercises } from '../../../services/localExerciseService';
+import { fetchExerciseCatalogList } from '../../../services/exerciseCatalogService';
 import { useCustomExercises } from '../../../hooks/useCustomExercises';
+import { useSupabase } from '../../../hooks/useSupabase';
 import CustomExerciseForm from './CustomExerciseForm';
 import PropTypes from 'prop-types';
 
@@ -56,6 +57,7 @@ const AddExerciseDialog = ({ open, onClose, onAddExercise }) => {
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     const { customExercises, saveCustomExercise } = useCustomExercises();
+    const supabase = useSupabase();
 
     const [activeTab, setActiveTab] = useState('strength');
     const [searchQuery, setSearchQuery] = useState('');
@@ -94,7 +96,9 @@ const AddExerciseDialog = ({ open, onClose, onAddExercise }) => {
         if (selectedMuscleGroup !== 'all') {
             all = all.filter(ex =>
                 ex.primaryMuscles?.some(m => m.toLowerCase().includes(selectedMuscleGroup.toLowerCase())) ||
-                ex.muscles?.toLowerCase().includes(selectedMuscleGroup.toLowerCase())
+                (Array.isArray(ex.muscles)
+                    ? ex.muscles.some(m => m.toLowerCase().includes(selectedMuscleGroup.toLowerCase()))
+                    : ex.muscles?.toLowerCase().includes(selectedMuscleGroup.toLowerCase()))
             );
         }
         setFilteredExercises(all);
@@ -103,7 +107,7 @@ const AddExerciseDialog = ({ open, onClose, onAddExercise }) => {
     const loadExercises = async () => {
         setLoading(true);
         try {
-            const data = await fetchExercises(50, 0);
+            const data = await fetchExerciseCatalogList(supabase, { limit: 50 });
             setExercises(data);
             setFilteredExercises(data);
         } catch (error) {
@@ -115,11 +119,16 @@ const AddExerciseDialog = ({ open, onClose, onAddExercise }) => {
 
     const handleAddStrengthExercise = (exercise) => {
         onAddExercise({
+            exerciseId: exercise.id,
             name: exercise.name,
             exercise_type: 'strength',
             difficulty: exercise.difficulty || 'Intermediate',
-            muscles: exercise.primaryMuscles?.join(', ') || exercise.muscles || 'Various',
-            muscleGroups: exercise.primaryMuscles?.join(', ') || exercise.muscles || 'Various',
+            muscles: exercise.primaryMuscles?.join(', ')
+                || (Array.isArray(exercise.muscles) ? exercise.muscles.join(', ') : exercise.muscles)
+                || 'Various',
+            muscleGroups: exercise.primaryMuscles?.join(', ')
+                || (Array.isArray(exercise.muscles) ? exercise.muscles.join(', ') : exercise.muscles)
+                || 'Various',
             equipment: exercise.equipment || 'Bodyweight',
             targetSets: 3,
             targetReps: '8-12',

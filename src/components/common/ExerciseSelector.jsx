@@ -29,7 +29,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { useSupabase } from '../../hooks/useSupabase';
 import { useWorkoutReader } from '../../hooks/useWorkouts';
-import { fetchExercisesByName } from '../../services/localExerciseService';
+import { fetchExerciseCatalogList } from '../../services/exerciseCatalogService';
 import progressiveOverloadAI from '../../services/progressiveOverloadAI';
 import { getRecentExercisesFromWorkouts } from '../../utils/workoutExerciseHistory';
 
@@ -186,7 +186,10 @@ export default function ExerciseSelector({
         console.log('🔍 Searching exercises for term:', term);
         setLoading(true);
         try {
-            const results = await fetchExercisesByName(term);
+            const results = await fetchExerciseCatalogList(supabase, {
+                searchTerm: term,
+                limit: 50,
+            });
             console.log('📋 Search results:', results.length, 'exercises found');
 
             // Format results and detect similar exercises
@@ -228,7 +231,10 @@ export default function ExerciseSelector({
 
         try {
             // Get similar exercises based on target muscle and equipment
-            const similarResults = await fetchExercisesByName(selectedExercise.target);
+            const similarResults = await fetchExerciseCatalogList(supabase, {
+                searchTerm: selectedExercise.target,
+                limit: 50,
+            });
 
             // Filter for exercises with same target muscle but different equipment/name
             const variations = similarResults

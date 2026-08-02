@@ -26,10 +26,11 @@ import {
 import { styled } from '@mui/material/styles';
 import { X as MdClose, Plus as MdAdd, Timer as MdTimer, Dumbbell as MdFitnessCenter, Minus as MdRemove, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
-import { fetchAllExercises } from '../../../services/localExerciseService';
+import { fetchAllExerciseCatalog } from '../../../services/exerciseCatalogService';
 import { useWorkoutMutations } from '../hooks/useWorkoutMutations';
 import { useCustomExercises } from '../../../hooks/useCustomExercises';
 import CustomExerciseForm from './CustomExerciseForm';
+import { useSupabase } from '../../../hooks/useSupabase';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
     '& .MuiDialog-paper': {
@@ -107,6 +108,7 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated, editData }) => {
     const [exercisesLoading, setExercisesLoading] = useState(true);
 
     const { currentUser } = useAuth();
+    const supabase = useSupabase();
     const { createTemplate, updateTemplate } = useWorkoutMutations();
     const { customExercises, saveCustomExercise } = useCustomExercises();
     const [showCustomForm, setShowCustomForm] = useState(false);
@@ -217,7 +219,7 @@ const CreateWorkoutModal = ({ open, onClose, onWorkoutCreated, editData }) => {
         const loadExercises = async () => {
             try {
                 setExercisesLoading(true);
-                const exerciseData = await fetchAllExercises();
+                const exerciseData = await fetchAllExerciseCatalog(supabase);
 
                 // Transform exercise data to match our needs
                 const transformedExercises = exerciseData.map(exercise => ({

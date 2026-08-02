@@ -1,7 +1,15 @@
 import geminiConfig from "../config/geminiConfig";
 import aiApiClient from "./aiApiClient";
 import exerciseVectorSearchService from "./exerciseVectorSearchService";
-import { fetchExerciseForRAG } from "./localExerciseService";
+import {
+  fetchExerciseCatalogById,
+  formatExerciseCatalogRagContext,
+} from "./exerciseCatalogService";
+
+const fetchExerciseRagContext = async (supabase, exerciseId) => {
+  const exercise = await fetchExerciseCatalogById(supabase, exerciseId);
+  return formatExerciseCatalogRagContext(exercise);
+};
 
 const FIVE_MINUTES = 5 * 60 * 1000;
 const ONE_HOUR = 60 * 60 * 1000;
@@ -256,7 +264,7 @@ class HuggingFaceService {
 
     return this._runCachedRequest(cacheKey, async () => {
       const ragContext = analysisData.exerciseId
-        ? await fetchExerciseForRAG(analysisData.exerciseId).catch(() => null)
+        ? await fetchExerciseRagContext(this.supabase, analysisData.exerciseId).catch(() => null)
         : null;
       const { system, prompt } = this._buildProgressionPrompt(
         analysisData,
@@ -279,7 +287,7 @@ class HuggingFaceService {
           if (!analysis.exerciseId) {
             return null;
           }
-          return fetchExerciseForRAG(analysis.exerciseId).catch(() => null);
+          return fetchExerciseRagContext(this.supabase, analysis.exerciseId).catch(() => null);
         })
       );
 

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockChat = vi.fn();
 const mockSearchRelevantExercises = vi.fn();
-const mockFetchExerciseForRAG = vi.fn();
+const mockFetchExerciseCatalogById = vi.fn();
 
 vi.mock("../aiApiClient", () => ({
   default: {
@@ -17,8 +17,9 @@ vi.mock("../exerciseVectorSearchService", () => ({
   },
 }));
 
-vi.mock("../localExerciseService", () => ({
-  fetchExerciseForRAG: mockFetchExerciseForRAG,
+vi.mock("../exerciseCatalogService", () => ({
+  fetchExerciseCatalogById: mockFetchExerciseCatalogById,
+  formatExerciseCatalogRagContext: vi.fn(() => null),
 }));
 
 describe("HuggingFaceService safeguards", () => {
@@ -27,7 +28,7 @@ describe("HuggingFaceService safeguards", () => {
     vi.useRealTimers();
     vi.spyOn(globalThis, "setInterval").mockReturnValue(1);
     mockSearchRelevantExercises.mockResolvedValue([]);
-    mockFetchExerciseForRAG.mockResolvedValue(null);
+    mockFetchExerciseCatalogById.mockResolvedValue(null);
   });
 
   it("retries retryable provider failures before succeeding", async () => {

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Box, Typography, Button } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { Plus, LineChart as MdShowChart, BookOpen as MdLibraryBooks } from 'lucide-react';
@@ -53,12 +54,20 @@ const TabButton = styled(Button)(({ active, theme }) => ({
     },
 }));
 
+export const getWorkoutTabFromSearchParams = (searchParams) => (
+    searchParams.get('tab') === 'library' ? 1 : 0
+);
+
 const WorkoutDashboard = () => {
-    const [activeTab, setActiveTab] = useState(0);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const activeTab = getWorkoutTabFromSearchParams(searchParams);
     const [createModalOpen, setCreateModalOpen] = useState(false);
 
     const handleTabChange = (tabIndex) => {
-        setActiveTab(tabIndex);
+        const nextParams = new URLSearchParams(searchParams);
+        if (tabIndex === 1) nextParams.set('tab', 'library');
+        else nextParams.delete('tab');
+        setSearchParams(nextParams, { replace: true });
     };
 
     const handleNewWorkout = () => {

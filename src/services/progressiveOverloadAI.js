@@ -7,6 +7,22 @@
 import aiDatabaseService from "./aiDatabaseService";
 import geminiAIService from "./geminiAIService";
 import { listWorkouts } from "./workoutRepository";
+import {
+  calculateSubstitutionConfidence,
+  calculateSubstitutionWeight,
+  generateExerciseSubstitutions,
+  getExerciseDifficulty,
+  getExerciseEquipment,
+  getSubstitutionBenefits,
+  getSubstitutionReason,
+} from "./progressiveOverload/substitutionEngine";
+import {
+  analyzeExerciseFrequency,
+  analyzeVolumeProgression,
+  calculateConsistencyScore,
+  calculateDurationTrend,
+  getEmptyWorkoutAnalysis,
+} from "./progressiveOverload/historyAnalytics";
 
 /**
  * @typedef {Object} ProgressionAnalysis
@@ -397,79 +413,8 @@ class ProgressiveOverloadAIService {
    * @private
    */
   async _generateExerciseSubstitutions(originalAnalysis, userProfile, reason) {
-    const substitutions = [];
-
-    // Define exercise substitution mappings based on muscle groups
-    const substitutionMap = {
-      "bench-press": [
-        "incline-bench-press",
-        "dumbbell-press",
-        "push-ups",
-        "chest-fly",
-      ],
-      squat: ["leg-press", "goblet-squat", "lunges", "bulgarian-split-squat"],
-      deadlift: [
-        "romanian-deadlift",
-        "sumo-deadlift",
-        "trap-bar-deadlift",
-        "hip-thrust",
-      ],
-      "shoulder-press": [
-        "dumbbell-shoulder-press",
-        "arnold-press",
-        "pike-push-ups",
-        "lateral-raises",
-      ],
-      "pull-up": [
-        "lat-pulldown",
-        "assisted-pull-ups",
-        "inverted-rows",
-        "cable-rows",
-      ],
-      "bicep-curls": [
-        "hammer-curls",
-        "preacher-curls",
-        "cable-curls",
-        "chin-ups",
-      ],
-      "tricep-extensions": [
-        "close-grip-bench-press",
-        "dips",
-        "overhead-tricep-press",
-        "diamond-push-ups",
-      ],
-    };
-
-    const exerciseKey = originalAnalysis.exerciseId.toLowerCase();
-    const alternatives = substitutionMap[exerciseKey] || [];
-
-    // Generate substitutions with reasoning
-    for (const alternative of alternatives.slice(0, 3)) {
-      const substitution = {
-        exerciseId: alternative,
-        exerciseName: alternative.replace("-", " "),
-        originalExercise: originalAnalysis.exerciseId,
-        originalExerciseName: originalAnalysis.exerciseName,
-        reason: this._getSubstitutionReason(reason, alternative),
-        suggestedWeight: this._calculateSubstitutionWeight(
-          originalAnalysis,
-          alternative
-        ),
-        suggestedReps: originalAnalysis.currentReps,
-        suggestedSets: originalAnalysis.currentSets,
-        confidenceLevel: this._calculateSubstitutionConfidence(
-          originalAnalysis,
-          alternative
-        ),
-        benefits: this._getSubstitutionBenefits(alternative, reason),
-        difficulty: this._getExerciseDifficulty(alternative),
-        equipment: this._getExerciseEquipment(alternative),
-      };
-
-      substitutions.push(substitution);
-    }
-
-    return substitutions.sort((a, b) => b.confidenceLevel - a.confidenceLevel);
+    void userProfile;
+    return generateExerciseSubstitutions(originalAnalysis, reason);
   }
 
   /**
@@ -480,25 +425,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _calculateSubstitutionWeight(originalAnalysis, alternativeExercise) {
-    // Weight conversion factors for different exercises
-    const conversionFactors = {
-      "dumbbell-press": 0.4, // Each dumbbell is roughly 40% of barbell weight
-      "incline-bench-press": 0.85, // Typically 85% of flat bench
-      "push-ups": 0, // Bodyweight exercise
-      "leg-press": 1.5, // Can typically press more than squat
-      "goblet-squat": 0.3, // Much lighter weight
-      lunges: 0.6, // Per leg, so total is similar to squat
-      "romanian-deadlift": 0.8, // Slightly less than conventional deadlift
-      "sumo-deadlift": 1.0, // Similar to conventional
-      "dumbbell-shoulder-press": 0.35, // Each dumbbell
-      "lat-pulldown": 0.9, // Close to pull-up body weight equivalent
-      "hammer-curls": 0.8, // Slightly heavier than regular curls
-      "close-grip-bench-press": 0.9, // Close to regular bench
-      dips: 0, // Bodyweight exercise
-    };
-
-    const factor = conversionFactors[alternativeExercise] || 0.8;
-    return Math.round(originalAnalysis.currentWeight * factor);
+    return calculateSubstitutionWeight(originalAnalysis, alternativeExercise);
   }
 
   /**
@@ -509,24 +436,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _calculateSubstitutionConfidence(originalAnalysis, alternativeExercise) {
-    // Base confidence on original exercise confidence and substitution quality
-    const baseConfidence = originalAnalysis.confidenceLevel * 0.8;
-
-    // High-quality substitutions (same movement pattern)
-    const highQualitySubstitutions = [
-      "incline-bench-press",
-      "dumbbell-press",
-      "sumo-deadlift",
-      "romanian-deadlift",
-      "dumbbell-shoulder-press",
-      "hammer-curls",
-    ];
-
-    if (highQualitySubstitutions.includes(alternativeExercise)) {
-      return Math.min(baseConfidence + 0.1, 0.95);
-    }
-
-    return baseConfidence;
+    return calculateSubstitutionConfidence(originalAnalysis, alternativeExercise);
   }
 
   /**
@@ -537,27 +447,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _getSubstitutionReason(reason, alternative) {
-    switch (reason) {
-      case "plateau":
-        return `Break through plateau with ${alternative.replace(
-          "-",
-          " "
-        )} - different angle/grip`;
-      case "equipment":
-        return `Equipment alternative: ${alternative.replace(
-          "-",
-          " "
-        )} targets same muscles`;
-      case "preference":
-        return `User preference: ${alternative.replace("-", " ")} for variety`;
-      case "injury":
-        return `Injury-friendly alternative: ${alternative.replace(
-          "-",
-          " "
-        )} with reduced stress`;
-      default:
-        return `Alternative exercise: ${alternative.replace("-", " ")}`;
-    }
+    return getSubstitutionReason(reason, alternative);
   }
 
   /**
@@ -568,56 +458,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _getSubstitutionBenefits(alternative) {
-    const benefitMap = {
-      "incline-bench-press": [
-        "Upper chest focus",
-        "Shoulder-friendly angle",
-        "Strength variation",
-      ],
-      "dumbbell-press": [
-        "Unilateral training",
-        "Greater range of motion",
-        "Stabilizer activation",
-      ],
-      "push-ups": [
-        "Bodyweight convenience",
-        "Core engagement",
-        "Functional movement",
-      ],
-      "leg-press": [
-        "Reduced spinal load",
-        "Isolated leg strength",
-        "Safer for beginners",
-      ],
-      "goblet-squat": [
-        "Improved mobility",
-        "Core activation",
-        "Beginner-friendly",
-      ],
-      "romanian-deadlift": [
-        "Hamstring focus",
-        "Hip hinge pattern",
-        "Posterior chain",
-      ],
-      "lat-pulldown": [
-        "Controlled resistance",
-        "Beginner-friendly",
-        "Adjustable weight",
-      ],
-      "hammer-curls": [
-        "Forearm strength",
-        "Neutral grip",
-        "Reduced wrist stress",
-      ],
-    };
-
-    return (
-      benefitMap[alternative] || [
-        "Muscle variation",
-        "Movement diversity",
-        "Progression option",
-      ]
-    );
+    return getSubstitutionBenefits(alternative);
   }
 
   /**
@@ -627,18 +468,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _getExerciseDifficulty(exercise) {
-    const difficultyMap = {
-      "push-ups": "Beginner",
-      "goblet-squat": "Beginner",
-      "lat-pulldown": "Beginner",
-      "dumbbell-press": "Intermediate",
-      "incline-bench-press": "Intermediate",
-      "romanian-deadlift": "Intermediate",
-      "pull-ups": "Advanced",
-      dips: "Advanced",
-    };
-
-    return difficultyMap[exercise] || "Intermediate";
+    return getExerciseDifficulty(exercise);
   }
 
   /**
@@ -648,20 +478,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _getExerciseEquipment(exercise) {
-    const equipmentMap = {
-      "push-ups": "Bodyweight",
-      "pull-ups": "Pull-up bar",
-      dips: "Dip bars",
-      "goblet-squat": "Dumbbell",
-      "dumbbell-press": "Dumbbells",
-      "hammer-curls": "Dumbbells",
-      "lat-pulldown": "Cable machine",
-      "leg-press": "Leg press machine",
-      "incline-bench-press": "Barbell + Incline bench",
-      "romanian-deadlift": "Barbell",
-    };
-
-    return equipmentMap[exercise] || "Standard gym equipment";
+    return getExerciseEquipment(exercise);
   }
 
   /**
@@ -1878,59 +1695,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _analyzeExerciseFrequency(workouts) {
-    const exerciseCount = new Map();
-    const exerciseLastSeen = new Map();
-    const totalExercises = new Set();
-
-    workouts.forEach((workout, index) => {
-      if (workout.exercises && Array.isArray(workout.exercises)) {
-        workout.exercises.forEach((exercise) => {
-          const exerciseId = exercise.exerciseId;
-          // Skip exercises without valid exerciseId
-          if (!exerciseId || typeof exerciseId !== "string") {
-            return;
-          }
-          totalExercises.add(exerciseId);
-
-          exerciseCount.set(
-            exerciseId,
-            (exerciseCount.get(exerciseId) || 0) + 1
-          );
-
-          if (!exerciseLastSeen.has(exerciseId)) {
-            exerciseLastSeen.set(exerciseId, index);
-          }
-        });
-      }
-    });
-
-    // Calculate frequency metrics
-    const frequencyData = Array.from(exerciseCount.entries()).map(
-      ([exerciseId, count]) => ({
-        exerciseId,
-        exerciseName: exerciseId
-          ? exerciseId.replace("-", " ")
-          : "Unknown Exercise",
-        frequency: count,
-        frequencyPercentage: (count / workouts.length) * 100,
-        lastSeenWorkoutsAgo: exerciseLastSeen.get(exerciseId),
-        isRegular: count >= Math.ceil(workouts.length * 0.3), // Appears in 30%+ of workouts
-        isRecent: exerciseLastSeen.get(exerciseId) <= 2, // Seen in last 3 workouts
-      })
-    );
-
-    // Sort by frequency
-    frequencyData.sort((a, b) => b.frequency - a.frequency);
-
-    return {
-      totalUniqueExercises: totalExercises.size,
-      mostFrequent: frequencyData.slice(0, 5),
-      regularExercises: frequencyData.filter((ex) => ex.isRegular),
-      recentExercises: frequencyData.filter((ex) => ex.isRecent),
-      averageExercisesPerWorkout:
-        workouts.reduce((sum, w) => sum + (w.exercises?.length || 0), 0) /
-        workouts.length,
-    };
+    return analyzeExerciseFrequency(workouts);
   }
 
   /**
@@ -2158,42 +1923,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _analyzeVolumeProgression(workouts) {
-    const sortedWorkouts = [...workouts].sort(
-      (a, b) => new Date(a.date) - new Date(b.date)
-    );
-
-    const volumeData = sortedWorkouts.map((workout) => ({
-      date: workout.timestamp,
-      totalVolume: workout.totalVolume || 0,
-      exerciseCount: workout.exercises?.length || 0,
-    }));
-
-    const totalVolume = volumeData.reduce((sum, w) => sum + w.totalVolume, 0);
-    const averageVolume = totalVolume / volumeData.length;
-
-    // Calculate volume progression rate
-    const firstHalf = volumeData.slice(0, Math.floor(volumeData.length / 2));
-    const secondHalf = volumeData.slice(Math.floor(volumeData.length / 2));
-
-    const firstHalfAvg =
-      firstHalf.reduce((sum, w) => sum + w.totalVolume, 0) / firstHalf.length;
-    const secondHalfAvg =
-      secondHalf.reduce((sum, w) => sum + w.totalVolume, 0) / secondHalf.length;
-
-    const progressionRate = secondHalfAvg - firstHalfAvg;
-
-    return {
-      totalVolume,
-      averageVolume: Math.round(averageVolume),
-      progressionRate: Math.round(progressionRate),
-      progressionPercentage:
-        firstHalfAvg > 0
-          ? Math.round((progressionRate / firstHalfAvg) * 100)
-          : 0,
-      volumeDistribution: volumeData,
-      highestVolume: Math.max(...volumeData.map((w) => w.totalVolume)),
-      lowestVolume: Math.min(...volumeData.map((w) => w.totalVolume)),
-    };
+    return analyzeVolumeProgression(workouts);
   }
 
   /**
@@ -2274,21 +2004,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _calculateConsistencyScore(daysBetweenWorkouts) {
-    if (daysBetweenWorkouts.length === 0) return 0;
-
-    const mean =
-      daysBetweenWorkouts.reduce((sum, days) => sum + days, 0) /
-      daysBetweenWorkouts.length;
-    const variance =
-      daysBetweenWorkouts.reduce(
-        (sum, days) => sum + Math.pow(days - mean, 2),
-        0
-      ) / daysBetweenWorkouts.length;
-    const standardDeviation = Math.sqrt(variance);
-
-    // Lower standard deviation = higher consistency
-    // Normalize to 0-1 scale (assuming max reasonable std dev is 7 days)
-    return Math.max(0, 1 - standardDeviation / 7);
+    return calculateConsistencyScore(daysBetweenWorkouts);
   }
 
   /**
@@ -2298,21 +2014,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _calculateDurationTrend(workouts) {
-    if (workouts.length < 4) return "stable";
-
-    const recentDurations = workouts.slice(-3).map((w) => w.duration || 0);
-    const earlierDurations = workouts.slice(0, 3).map((w) => w.duration || 0);
-
-    const recentAvg =
-      recentDurations.reduce((sum, d) => sum + d, 0) / recentDurations.length;
-    const earlierAvg =
-      earlierDurations.reduce((sum, d) => sum + d, 0) / earlierDurations.length;
-
-    const difference = recentAvg - earlierAvg;
-
-    if (difference > 5) return "increasing";
-    if (difference < -5) return "decreasing";
-    return "stable";
+    return calculateDurationTrend(workouts);
   }
 
   /**
@@ -2321,30 +2023,7 @@ class ProgressiveOverloadAIService {
    * @private
    */
   _getEmptyAnalysis() {
-    return {
-      totalWorkouts: 0,
-      dateRange: { start: null, end: null },
-      exerciseFrequency: {
-        totalUniqueExercises: 0,
-        mostFrequent: [],
-        regularExercises: [],
-        recentExercises: [],
-      },
-      personalRecords: {
-        totalRecords: 0,
-        recentRecords: [],
-        topPerformers: [],
-      },
-      trends: {
-        workoutFrequency: { averageDaysBetween: 0, weeklyFrequency: 0 },
-        volume: { trend: "stable" },
-      },
-      consistency: { score: 0, rating: "insufficient_data" },
-      volume: { totalVolume: 0, averageVolume: 0, progressionRate: 0 },
-      recommendations: [
-        "Complete more workouts to get personalized insights and recommendations",
-      ],
-    };
+    return getEmptyWorkoutAnalysis();
   }
 
   /**

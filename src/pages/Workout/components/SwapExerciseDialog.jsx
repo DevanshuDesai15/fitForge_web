@@ -32,8 +32,9 @@ import {
     ChevronDown,
     ChevronUp
 } from 'lucide-react';
-import { fetchExercises } from '../../../services/localExerciseService';
+import { fetchExerciseCatalogList } from '../../../services/exerciseCatalogService';
 import { useCustomExercises } from '../../../hooks/useCustomExercises';
+import { useSupabase } from '../../../hooks/useSupabase';
 import CustomExerciseForm, { MUSCLE_GROUPS } from './CustomExerciseForm';
 import PropTypes from 'prop-types';
 
@@ -42,6 +43,7 @@ const SwapExerciseDialog = ({ open, onClose, onSwapExercise, exerciseName }) => 
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     const { customExercises, saveCustomExercise } = useCustomExercises();
+    const supabase = useSupabase();
 
     const [searchQuery, setSearchQuery] = useState('');
     const [libraryExercises, setLibraryExercises] = useState([]);
@@ -67,7 +69,7 @@ const SwapExerciseDialog = ({ open, onClose, onSwapExercise, exerciseName }) => 
     const loadLibrary = async () => {
         setLibraryLoading(true);
         try {
-            const data = await fetchExercises(50, 0);
+            const data = await fetchExerciseCatalogList(supabase, { limit: 50 });
             setLibraryExercises(data);
         } catch (err) {
             console.error('Error loading exercise library:', err);
@@ -98,7 +100,9 @@ const SwapExerciseDialog = ({ open, onClose, onSwapExercise, exerciseName }) => 
         if (selectedMuscleGroup !== 'all') {
             result = result.filter(ex =>
                 ex.primaryMuscles?.some(m => m.toLowerCase().includes(selectedMuscleGroup.toLowerCase())) ||
-                ex.muscles?.toLowerCase().includes(selectedMuscleGroup.toLowerCase())
+                (Array.isArray(ex.muscles)
+                    ? ex.muscles.some(m => m.toLowerCase().includes(selectedMuscleGroup.toLowerCase()))
+                    : ex.muscles?.toLowerCase().includes(selectedMuscleGroup.toLowerCase()))
             );
         }
         return result;

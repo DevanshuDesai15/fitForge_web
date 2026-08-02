@@ -445,7 +445,7 @@ export default function WorkoutTemplates() {
                             <Button
                                 variant="outlined"
                                 startIcon={<BookOpen size={18} />}
-                                onClick={() => navigate('/workout/library')}
+                                onClick={() => navigate('/workout?tab=library')}
                                 sx={{ color: theme.palette.primary.light, borderColor: theme.palette.primary.light }}
                             >
                                 Browse Exercises

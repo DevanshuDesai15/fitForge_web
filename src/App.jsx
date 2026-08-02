@@ -24,10 +24,8 @@ const ExerciseHistory = lazy(() => import('./pages/History/ExerciseHistory'));
 const Progress = lazy(() => import('./components/Progress'));
 const ExerciseManager = lazy(() => import('./components/workout/ExerciseManager'));
 const StartWorkout = lazy(() => import('./components/workout/StartWorkout'));
-const ExerciseLibrary = lazy(() => import('./components/workout/ExerciseLibrary'));
 const WorkoutTemplates = lazy(() => import('./components/workout/WorkoutTemplates'));
 const QuickAdd = lazy(() => import('./components/workout/QuickAdd'));
-const ExerciseDetail = lazy(() => import('./components/workout/ExerciseDetail'));
 
 const CalendarTest = import.meta.env.DEV
   ? lazy(() => import('./components/test/CalendarTest'))
@@ -43,11 +41,6 @@ function AppWrapper({ children }) {
       {children}
     </div>
   );
-}
-
-// Import API testing utilities in development
-if (import.meta.env.DEV) {
-  import('./utils/apiTester.js');
 }
 
 function App() {
@@ -96,16 +89,12 @@ function App() {
                   } />
                   <Route path="/workout/library" element={
                     <ProtectedRoute>
-                      <Layout>
-                        <ExerciseLibrary />
-                      </Layout>
+                      <Navigate to="/workout?tab=library" replace />
                     </ProtectedRoute>
                   } />
                   <Route path="/workout/exercise/:id" element={
                     <ProtectedRoute>
-                      <Layout>
-                        <ExerciseDetail />
-                      </Layout>
+                      <Navigate to="/workout?tab=library" replace />
                     </ProtectedRoute>
                   } />
                   <Route path="/workout/templates" element={

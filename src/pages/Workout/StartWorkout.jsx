@@ -91,9 +91,11 @@ export function calcWorkoutProgress(exercises) {
 
 export function buildWorkoutSaveExercises(exercises, weightUnit) {
     return exercises.flatMap(exercise => {
+        const exerciseId = exercise.exerciseId ?? exercise.id ?? null;
         if (exercise.exercise_type === 'cardio') {
             if (!exercise.cardio?.completed) return [];
             return [{
+                ...(exerciseId ? { exerciseId } : {}),
                 name: exercise.name,
                 exercise_type: 'cardio',
                 cardio: {
@@ -108,6 +110,7 @@ export function buildWorkoutSaveExercises(exercises, weightUnit) {
             .map(set => ({ weight: set.weight || '0', weightUnit, reps: set.reps, completed: true }));
         if (completedSets.length === 0) return [];
         return [{
+            ...(exerciseId ? { exerciseId } : {}),
             name: exercise.name,
             exercise_type: 'strength',
             sets: completedSets,
@@ -118,18 +121,35 @@ export function buildWorkoutSaveExercises(exercises, weightUnit) {
     });
 }
 
+const normalizeExerciseName = (name) => String(name || '').trim().toLowerCase();
+
 export function buildPreviousSetsMap(workoutRows) {
-    const map = {};
+    const map = { byId: {}, byName: {} };
     for (const row of (workoutRows || [])) {
         for (const exercise of (row.exercises || [])) {
-            if (!exercise.name) continue;
             if (exercise.exercise_type === 'cardio') continue;
-            if (!map[exercise.name] && Array.isArray(exercise.sets)) {
-                map[exercise.name] = exercise.sets;
+            if (!Array.isArray(exercise.sets)) continue;
+
+            const exerciseId = exercise.exerciseId ?? exercise.exercise_id ?? exercise.id;
+            const normalizedName = normalizeExerciseName(exercise.name ?? exercise.exerciseName);
+
+            if (exerciseId && !map.byId[exerciseId]) map.byId[exerciseId] = exercise.sets;
+            if (normalizedName && !map.byName[normalizedName]) {
+                map.byName[normalizedName] = exercise.sets;
             }
         }
     }
     return map;
+}
+
+export function resolvePreviousSets(previousSetsMap, exercise) {
+    const exerciseId = exercise?.exerciseId ?? exercise?.exercise_id ?? exercise?.id;
+    if (exerciseId && previousSetsMap?.byId?.[exerciseId]) {
+        return previousSetsMap.byId[exerciseId];
+    }
+
+    const normalizedName = normalizeExerciseName(exercise?.name ?? exercise?.exerciseName);
+    return normalizedName ? previousSetsMap?.byName?.[normalizedName] : undefined;
 }
 
 export function resolveProgramWorkoutSelection(programData, templateRows, requestedDayId = null) {
@@ -194,7 +214,7 @@ const StartWorkout = () => {
     const [showRestTimer, setShowRestTimer] = useState(false);
     const [restDuration] = useState(180); // 3 minutes default - can be adjusted later
     const [bottomTab, setBottomTab] = useState('overview'); // 'overview', 'ai-coach', 'suggestions', 'variations'
-    const [previousSetsMap, setPreviousSetsMap] = useState({});
+    const [previousSetsMap, setPreviousSetsMap] = useState({ byId: {}, byName: {} });
 
     // Hooks
     const navigate = useNavigate();
@@ -947,7 +967,10 @@ const StartWorkout = () => {
                                 totalExercises={exercises.length}
                                 onPreviousExercise={handlePreviousExercise}
                                 onNextExercise={handleNextExercise}
-                                previousSets={previousSetsMap[exercises[currentExerciseIndex]?.name]}
+                                previousSets={resolvePreviousSets(
+                                    previousSetsMap,
+                                    exercises[currentExerciseIndex]
+                                )}
                             />
                         )}
 
