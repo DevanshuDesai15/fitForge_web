@@ -1,4 +1,6 @@
-import geminiConfig from "../config/geminiConfig";
+import aiProviderConfig, {
+  normalizeAIProviderOptions,
+} from "../config/aiProviderConfig";
 import aiApiClient from "./aiApiClient";
 import exerciseVectorSearchService from "./exerciseVectorSearchService";
 import {
@@ -17,8 +19,8 @@ const DEFAULT_RETRY_DELAY_MS = 750;
 const RETRYABLE_STATUS_CODES = new Set([408, 409, 425, 429, 500, 502, 503, 504]);
 
 class HuggingFaceService {
-  constructor(config = geminiConfig) {
-    this.config = config;
+  constructor(config = aiProviderConfig) {
+    this.config = normalizeAIProviderOptions(config);
     this.supabase = null;
     this.requestCache = new Map();
     this.pendingRequests = new Map();
@@ -43,7 +45,7 @@ class HuggingFaceService {
   }
 
   _isEnabled() {
-    return !this.config.emergencyDisable && this.config.useGeminiAI;
+    return !this.config.emergencyDisable && this.config.useAIProvider;
   }
 
   _isCircuitOpen() {

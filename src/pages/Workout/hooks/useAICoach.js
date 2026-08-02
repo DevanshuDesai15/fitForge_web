@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { generateWorkoutAnalysis } from "../../../services/geminiAIService";
+import { generateWorkoutAnalysis } from "../../../services/aiProviderService";
 
 export const useAICoach = () => {
   const [loading, setLoading] = useState(false);

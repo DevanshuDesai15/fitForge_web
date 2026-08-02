@@ -85,6 +85,9 @@ These values are optional for local browser development:
 - `VITE_SENTRY_DSN` and `VITE_SENTRY_ENVIRONMENT`
 - `VITE_POSTHOG_KEY` and `VITE_POSTHOG_HOST`
 - The browser-safe Hugging Face feature controls documented in `.env.example`
+- `VITE_AI_PROVIDER_PRIORITY` to control the provider's share when AI and rule-based suggestions are combined
+
+Deprecated `VITE_GEMINI_*` variables remain accepted as lower-priority compatibility fallbacks, but Gemini is not an active provider and new environments should use the provider-neutral or `VITE_HUGGINGFACE_*` names.
 
 `SUPABASE_SERVICE_ROLE_KEY` is not used by the browser app. Reserve it for trusted administrative scripts, including exercise-catalog imports, and never expose it to client code.
 

@@ -5,7 +5,7 @@ const { mockGenerateWorkoutRecommendations, mockSetSupabase } = vi.hoisted(() =>
   mockSetSupabase: vi.fn(),
 }));
 
-vi.mock("../geminiAIService", () => ({
+vi.mock("../aiProviderService", () => ({
   default: {
     generateWorkoutRecommendations: mockGenerateWorkoutRecommendations,
     setSupabase: mockSetSupabase,

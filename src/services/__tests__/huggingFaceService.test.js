@@ -41,7 +41,7 @@ describe("HuggingFaceService safeguards", () => {
       requestTimeout: 1000,
       maxRetries: 1,
       emergencyDisable: false,
-      useGeminiAI: true,
+      useAIProvider: true,
     });
     service._sleep = vi.fn().mockResolvedValue(undefined);
 
@@ -71,7 +71,7 @@ describe("HuggingFaceService safeguards", () => {
       requestTimeout: 25,
       maxRetries: 0,
       emergencyDisable: false,
-      useGeminiAI: true,
+      useAIProvider: true,
     });
 
     mockChat.mockImplementation(
@@ -86,5 +86,15 @@ describe("HuggingFaceService safeguards", () => {
     const assertion = expect(requestPromise).rejects.toThrow("timed out");
     await vi.advanceTimersByTimeAsync(25);
     await assertion;
+  });
+
+  it("accepts the deprecated provider-enabled option at its constructor boundary", async () => {
+    const { HuggingFaceService } = await import("../huggingFaceService");
+    const service = new HuggingFaceService({
+      emergencyDisable: false,
+      useGeminiAI: true,
+    });
+
+    expect(service._isEnabled()).toBe(true);
   });
 });

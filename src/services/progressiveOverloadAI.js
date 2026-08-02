@@ -5,7 +5,8 @@
  */
 
 import aiDatabaseService from "./aiDatabaseService";
-import geminiAIService from "./geminiAIService";
+import aiProviderService from "./aiProviderService";
+import { normalizeAIProviderOptions } from "../config/aiProviderConfig";
 import { listWorkouts } from "./workoutRepository";
 import {
   calculateSubstitutionConfidence,
@@ -188,7 +189,7 @@ import {
 class ProgressiveOverloadAIService {
   setSupabase(supabaseClient) {
     this.supabase = supabaseClient;
-    geminiAIService.setSupabase(supabaseClient);
+    aiProviderService.setSupabase(supabaseClient);
   }
 
   /**
@@ -198,6 +199,7 @@ class ProgressiveOverloadAIService {
    * @param {string} config.modelVersion - AI model version
    */
   constructor(config = {}) {
+    const providerOptions = normalizeAIProviderOptions(config);
     this.config = {
       enableLogging: config.enableLogging || false,
       modelVersion: config.modelVersion || "1.0.0",
@@ -208,10 +210,10 @@ class ProgressiveOverloadAIService {
       deloadPercentage: 0.1, // 10%
       confidenceThreshold: 0.7,
       // Generative AI integration
-      useGeminiAI: config.useGeminiAI !== false, // Default to true
       hybridMode: config.hybridMode !== false, // Use both rule-based and AI
-      geminiPriority: config.geminiPriority || 0.4, // 40% weight to provider suggestions
       ...config,
+      useAIProvider: providerOptions.useAIProvider,
+      providerPriority: providerOptions.providerPriority,
     };
 
     this.compoundExercises = [
@@ -365,11 +367,11 @@ class ProgressiveOverloadAIService {
       );
 
       // Step 2: Use the generative provider for enhanced intelligence (when enabled)
-      if (this.config.useGeminiAI) {
+      if (this.config.useAIProvider) {
         try {
           const workoutHistory = await this._getRecentWorkoutHistory(userId, 5);
-          const geminiSuggestion =
-            await geminiAIService.generateProgressionSuggestions(
+          const providerSuggestion =
+            await aiProviderService.generateProgressionSuggestions(
               analysis,
               userProfile,
               workoutHistory
@@ -378,7 +380,7 @@ class ProgressiveOverloadAIService {
           // Step 3: Combine both suggestions intelligently
           return this._combineProgressionSuggestions(
             ruleBasedSuggestion,
-            geminiSuggestion
+            providerSuggestion
           );
         } catch (error) {
           this._log("Generative AI unavailable, using rule-based suggestion", {
@@ -549,11 +551,11 @@ class ProgressiveOverloadAIService {
       );
 
       // Step 3: Use a single provider call for all exercises (when enabled)
-      if (this.config.useGeminiAI && exerciseIds.length > 0) {
+      if (this.config.useAIProvider && exerciseIds.length > 0) {
         try {
           const workoutHistory = await this._getRecentWorkoutHistory(userId, 5);
-          const batchGeminiSuggestion =
-            await geminiAIService.generateBatchProgressionSuggestions(
+          const batchProviderSuggestion =
+            await aiProviderService.generateBatchProgressionSuggestions(
               analyses,
               userProfile,
               workoutHistory
@@ -561,10 +563,10 @@ class ProgressiveOverloadAIService {
 
           // Step 4: Combine batch suggestions
           return ruleBasedSuggestions.map((ruleSuggestion, index) => {
-            const geminiSuggestion = batchGeminiSuggestion.suggestions?.[index];
-            if (geminiSuggestion) {
+            const providerSuggestion = batchProviderSuggestion.suggestions?.[index];
+            if (providerSuggestion) {
               return this._combineProgressionSuggestions(ruleSuggestion, {
-                primarySuggestion: geminiSuggestion,
+                primarySuggestion: providerSuggestion,
               });
             }
             return this._enhanceRuleBasedSuggestion(
@@ -827,7 +829,7 @@ class ProgressiveOverloadAIService {
       );
 
       // Step 2: Use the generative provider for intelligent analysis (when enabled and userId available)
-      if (this.config.useGeminiAI && userId) {
+      if (this.config.useAIProvider && userId) {
         try {
           const userProfile = await this._getUserProgressionProfile(userId);
           const pastInterventions = await this._getPastInterventions(
@@ -835,8 +837,8 @@ class ProgressiveOverloadAIService {
             plateauData.exerciseId
           );
 
-          const geminiInterventions =
-            await geminiAIService.generatePlateauInterventions(
+          const providerInterventions =
+            await aiProviderService.generatePlateauInterventions(
               plateauData,
               userProfile,
               pastInterventions
@@ -845,7 +847,7 @@ class ProgressiveOverloadAIService {
           // Step 3: Combine and enhance interventions
           const combinedInterventions = this._combineInterventionSuggestions(
             ruleBasedInterventions,
-            geminiInterventions
+            providerInterventions
           );
 
           return this._prioritizeInterventions(
@@ -2496,24 +2498,24 @@ class ProgressiveOverloadAIService {
   }
 
   /**
-   * Combine rule-based and Gemini AI progression suggestions
+   * Combine rule-based and AI provider progression suggestions
    * @param {ProgressionSuggestion} ruleBasedSuggestion - Rule-based suggestion
-   * @param {Object} geminiSuggestion - Gemini AI suggestion
+   * @param {Object} providerSuggestion - AI provider suggestion
    * @returns {ProgressionSuggestion} Combined suggestion
    * @private
    */
-  _combineProgressionSuggestions(ruleBasedSuggestion, geminiSuggestion) {
-    const rulePriority = 1 - this.config.geminiPriority; // e.g., 0.6
-    const geminiPriority = this.config.geminiPriority; // e.g., 0.4
+  _combineProgressionSuggestions(ruleBasedSuggestion, providerSuggestion) {
+    const rulePriority = 1 - this.config.providerPriority; // e.g., 0.6
+    const providerPriority = this.config.providerPriority; // e.g., 0.4
 
     // Combine confidence scores
     const combinedConfidence =
       ruleBasedSuggestion.confidenceLevel * rulePriority +
-      (geminiSuggestion.primarySuggestion?.confidence || 0.5) * geminiPriority;
+      (providerSuggestion.primarySuggestion?.confidence || 0.5) * providerPriority;
 
-    // Use Gemini's reasoning if available, otherwise rule-based
+    // Use AI provider's reasoning if available, otherwise rule-based
     const reasoning =
-      geminiSuggestion.primarySuggestion?.reasoning ||
+      providerSuggestion.primarySuggestion?.reasoning ||
       ruleBasedSuggestion.reasoning;
 
     // Combine suggestions intelligently
@@ -2523,16 +2525,16 @@ class ProgressiveOverloadAIService {
       reasoning: `${reasoning} (AI-Enhanced)`,
       alternativeOptions: [
         ...(ruleBasedSuggestion.alternativeOptions || []),
-        ...(geminiSuggestion.alternatives || []).map((alt) => ({
+        ...(providerSuggestion.alternatives || []).map((alt) => ({
           weight: ruleBasedSuggestion.currentWeight,
           reps: ruleBasedSuggestion.suggestedReps,
           reasoning: alt.description,
         })),
       ],
-      personalizedTips: geminiSuggestion.personalizedTips || [],
-      riskFactors: geminiSuggestion.primarySuggestion?.riskFactors || [],
+      personalizedTips: providerSuggestion.personalizedTips || [],
+      riskFactors: providerSuggestion.primarySuggestion?.riskFactors || [],
       aiEnhanced: true,
-      geminiInsights: geminiSuggestion.primarySuggestion || null,
+      providerInsights: providerSuggestion.primarySuggestion || null,
     };
   }
 
@@ -2586,35 +2588,35 @@ class ProgressiveOverloadAIService {
   }
 
   /**
-   * Combine rule-based and Gemini intervention suggestions
+   * Combine rule-based and AI provider intervention suggestions
    * @param {Array<InterventionSuggestion>} ruleBasedInterventions - Rule-based interventions
-   * @param {Object} geminiInterventions - Gemini AI interventions
+   * @param {Object} providerInterventions - AI provider interventions
    * @returns {Array<InterventionSuggestion>} Combined interventions
    * @private
    */
-  _combineInterventionSuggestions(ruleBasedInterventions, geminiInterventions) {
+  _combineInterventionSuggestions(ruleBasedInterventions, providerInterventions) {
     const combined = [...ruleBasedInterventions];
 
-    // Add Gemini interventions that don't duplicate existing ones
-    if (geminiInterventions.interventions) {
-      geminiInterventions.interventions.forEach((geminiIntervention) => {
+    // Add AI provider interventions that don't duplicate existing ones
+    if (providerInterventions.interventions) {
+      providerInterventions.interventions.forEach((providerIntervention) => {
         // Check if this type of intervention already exists
         const existingIntervention = combined.find(
-          (existing) => existing.type === geminiIntervention.type
+          (existing) => existing.type === providerIntervention.type
         );
 
         if (!existingIntervention) {
           combined.push({
-            ...geminiIntervention,
+            ...providerIntervention,
             aiGenerated: true,
             priority: this._calculateInterventionPriority(
-              geminiIntervention,
+              providerIntervention,
               {}
             ),
           });
         } else {
           // Enhance existing intervention with AI insights
-          existingIntervention.reasoning = `${existingIntervention.reasoning} | AI Insight: ${geminiIntervention.reasoning}`;
+          existingIntervention.reasoning = `${existingIntervention.reasoning} | AI Insight: ${providerIntervention.reasoning}`;
           existingIntervention.aiEnhanced = true;
         }
       });
@@ -2724,12 +2726,12 @@ class ProgressiveOverloadAIService {
       const analyses = await this.analyzeWorkoutHistory(userId);
 
       // Use the generative provider for intelligent workout planning
-      if (this.config.useGeminiAI && analyses.length > 0) {
+      if (this.config.useAIProvider && analyses.length > 0) {
         this._log("Using AI workout recommendations", {
           analysisCount: analyses.length,
         });
         const recommendationResult =
-          await geminiAIService.generateWorkoutRecommendations(
+          await aiProviderService.generateWorkoutRecommendations(
             workoutContext,
             userProfile,
             recentWorkouts
@@ -2785,7 +2787,7 @@ class ProgressiveOverloadAIService {
 
       // Fallback to rule-based suggestions if AI is disabled or no analysis
       this._log("Using rule-based workout suggestions", {
-        geminiEnabled: this.config.useGeminiAI,
+        providerEnabled: this.config.useAIProvider,
         analysisCount: analyses.length,
       });
 
