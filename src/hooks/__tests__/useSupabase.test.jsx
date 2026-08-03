@@ -38,7 +38,7 @@ describe('useSupabase', () => {
     );
   });
 
-  it('registers the current Clerk Supabase-template token provider', async () => {
+  it('registers the current Clerk session token provider', async () => {
     const getToken = vi.fn().mockResolvedValue('clerk-token');
     clerkState.session = { id: 'sess_123', getToken };
 
@@ -49,7 +49,8 @@ describe('useSupabase', () => {
     await act(async () => {
       await expect(provider()).resolves.toBe('clerk-token');
     });
-    expect(getToken).toHaveBeenCalledWith({ template: 'supabase' });
+    expect(getToken).toHaveBeenCalledTimes(1);
+    expect(getToken.mock.calls[0]).toEqual([]);
 
     view.unmount();
     expect(supabaseMocks.cleanup).toHaveBeenCalledTimes(1);

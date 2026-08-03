@@ -70,8 +70,9 @@ describe('catalog-wide operations', () => {
   });
 
   it('loads one exercise by ID and formats compact AI context', async () => {
+    const exerciseId = '123e4567-e89b-42d3-a456-426614174000';
     const row = {
-      id: 'catalog_bench',
+      id: exerciseId,
       name: 'Bench Press',
       description: 'Press the bar',
       difficulty: 'Intermediate',
@@ -87,8 +88,8 @@ describe('catalog-wide operations', () => {
     };
     const supabase = { from: vi.fn(() => builder) };
 
-    const exercise = await fetchExerciseCatalogById(supabase, 'catalog_bench');
-    expect(builder.eq).toHaveBeenCalledWith('id', 'catalog_bench');
+    const exercise = await fetchExerciseCatalogById(supabase, exerciseId);
+    expect(builder.eq).toHaveBeenCalledWith('id', exerciseId);
     expect(JSON.parse(formatExerciseCatalogRagContext(exercise))).toEqual({
       name: 'Bench Press',
       description: 'Press the bar',
@@ -98,6 +99,22 @@ describe('catalog-wide operations', () => {
       steps: ['Unrack', 'Press'],
       muscle_groups: ['Chest', 'Triceps'],
     });
+  });
+
+  it('loads a historical name without sending it to the UUID ID column', async () => {
+    const row = { id: '123e4567-e89b-42d3-a456-426614174000', name: 'Leg Press' };
+    const builder = {
+      select: vi.fn(() => builder),
+      eq: vi.fn(() => builder),
+      maybeSingle: vi.fn().mockResolvedValue({ data: row, error: null }),
+    };
+    const supabase = { from: vi.fn(() => builder) };
+
+    const exercise = await fetchExerciseCatalogById(supabase, 'Leg Press');
+
+    expect(builder.eq).toHaveBeenCalledWith('name', 'Leg Press');
+    expect(builder.eq).not.toHaveBeenCalledWith('id', 'Leg Press');
+    expect(exercise.name).toBe('Leg Press');
   });
 });
 

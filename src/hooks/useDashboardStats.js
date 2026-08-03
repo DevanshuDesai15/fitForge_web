@@ -4,12 +4,37 @@ import { useAuth } from "../contexts/AuthContext";
 import { listWorkouts } from "../services/workoutRepository";
 import { fetchExerciseMuscleMapByNames } from "../services/exerciseCatalogService";
 
+function getDashboardWeekStart(now = new Date()) {
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - start.getDay());
+  return start;
+}
+
+export function getDashboardWeekKey(now = new Date()) {
+  const start = getDashboardWeekStart(now);
+  return `${start.getFullYear()}-${start.getMonth() + 1}-${start.getDate()}`;
+}
+
+export function isWorkoutInDashboardWeek(workout, now = new Date()) {
+  const rawDate = workout?.timestamp ?? workout?.completedAt ?? workout?.createdAt;
+  if (!rawDate) return false;
+
+  const workoutDate = new Date(rawDate);
+  if (Number.isNaN(workoutDate.getTime())) return false;
+
+  const weekStart = getDashboardWeekStart(now);
+  const nextWeekStart = new Date(weekStart);
+  nextWeekStart.setDate(weekStart.getDate() + 7);
+  return workoutDate >= weekStart && workoutDate < nextWeekStart;
+}
+
 export function useDashboardStats() {
   const supabase = useSupabase();
   const { currentUser } = useAuth();
 
   return useQuery({
-    queryKey: ["dashboard_stats", currentUser?.uid],
+    queryKey: ["dashboard_stats", currentUser?.uid, getDashboardWeekKey()],
     queryFn: async () => {
       if (!currentUser?.uid) return null;
 
@@ -31,10 +56,8 @@ export function useDashboardStats() {
       const userPrograms = programsResult.data;
       const completedWorkouts = workoutsResult;
 
-      // Stats Processing (Trailing 7 days)
+      // Stats Processing (current Sunday-Saturday calendar week)
       const today = new Date();
-      const sevenDaysAgo = new Date(today);
-      sevenDaysAgo.setDate(today.getDate() - 7);
 
       let weeklyWorkouts = 0;
       let weeklyMinutes = 0;
@@ -43,10 +66,9 @@ export function useDashboardStats() {
       const uniqueExercises = new Set();
       const targetedMuscles = new Set();
 
-      const weekWorkoutData = completedWorkouts.filter((w) => {
-        const workoutDate = new Date(w.timestamp);
-        return workoutDate >= sevenDaysAgo;
-      });
+      const weekWorkoutData = completedWorkouts.filter((workout) =>
+        isWorkoutInDashboardWeek(workout, today)
+      );
 
       // Collect all exercise names from this week to look up muscle info for old records
       const exerciseNamesInWeek = new Set();
@@ -199,5 +221,6 @@ export function useDashboardStats() {
     },
     enabled: !!currentUser?.uid,
     staleTime: 1000 * 60 * 2, // 2 minutes
+    refetchInterval: 1000 * 60, // Refresh data and roll over promptly at a new week.
   });
 }

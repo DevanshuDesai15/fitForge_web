@@ -1,13 +1,18 @@
 /**
  * @fileoverview Browser-safe configuration for the active AI provider.
  * Legacy Gemini-era properties and environment variables remain supported as
- * deprecated aliases while Hugging Face remains the active provider.
+ * deprecated aliases while OpenRouter remains the active provider.
  */
 
 // Keep this list explicit. Dynamic access to import.meta.env causes Vite to
 // serialize every VITE_* variable into the browser bundle, including unrelated
 // legacy credentials that may still exist in a developer's local environment.
 const browserEnv = {
+  VITE_USE_OPENROUTER_AI: import.meta.env.VITE_USE_OPENROUTER_AI,
+  VITE_OPENROUTER_EMERGENCY_DISABLE:
+    import.meta.env.VITE_OPENROUTER_EMERGENCY_DISABLE,
+  VITE_OPENROUTER_TIMEOUT: import.meta.env.VITE_OPENROUTER_TIMEOUT,
+  VITE_OPENROUTER_MAX_RETRIES: import.meta.env.VITE_OPENROUTER_MAX_RETRIES,
   VITE_USE_HUGGINGFACE_AI: import.meta.env.VITE_USE_HUGGINGFACE_AI,
   VITE_USE_GEMINI_AI: import.meta.env.VITE_USE_GEMINI_AI,
   VITE_HUGGINGFACE_HYBRID_MODE:
@@ -54,7 +59,8 @@ const getEnvVar = (key, defaultValue = "") => {
 };
 
 const useAIProvider =
-  (getEnvVar("VITE_USE_HUGGINGFACE_AI") ||
+  (getEnvVar("VITE_USE_OPENROUTER_AI") ||
+    getEnvVar("VITE_USE_HUGGINGFACE_AI") ||
     getEnvVar("VITE_USE_GEMINI_AI", "true")) === "true";
 
 const providerPriority = parseFloat(
@@ -63,22 +69,25 @@ const providerPriority = parseFloat(
 );
 
 export const aiProviderConfig = {
-  provider: "huggingface",
+  provider: "openrouter",
 
   useAIProvider,
   hybridMode:
     (getEnvVar("VITE_HUGGINGFACE_HYBRID_MODE") ||
       getEnvVar("VITE_HYBRID_MODE", "true")) === "true",
   emergencyDisable:
-    (getEnvVar("VITE_HUGGINGFACE_EMERGENCY_DISABLE") ||
+    (getEnvVar("VITE_OPENROUTER_EMERGENCY_DISABLE") ||
+      getEnvVar("VITE_HUGGINGFACE_EMERGENCY_DISABLE") ||
       getEnvVar("VITE_GEMINI_EMERGENCY_DISABLE", "false")) === "true",
   providerPriority,
   requestTimeout: parseInt(
-    getEnvVar("VITE_HUGGINGFACE_TIMEOUT") ||
+    getEnvVar("VITE_OPENROUTER_TIMEOUT") ||
+      getEnvVar("VITE_HUGGINGFACE_TIMEOUT") ||
       getEnvVar("VITE_GEMINI_TIMEOUT", "20000")
   ),
   maxRetries: parseInt(
-    getEnvVar("VITE_HUGGINGFACE_MAX_RETRIES") ||
+    getEnvVar("VITE_OPENROUTER_MAX_RETRIES") ||
+      getEnvVar("VITE_HUGGINGFACE_MAX_RETRIES") ||
       getEnvVar("VITE_GEMINI_MAX_RETRIES", "0")
   ),
   enableLogging: getEnvVar("NODE_ENV", "production") === "development",

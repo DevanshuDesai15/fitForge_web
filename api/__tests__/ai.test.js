@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createAiHandler } from "../ai";
+import { createAiHandler, createOpenRouterClient } from "../ai";
 
 const validEnv = {
-  HUGGINGFACE_API_KEY: "hf_server_secret",
-  HUGGINGFACE_MODEL: "server-chat-model",
-  HUGGINGFACE_EMBEDDING_MODEL: "server-embedding-model",
+  OPENROUTER_API_KEY: "openrouter_server_secret",
+  OPENROUTER_MODEL: "openai/gpt-5-mini",
+  OPENROUTER_EMBEDDING_MODEL: "intfloat/multilingual-e5-large",
   CLERK_SECRET_KEY: "sk_test_secret",
   CLERK_AUTHORIZED_PARTIES: "http://localhost:3000,https://fitforge.example",
 };
@@ -248,18 +248,31 @@ describe("Vercel AI function", () => {
     expect(response.statusCode).toBe(200);
     expect(response.body).toEqual({ content: "{\"ok\":true}" });
     expect(harness.createInferenceClient).toHaveBeenCalledWith(
-      "hf_server_secret"
+      "openrouter_server_secret"
     );
     expect(harness.chatCompletion).toHaveBeenCalledWith({
-      model: "server-chat-model",
+      model: "openai/gpt-5-mini",
       messages: [
         { role: "system", content: "Return JSON." },
         { role: "user", content: "Analyze this workout." },
       ],
       temperature: 0.4,
-      max_tokens: 1500,
+      max_tokens: 4000,
+      reasoning: { effort: "low", exclude: true },
       response_format: { type: "json_object" },
     });
+  });
+
+  it("rejects truncated provider output instead of returning incomplete JSON", async () => {
+    const harness = createHarness();
+    harness.chatCompletion.mockResolvedValue({
+      choices: [{ finish_reason: "length", message: { content: '{"partial":' } }],
+    });
+
+    const response = await invoke(harness);
+
+    expect(response.statusCode).toBe(502);
+    expect(response.body).toEqual({ error: "AI provider response was truncated" });
   });
 
   it("returns a flattened embedding vector", async () => {
@@ -278,21 +291,39 @@ describe("Vercel AI function", () => {
     expect(response.statusCode).toBe(200);
     expect(response.body).toEqual({ embedding: [0.1, 0.2, 0.3] });
     expect(harness.featureExtraction).toHaveBeenCalledWith({
-      model: "server-embedding-model",
-      inputs: "query: bench press",
+      model: "intfloat/multilingual-e5-large",
+      input: "query: bench press",
     });
   });
 
   it("does not expose provider error details", async () => {
     const harness = createHarness();
     harness.chatCompletion.mockRejectedValue(
-      new Error("provider response included hf_server_secret")
+      new Error("provider response included openrouter_server_secret")
     );
 
     const response = await invoke(harness);
 
     expect(response.statusCode).toBe(502);
     expect(response.body).toEqual({ error: "AI provider request failed" });
-    expect(JSON.stringify(response.body)).not.toContain("hf_server_secret");
+    expect(JSON.stringify(response.body)).not.toContain("openrouter_server_secret");
+  });
+});
+
+describe("OpenRouter client", () => {
+  it("sends chat requests to OpenRouter without exposing the key in the body", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({ choices: [] }),
+    });
+    const client = createOpenRouterClient("server_secret");
+
+    await client.chatCompletion({ model: "openai/gpt-5-mini", messages: [] });
+
+    const [url, options] = fetchMock.mock.calls[0];
+    expect(url).toBe("https://openrouter.ai/api/v1/chat/completions");
+    expect(options.headers.Authorization).toBe("Bearer server_secret");
+    expect(options.body).not.toContain("server_secret");
+    fetchMock.mockRestore();
   });
 });

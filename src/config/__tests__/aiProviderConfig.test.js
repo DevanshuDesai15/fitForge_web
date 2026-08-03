@@ -14,7 +14,7 @@ import legacyGeminiConfig, {
 describe("aiProviderConfig", () => {
   it("exposes provider-neutral settings with deprecated property aliases", () => {
     expect(namedAIProviderConfig).toBe(aiProviderConfig);
-    expect(aiProviderConfig.provider).toBe("huggingface");
+    expect(aiProviderConfig.provider).toBe("openrouter");
     expect(aiProviderConfig.useAIProvider).toBeTypeOf("boolean");
     expect(aiProviderConfig.providerPriority).toBeTypeOf("number");
     expect(aiProviderConfig.useGeminiAI).toBe(aiProviderConfig.useAIProvider);

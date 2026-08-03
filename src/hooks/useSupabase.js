@@ -13,9 +13,7 @@ export function useSupabase() {
       return setSupabaseTokenProvider(null);
     }
 
-    return setSupabaseTokenProvider(() =>
-      session.getToken({ template: 'supabase' })
-    );
+    return setSupabaseTokenProvider(() => session.getToken());
   }, [session]);
 
   return getSupabaseClient();

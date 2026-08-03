@@ -73,7 +73,12 @@ export function mapWorkoutToDb(workout = {}, userId, options = {}) {
     total_volume_kg: workout.totalVolumeKg ?? workout.total_volume_kg ?? null,
     completed: workout.completed ?? false,
     completed_at: workout.completedAt ?? workout.completed_at ?? null,
-    timestamp: workout.timestamp ?? null,
+    timestamp:
+      workout.timestamp
+      ?? workout.completedAt
+      ?? workout.completed_at
+      ?? options.createdAt
+      ?? null,
     notes: workout.notes ?? '',
     ...(options.createdAt !== undefined ? { created_at: options.createdAt } : {}),
     ...(options.updatedAt !== undefined ? { updated_at: options.updatedAt } : {}),

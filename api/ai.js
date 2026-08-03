@@ -1,15 +1,15 @@
 import { verifyToken as verifyClerkToken } from "@clerk/backend";
-import { HfInference } from "@huggingface/inference";
 
 const MAX_SYSTEM_PROMPT_LENGTH = 12_000;
 const MAX_USER_PROMPT_LENGTH = 24_000;
 const MAX_EMBEDDING_QUERY_LENGTH = 2_000;
 const MAX_REQUEST_BODY_BYTES = 40_000;
 
-const DEFAULT_CHAT_MODEL = "Qwen/Qwen2.5-72B-Instruct";
+const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
+const DEFAULT_CHAT_MODEL = "openai/gpt-5-mini";
 const DEFAULT_EMBEDDING_MODEL = "intfloat/multilingual-e5-large";
 const DEFAULT_TEMPERATURE = 0.4;
-const DEFAULT_MAX_TOKENS = 1500;
+const DEFAULT_MAX_TOKENS = 4000;
 
 const isBoundedString = (value, maxLength) =>
   typeof value === "string" &&
@@ -50,6 +50,32 @@ const getRequestBodySize = (body) => {
 
 const sendJson = (response, status, body) => response.status(status).json(body);
 
+export const createOpenRouterClient = (apiKey) => {
+  const request = async (path, body) => {
+    const response = await fetch(`${OPENROUTER_BASE_URL}/${path}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://fitforge.app",
+        "X-OpenRouter-Title": "FitForge",
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenRouter request failed with status ${response.status}`);
+    }
+
+    return response.json();
+  };
+
+  return {
+    chatCompletion: (body) => request("chat/completions", body),
+    featureExtraction: (body) => request("embeddings", body),
+  };
+};
+
 export const createAiHandler = ({
   verifyToken,
   createInferenceClient,
@@ -67,7 +93,7 @@ export const createAiHandler = ({
     const clerkVerificationKey = env.CLERK_JWT_KEY || env.CLERK_SECRET_KEY;
 
     if (
-      !env.HUGGINGFACE_API_KEY ||
+      !env.OPENROUTER_API_KEY ||
       !clerkVerificationKey ||
       authorizedParties.length === 0
     ) {
@@ -133,20 +159,27 @@ export const createAiHandler = ({
       });
     }
 
-    const client = createInferenceClient(env.HUGGINGFACE_API_KEY);
+    const client = createInferenceClient(env.OPENROUTER_API_KEY);
 
     try {
       if (operation === "chat") {
         const providerResponse = await client.chatCompletion({
-          model: env.HUGGINGFACE_MODEL || DEFAULT_CHAT_MODEL,
+          model: env.OPENROUTER_MODEL || DEFAULT_CHAT_MODEL,
           messages: [
             { role: "system", content: payload.systemPrompt },
             { role: "user", content: payload.userPrompt },
           ],
           temperature: DEFAULT_TEMPERATURE,
           max_tokens: DEFAULT_MAX_TOKENS,
+          reasoning: { effort: "low", exclude: true },
           response_format: { type: "json_object" },
         });
+
+        if (providerResponse.choices?.[0]?.finish_reason === "length") {
+          return sendJson(response, 502, {
+            error: "AI provider response was truncated",
+          });
+        }
 
         return sendJson(response, 200, {
           content: providerResponse.choices?.[0]?.message?.content ?? "{}",
@@ -155,12 +188,12 @@ export const createAiHandler = ({
 
       const providerResponse = await client.featureExtraction({
         model:
-          env.HUGGINGFACE_EMBEDDING_MODEL || DEFAULT_EMBEDDING_MODEL,
-        inputs: payload.query,
+          env.OPENROUTER_EMBEDDING_MODEL || DEFAULT_EMBEDDING_MODEL,
+        input: payload.query,
       });
-      const embedding = Array.isArray(providerResponse?.[0])
-        ? providerResponse[0]
-        : providerResponse;
+      const embedding = providerResponse?.data?.[0]?.embedding
+        || providerResponse?.[0]
+        || providerResponse;
 
       return sendJson(response, 200, { embedding });
     } catch {
@@ -172,7 +205,7 @@ export const createAiHandler = ({
 
 const handler = createAiHandler({
   verifyToken: verifyClerkToken,
-  createInferenceClient: (apiKey) => new HfInference(apiKey),
+  createInferenceClient: createOpenRouterClient,
   env: process.env,
 });
 

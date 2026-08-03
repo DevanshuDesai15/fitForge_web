@@ -100,7 +100,7 @@ class HuggingFaceService {
       promise,
       new Promise((_, reject) => {
         setTimeout(() => {
-          reject(new Error(`Hugging Face request timed out after ${timeoutMs}ms`));
+          reject(new Error(`AI provider request timed out after ${timeoutMs}ms`));
         }, timeoutMs);
       }),
     ]);
@@ -188,11 +188,11 @@ class HuggingFaceService {
 
   async _makeRequest(systemPrompt, userPrompt) {
     if (!this._isEnabled()) {
-      throw new Error("Hugging Face service is disabled");
+      throw new Error("AI provider service is disabled");
     }
 
     if (this._isCircuitOpen()) {
-      throw new Error("Hugging Face service circuit breaker is open");
+      throw new Error("AI provider service circuit breaker is open");
     }
 
     const totalAttempts = Math.max(1, (this.config.maxRetries || 0) + 1);
@@ -220,7 +220,7 @@ class HuggingFaceService {
       }
     }
 
-    throw new Error("Hugging Face request failed unexpectedly");
+    throw new Error("AI provider request failed unexpectedly");
   }
 
   _extractJsonFromResponse(text) {

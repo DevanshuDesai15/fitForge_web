@@ -35,6 +35,7 @@ export const normalizeExerciseCatalogRow = (row) => {
 };
 
 const sanitizeSearchTerm = (value) => String(value || '').replace(/[,%()]/g, ' ').trim();
+const isUuid = (value) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 
 export const fetchExerciseCatalogList = async (
   supabase,
@@ -74,10 +75,11 @@ export const fetchAllExerciseCatalog = async (supabase, { pageSize = 1000 } = {}
 
 export const fetchExerciseCatalogById = async (supabase, exerciseId) => {
   if (!supabase || !exerciseId) return null;
+  const lookupColumn = isUuid(exerciseId) ? 'id' : 'name';
   const { data, error } = await supabase
     .from('exercises')
     .select('*')
-    .eq('id', exerciseId)
+    .eq(lookupColumn, exerciseId)
     .maybeSingle();
 
   if (error) throw error;
