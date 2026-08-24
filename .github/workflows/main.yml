@@ -27,3 +27,8 @@ jobs:
       - name: Run tests
         run: npm run test
 
+      - name: Run TypeScript checks
+        run: npm run typecheck
+
+      - name: Build web application
+        run: npm run build:web

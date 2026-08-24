@@ -121,12 +121,25 @@ CLERK_AUTHORIZED_PARTIES=http://localhost:5173,https://your-domain.example
 
 `CLERK_AUTHORIZED_PARTIES` must include every origin allowed to call the endpoint. The API rejects unauthenticated requests and supports only its fixed `chat` and `embedding` operations.
 
+## Workspace commands
+
+```bash
+npm ci
+npm run dev:web
+npm run dev:mobile
+npm run lint
+npm run test
+npm run typecheck
+npm run build:web
+```
+
 ## Development commands
 
 | Command | Purpose |
 |---|---|
-| `npm run dev` | Start the Vite development server |
-| `npm run build` | Create the production bundle in `dist/` |
+| `npm run dev` | Start the Vite web development server |
+| `npm run dev:mobile` | Start Expo for a development build |
+| `npm run build` | Create the web production bundle in `apps/web/dist/` |
 | `npm run preview` | Preview the production bundle locally |
 | `npm run test` | Run the Vitest suite once |
 | `npm run test:watch` | Run Vitest in watch mode |
@@ -138,14 +151,10 @@ Pull requests targeting `main` run install, lint, and test checks through `.gith
 
 ```text
 api/                         Vercel server functions
+apps/web/                    Vite browser application
+apps/mobile/                 Expo Router mobile application
+packages/                    Platform-neutral TypeScript packages
 scripts/                     Maintenance and exercise-import scripts
-src/
-  components/                Shared and feature UI
-  contexts/                  Authentication and unit preferences
-  hooks/                     Supabase and TanStack Query hooks
-  pages/                     Route-level features
-  services/                  Data repositories, analytics, and AI services
-  utils/                     Pure utilities and browser integrations
 supabase/
   functions/                 Supabase Edge Functions
   migrations/                Ordered schema and RLS migrations

@@ -1,7 +1,7 @@
 import {
   buildExerciseSearchQuery,
   toVectorLiteral,
-} from "../../scripts/lib/exerciseMigration.js";
+} from "../../../../scripts/lib/exerciseMigration.js";
 import aiApiClient from "./aiApiClient";
 
 class ExerciseVectorSearchService {
