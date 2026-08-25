@@ -1,0 +1,44 @@
+<h2>Welcome carousel correction</h2>
+<p class="subtitle">All three keep your approved copy and colors. The difference is how faithfully and maintainably the slide visuals are reproduced.</p>
+
+<div class="cards">
+  <div class="card" data-choice="native-faithful" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f0f10;padding:18px;color:#f4f4f5;min-height:390px;border-radius:16px;display:flex;flex-direction:column;font-family:Arial,sans-serif">
+      <div style="padding-top:16px;display:flex;justify-content:space-between;align-items:center">
+        <div style="color:#dff43b;font-weight:900;font-size:17px">⬡ FITFORGE</div><div style="color:#a1a1aa">Skip</div>
+      </div>
+      <div style="flex:1;display:flex;align-items:center">
+        <div style="width:100%;border:1px solid #333;border-radius:12px;padding:14px;background:#19191b">
+          <div style="display:flex;justify-content:space-between"><strong>Bench Press</strong><small style="color:#71717a">SET 3 / 4</small></div>
+          <div style="margin-top:13px;border-radius:8px;background:#252529;padding:10px">✓ 80 kg × 10</div>
+          <div style="margin-top:7px;border-radius:8px;background:#252529;padding:10px">✓ 80 kg × 9</div>
+          <div style="margin-top:7px;border-radius:8px;background:#252529;padding:10px">3 &nbsp; 82.5 kg × 8</div>
+        </div>
+      </div>
+      <small style="color:#dff43b">01 / 03 · LOG IT LIVE</small><h3 style="color:#fff;margin:10px 0 6px;font-size:28px">Every set. On the record.</h3>
+      <p style="color:#a1a1aa;margin:0 0 18px">Real native SetRow components, exactly like the kit.</p>
+      <div style="display:flex;gap:7px;justify-content:center"><i style="width:26px;height:7px;border-radius:4px;background:#dff43b"></i><i style="width:7px;height:7px;border-radius:4px;background:#444"></i><i style="width:7px;height:7px;border-radius:4px;background:#444"></i></div>
+    </div>
+    <div class="card-body"><h3>A · Native and design-faithful (recommended)</h3><p>Use the real SVG logo, SetRow/AISuggestionCard/Heatmap components, a paged horizontal FlatList, and animated pill dots. Closest to the source while remaining responsive and accessible.</p></div>
+  </div>
+
+  <div class="card" data-choice="raster" onclick="toggleSelect(this)">
+    <div class="card-image"><div class="placeholder" style="min-height:390px;display:flex;align-items:center;justify-content:center">One full-screen exported image per slide</div></div>
+    <div class="card-body"><h3>B · Raster screenshots</h3><p>Pixel-identical at one phone size, but text, spacing, accessibility, and future design-system changes would not adapt cleanly.</p></div>
+  </div>
+
+  <div class="card" data-choice="hybrid" onclick="toggleSelect(this)">
+    <div class="card-image"><div class="placeholder" style="min-height:390px;display:flex;align-items:center;justify-content:center">Native header/copy + static visual image</div></div>
+    <div class="card-body"><h3>C · Hybrid</h3><p>Keep navigation and copy native but use exported images for the product previews. Easier initially, but duplicates visuals already available as native components.</p></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Verified against your mobile kit</h3>
+  <ul>
+    <li>The logo asset already exists: <code>designSystem/assets/appLogo.svg</code>.</li>
+    <li>The three “screenshots” are not missing image files; the kit builds them from real SetRow, AISuggestionCard, and Heatmap components.</li>
+    <li>The source specifies 18px top padding, plus the iPhone safe area; the current native screen does not account for the safe area.</li>
+    <li>The source uses swipe navigation and 26×7 active / 7×7 inactive dots—not numbered buttons.</li>
+  </ul>
+</div>

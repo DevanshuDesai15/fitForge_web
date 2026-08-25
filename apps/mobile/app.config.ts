@@ -10,7 +10,7 @@ const config: ExpoConfig = {
   runtimeVersion: { policy: 'appVersion' },
   ios: { bundleIdentifier: 'com.devanshudesai.fitforge' },
   android: { package: 'com.devanshudesai.fitforge' },
-  plugins: ['expo-router', 'expo-secure-store', 'expo-sqlite'],
+  plugins: ['expo-router', 'expo-secure-store', 'expo-sqlite', '@clerk/expo'],
   experiments: { typedRoutes: true },
 };
 

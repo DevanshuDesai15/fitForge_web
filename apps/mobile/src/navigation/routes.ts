@@ -11,6 +11,7 @@ export const routes = {
   signIn: '/sign-in' as Href,
   signUp: '/sign-up' as Href,
   verification: '/verification' as Href,
+  oauthCallback: '/oauth-callback' as Href,
   setup: '/setup' as Href,
   home: '/home' as Href,
   workouts: '/workouts' as Href,
