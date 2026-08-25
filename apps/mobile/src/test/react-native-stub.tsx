@@ -15,6 +15,7 @@ export const Text = host('Text');
 export const Pressable = host('Pressable');
 export const TextInput = host('TextInput');
 export const ScrollView = host('ScrollView');
+export const KeyboardAvoidingView = host('KeyboardAvoidingView');
 export const ActivityIndicator = host('ActivityIndicator');
 export const Modal = ({ visible, children, ...props }: HostProps & { visible?: boolean }) =>
   visible ? React.createElement('Modal', props, children) : null;
@@ -29,3 +30,4 @@ export const Platform = {
   OS: 'ios',
   select: <T,>(options: { ios?: T; default?: T }): T | undefined => options.ios ?? options.default,
 };
+export const useWindowDimensions = () => ({ width: 390, height: 844, scale: 3, fontScale: 1 });

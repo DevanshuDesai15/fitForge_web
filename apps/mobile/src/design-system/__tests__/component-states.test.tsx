@@ -1,6 +1,6 @@
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { describe, expect, it, vi } from 'vitest';
-import { AISuggestionCard, Alert, BottomNav, Dialog, ProgressRing, SetRow, Tabs } from '..';
+import { AISuggestionCard, Alert, BottomNav, Dialog, Heatmap, ProgressRing, SetRow, Tabs } from '..';
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean; __DEV__: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 (globalThis as typeof globalThis & { __DEV__: boolean }).__DEV__ = true;
@@ -44,6 +44,20 @@ describe('design-system component states', () => {
     expect(checkbox.props.accessibilityState).toMatchObject({ checked: true });
     act(() => checkbox.props.onPress());
     expect(complete).toHaveBeenCalledOnce();
+    expect(renderer.root.findAllByType('TextInput' as never)).toHaveLength(0);
+    const completionStyles = Array.isArray(checkbox.props.style) ? checkbox.props.style.flat().filter(Boolean) : [checkbox.props.style];
+    expect(completionStyles).toContainEqual(expect.objectContaining({ width: 44, height: 22 }));
+  });
+
+  it('renders the fluid activity heatmap with registered day and month axes', () => {
+    const renderer = render(<Heatmap year={2026} values={Array.from({ length: 371 }, (_, index) => index % 3 ? 0 : 1)} months={[{ label: 'Sep', weekIndex: 0 }, { label: 'Aug', weekIndex: 48 }]} totalWorkouts={124} workoutDays={365} fluid />);
+    const output = JSON.stringify(renderer.toJSON());
+    expect(output).toContain('2026 Workout Activity');
+    expect(output).toContain('124 workouts in 365 days');
+    expect(output).toContain('Less');
+    expect(output).toContain('More');
+    expect(output).toContain('Sep');
+    expect(output).toContain('Aug');
   });
 
   it('uses both configured endpoints in the progress-ring gradient', () => {

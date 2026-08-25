@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import * as system from '..';
+import { iconRegistry } from '../icon/icons';
 
 const expected = [
   'AddRow', 'Badge', 'Button', 'Card', 'Chip', 'IconButton', 'SelectableRow', 'StatCard',
@@ -13,5 +14,9 @@ describe('native design-system exports', () => {
     expect(expected).toHaveLength(29);
     const exportedNames = Object.keys(system);
     for (const name of expected) expect(exportedNames).toContain(name);
+  });
+
+  it('provides the auth header back-arrow icon', () => {
+    expect(iconRegistry['arrow-left']).toBeDefined();
   });
 });

@@ -12,6 +12,7 @@ export default defineConfig({
       { find: /^@clerk\/expo$/, replacement: new URL('./src/test/clerk-stub.tsx', import.meta.url).pathname },
       { find: /^expo-auth-session$/, replacement: new URL('./src/test/auth-session-stub.ts', import.meta.url).pathname },
       { find: /^expo-web-browser$/, replacement: new URL('./src/test/web-browser-stub.ts', import.meta.url).pathname },
+      { find: /^expo-router$/, replacement: new URL('./src/test/expo-router-stub.tsx', import.meta.url).pathname },
     ],
   },
   test: {
