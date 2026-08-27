@@ -31,7 +31,9 @@ export default function Layout({ children }) {
                     width: isDesktop ? `calc(100% - ${sidebarWidth}px)` : '100%',
                     marginLeft: isDesktop ? `${sidebarWidth}px` : 0,
                     paddingTop: 0,
-                    paddingBottom: isDesktop ? 0 : '80px', // Space for bottom nav on mobile
+                    paddingBottom: isDesktop
+                        ? 0
+                        : 'calc(var(--ff-mobile-nav-height, 88px) + env(safe-area-inset-bottom) + 24px)',
                     transition: theme.transitions.create(['margin', 'width'], {
                         easing: theme.transitions.easing.sharp,
                         duration: theme.transitions.duration.standard,

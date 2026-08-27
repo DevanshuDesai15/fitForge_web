@@ -28,30 +28,30 @@ describe('Navigation', () => {
     useMediaQueryMock.mockReturnValue(false);
   });
 
-  it('renders the centered logo as the mobile home action and keeps four nav items around it', () => {
+  it('renders four primary destinations around a centered start workout action', () => {
     render(
       <MemoryRouter initialEntries={['/workout']}>
         <Navigation />
       </MemoryRouter>
     );
 
-    expect(screen.queryByText('Home')).not.toBeInTheDocument();
+    expect(screen.getByText('Home')).toBeInTheDocument();
     expect(screen.getByText('Workout')).toBeInTheDocument();
     expect(screen.getByText('History')).toBeInTheDocument();
     expect(screen.getByText('Progress')).toBeInTheDocument();
-    expect(screen.getByText('Profile')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /go to home/i })).toBeInTheDocument();
+    expect(screen.queryByText('Profile')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /start workout/i })).toBeInTheDocument();
   });
 
-  it('navigates home when the centered logo is pressed on mobile', () => {
+  it('navigates to the active workout when the centered action is pressed', () => {
     render(
       <MemoryRouter initialEntries={['/progress']}>
         <Navigation />
       </MemoryRouter>
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /go to home/i }));
+    fireEvent.click(screen.getByRole('button', { name: /start workout/i }));
 
-    expect(navigateMock).toHaveBeenCalledWith('/');
+    expect(navigateMock).toHaveBeenCalledWith('/workout/start');
   });
 });

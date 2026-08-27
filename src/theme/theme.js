@@ -111,6 +111,17 @@ const colors = {
 };
 
 export const theme = createTheme({
+  fitforge: {
+    mobile: {
+      navHeight: 88,
+      contentMaxWidth: 920,
+      phoneGutter: 16,
+      tabletGutter: 28,
+    },
+    radius: { sm: 10, md: 14, lg: 18, pill: 999 },
+    surface: { canvas: "#121212", card: "#282828", raised: "#3f3f3f" },
+    border: { main: "rgba(255,255,255,0.08)", strong: "rgba(255,255,255,0.16)" },
+  },
   palette: {
     mode: "dark",
     primary: colors.primary,

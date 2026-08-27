@@ -16,6 +16,7 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import appLogo from '../../assets/appLogo.svg';
 import shortLogo from '../../assets/shortLogo.svg';
+import MobileBottomNav from '../mobile/MobileBottomNav';
 import {
     Dumbbell as MdFitnessCenter,
     History as MdHistory,
@@ -90,6 +91,10 @@ export default function Navigation() {
             icon: MdPerson,
         },
     ];
+
+    if (!isDesktop) {
+        return <MobileBottomNav onStart={() => handleSidebarItemClick('/workout/start')} />;
+    }
 
     if (isDesktop) {
         // Desktop Sidebar Navigation
