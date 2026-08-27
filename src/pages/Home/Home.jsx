@@ -26,12 +26,12 @@ import QuickAddExerciseModal from '../../components/workout/QuickAddExerciseModa
 
 // Components
 import AIUnlockProgress from './components/AIUnlockProgress';
-import WelcomeModal from './components/WelcomeModal';
 import TodaysFocusCard from './components/TodaysFocusCard';
 import WeeklyStatsGrid from './components/WeeklyStatsGrid';
 import RecentAchievementsList from './components/RecentAchievementsList';
 import QuickActionsGrid from './components/QuickActionsGrid';
 import WeeklyTargetsGrid from './components/WeeklyTargetsGrid';
+import MobileHome from './components/MobileHome';
 import { deriveHomeFocus } from './utils/homeFocus';
 
 
@@ -122,7 +122,6 @@ export default function Home() {
     const [aiLoading, setAiLoading] = useState(false);
     const [aiError, setAiError] = useState('');
     const [quickAddModalOpen, setQuickAddModalOpen] = useState(false);
-    const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(true);
     const [greeting, setGreeting] = useState(getDynamicGreeting);
 
     const { currentUser } = useAuth();
@@ -250,40 +249,21 @@ export default function Home() {
         return () => clearInterval(interval);
     }, []);
 
-    useEffect(() => {
-        if (!isWelcomeModalOpen) {
-            return undefined;
-        }
-
-        const previousOverflow = document.body.style.overflow;
-        document.body.style.overflow = 'hidden';
-
-        return () => {
-            document.body.style.overflow = previousOverflow;
-        };
-    }, [isWelcomeModalOpen]);
-
     const displayName = profile?.display_name || currentUser?.email?.split('@')[0] || 'Member';
 
     const isLoading = statsLoading || profileLoading;
+    const mobileRecommendations = aiRecommendations.map((recommendation) => ({
+        ...recommendation,
+        title: getRecommendationTitle(recommendation),
+        description: getRecommendationDescription(recommendation),
+    }));
 
     return (
         <Box sx={{
             minHeight: '100vh',
             background: '#121212',
         }}>
-            {isWelcomeModalOpen ? (
-                <WelcomeModal
-                    greeting={greeting}
-                    displayName={displayName}
-                    streakDays={safeWeeklyStats.streakDays}
-                    onClose={() => setIsWelcomeModalOpen(false)}
-                    onLogWorkout={() => setQuickAddModalOpen(true)}
-                    onStartTraining={() => navigate('/workout')}
-                />
-            ) : null}
-
-            <Box sx={{
+            {isDesktop ? <Box sx={{
                 maxWidth: '1400px',
                 margin: '0 auto',
                 padding: isDesktop ? '0 3rem 2rem 3rem' : '0 1rem 1rem 1rem',
@@ -295,7 +275,7 @@ export default function Home() {
                 )}
 
                 {/* Weekly Targets (Prominently displayed) */}
-                <Box sx={{ mb: 4, mt: isWelcomeModalOpen ? { xs: 2.5, md: 1.5 } : { xs: 5, md: 4 } }}>
+                <Box sx={{ mb: 4, mt: { xs: 2.5, md: 4 } }}>
                     <Typography variant="h5" sx={{ color: 'text.primary', fontWeight: 'bold', mb: 2 }}>
                         Weekly Targets
                     </Typography>
@@ -536,7 +516,29 @@ export default function Home() {
                         </Card>
                     </Grid>
                 </Grid>
-            </Box>
+            </Box> : (
+                <MobileHome
+                    data={{
+                        displayName,
+                        avatarUrl: profile?.avatar_url || currentUser?.photoURL,
+                        greeting: greeting.text,
+                        weeklyStats: safeWeeklyStats,
+                        achievements: recentAchievements || [],
+                        aiRecommendations: mobileRecommendations,
+                        completedWorkoutsCount,
+                        workoutsUntilAiUnlock,
+                        isAiUnlocked,
+                    }}
+                    state={{ loading: isLoading, error: statsError, aiLoading, aiError }}
+                    actions={{
+                        onOpenProfile: () => navigate('/profile'),
+                        onRetry: refetchStats,
+                        onQuickWorkout: () => navigate('/workout/start'),
+                        onLogActivity: () => setQuickAddModalOpen(true),
+                        onSetGoal: () => navigate('/progress'),
+                    }}
+                />
+            )}
 
             {/* Quick Add Exercise Modal */}
             <QuickAddExerciseModal

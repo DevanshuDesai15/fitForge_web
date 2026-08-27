@@ -5,7 +5,7 @@ import { Box, IconButton, Typography } from '@mui/material';
 export default function MobileScreen({ children, title, subtitle, backAction, headerAction, sx }) {
   return (
     <Box sx={{ minHeight: '100%', backgroundColor: 'background.default' }}>
-      <Box sx={{ width: '100%', maxWidth: 920, mx: 'auto', px: { xs: 2, sm: 3.5 }, pt: { xs: 2.5, sm: 3.5 }, pb: 3, ...sx }}>
+      <Box sx={{ boxSizing: 'border-box', width: '100%', maxWidth: 920, mx: 'auto', px: { xs: 2, sm: 3.5 }, pt: { xs: 2.5, sm: 3.5 }, pb: 3, ...sx }}>
         {title || backAction || headerAction ? (
           <Box component="header" sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: 3 }}>
             {backAction ? (
