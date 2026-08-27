@@ -9,6 +9,8 @@ export default defineConfig({
       { find: /^react-native-svg$/, replacement: new URL('./src/test/svg-stub.tsx', import.meta.url).pathname },
       { find: /^react-native-safe-area-context$/, replacement: new URL('./src/test/safe-area-stub.tsx', import.meta.url).pathname },
       { find: /^expo-secure-store$/, replacement: new URL('./src/test/secure-store-stub.ts', import.meta.url).pathname },
+      { find: /^expo-crypto$/, replacement: new URL('./src/test/crypto-stub.ts', import.meta.url).pathname },
+      { find: /^@react-native-community\/netinfo$/, replacement: new URL('./src/test/netinfo-stub.ts', import.meta.url).pathname },
       { find: /^@clerk\/expo$/, replacement: new URL('./src/test/clerk-stub.tsx', import.meta.url).pathname },
       { find: /^expo-auth-session$/, replacement: new URL('./src/test/auth-session-stub.ts', import.meta.url).pathname },
       { find: /^expo-web-browser$/, replacement: new URL('./src/test/web-browser-stub.ts', import.meta.url).pathname },

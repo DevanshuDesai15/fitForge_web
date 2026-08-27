@@ -30,4 +30,5 @@ export const Platform = {
   OS: 'ios',
   select: <T,>(options: { ios?: T; default?: T }): T | undefined => options.ios ?? options.default,
 };
+export const AppState = { addEventListener: () => ({ remove: () => undefined }) };
 export const useWindowDimensions = () => ({ width: 390, height: 844, scale: 3, fontScale: 1 });

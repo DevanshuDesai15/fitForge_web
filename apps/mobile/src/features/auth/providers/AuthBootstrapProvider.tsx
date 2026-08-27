@@ -6,6 +6,7 @@ import type { ProfileResolution } from '../model/auth-policy';
 import { partitionStore } from '../services/partition-store';
 import { createMobileSupabaseClient } from '../services/supabase';
 import { profileIsOnboarded, resolveProfile, type MobileProfile } from '../services/profile-repository';
+import { profileCache } from '../services/profile-cache';
 
 type BootstrapValue = {
   clerkLoaded: boolean;
@@ -39,11 +40,18 @@ export function AuthBootstrapProvider({ children }: { children: ReactNode }) {
           email: user.primaryEmailAddress?.emailAddress ?? null,
           displayName: user.fullName ?? user.firstName ?? null,
         });
+        await profileCache.set(userId, resolved).catch(() => undefined);
         if (!active) return;
         setResolution({ userId, profile: resolved, error: null, status: profileIsOnboarded(resolved) ? 'complete' : 'incomplete' });
       } catch (error) {
         if (!active) return;
-        setResolution({ userId, profile: null, error: error instanceof Error ? error.message : 'Unable to resolve your FitForge profile.', status: 'error' });
+        const cached = await profileCache.get(userId).catch(() => null);
+        if (!active) return;
+        if (cached) {
+          setResolution({ userId, profile: cached, error: null, status: profileIsOnboarded(cached) ? 'complete' : 'incomplete' });
+        } else {
+          setResolution({ userId, profile: null, error: error instanceof Error ? error.message : 'Unable to resolve your FitForge profile.', status: 'error' });
+        }
       }
     })();
     return () => { active = false; };

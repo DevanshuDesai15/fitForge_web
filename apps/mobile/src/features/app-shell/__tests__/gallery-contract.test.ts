@@ -7,5 +7,6 @@ describe('development gallery contract', () => {
     for (const heading of ['Core', 'Data', 'Feedback', 'Forms', 'Navigation', 'Workout', 'Authentication & onboarding', 'pending local changes', 'Disabled', 'Loading', 'Error', 'Empty', 'Dialog', 'Sheet']) {
       expect(source).toContain(heading);
     }
+    for (const syncState of ['Pending', 'Syncing', 'Retryable', 'Blocked auth', 'Permanent failure', 'Synchronized']) expect(source).toContain(syncState);
   });
 });

@@ -13,6 +13,7 @@
     "@fitforge/domain": "0.0.0",
     "@fitforge/types": "0.0.0",
     "@fitforge/validation": "0.0.0",
+    "@react-native-community/netinfo": "12.0.1",
     "@supabase/supabase-js": "^2.112.4",
     "expo": "~57.0.16",
     "expo-auth-session": "~57.0.9",
