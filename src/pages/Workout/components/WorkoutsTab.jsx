@@ -118,7 +118,7 @@ CustomTooltip.propTypes = {
     label: PropTypes.string
 };
 
-const WorkoutsTab = () => {
+const WorkoutsTab = ({ initialSubTab = 0, hideSubTabs = false }) => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
     const supabase = useSupabase();
@@ -128,7 +128,7 @@ const WorkoutsTab = () => {
     const { createTemplate, createProgram, deleteTemplate, deleteProgram } = useWorkoutMutations();
     const { workoutStarted, exercises, clearWorkoutState } = useWorkoutState();
 
-    const [activeSubTab, setActiveSubTab] = useState(0); // 0 = Quick Start, 1 = Programs
+    const [activeSubTab, setActiveSubTab] = useState(initialSubTab); // 0 = Quick Start, 1 = Programs
     const [recommendedWorkouts, setRecommendedWorkouts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -550,7 +550,7 @@ const WorkoutsTab = () => {
     return (
         <Box>
             {/* Sub-Tab Navigation */}
-            <Box sx={{
+            {!hideSubTabs && <Box sx={{
                 mb: 4,
                 display: 'flex',
                 justifyContent: { xs: 'center', sm: 'flex-start' },
@@ -582,7 +582,7 @@ const WorkoutsTab = () => {
                         Programs
                     </TabButton>
                 </Box>
-            </Box>
+            </Box>}
 
             {/* Quick Start Content */}
             {activeSubTab === 0 && (
@@ -1729,6 +1729,11 @@ const WorkoutsTab = () => {
             />
         </Box>
     );
+};
+
+WorkoutsTab.propTypes = {
+    initialSubTab: PropTypes.oneOf([0, 1]),
+    hideSubTabs: PropTypes.bool,
 };
 
 export default WorkoutsTab;

@@ -148,6 +148,8 @@ const GlowingButton = styled(Button)(({ theme }) => ({
 export default function LandingPage() {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    // Phones and tablets enter through the app's welcome carousel; desktop keeps Clerk's sign in / sign up.
+    const entersApp = useMediaQuery(theme.breakpoints.down('lg'));
     const navigate = useNavigate();
     const { currentUser } = useAuth();
     const rootRef = useRef(null);
@@ -226,7 +228,7 @@ export default function LandingPage() {
         if (currentUser) {
             navigate('/');
         } else {
-            navigate('/signup');
+            navigate(entersApp ? '/welcome' : '/signup');
         }
     };
 
@@ -513,6 +515,17 @@ export default function LandingPage() {
                                 >
                                     Go to App
                                 </Button>
+                            ) : entersApp ? (
+                                <Button
+                                    variant="outlined"
+                                    onClick={handleGetStarted}
+                                    sx={{
+                                        borderColor: theme.palette.primary.main,
+                                        color: theme.palette.primary.main
+                                    }}
+                                >
+                                    Go to App
+                                </Button>
                             ) : (
                                 <>
                                     <Button
@@ -597,7 +610,7 @@ export default function LandingPage() {
                                     <GlowingButton size="large" endIcon={<MdArrowForward />} onClick={handleGetStarted}>
                                         {currentUser ? 'Open FitForge' : 'Start Transforming'}
                                     </GlowingButton>
-                                    {!currentUser && (
+                                    {!currentUser && !entersApp && (
                                         <Button
                                             variant="text"
                                             onClick={handleSignIn}

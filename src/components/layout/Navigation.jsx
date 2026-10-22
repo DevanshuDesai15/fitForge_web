@@ -16,6 +16,8 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import appLogo from '../../assets/appLogo.svg';
 import shortLogo from '../../assets/shortLogo.svg';
+import MobileBottomNav from '../mobile/MobileBottomNav';
+import StartWorkoutSheet from './StartWorkoutSheet';
 import {
     Dumbbell as MdFitnessCenter,
     History as MdHistory,
@@ -28,6 +30,7 @@ export default function Navigation() {
     const location = useLocation();
     const theme = useTheme();
     const [value, setValue] = useState('/');
+    const [startOpen, setStartOpen] = useState(false);
     const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
 
     const sidebarWidth = 280;
@@ -90,6 +93,15 @@ export default function Navigation() {
             icon: MdPerson,
         },
     ];
+
+    if (!isDesktop) {
+        return (
+            <>
+                <MobileBottomNav onStart={() => setStartOpen(true)} />
+                {startOpen && <StartWorkoutSheet onClose={() => setStartOpen(false)} />}
+            </>
+        );
+    }
 
     if (isDesktop) {
         // Desktop Sidebar Navigation

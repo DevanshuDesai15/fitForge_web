@@ -23,6 +23,8 @@ export default defineConfig(({ mode }) => {
       environment: 'jsdom',
       setupFiles: './src/test/setup.js',
       globals: true,
+      // CI runners are slow; MUI-heavy screen tests exceed the 5s default there.
+      testTimeout: 20000,
       // Node 25+ exposes its own Web Storage global. Disable it in test
       // workers so jsdom remains the browser-storage implementation.
       execArgv: nodeMajorVersion >= 25 ? ['--no-experimental-webstorage'] : [],

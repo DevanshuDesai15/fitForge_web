@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildProfileUpdatePayload,
   getProfileNotifications,
+  getWorkoutPreferences,
   mapProfileToUserData,
 } from '../profileData';
 
@@ -125,5 +126,17 @@ describe('profileData', () => {
       achievements: true,
       aiRecommendations: true,
     });
+  });
+});
+
+describe('getWorkoutPreferences', () => {
+  it('defaults to screen awake, no rest alerts and a goal of 4', () => {
+    expect(getWorkoutPreferences(null)).toEqual({ keepScreenAwake: true, restTimerAlerts: false, weeklyGoal: 4 });
+  });
+
+  it('uses saved values and falls back when the goal is invalid', () => {
+    expect(getWorkoutPreferences({ preferences: { keepScreenAwake: false, restTimerAlerts: true, weeklyGoal: 5 } }))
+      .toEqual({ keepScreenAwake: false, restTimerAlerts: true, weeklyGoal: 5 });
+    expect(getWorkoutPreferences({ preferences: { weeklyGoal: 'x' } }).weeklyGoal).toBe(4);
   });
 });

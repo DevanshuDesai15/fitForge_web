@@ -1,8 +1,11 @@
+import { useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSupabase } from "./useSupabase";
 import { useAuth } from "../contexts/AuthContext";
+import { useWorkoutPreferences } from "./useWorkoutPreferences";
 import { listWorkouts } from "../services/workoutRepository";
 import { fetchExerciseMuscleMapByNames } from "../services/exerciseCatalogService";
+import { deriveNextProgramWorkout } from "../pages/Home/utils/nextProgramWorkout";
 
 function getDashboardWeekStart(now = new Date()) {
   const start = new Date(now);
@@ -32,6 +35,7 @@ export function isWorkoutInDashboardWeek(workout, now = new Date()) {
 export function useDashboardStats() {
   const supabase = useSupabase();
   const { currentUser } = useAuth();
+  const { weeklyGoal } = useWorkoutPreferences();
 
   return useQuery({
     queryKey: ["dashboard_stats", currentUser?.uid, getDashboardWeekKey()],
@@ -39,9 +43,13 @@ export function useDashboardStats() {
       if (!currentUser?.uid) return null;
 
       // Parallel fetch for core dashboard building blocks
-      const [programsResult, workoutsResult] = await Promise.all([
+      const [programsResult, templatesResult, workoutsResult] = await Promise.all([
         supabase
           .from("workout_programs")
+          .select("*")
+          .eq("user_id", currentUser.uid),
+        supabase
+          .from("workout_templates")
           .select("*")
           .eq("user_id", currentUser.uid),
         listWorkouts({
@@ -53,6 +61,7 @@ export function useDashboardStats() {
       ]);
 
       if (programsResult.error) throw programsResult.error;
+      if (templatesResult.error) throw templatesResult.error;
       const userPrograms = programsResult.data;
       const completedWorkouts = workoutsResult;
 
@@ -142,7 +151,6 @@ export function useDashboardStats() {
       }
 
       // Next Workout Logic (Ported from Home.jsx)
-      let nextWorkout = null;
       let isTomorrowFocus = false;
       const lastRepeatableWorkout =
         completedWorkouts.find(
@@ -154,58 +162,19 @@ export function useDashboardStats() {
       const workedOutToday = uniqueDates.has(new Date().toDateString());
       isTomorrowFocus = workedOutToday;
 
-      if (userPrograms.length > 0) {
-        const program = userPrograms[0]; // Logic matches Home.jsx legacy
-        if (program.schedule && Array.isArray(program.schedule)) {
-          const programWorkouts = completedWorkouts.filter(
-            (w) => w.program_id === program.id,
-          );
-
-          if (programWorkouts.length === 0) {
-            nextWorkout = program.schedule[0];
-          } else {
-            // Anchor to the most recently completed program day (workouts sorted desc)
-            const completedDayNames = new Set(
-              programWorkouts.map((w) => w.day_name),
-            );
-            const lastDayName = programWorkouts[0].day_name;
-            const lastIndex = program.schedule.findIndex(
-              (d) => d.name === lastDayName,
-            );
-            const startIndex = lastIndex === -1 ? 0 : lastIndex;
-            const len = program.schedule.length;
-
-            // Scan forward from last completed, skip already-done days
-            let candidate = null;
-            for (let i = 1; i <= len; i++) {
-              const idx = (startIndex + i) % len;
-              if (!completedDayNames.has(program.schedule[idx].name)) {
-                candidate = program.schedule[idx];
-                break;
-              }
-            }
-
-            // All days done → new cycle, advance one from last
-            nextWorkout =
-              candidate || program.schedule[(startIndex + 1) % len];
-          }
-
-          if (nextWorkout) {
-            nextWorkout = {
-              ...nextWorkout,
-              programName: program.name,
-              programId: program.id,
-            };
-          }
-        }
-      }
+      // The day after the last program day the user trained, in the program's order.
+      const nextWorkout = deriveNextProgramWorkout({
+        programs: userPrograms,
+        templates: templatesResult.data || [],
+        workouts: completedWorkouts,
+      });
 
       return {
         weeklyStats: {
           totalVolume: Math.round(weeklyVolume),
           volumeUnit: "kg",
-          goalProgress: (weeklyWorkouts / 4) * 100, // Target is 4
-          goalText: `${weeklyWorkouts}/4`,
+          goalProgress: 0,
+          goalText: '',
           streakDays: streakCount,
           workoutsDone: weeklyWorkouts,
           activeMinutes: Math.round(weeklyMinutes / 60),
@@ -222,5 +191,14 @@ export function useDashboardStats() {
     enabled: !!currentUser?.uid,
     staleTime: 1000 * 60 * 2, // 2 minutes
     refetchInterval: 1000 * 60, // Refresh data and roll over promptly at a new week.
+    // The goal is a preference, so applying it here avoids refetching when it changes.
+    select: useCallback((stats) => {
+      if (!stats?.weeklyStats) return stats;
+      const done = stats.weeklyStats.workoutsDone;
+      return {
+        ...stats,
+        weeklyStats: { ...stats.weeklyStats, goalProgress: (done / weeklyGoal) * 100, goalText: `${done}/${weeklyGoal}`, weeklyGoal },
+      };
+    }, [weeklyGoal]),
   });
 }

@@ -35,11 +35,11 @@ export const useWorkoutState = () => {
     [displayNow, timerState]
   );
 
-  const saveWorkoutState = useCallback(() => {
+  const persistWorkoutState = useCallback((timer) => {
     if (
       !workoutStarted ||
       !currentUser ||
-      timerState.timerStatus === TIMER_STATUS.IDLE
+      timer.timerStatus === TIMER_STATUS.IDLE
     ) {
       return false;
     }
@@ -50,9 +50,9 @@ export const useWorkoutState = () => {
       exercises,
       currentTemplate,
       selectedDay,
-      elapsedTime: timerState.elapsedTime,
-      timerStatus: timerState.timerStatus,
-      timerStartedAt: timerState.timerStartedAt,
+      elapsedTime: timer.elapsedTime,
+      timerStatus: timer.timerStatus,
+      timerStartedAt: timer.timerStartedAt,
       workoutStartTime,
       timestamp: Date.now(),
     };
@@ -63,10 +63,24 @@ export const useWorkoutState = () => {
     exercises,
     currentTemplate,
     selectedDay,
-    timerState,
     workoutStartTime,
     currentUser,
   ]);
+
+  const saveWorkoutState = useCallback(
+    () => persistWorkoutState(timerState),
+    [persistWorkoutState, timerState]
+  );
+
+  // "Save as incomplete": stop the clock and persist that stopped clock in the same step, so time
+  // spent away from the session is not counted when it is resumed.
+  const pauseAndSaveWorkoutState = useCallback(() => {
+    const now = Date.now();
+    const paused = pauseTimerState(timerState, now);
+    setTimerState(paused);
+    setDisplayNow(now);
+    return persistWorkoutState(paused);
+  }, [persistWorkoutState, timerState]);
 
   const restoreWorkoutState = useCallback(() => {
     const savedState = localStorage.getItem("workoutState");
@@ -194,6 +208,7 @@ export const useWorkoutState = () => {
     workoutStartTime,
     setWorkoutStartTime,
     saveWorkoutState,
+    pauseAndSaveWorkoutState,
     restoreWorkoutState,
     clearWorkoutState,
   };

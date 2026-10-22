@@ -161,8 +161,12 @@ export const useWorkoutPrograms = () => {
   useEffect(() => {
     if (!currentUser) return;
 
+    // Unique per mount: supabase-js caches channels by topic name, so a static name
+    // collides with the still-unsubscribing previous instance under React 18 StrictMode's
+    // mount/cleanup/mount dev cycle (or fast tab-switch remounts), and the reused channel
+    // rejects a new `.on()` because it already passed `subscribe()`.
     const subscription = supabase
-      .channel('workout_programs_changes')
+      .channel(`workout_programs_changes:${currentUser.uid}:${crypto.randomUUID()}`)
       .on(
         'postgres_changes',
         {

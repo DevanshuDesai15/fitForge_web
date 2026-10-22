@@ -164,7 +164,7 @@ const CircularTarget = ({
     );
 };
 
-export default function WeeklyTargetsGrid({ weeklyStats }) {
+export default function WeeklyTargetsGrid({ weeklyStats, mobileKit = false }) {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const {
@@ -214,8 +214,8 @@ export default function WeeklyTargetsGrid({ weeklyStats }) {
                         colorStart="#4a8af5"
                         colorEnd="#7bb8ff"
                         glowColor="#5c9cf6"
-                        size={isMobile ? 76 : 140}
-                        strokeWidth={isMobile ? 5 : 7}
+                        size={mobileKit || isMobile ? 76 : 140}
+                        strokeWidth={mobileKit || isMobile ? 5 : 7}
                     />
                 </Box>
 
@@ -225,11 +225,11 @@ export default function WeeklyTargetsGrid({ weeklyStats }) {
                         current={weeklySets.current}
                         target={weeklySets.target}
                         label="Sets"
-                        colorStart="#f5734a"
-                        colorEnd="#ffab76"
-                        glowColor="#f67c5c"
-                        size={isMobile ? 104 : 200}
-                        strokeWidth={isMobile ? 6 : 9}
+                        colorStart={mobileKit ? "#4a8af5" : "#f5734a"}
+                        colorEnd={mobileKit ? "#7bb8ff" : "#ffab76"}
+                        glowColor={mobileKit ? "#5c9cf6" : "#f67c5c"}
+                        size={mobileKit || isMobile ? 104 : 200}
+                        strokeWidth={mobileKit || isMobile ? 6 : 9}
                     />
                 </Box>
 
@@ -239,11 +239,11 @@ export default function WeeklyTargetsGrid({ weeklyStats }) {
                         current={uniqueExercises.current}
                         target={uniqueExercises.target}
                         label="Exercises"
-                        colorStart="#5cd8e8"
-                        colorEnd="#a0f0ff"
-                        glowColor="#78dce8"
-                        size={isMobile ? 76 : 140}
-                        strokeWidth={isMobile ? 5 : 7}
+                        colorStart={mobileKit ? "#4a8af5" : "#5cd8e8"}
+                        colorEnd={mobileKit ? "#7bb8ff" : "#a0f0ff"}
+                        glowColor={mobileKit ? "#5c9cf6" : "#78dce8"}
+                        size={mobileKit || isMobile ? 76 : 140}
+                        strokeWidth={mobileKit || isMobile ? 5 : 7}
                     />
                 </Box>
             </Box>

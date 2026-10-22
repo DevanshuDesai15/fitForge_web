@@ -1,9 +1,10 @@
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useMediaQuery, useTheme } from '@mui/material';
+import MobileAuth from './mobile/MobileAuth';
 import { SignUp as ClerkSignUp } from '@clerk/clerk-react';
 import logo from '../../../public/logo.svg';
 import signUpHero from '../../assets/image/Signup.png';
 
-export default function SignUp() {
+function DesktopSignUp() {
     return (
         <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: '#0A0A0A' }}>
             {/* Left Column: Auth Form */}
@@ -259,4 +260,11 @@ export default function SignUp() {
             </Box>
         </Box>
     );
+}
+
+// Phones and tablets get the Mobile Kit screens (Clerk behind them); desktop keeps Clerk's hosted form.
+export default function SignUp() {
+    const theme = useTheme();
+    const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
+    return isDesktop ? <DesktopSignUp /> : <MobileAuth start="signup" />;
 }
