@@ -162,7 +162,7 @@ function AccountSection({ userData, actions }) {
 
       <Dialog open={confirming} onClose={() => setConfirming(false)}>
         <DialogTitle>Sign out?</DialogTitle>
-        <DialogContent><DialogContentText>You&apos;ll need to sign in again to see your workouts.</DialogContentText></DialogContent>
+        <DialogContent><DialogContentText>Every logged set is already saved to your account. You&apos;ll need your password — or a code — to log anything new.</DialogContentText></DialogContent>
         <DialogActions>
           <Button onClick={() => setConfirming(false)}>Cancel</Button>
           <Button color="error" onClick={() => { setConfirming(false); onSignOut(); }}>Sign out</Button>

@@ -1,6 +1,6 @@
 import { ThemeProvider } from '@mui/material';
-import { render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { theme } from '../../theme/theme';
 import LandingPage from './LandingPage';
 
@@ -191,5 +191,47 @@ describe('LandingPage premium redesign', () => {
         );
         expect(matchMediaAddMock.mock.calls.length).toBeGreaterThanOrEqual(3);
         expect(matchMediaContext.current.revert).toBe(matchMediaRevertMock);
+    });
+
+    describe('entering the app', () => {
+        const phone = (matches) => {
+            window.matchMedia = vi.fn((query) => ({
+                matches,
+                media: query,
+                addEventListener: vi.fn(),
+                removeEventListener: vi.fn(),
+                addListener: vi.fn(),
+                removeListener: vi.fn()
+            }));
+        };
+
+        afterEach(() => {
+            delete window.matchMedia;
+        });
+
+        it('offers one "Go to App" button on phones, leading to the welcome carousel', () => {
+            phone(true);
+            renderLandingPage();
+
+            expect(screen.queryByRole('button', { name: /^sign in$/i })).not.toBeInTheDocument();
+            expect(screen.queryByRole('button', { name: /^sign up$/i })).not.toBeInTheDocument();
+            expect(screen.queryByRole('button', { name: /already training/i })).not.toBeInTheDocument();
+
+            fireEvent.click(screen.getByRole('button', { name: 'Go to App' }));
+            expect(navigateMock).toHaveBeenCalledWith('/welcome');
+            fireEvent.click(screen.getByRole('button', { name: /start transforming/i }));
+            expect(navigateMock).toHaveBeenLastCalledWith('/welcome');
+        });
+
+        it('keeps Sign In and Sign Up on desktop', () => {
+            phone(false);
+            renderLandingPage();
+
+            expect(screen.queryByRole('button', { name: 'Go to App' })).not.toBeInTheDocument();
+            fireEvent.click(screen.getByRole('button', { name: /^sign in$/i }));
+            expect(navigateMock).toHaveBeenCalledWith('/signin');
+            fireEvent.click(screen.getByRole('button', { name: /^sign up$/i }));
+            expect(navigateMock).toHaveBeenLastCalledWith('/signup');
+        });
     });
 });

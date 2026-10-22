@@ -1,6 +1,7 @@
 // App.jsx
 import { lazy, Suspense } from 'react';
 import {  Routes, Route, Navigate } from 'react-router-dom';
+import { AuthenticateWithRedirectCallback } from '@clerk/clerk-react';
 import { AuthProvider } from './contexts/AuthContext';
 import { UnitsProvider } from './contexts/UnitsContext';
 import { ThemeProvider } from '@mui/material';
@@ -19,6 +20,8 @@ const LandingPage = lazy(() => import('./pages/Landing/LandingPage'));
 const SignIn = lazy(() => import('./pages/Auth/SignIn'));
 const SignUp = lazy(() => import('./pages/Auth/SignUp'));
 const Profile = lazy(() => import('./pages/Profile'));
+const MobileAuth = lazy(() => import('./pages/Auth/mobile/MobileAuth'));
+const SetupWizard = lazy(() => import('./pages/Auth/mobile/SetupWizard'));
 const Workout = lazy(() => import('./components/Workout'));
 const HistoryPage = lazy(() => import('./pages/History/HistoryPage'));
 const Progress = lazy(() => import('./components/Progress'));
@@ -67,6 +70,23 @@ function App() {
                     <PublicRoute>
                       <SignUp />
                     </PublicRoute>
+                  } />
+
+                  {/* The landing page's "Go to App" on phones: welcome carousel, then sign in / sign up */}
+                  <Route path="/welcome" element={
+                    <PublicRoute>
+                      <MobileAuth start="welcome" />
+                    </PublicRoute>
+                  } />
+
+                  {/* Where Clerk lands after Google; finishes the sign-in and returns to / */}
+                  <Route path="/sso-callback" element={<AuthenticateWithRedirectCallback signInFallbackRedirectUrl="/" signUpFallbackRedirectUrl="/" />} />
+
+                  {/* First-run setup wizard (phones; DefaultRoute sends brand-new accounts here) */}
+                  <Route path="/setup" element={
+                    <ProtectedRoute>
+                      <SetupWizard />
+                    </ProtectedRoute>
                   } />
 
                   {/* Default route - smart routing based on auth status */}
