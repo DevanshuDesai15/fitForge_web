@@ -20,7 +20,7 @@ const SignIn = lazy(() => import('./pages/Auth/SignIn'));
 const SignUp = lazy(() => import('./pages/Auth/SignUp'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Workout = lazy(() => import('./components/Workout'));
-const ExerciseHistory = lazy(() => import('./pages/History/ExerciseHistory'));
+const HistoryPage = lazy(() => import('./pages/History/HistoryPage'));
 const Progress = lazy(() => import('./components/Progress'));
 const ExerciseManager = lazy(() => import('./components/workout/ExerciseManager'));
 const StartWorkout = lazy(() => import('./components/workout/StartWorkout'));
@@ -116,7 +116,7 @@ function App() {
                   <Route path="/history" element={
                     <ProtectedRoute>
                       <Layout>
-                        <ExerciseHistory />
+                        <HistoryPage />
                       </Layout>
                     </ProtectedRoute>
                   } />

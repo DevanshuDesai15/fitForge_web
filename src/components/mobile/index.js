@@ -1,4 +1,5 @@
 export { default as MobileBottomNav } from './MobileBottomNav';
+export { default as MobileHeatmap } from './MobileHeatmap';
 export { default as MobileHeroStat } from './MobileHeroStat';
 export { default as MobileScreen } from './MobileScreen';
 export { default as MobileSection } from './MobileSection';
