@@ -33,6 +33,7 @@ import QuickActionsGrid from './components/QuickActionsGrid';
 import WeeklyTargetsGrid from './components/WeeklyTargetsGrid';
 import MobileHome from './components/MobileHome';
 import { deriveHomeFocus } from './utils/homeFocus';
+import { readOngoingWorkout, formatAgo, discardOngoingWorkout } from '../Workout/utils/ongoingWorkout';
 
 
 
@@ -130,6 +131,8 @@ export default function Home() {
     const theme = useTheme();
     const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
     const userId = currentUser?.uid;
+    const [ongoingWorkout, setOngoingWorkout] = useState(null);
+    useEffect(() => { setOngoingWorkout(readOngoingWorkout(userId)); }, [userId]);
 
     // React Query Hooks (Supabase)
     const { profile, isLoading: profileLoading } = useProfile();
@@ -527,12 +530,15 @@ export default function Home() {
                         completedWorkoutsCount,
                         workoutsUntilAiUnlock,
                         isAiUnlocked,
+                        ongoing: ongoingWorkout && { name: ongoingWorkout.name, sets: ongoingWorkout.sets, ago: formatAgo(ongoingWorkout.savedAt) },
                     }}
                     state={{ loading: isLoading, error: statsError, aiLoading, aiError }}
                     actions={{
                         onRetry: refetchStats,
                         onQuickWorkout: () => navigate('/workout/start'),
                         onBrowsePrograms: () => navigate('/workout'),
+                        onResume: () => navigate('/workout/start'),
+                        onDiscardOngoing: () => { discardOngoingWorkout(); setOngoingWorkout(null); },
                         onLogActivity: () => setQuickAddModalOpen(true),
                         onSetGoal: () => navigate('/progress'),
                     }}

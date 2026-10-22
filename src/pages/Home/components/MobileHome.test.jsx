@@ -99,4 +99,32 @@ describe('MobileHome', () => {
     expect(onQuickWorkout).toHaveBeenCalledOnce();
     expect(onBrowsePrograms).toHaveBeenCalledOnce();
   });
+  it('offers to resume an unfinished session and asks before discarding it', () => {
+    const onResume = vi.fn();
+    const onDiscardOngoing = vi.fn();
+    render(
+      <ThemeProvider theme={theme}>
+        <MobileHome
+          data={{
+            displayName: 'Devanshu', greeting: 'Good evening', weeklyStats, achievements: [], completedWorkoutsCount: 5,
+            workoutsUntilAiUnlock: 0, isAiUnlocked: true, aiRecommendations: [],
+            ongoing: { name: 'Push Day A', sets: 4, ago: '2 hours ago' },
+          }}
+          state={{ loading: false, error: null, aiLoading: false, aiError: '' }}
+          actions={{ ...actions, onResume, onDiscardOngoing }}
+        />
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByText('4 sets logged · 2 hours ago')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Resume' }));
+    expect(onResume).toHaveBeenCalledOnce();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
+    expect(onDiscardOngoing).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Keep it' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
+    expect(onDiscardOngoing).toHaveBeenCalledOnce();
+  });
 });

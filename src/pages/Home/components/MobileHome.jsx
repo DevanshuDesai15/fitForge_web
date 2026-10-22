@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import { Activity, Brain, CalendarDays, Clock, Play, Target, TrendingUp, Zap } from 'lucide-react';
 import { Box, Button, ButtonBase, Card, CardContent, Chip, Typography } from '@mui/material';
-import { MobileHeroStat, MobileScreen, MobileSection, MobileState } from '../../../components/mobile';
+import { MobileHeroStat, MobileResumeCard, MobileScreen, MobileSection, MobileState } from '../../../components/mobile';
 import AIUnlockProgress from './AIUnlockProgress';
 import WeeklyTargetsGrid from './WeeklyTargetsGrid';
 
@@ -28,6 +28,7 @@ export default function MobileHome({ data, state, actions }) {
     completedWorkoutsCount,
     workoutsUntilAiUnlock,
     isAiUnlocked,
+    ongoing,
   } = data;
   // Day one keeps the zeroed rings and hero stat so the shape of the dashboard is visible before it fills.
   const isDayOne = completedWorkoutsCount === 0;
@@ -42,6 +43,10 @@ export default function MobileHome({ data, state, actions }) {
           </Typography>
         </Box>
       </Box>
+
+      {ongoing ? (
+        <MobileResumeCard name={ongoing.name} sets={ongoing.sets} ago={ongoing.ago} onResume={actions.onResume} onDiscard={actions.onDiscardOngoing} />
+      ) : null}
 
       {state.error ? (
         <MobileState kind="failure" title="Could not load your dashboard" message={String(state.error.message || state.error)} onRetry={actions.onRetry} />
@@ -194,7 +199,8 @@ MobileHome.propTypes = {
     completedWorkoutsCount: PropTypes.number.isRequired,
     workoutsUntilAiUnlock: PropTypes.number.isRequired,
     isAiUnlocked: PropTypes.bool.isRequired,
+    ongoing: PropTypes.shape({ name: PropTypes.string, sets: PropTypes.number, ago: PropTypes.string }),
   }).isRequired,
   state: PropTypes.shape({ loading: PropTypes.bool, error: PropTypes.any, aiLoading: PropTypes.bool, aiError: PropTypes.string }).isRequired,
-  actions: PropTypes.shape({ onRetry: PropTypes.func.isRequired, onQuickWorkout: PropTypes.func.isRequired, onLogActivity: PropTypes.func.isRequired, onSetGoal: PropTypes.func.isRequired, onBrowsePrograms: PropTypes.func }).isRequired,
+  actions: PropTypes.shape({ onRetry: PropTypes.func.isRequired, onQuickWorkout: PropTypes.func.isRequired, onLogActivity: PropTypes.func.isRequired, onSetGoal: PropTypes.func.isRequired, onBrowsePrograms: PropTypes.func, onResume: PropTypes.func, onDiscardOngoing: PropTypes.func }).isRequired,
 };
