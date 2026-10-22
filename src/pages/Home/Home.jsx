@@ -532,6 +532,7 @@ export default function Home() {
                     actions={{
                         onRetry: refetchStats,
                         onQuickWorkout: () => navigate('/workout/start'),
+                        onBrowsePrograms: () => navigate('/workout'),
                         onLogActivity: () => setQuickAddModalOpen(true),
                         onSetGoal: () => navigate('/progress'),
                     }}

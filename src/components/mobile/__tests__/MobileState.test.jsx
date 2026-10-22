@@ -8,7 +8,7 @@ describe('MobileState', () => {
     const retry = vi.fn();
     render(<MobileState kind="failure" title="Could not load" onRetry={retry} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /retry/i }));
+    fireEvent.click(screen.getByRole('button', { name: /try again/i }));
 
     expect(retry).toHaveBeenCalledOnce();
     expect(screen.getByRole('alert')).toHaveTextContent('Could not load');
@@ -20,6 +20,15 @@ describe('MobileState', () => {
 
     rerender(<MobileState kind="degraded" title="AI coach is using offline guidance" />);
     expect(screen.getByRole('status')).toHaveTextContent(/offline guidance/i);
+  });
+
+  it('reports a failed load as offline when the phone has no connection', () => {
+    const spy = vi.spyOn(window.navigator, 'onLine', 'get').mockReturnValue(false);
+    render(<MobileState kind="failure" title="Could not load your history" message="request failed" />);
+
+    expect(screen.getByRole('heading', { name: /you are offline/i })).toBeInTheDocument();
+    expect(screen.getByText(/last synced copy/i)).toBeInTheDocument();
+    spy.mockRestore();
   });
 
   it('presents an empty state without announcing an error', () => {

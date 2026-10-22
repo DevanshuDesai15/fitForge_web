@@ -55,7 +55,14 @@ describe('MobileProgress', () => {
     view.unmount();
     renderProgress({}, { error: 'boom' });
     expect(screen.getByText('boom')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
+  });
+
+  it('gates the overview behind three sessions on a brand-new account', () => {
+    renderProgress({ exercises: [], personalRecords: [] });
+    expect(screen.getByText('0 / 3')).toBeInTheDocument();
+    expect(screen.getByText('No trends yet.')).toBeInTheDocument();
+    expect(screen.queryByText('Volume lifted, week to date')).not.toBeInTheDocument();
   });
 
   it('goals and achievements reuse the existing sections', () => {

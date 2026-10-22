@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
-import { Activity, Brain, Clock, Target, TrendingUp, Zap } from 'lucide-react';
-import { Box, ButtonBase, Card, CardContent, Chip, Typography } from '@mui/material';
+import { Activity, Brain, CalendarDays, Clock, Play, Target, TrendingUp, Zap } from 'lucide-react';
+import { Box, Button, ButtonBase, Card, CardContent, Chip, Typography } from '@mui/material';
 import { MobileHeroStat, MobileScreen, MobileSection, MobileState } from '../../../components/mobile';
 import AIUnlockProgress from './AIUnlockProgress';
 import WeeklyTargetsGrid from './WeeklyTargetsGrid';
@@ -29,6 +29,8 @@ export default function MobileHome({ data, state, actions }) {
     workoutsUntilAiUnlock,
     isAiUnlocked,
   } = data;
+  // Day one keeps the zeroed rings and hero stat so the shape of the dashboard is visible before it fills.
+  const isDayOne = completedWorkoutsCount === 0;
 
   return (
     <MobileScreen>
@@ -45,7 +47,7 @@ export default function MobileHome({ data, state, actions }) {
         <MobileState kind="failure" title="Could not load your dashboard" message={String(state.error.message || state.error)} onRetry={actions.onRetry} />
       ) : state.loading ? (
         <MobileSection title="Weekly Targets">
-          <MobileState kind="loading" title="Loading your dashboard" />
+          <MobileState kind="loading" shape="rings" title="Loading your dashboard" />
         </MobileSection>
       ) : (
         <>
@@ -53,11 +55,23 @@ export default function MobileHome({ data, state, actions }) {
             <WeeklyTargetsGrid weeklyStats={weeklyStats} mobileKit />
           </MobileSection>
 
+          {isDayOne ? (
+            <MobileSection title="Today">
+              <MobileState
+                kind="empty"
+                title="Nothing logged yet."
+                message="Pick a program and the app will tell you what to train each day. Or start an empty workout and log as you go — nothing has to be planned first."
+                action={<Button fullWidth variant="contained" startIcon={<Play size={16} />} onClick={actions.onQuickWorkout}>Start your first workout</Button>}
+                secondary={actions.onBrowsePrograms ? <Button fullWidth variant="text" startIcon={<CalendarDays size={16} />} onClick={actions.onBrowsePrograms}>Browse programs</Button> : null}
+              />
+            </MobileSection>
+          ) : null}
+
           <MobileSection title="This Week">
             <MobileHeroStat
               value={weeklyStats.totalVolume.toLocaleString()}
               unit={weeklyStats.volumeUnit}
-              caption={`Lifted this week · ${weeklyStats.goalText} workouts toward your goal`}
+              caption={isDayOne ? 'Your first session writes this number.' : `Lifted this week · ${weeklyStats.goalText} workouts toward your goal`}
               stats={[
                 { value: `${Math.round(weeklyStats.goalProgress)}%`, label: 'of weekly goal' },
                 { value: weeklyStats.streakDays, label: 'day streak' },
@@ -182,5 +196,5 @@ MobileHome.propTypes = {
     isAiUnlocked: PropTypes.bool.isRequired,
   }).isRequired,
   state: PropTypes.shape({ loading: PropTypes.bool, error: PropTypes.any, aiLoading: PropTypes.bool, aiError: PropTypes.string }).isRequired,
-  actions: PropTypes.shape({ onRetry: PropTypes.func.isRequired, onQuickWorkout: PropTypes.func.isRequired, onLogActivity: PropTypes.func.isRequired, onSetGoal: PropTypes.func.isRequired }).isRequired,
+  actions: PropTypes.shape({ onRetry: PropTypes.func.isRequired, onQuickWorkout: PropTypes.func.isRequired, onLogActivity: PropTypes.func.isRequired, onSetGoal: PropTypes.func.isRequired, onBrowsePrograms: PropTypes.func }).isRequired,
 };

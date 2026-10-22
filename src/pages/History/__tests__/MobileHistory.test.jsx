@@ -41,7 +41,7 @@ describe('MobileHistory', () => {
     const onRetry = vi.fn();
     renderHistory({}, { error: new Error('boom') }, { onRetry });
     expect(screen.getByText('boom')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /retry/i }));
+    fireEvent.click(screen.getByRole('button', { name: /try again/i }));
     expect(onRetry).toHaveBeenCalled();
   });
 

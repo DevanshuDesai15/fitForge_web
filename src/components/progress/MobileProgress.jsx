@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Brain, LineChart, Target, Trophy } from 'lucide-react';
-import { Box, ButtonBase } from '@mui/material';
+import { Box, ButtonBase, LinearProgress, Typography } from '@mui/material';
 import { MobileScreen, MobileState } from '../mobile';
 import GoalsSection from './components/GoalsSection';
 import AchievementsSection from './components/AchievementsSection';
@@ -53,6 +53,18 @@ export default function MobileProgress({ data, state, actions }) {
           <MobileState kind="failure" title="Could not load your progress" message={String(state.error)} onRetry={actions.onRetry} />
         ) : state.loading ? (
           <MobileState kind="loading" title="Loading your progress" />
+        ) : tab === 'overview' && !exercises.length ? (
+          <Box>
+            <Box sx={{ mb: 2, p: 2, borderRadius: '14px', backgroundColor: '#2a2a2a' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 1.25 }}>
+                <Typography sx={{ color: 'text.secondary', fontSize: '0.95rem' }}>Sessions logged</Typography>
+                <Typography sx={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontWeight: 700 }}>0 / 3</Typography>
+              </Box>
+              <LinearProgress variant="determinate" value={0} />
+              <Typography sx={{ mt: 1.25, color: 'text.secondary', fontSize: '0.85rem' }}>Three sessions is the minimum for a trend line worth trusting.</Typography>
+            </Box>
+            <MobileState kind="empty" title="No trends yet." message="Charts, plateau detection and progression suggestions all need history to work from. Log three sessions and this screen turns on by itself." />
+          </Box>
         ) : tab === 'overview' ? (
           <MobileProgressOverview overview={overview} weightUnit={weightUnit} />
         ) : tab === 'goals' ? (

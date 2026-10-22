@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { ThemeProvider } from '@mui/material';
 import { describe, expect, it, vi } from 'vitest';
 import { theme } from '../../../theme/theme';
@@ -75,5 +75,28 @@ describe('MobileHome', () => {
     expect(document.querySelectorAll('.lucide-brain')).toHaveLength(2);
     expect(document.querySelector('.lucide-clock')).toBeInTheDocument();
     expect(screen.queryByText('Your next progression')).not.toBeInTheDocument();
+  });
+  it('invites a day-one user to start while keeping the zeroed dashboard visible', () => {
+    const onQuickWorkout = vi.fn();
+    const onBrowsePrograms = vi.fn();
+    render(
+      <ThemeProvider theme={theme}>
+        <MobileHome
+          data={{
+            displayName: 'Devanshu', greeting: 'Good evening', weeklyStats: { ...weeklyStats, totalVolume: 0, goalProgress: 0, streakDays: 0, activeMinutes: 0 },
+            achievements: [], completedWorkoutsCount: 0, workoutsUntilAiUnlock: 5, isAiUnlocked: false, aiRecommendations: [],
+          }}
+          state={{ loading: false, error: null, aiLoading: false, aiError: '' }}
+          actions={{ ...actions, onQuickWorkout, onBrowsePrograms }}
+        />
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByText('Nothing logged yet.')).toBeInTheDocument();
+    expect(screen.getByText('Your first session writes this number.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /start your first workout/i }));
+    fireEvent.click(screen.getByRole('button', { name: /browse programs/i }));
+    expect(onQuickWorkout).toHaveBeenCalledOnce();
+    expect(onBrowsePrograms).toHaveBeenCalledOnce();
   });
 });
