@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import Progress from './Progress';
 
 vi.mock('recharts', () => ({
@@ -40,15 +40,23 @@ vi.mock('./hooks/useAIInsights', () => ({
 vi.mock('./hooks/usePlateauDetection', () => ({
     usePlateauDetection: () => ({
         plateauAlerts: [],
-        appliedInterventions: [],
-        dismissedAlerts: [],
+        appliedInterventions: {},
+        dismissedAlerts: new Set(),
         loadPlateauAlerts: vi.fn(),
         handleInterventionApply: vi.fn(),
         handleAlertDismiss: vi.fn(),
     }),
 }));
 
+const useMediaQueryMock = vi.hoisted(() => vi.fn());
+vi.mock('@mui/material', async (importOriginal) => ({
+    ...(await importOriginal()),
+    useMediaQuery: (...args) => useMediaQueryMock(...args),
+}));
+
 describe('Progress navigation', () => {
+    beforeEach(() => useMediaQueryMock.mockReturnValue(true));
+
     it('constrains the tabs to the page width so they cannot overflow the viewport', () => {
         render(<Progress />);
 
@@ -63,5 +71,14 @@ describe('Progress navigation', () => {
         screen.getAllByRole('tab').forEach((tab) => {
             expect(tab).toHaveStyle({ minWidth: '0', flex: '1 1 0' });
         });
+    });
+});
+
+describe('Progress on mobile', () => {
+    it('renders the Mobile Kit shell with icon-only tabs', () => {
+        useMediaQueryMock.mockReturnValue(false);
+        render(<Progress />);
+        expect(screen.getByRole('heading', { name: 'Progress & Goals' })).toBeInTheDocument();
+        expect(screen.getAllByRole('tab').map((t) => t.getAttribute('aria-label'))).toEqual(['Overview', 'Goals', 'Achievements', 'AI Dashboard']);
     });
 });

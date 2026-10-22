@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Box, Typography, Alert, CircularProgress, CardContent, Tooltip } from '@mui/material';
+import { Box, Typography, Alert, CircularProgress, CardContent, Tooltip, useMediaQuery, useTheme } from '@mui/material';
 import { Brain as MdPsychology, LineChart as MdShowChart, Target as MdTrackChanges, Trophy as MdEmojiEvents, Target, Flame, Clock, Zap } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer } from 'recharts';
 import { useUnits } from '../../contexts/UnitsContext';
@@ -10,11 +10,14 @@ import { usePlateauDetection } from './hooks/usePlateauDetection';
 import AIDashboard from './AIDashboard';
 import GoalsSection from './components/GoalsSection';
 import AchievementsSection from './components/AchievementsSection';
+import MobileProgress from './MobileProgress';
 
 const Progress = () => {
     // Main navigation state
     const [activeMainTab, setActiveMainTab] = useState(0);
     const { weightUnit } = useUnits();
+    const theme = useTheme();
+    const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
 
     // Progress data states
     const [selectedExercise, setSelectedExercise] = useState('');
@@ -31,6 +34,7 @@ const Progress = () => {
         personalRecords,
         availableExercises,
         loadGoals,
+        loadData,
         setError
     } = useProgressData(activeMainTab);
 
@@ -468,6 +472,28 @@ const Progress = () => {
             </Box>
         );
     };
+
+    if (!isDesktop) {
+        return (
+            <MobileProgress
+                data={{
+                    exercises, personalRecords, weightUnit, goals, availableExercises, progressionAnalyses,
+                    plateauAlerts, appliedInterventions, dismissedAlerts, progressData, selectedExercise, timeRange, showOnlyRecent,
+                }}
+                state={{ loading, error }}
+                actions={{
+                    onRetry: loadData,
+                    onGoalsUpdate: loadGoals,
+                    setError,
+                    setShowOnlyRecent,
+                    setSelectedExercise,
+                    setTimeRange,
+                    onInterventionApply: handleInterventionApply,
+                    onAlertDismiss: handleAlertDismiss,
+                }}
+            />
+        );
+    }
 
     return (
         <Box sx={{
