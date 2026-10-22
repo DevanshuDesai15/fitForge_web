@@ -6,10 +6,13 @@ import { useMediaQuery } from '@mui/material';
 import { Plus, LineChart as MdShowChart, BookOpen as MdLibraryBooks } from 'lucide-react';
 import WorkoutsTab from './WorkoutsTab';
 import ExerciseLibraryTab from './ExerciseLibraryTab';
+import MobileExerciseLibrary from './MobileExerciseLibrary';
+import MobileWorkoutsList from './MobileWorkoutsList';
 import CreateWorkoutModal from './CreateWorkoutModal';
 import CreateProgramModal from './CreateProgramModal';
 import MobileWorkoutDashboard from './MobileWorkoutDashboard';
 import MobilePrograms, { MobileProgramDetail } from './MobilePrograms';
+import MobileDayEditor from './MobileDayEditor';
 import { getWorkoutTabFromSearchParams } from './workoutDashboardUtils';
 import { useWorkoutPrograms } from '../hooks/useWorkoutPrograms';
 import { buildWorkoutStartState } from './workoutRecommendationEngine';
@@ -69,7 +72,7 @@ const WorkoutDashboard = () => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const { programs, loading: programsLoading, error: programsError, loadPrograms } = useWorkoutPrograms();
-    const { deleteProgram } = useWorkoutMutations();
+    const { deleteProgram, createTemplate, updateProgram } = useWorkoutMutations();
     const activeTab = getWorkoutTabFromSearchParams(searchParams);
     const [createModalOpen, setCreateModalOpen] = useState(false);
     const [createProgramModalOpen, setCreateProgramModalOpen] = useState(false);
@@ -82,6 +85,9 @@ const WorkoutDashboard = () => {
         : 'workouts';
     const selectedProgram = activeMobileTab === 'programs'
         ? programs.find((program) => String(program.id) === searchParams.get('program'))
+        : null;
+    const selectedDay = selectedProgram
+        ? selectedProgram.days?.find((day) => String(day.id) === searchParams.get('day'))
         : null;
 
     const handleMobileTabChange = (tab) => {
@@ -128,6 +134,36 @@ const WorkoutDashboard = () => {
         setCreateProgramModalOpen(true);
     };
 
+    const handleOpenDay = (day) => {
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.set('day', day.id);
+        setSearchParams(nextParams, { replace: false });
+    };
+
+    const handleCloseDay = () => {
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.delete('day');
+        setSearchParams(nextParams, { replace: false });
+        loadPrograms();
+    };
+
+    const handleAddDay = async () => {
+        const dayNumber = (selectedProgram.days?.length || 0) + 1;
+        const createdTemplate = await createTemplate({
+            name: `Day ${dayNumber}`,
+            description: '',
+            category: selectedProgram.category,
+            difficulty: selectedProgram.difficulty,
+            exercises: [],
+            isCustom: true,
+        });
+        await updateProgram(selectedProgram.id, {
+            templateIds: [...(selectedProgram.templateIds || []), createdTemplate.id],
+        });
+        await loadPrograms();
+        handleOpenDay({ id: createdTemplate.id });
+    };
+
     const handleDeleteSelectedProgram = async () => {
         await deleteProgram(selectedProgram.id);
         setDeleteProgramOpen(false);
@@ -136,6 +172,19 @@ const WorkoutDashboard = () => {
     };
 
     if (!isDesktop) {
+        if (selectedProgram && selectedDay) {
+            return (
+                <MobileScreen>
+                    <MobileDayEditor
+                        program={selectedProgram}
+                        day={selectedDay}
+                        onBack={handleCloseDay}
+                        onDeleted={handleCloseDay}
+                    />
+                </MobileScreen>
+            );
+        }
+
         if (selectedProgram) {
             return (
                 <>
@@ -145,8 +194,8 @@ const WorkoutDashboard = () => {
                             onBack={handleCloseProgram}
                             onStart={handleStartProgramDay}
                             onEdit={handleEditProgram}
-                            onOpenDay={handleEditProgram}
-                            onAddDay={handleEditProgram}
+                            onOpenDay={handleOpenDay}
+                            onAddDay={handleAddDay}
                             onDelete={() => setDeleteProgramOpen(true)}
                         />
                     </MobileScreen>
@@ -183,7 +232,7 @@ const WorkoutDashboard = () => {
                     onNewWorkout={handleNewWorkout}
                     onNewProgram={() => setCreateProgramModalOpen(true)}
                     panels={{
-                        workouts: <WorkoutsTab key="workouts" initialSubTab={0} hideSubTabs />,
+                        workouts: <MobileWorkoutsList key="workouts" />,
                         programs: (
                             <MobilePrograms
                                 programs={programs}
@@ -195,7 +244,7 @@ const WorkoutDashboard = () => {
                                 onNew={() => setCreateProgramModalOpen(true)}
                             />
                         ),
-                        library: <ExerciseLibraryTab />,
+                        library: <MobileExerciseLibrary />,
                     }}
                 />
                 <CreateWorkoutModal

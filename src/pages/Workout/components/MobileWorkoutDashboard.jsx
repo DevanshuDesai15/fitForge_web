@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { Plus } from 'lucide-react';
 import { MobileScreen, MobileTabs } from '../../../components/mobile';
 
@@ -14,22 +14,18 @@ export default function MobileWorkoutDashboard({ activeTab, onTabChange, onNewWo
   const showCreateAction = activeTab !== 'library';
 
   return (
-    <MobileScreen>
-      <Box component="header" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, mb: 2.5 }}>
-        <Typography component="h1" sx={{ fontSize: { xs: '2rem', sm: '2.35rem' }, fontWeight: 800, letterSpacing: '-0.025em' }}>
-          Workout
-        </Typography>
-        {showCreateAction ? (
-          <Button
-            variant="contained"
-            startIcon={<Plus size={18} />}
-            onClick={isPrograms ? onNewProgram : onNewWorkout}
-            sx={{ flexShrink: 0, borderRadius: '10px', color: 'primary.contrastText', fontWeight: 800 }}
-          >
-            {isPrograms ? 'New Program' : 'New Workout'}
-          </Button>
-        ) : null}
-      </Box>
+    <MobileScreen title="Workouts & Exercises" subtitle="Track routines and browse exercise library">
+      {showCreateAction ? (
+        <Button
+          fullWidth
+          variant="contained"
+          startIcon={<Plus size={18} />}
+          onClick={isPrograms ? onNewProgram : onNewWorkout}
+          sx={{ mb: 3, borderRadius: '10px', color: 'primary.contrastText', fontWeight: 800 }}
+        >
+          {isPrograms ? 'New Program' : 'New Workout'}
+        </Button>
+      ) : null}
 
       <MobileTabs
         tabs={tabs}
