@@ -180,7 +180,7 @@ export function editSet(exercises, exerciseIndex, setIndex, patch, displayUnit) 
   });
 }
 
-function bestWeight(workouts, name, displayUnit) {
+export function bestWeight(workouts, name, displayUnit) {
   let best = 0;
   for (const workout of toArray(workouts)) {
     const fallback = getWorkoutFallbackUnit(workout);

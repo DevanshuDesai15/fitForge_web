@@ -200,4 +200,28 @@ describe("useWorkoutState timer persistence", () => {
     expect(result.current.elapsedTime).toBe(0);
     expect(result.current.timerStatus).toBe(TIMER_STATUS.IDLE);
   });
+  it("pauses the clock and saves it stopped, so time away is not counted on resume", () => {
+    localStorage.setItem("workoutState", JSON.stringify(savedWorkout()));
+    const { result } = renderHook(() => useWorkoutState());
+    expect(result.current.timerStatus).toBe(TIMER_STATUS.RUNNING);
+
+    act(() => {
+      vi.advanceTimersByTime(10_000);
+      result.current.pauseAndSaveWorkoutState();
+    });
+
+    const saved = JSON.parse(localStorage.getItem("workoutState"));
+    expect(saved.timerStatus).toBe(TIMER_STATUS.PAUSED);
+    expect(saved.timerStartedAt).toBeNull();
+    expect(saved.elapsedTime).toBe(55); // 40 banked + 5 already running + 10 since restore
+
+    act(() => {
+      vi.advanceTimersByTime(30 * 60_000);
+    });
+    expect(result.current.elapsedTime).toBe(55);
+
+    const reopened = renderHook(() => useWorkoutState());
+    expect(reopened.result.current.timerStatus).toBe(TIMER_STATUS.PAUSED);
+    expect(reopened.result.current.elapsedTime).toBe(55);
+  });
 });

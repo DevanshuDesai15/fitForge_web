@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Card, CardContent } from '@mui/material';
+import { Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Card, CardContent, useMediaQuery, useTheme } from '@mui/material';
 import { CheckCircle as MdCheckCircle, Timer as MdTimer, ArrowLeft, Lightbulb as MdLightbulb, ArrowLeftRight as MdSwapHoriz } from 'lucide-react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { usePostHog } from 'posthog-js/react';
@@ -37,6 +37,9 @@ import WorkoutTimerControl from './components/WorkoutTimerControl';
 import { useWorkoutState } from './hooks/useWorkoutState';
 import { useWorkoutTemplates } from './hooks/useWorkoutTemplates';
 import { useAISuggestions } from './hooks/useAISuggestions';
+import { MobileExitSheet, MobileFinishSummary } from '../../components/mobile';
+import useBackGestureGuard from '../../hooks/useBackGestureGuard';
+import { buildFinishSummary, programContinuity } from './utils/finishSummary';
 import { useWorkoutPreferences } from '../../hooks/useWorkoutPreferences';
 import { useKeepScreenAwake } from '../../hooks/useKeepScreenAwake';
 
@@ -45,13 +48,15 @@ const StartWorkout = () => {
     const [currentStep, setCurrentStep] = useState('template'); // 'template', 'day', 'workout'
     const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
     const [finishDialog, setFinishDialog] = useState(false);
+    const [exitSheetOpen, setExitSheetOpen] = useState(false);
+    const [finishSummary, setFinishSummary] = useState(null);
     const [addExerciseDialog, setAddExerciseDialog] = useState(false);
     const [swapExerciseDialog, setSwapExerciseDialog] = useState({ open: false, index: null });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [showRestTimer, setShowRestTimer] = useState(false);
-    const { keepScreenAwake, restTimerAlerts } = useWorkoutPreferences();
+    const { keepScreenAwake, restTimerAlerts, weeklyGoal } = useWorkoutPreferences();
     const [restDuration] = useState(180); // 3 minutes default - can be adjusted later
     const [bottomTab, setBottomTab] = useState('overview'); // 'overview', 'ai-coach', 'suggestions', 'variations'
     const [previousSetsMap, setPreviousSetsMap] = useState({ byId: {}, byName: {} });
@@ -66,6 +71,8 @@ const StartWorkout = () => {
     const readWorkouts = useWorkoutReader();
     const { weightUnit } = useUnits();
     const posthog = usePostHog();
+    const theme = useTheme();
+    const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
 
     const {
         workoutStarted,
@@ -82,8 +89,13 @@ const StartWorkout = () => {
         resumeWorkoutTimer,
         workoutStartTime,
         setWorkoutStartTime,
+        pauseAndSaveWorkoutState,
         clearWorkoutState
     } = useWorkoutState();
+
+    // A phone back swipe during a live session asks what to do instead of silently leaving.
+    const backGuardActive = !isDesktop && currentStep === 'workout' && exercises.length > 0 && !finishSummary;
+    useBackGestureGuard(backGuardActive, () => { if (!saving) setExitSheetOpen(true); });
 
     const { templates, loading: templatesLoading } = useWorkoutTemplates();
     const { loadAISuggestions } = useAISuggestions();
@@ -568,6 +580,22 @@ const StartWorkout = () => {
                 timestamp: completedAt,
             };
 
+            // Mobile shows a summary that needs the history from before this session, so read it first.
+            let priorWorkouts = [];
+            if (!isDesktop) {
+                try {
+                    priorWorkouts = await readWorkouts({
+                        columns: 'exercises, timestamp',
+                        completed: true,
+                        orderBy: 'timestamp',
+                        limit: 500,
+                    });
+                } catch (historyError) {
+                    console.warn('Could not load history for the finish summary:', historyError);
+                }
+            }
+            const program = programContinuity(currentTemplate, selectedDay, templates);
+
             console.log('💾 Saving workout data:', workoutData);
             const savedWorkout = await createWorkout(workoutData);
             console.log('✅ Workout saved with ID:', savedWorkout.id);
@@ -588,6 +616,19 @@ const StartWorkout = () => {
             setFinishDialog(false);
             setSaving(false);
 
+            if (!isDesktop) {
+                setFinishSummary(buildFinishSummary({
+                    exercises: workoutData.exercises,
+                    priorWorkouts,
+                    weightUnit,
+                    durationSeconds: elapsedTime,
+                    name: resolvedDayName,
+                    weeklyGoal,
+                    program,
+                }));
+                return;
+            }
+
             // Navigate to progress page
             navigate('/progress', {
                 state: {
@@ -607,6 +648,17 @@ const StartWorkout = () => {
     const totalSets = totalUnits;
     const completedSets = completedUnits;
     const workoutProgress = totalSets > 0 ? (completedSets / totalSets) * 100 : 0;
+
+    if (finishSummary) {
+        return (
+            <MobileFinishSummary
+                summary={finishSummary}
+                weightUnit={weightUnit}
+                onDone={() => navigate('/')}
+                onHistory={() => navigate('/history')}
+            />
+        );
+    }
 
     return (
         <Box sx={{ minHeight: '100vh', background: '#121212', p: 2 }}>
@@ -666,7 +718,7 @@ const StartWorkout = () => {
                         {/* Back Button */}
                         <Button
                             startIcon={<ArrowLeft size={18} />}
-                            onClick={() => navigate('/workout')}
+                            onClick={() => (isDesktop ? navigate('/workout') : setExitSheetOpen(true))}
                             sx={{
                                 color: 'text.secondary',
                                 textTransform: 'none',
@@ -901,6 +953,16 @@ const StartWorkout = () => {
                     onClose={() => setSwapExerciseDialog({ open: false, index: null })}
                     onSwapExercise={handleConfirmSwap}
                     exerciseName={swapExerciseDialog.index !== null ? exercises[swapExerciseDialog.index]?.name : ''}
+                />
+
+                {/* Mobile leave sheet: finish, park for later (resume card on Home), or discard */}
+                <MobileExitSheet
+                    open={exitSheetOpen}
+                    setsLogged={completedSets}
+                    onClose={() => setExitSheetOpen(false)}
+                    onFinish={() => { setExitSheetOpen(false); setFinishDialog(true); }}
+                    onIncomplete={() => { pauseAndSaveWorkoutState(); setExitSheetOpen(false); navigate('/workout', { replace: backGuardActive }); }}
+                    onDiscard={() => { clearWorkoutState(); setExitSheetOpen(false); navigate('/workout', { replace: backGuardActive }); }}
                 />
 
                 {/* Finish Workout Dialog */}
