@@ -20,9 +20,10 @@ describe('buildOverview', () => {
     expect(buildOverview([ex(7, 14), ex(7, 12)], [], NOW).streak).toBe(1);
   });
 
-  it('reports consistency and a weekly-goal achievement only at 5 days', () => {
+  it('reports consistency and a weekly-goal achievement only once the goal is met', () => {
     const days = [9, 10, 11, 12, 13].map((d) => ex(7, d));
-    const o = buildOverview(days, [{ exerciseName: 'Bench', weight: 100 }], NOW);
+    expect(buildOverview(days, [], NOW, 6).achievements).toEqual([]);
+    const o = buildOverview(days, [{ exerciseName: 'Bench', weight: 100 }], NOW, 5);
     expect(o.achievements.map((a) => a.kind)).toEqual(['weekly', 'record']);
     expect(o.consistency[0].value).toBe('5 days');
     expect(o.consistency[1].value).toBe('Aug');

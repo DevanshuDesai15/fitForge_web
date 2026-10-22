@@ -11,11 +11,13 @@ import AIDashboard from './AIDashboard';
 import GoalsSection from './components/GoalsSection';
 import AchievementsSection from './components/AchievementsSection';
 import MobileProgress from './MobileProgress';
+import { useWorkoutPreferences } from '../../hooks/useWorkoutPreferences';
 
 const Progress = () => {
     // Main navigation state
     const [activeMainTab, setActiveMainTab] = useState(0);
     const { weightUnit } = useUnits();
+    const { weeklyGoal } = useWorkoutPreferences();
     const theme = useTheme();
     const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
 
@@ -73,7 +75,7 @@ const Progress = () => {
     const renderOverview = () => {
         const now = new Date();
         const year = now.getFullYear();
-        const WEEKLY_GOAL = 5;
+        const WEEKLY_GOAL = weeklyGoal;
         const DOT_SIZE = 13;
         const DOT_GAP = 3;
 
@@ -477,7 +479,7 @@ const Progress = () => {
         return (
             <MobileProgress
                 data={{
-                    exercises, personalRecords, weightUnit, goals, availableExercises, progressionAnalyses,
+                    exercises, personalRecords, weightUnit, weeklyGoal, goals, availableExercises, progressionAnalyses,
                     plateauAlerts, appliedInterventions, dismissedAlerts, progressData, selectedExercise, timeRange, showOnlyRecent,
                 }}
                 state={{ loading, error }}

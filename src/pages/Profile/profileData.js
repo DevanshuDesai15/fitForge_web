@@ -5,6 +5,9 @@ const DEFAULT_PREFERENCES = {
   theme: 'dark',
   language: 'english',
   autoSync: true,
+  keepScreenAwake: true,
+  restTimerAlerts: false,
+  weeklyGoal: 4,
 };
 
 const DEFAULT_NOTIFICATIONS = {
@@ -53,6 +56,13 @@ export const getProfilePreferences = (profile) => ({
   ...DEFAULT_PREFERENCES,
   ...(profile?.preferences || {}),
 });
+
+// Training preferences read outside the Profile page (active workout, dashboard, progress).
+export const getWorkoutPreferences = (profile) => {
+  const { keepScreenAwake, restTimerAlerts, weeklyGoal } = getProfilePreferences(profile);
+  const goal = Number(weeklyGoal);
+  return { keepScreenAwake, restTimerAlerts, weeklyGoal: Number.isFinite(goal) && goal > 0 ? goal : DEFAULT_PREFERENCES.weeklyGoal };
+};
 
 export const getProfileNotifications = (profile) => ({
   ...DEFAULT_NOTIFICATIONS,

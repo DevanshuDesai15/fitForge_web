@@ -12,27 +12,30 @@ import {
   Select,
   MenuItem,
   IconButton,
+  InputAdornment,
   Typography,
   Box,
   Avatar
 } from '@mui/material';
-import { X, Save, User, Activity, Target, Bell } from 'lucide-react';
+import { X, User, Activity, Target, Bell } from 'lucide-react';
 import FitForgeSwitch from '../common/FitForgeSwitch';
 import { formatHeight } from '../../utils/unitConversions';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialog-paper': {
     backgroundColor: '#1a1a1a',
+    backgroundImage: 'none',
     borderRadius: '16px',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
+    border: '1px solid rgba(221, 237, 0, 0.28)',
+    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
     maxWidth: '600px',
     width: '100%',
     margin: '16px',
     overflowX: 'hidden',
     [theme.breakpoints.down('sm')]: {
-      margin: '8px',
-      borderRadius: '12px',
-      maxHeight: 'calc(100vh - 16px)',
+      margin: '16px',
+      borderRadius: '16px',
+      maxHeight: 'calc(100vh - 32px)',
     },
   },
 }));
@@ -41,11 +44,11 @@ const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'flex-start',
-  borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-  padding: '20px 24px 16px',
+  borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+  padding: '24px 24px 0',
   gap: '12px',
   [theme.breakpoints.down('sm')]: {
-    padding: '16px 12px 12px',
+    padding: '20px 16px 0',
     gap: '8px',
   },
 }));
@@ -59,122 +62,75 @@ const TitleSection = styled(Box)(({ theme }) => ({
   },
 }));
 
-const ModalTabs = styled(Box)(({ theme }) => ({
+const ModalTabs = styled(Box)({
   display: 'flex',
-  gap: '16px',
+  gap: '4px',
   marginTop: '16px',
   overflowX: 'auto',
   overflowY: 'hidden',
-  scrollbarWidth: 'none', // Firefox
-  '&::-webkit-scrollbar': {
-    display: 'none', // Chrome, Safari, Edge
-  },
-  [theme.breakpoints.down('sm')]: {
-    gap: '8px',
-    marginTop: '12px',
-  },
-}));
+  scrollbarWidth: 'none',
+  '&::-webkit-scrollbar': { display: 'none' },
+});
 
-const ModalTab = styled(Box)(({ theme, active }) => ({
+const ModalTab = styled(Box)(({ active }) => ({
   display: 'flex',
   alignItems: 'center',
-  gap: '8px',
-  padding: '8px 12px',
-  fontSize: '14px',
-  fontWeight: active ? 600 : 500,
+  justifyContent: 'center',
+  gap: '6px',
+  minHeight: '44px',
+  padding: '0 12px',
+  fontSize: '13px',
+  fontWeight: active ? 700 : 500,
   color: active ? '#dded00' : 'rgba(255, 255, 255, 0.6)',
-  backgroundColor: active ? 'rgba(221, 237, 0, 0.1)' : 'transparent',
-  border: 'none',
-  borderRadius: '8px',
+  borderBottom: `2px solid ${active ? '#dded00' : 'transparent'}`,
   cursor: 'pointer',
-  transition: 'all 0.2s ease',
   whiteSpace: 'nowrap',
   flexShrink: 0,
-
-  '&:hover': {
-    color: '#dded00',
-    backgroundColor: 'rgba(221, 237, 0, 0.05)',
-  },
-
-  '& svg': {
-    width: '16px',
-    height: '16px',
-    flexShrink: 0,
-  },
-
-  [theme.breakpoints.down('sm')]: {
-    padding: '6px 10px',
-    fontSize: '12px',
-    gap: '6px',
-    borderRadius: '6px',
-
-    '& svg': {
-      width: '14px',
-      height: '14px',
-    },
-  },
-
-  [theme.breakpoints.down(400)]: {
-    padding: '6px 8px',
-    fontSize: '11px',
-    gap: '4px',
-  },
+  transition: 'color 0.2s ease, border-color 0.2s ease',
+  '&:hover': { color: '#dded00' },
+  '& svg': { width: '16px', height: '16px', flexShrink: 0 },
 }));
 
-const StyledTextField = styled(TextField)(() => ({
+const StyledTextField = styled(TextField, { shouldForwardProp: (prop) => prop !== 'numeric' })(({ numeric }) => ({
   '& .MuiOutlinedInput-root': {
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
-    '& fieldset': {
-      borderColor: 'rgba(255, 255, 255, 0.1)',
-    },
-    '&:hover fieldset': {
-      borderColor: '#dded00',
-    },
-    '&.Mui-focused fieldset': {
-      borderColor: '#dded00',
-    },
-  },
-  '& .MuiInputLabel-root.Mui-focused': {
-    color: '#dded00',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: '8px',
+    '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.08)' },
+    '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.16)' },
+    '&.Mui-focused fieldset': { borderColor: '#dded00', borderWidth: '1px' },
+    '& input': numeric
+      ? { textAlign: 'center', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontWeight: 700, fontSize: '1.25rem', padding: '12px' }
+      : { fontSize: '1rem', padding: '12px' },
+    '& .MuiInputAdornment-root p': { color: 'rgba(255, 255, 255, 0.35)', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: '0.875rem' },
   },
 }));
 
 const StyledSelect = styled(Select)(() => ({
-  backgroundColor: 'rgba(255, 255, 255, 0.02)',
-  '& .MuiOutlinedInput-notchedOutline': {
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  '&:hover .MuiOutlinedInput-notchedOutline': {
-    borderColor: '#dded00',
-  },
-  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-    borderColor: '#dded00',
-  },
+  backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  borderRadius: '8px',
+  '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.08)' },
+  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.16)' },
+  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#dded00', borderWidth: '1px' },
+  '& .MuiSelect-select': { padding: '12px' },
 }));
 
 const SaveButton = styled(Button)(() => ({
-  background: 'linear-gradient(135deg, #dded00 0%, #c4d600 100%)',
-  color: '#000',
-  fontWeight: 600,
+  backgroundColor: '#dded00',
+  color: '#121212',
+  fontWeight: 700,
   textTransform: 'none',
-  padding: '10px 24px',
+  padding: '8px 24px',
   borderRadius: '8px',
-  '&:hover': {
-    background: 'linear-gradient(135deg, #f0f040 0%, #dded00 100%)',
-    transform: 'translateY(-1px)',
-  },
-  '&:disabled': {
-    background: 'rgba(255, 255, 255, 0.1)',
-    color: 'rgba(255, 255, 255, 0.3)',
-  },
+  boxShadow: 'none',
+  '&:hover': { backgroundColor: '#e8f15d', boxShadow: 'none' },
+  '&:disabled': { backgroundColor: 'rgba(255, 255, 255, 0.1)', color: 'rgba(255, 255, 255, 0.3)' },
 }));
 
 const CancelButton = styled(Button)(() => ({
   color: 'rgba(255, 255, 255, 0.7)',
   textTransform: 'none',
-  '&:hover': {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-  },
+  fontWeight: 600,
+  '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.05)' },
 }));
 
 const ProfilePhotoSection = styled(Box)({
@@ -201,7 +157,7 @@ const SectionTitle = styled(Typography)({
 });
 
 const Label = styled(Typography)({
-  fontSize: '13px',
+  fontSize: '0.75rem',
   color: 'rgba(255, 255, 255, 0.7)',
   marginBottom: '8px',
 });
@@ -339,9 +295,9 @@ const EditProfileModal = ({ open, onClose, userData, onSave, loading, preference
           <Typography
             variant="h6"
             sx={{
-              fontWeight: 600,
+              fontWeight: 700,
               mb: 0,
-              fontSize: { xs: '1.1rem', sm: '1.25rem' },
+              fontSize: '1.25rem',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
@@ -394,7 +350,7 @@ const EditProfileModal = ({ open, onClose, userData, onSave, loading, preference
         </IconButton>
       </StyledDialogTitle>
 
-      <DialogContent sx={{ p: { xs: 2, sm: 3 }, minHeight: { xs: '300px', sm: '400px' } }}>
+      <DialogContent sx={{ p: { xs: 2, sm: 3 }, pt: { xs: 3, sm: 3 }, minHeight: { xs: '300px', sm: '400px' } }}>
         {/* Personal Tab */}
         {activeTab === 'personal' && (
           <Box>
@@ -466,20 +422,24 @@ const EditProfileModal = ({ open, onClose, userData, onSave, loading, preference
           <Box>
             <SectionTitle>Physical Statistics</SectionTitle>
             <Grid container spacing={3}>
-              <Grid item xs={4}>
-                <Label>{heightUnit === 'cm' ? 'Height (cm)' : 'Height (ft\'in")'}</Label>
+              <Grid item xs={6} sm={4}>
+                <Label>Height</Label>
                 <StyledTextField
+                  numeric
                   fullWidth
                   size="small"
+                  InputProps={heightUnit === 'cm' ? { endAdornment: <InputAdornment position="end">cm</InputAdornment> } : undefined}
                   value={formData.height}
                   onChange={(e) => handleChange('height', e.target.value)}
                   placeholder={heightUnit === 'cm' ? '182' : "5'11\""}
                 />
               </Grid>
-              <Grid item xs={4}>
-                <Label>Current Weight ({weightUnit})</Label>
+              <Grid item xs={6} sm={4}>
+                <Label>Weight</Label>
                 <StyledTextField
+                  numeric
                   fullWidth
+                  InputProps={{ endAdornment: <InputAdornment position="end">{weightUnit}</InputAdornment> }}
                   size="small"
                   type="number"
                   value={formData.weight}
@@ -487,9 +447,10 @@ const EditProfileModal = ({ open, onClose, userData, onSave, loading, preference
                   placeholder={weightUnit === 'kg' ? '82' : '180'}
                 />
               </Grid>
-              <Grid item xs={4}>
+              <Grid item xs={6} sm={4}>
                 <Label>Age</Label>
                 <StyledTextField
+                  numeric
                   fullWidth
                   size="small"
                   type="number"
@@ -499,9 +460,11 @@ const EditProfileModal = ({ open, onClose, userData, onSave, loading, preference
                 />
               </Grid>
               <Grid item xs={12}>
-                <Label>Target Weight ({weightUnit})</Label>
+                <Label>Target Weight</Label>
                 <StyledTextField
+                  numeric
                   fullWidth
+                  InputProps={{ endAdornment: <InputAdornment position="end">{weightUnit}</InputAdornment> }}
                   size="small"
                   type="number"
                   value={formData.targetWeight}
@@ -648,16 +611,15 @@ const EditProfileModal = ({ open, onClose, userData, onSave, loading, preference
         )}
       </DialogContent>
 
-      <DialogActions sx={{ p: { xs: 2, sm: 3 }, borderTop: '1px solid rgba(255, 255, 255, 0.1)', gap: 1 }}>
+      <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: 2, borderTop: '1px solid rgba(255, 255, 255, 0.08)', gap: 1.5 }}>
         <CancelButton onClick={onClose}>
           Cancel
         </CancelButton>
         <SaveButton
           onClick={handleSubmit}
           disabled={loading}
-          startIcon={<Save size={18} />}
         >
-          {loading ? 'Saving...' : 'Save Changes'}
+          {loading ? 'Saving...' : 'Save'}
         </SaveButton>
       </DialogActions>
     </StyledDialog>

@@ -9,7 +9,7 @@ export default function MobileScreen({ children, title, subtitle, backAction, he
     <Box sx={{ minHeight: '100%', backgroundColor: 'background.default' }}>
       <Box sx={{ boxSizing: 'border-box', width: '100%', maxWidth: 920, mx: 'auto', px: { xs: 2, sm: 3.5 }, pt: { xs: 2.5, sm: 3.5 }, pb: 3, ...sx }}>
         {title || backAction || headerAction ? (
-          <Box component="header" sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: 3, pr: backAction ? 0 : 6 }}>
+          <Box component="header" sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: 3, pr: backAction || headerAction ? 0 : 6 }}>
             {backAction ? (
               <IconButton aria-label="Go back" onClick={backAction} sx={{ width: 44, height: 44, ml: -1 }}>
                 <ArrowLeft size={22} />

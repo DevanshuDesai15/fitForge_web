@@ -37,6 +37,8 @@ import WorkoutTimerControl from './components/WorkoutTimerControl';
 import { useWorkoutState } from './hooks/useWorkoutState';
 import { useWorkoutTemplates } from './hooks/useWorkoutTemplates';
 import { useAISuggestions } from './hooks/useAISuggestions';
+import { useWorkoutPreferences } from '../../hooks/useWorkoutPreferences';
+import { useKeepScreenAwake } from '../../hooks/useKeepScreenAwake';
 
 const StartWorkout = () => {
     // State management
@@ -49,6 +51,7 @@ const StartWorkout = () => {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [showRestTimer, setShowRestTimer] = useState(false);
+    const { keepScreenAwake, restTimerAlerts } = useWorkoutPreferences();
     const [restDuration] = useState(180); // 3 minutes default - can be adjusted later
     const [bottomTab, setBottomTab] = useState('overview'); // 'overview', 'ai-coach', 'suggestions', 'variations'
     const [previousSetsMap, setPreviousSetsMap] = useState({ byId: {}, byName: {} });
@@ -287,6 +290,8 @@ const StartWorkout = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams, location.state, currentUser]);
 
+    useKeepScreenAwake(keepScreenAwake && workoutStarted && exercises.length > 0);
+
     // Determine current step based on state
     useEffect(() => {
         if (workoutStarted && exercises.length > 0) {
@@ -419,7 +424,8 @@ const StartWorkout = () => {
     // 🎯 NEW: Handle rest timer completion
     const handleRestComplete = useCallback(() => {
         setShowRestTimer(false);
-    }, []);
+        if (restTimerAlerts && navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    }, [restTimerAlerts]);
 
     // 🎯 NEW: Handle skip rest
     const handleSkipRest = useCallback(() => {

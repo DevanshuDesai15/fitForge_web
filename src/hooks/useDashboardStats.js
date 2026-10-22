@@ -1,6 +1,8 @@
+import { useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSupabase } from "./useSupabase";
 import { useAuth } from "../contexts/AuthContext";
+import { useWorkoutPreferences } from "./useWorkoutPreferences";
 import { listWorkouts } from "../services/workoutRepository";
 import { fetchExerciseMuscleMapByNames } from "../services/exerciseCatalogService";
 
@@ -32,6 +34,7 @@ export function isWorkoutInDashboardWeek(workout, now = new Date()) {
 export function useDashboardStats() {
   const supabase = useSupabase();
   const { currentUser } = useAuth();
+  const { weeklyGoal } = useWorkoutPreferences();
 
   return useQuery({
     queryKey: ["dashboard_stats", currentUser?.uid, getDashboardWeekKey()],
@@ -204,8 +207,8 @@ export function useDashboardStats() {
         weeklyStats: {
           totalVolume: Math.round(weeklyVolume),
           volumeUnit: "kg",
-          goalProgress: (weeklyWorkouts / 4) * 100, // Target is 4
-          goalText: `${weeklyWorkouts}/4`,
+          goalProgress: 0,
+          goalText: '',
           streakDays: streakCount,
           workoutsDone: weeklyWorkouts,
           activeMinutes: Math.round(weeklyMinutes / 60),
@@ -222,5 +225,14 @@ export function useDashboardStats() {
     enabled: !!currentUser?.uid,
     staleTime: 1000 * 60 * 2, // 2 minutes
     refetchInterval: 1000 * 60, // Refresh data and roll over promptly at a new week.
+    // The goal is a preference, so applying it here avoids refetching when it changes.
+    select: useCallback((stats) => {
+      if (!stats?.weeklyStats) return stats;
+      const done = stats.weeklyStats.workoutsDone;
+      return {
+        ...stats,
+        weeklyStats: { ...stats.weeklyStats, goalProgress: (done / weeklyGoal) * 100, goalText: `${done}/${weeklyGoal}`, weeklyGoal },
+      };
+    }, [weeklyGoal]),
   });
 }

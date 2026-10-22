@@ -36,13 +36,13 @@ export default function MobileTabs({ tabs, value, onChange, variant = 'pill', ar
         ...sx,
       }}
     >
-      {tabs.map((tab) => <Tab key={tab.id} value={tab.id} label={tab.label} />)}
+      {tabs.map((tab) => <Tab key={tab.id} value={tab.id} label={tab.label} icon={tab.icon} iconPosition="start" />)}
     </Tabs>
   );
 }
 
 MobileTabs.propTypes = {
-  tabs: PropTypes.arrayOf(PropTypes.shape({ id: PropTypes.string.isRequired, label: PropTypes.string.isRequired })).isRequired,
+  tabs: PropTypes.arrayOf(PropTypes.shape({ id: PropTypes.string.isRequired, label: PropTypes.string.isRequired, icon: PropTypes.element })).isRequired,
   value: PropTypes.string.isRequired,
   onChange: PropTypes.func.isRequired,
   variant: PropTypes.oneOf(['pill', 'underline']),

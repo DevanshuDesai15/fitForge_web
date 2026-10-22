@@ -5,7 +5,9 @@ import {
     Typography,
     Button,
     Container,
-    styled
+    styled,
+    useMediaQuery,
+    useTheme
 } from '@mui/material';
 import { usePostHog } from 'posthog-js/react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -20,6 +22,7 @@ import ProfileTab from '../../components/profile/ProfileTab';
 import PreferencesTab from '../../components/profile/PreferencesTab';
 import AccountTab from '../../components/profile/AccountTab';
 import EditProfileModal from '../../components/profile/EditProfileModal';
+import MobileProfile from '../../components/profile/MobileProfile';
 import { safeCapture } from '../../services/analyticsService';
 import { listWorkouts } from '../../services/workoutRepository';
 import {
@@ -73,6 +76,8 @@ export default function Profile() {
     const { updateUnitPreference } = useUnits();
     const navigate = useNavigate();
     const posthog = usePostHog();
+    const theme = useTheme();
+    const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
 
     // State Management
     // User Data State (Supabase Hooks)
@@ -95,6 +100,14 @@ export default function Profile() {
         currentStreak: weeklyStats?.streakDays || 0,
         caloriesBurned: (weeklyStats?.workoutsDone || 0) * 350,
         personalRecords: 0,
+    };
+    // Mobile hero counts every logged workout; the desktop card above is a weekly figure.
+    const completedWorkouts = dashboardData?.completedWorkoutsCount || 0;
+    const mobileStats = {
+        totalWorkouts: completedWorkouts,
+        currentStreak: stats.currentStreak,
+        thisWeek: stats.totalWorkouts,
+        caloriesBurned: completedWorkouts * 350,
     };
 
     const [storageUsed] = useState(2.4 * 1024 * 1024);
@@ -246,6 +259,39 @@ export default function Profile() {
         handleExportData();
     };
 
+    const editModal = (
+        <EditProfileModal
+            open={editModalOpen}
+            onClose={() => setEditModalOpen(false)}
+            userData={userData}
+            onSave={handleSaveProfile}
+            loading={isUpdating}
+            preferences={preferences}
+        />
+    );
+
+    if (!isDesktop) {
+        return (
+            <>
+                <MobileProfile
+                    data={{ userData, stats: mobileStats, preferences, notifications }}
+                    state={{ error, success, statsLoading }}
+                    actions={{
+                        onEdit: handleEditProfile,
+                        onPreferenceChange: handlePreferenceChange,
+                        onNotificationChange: handleNotificationChange,
+                        onExportData: handleExportData,
+                        onClearCache: handleClearCache,
+                        onSignOut: handleSignOut,
+                        onDismissError: () => setError(''),
+                        onDismissSuccess: () => setSuccess(''),
+                    }}
+                />
+                {editModal}
+            </>
+        );
+    }
+
     return (
         <Box sx={{
             minHeight: '100vh',
@@ -336,15 +382,7 @@ export default function Profile() {
                     />
                 )}
 
-                {/* Edit Profile Modal */}
-                <EditProfileModal
-                    open={editModalOpen}
-                    onClose={() => setEditModalOpen(false)}
-                    userData={userData}
-                    onSave={handleSaveProfile}
-                    loading={isUpdating}
-                    preferences={preferences}
-                />
+                {editModal}
             </Container>
         </Box>
     );

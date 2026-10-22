@@ -1,6 +1,6 @@
 // Week-to-date numbers for the Progress overview, ported from Progress.jsx's renderOverview
-// (same estimates: 8 active minutes per logged exercise, a weekly goal of 5 training days).
-export const WEEKLY_GOAL = 5;
+// (same estimates: 8 active minutes per logged exercise, weekly goal from the profile, default 4 training days).
+export const DEFAULT_WEEKLY_GOAL = 4;
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -14,7 +14,7 @@ const volumeOf = (list) => list.reduce((sum, ex) => {
   return sum + sets.reduce((s, set) => s + (parseFloat(set.weight || 0) * parseInt(set.reps || 0, 10) || 0), 0);
 }, 0);
 
-export function buildOverview(exercises = [], personalRecords = [], now = new Date()) {
+export function buildOverview(exercises = [], personalRecords = [], now = new Date(), weeklyGoal = DEFAULT_WEEKLY_GOAL) {
   const year = now.getFullYear();
   const startOfWeek = new Date(now);
   startOfWeek.setDate(now.getDate() - now.getDay());
@@ -64,6 +64,7 @@ export function buildOverview(exercises = [], personalRecords = [], now = new Da
   const topRecord = personalRecords[0];
   return {
     weekDays,
+    weeklyGoal,
     weekDaysChange: weekDays - uniqueDays(prevWeek),
     weekVolume,
     volumeChange: percentChange(weekVolume, volumeOf(prevWeek)),
@@ -74,7 +75,7 @@ export function buildOverview(exercises = [], personalRecords = [], now = new Da
       volume: Math.round(volumeOf(thisWeek.filter((ex) => toDate(ex.timestamp).getDay() === (i === 6 ? 0 : i + 1)))),
     })),
     achievements: [
-      weekDays >= WEEKLY_GOAL ? { kind: 'weekly', title: 'Weekly Goal Achieved!', sub: `Completed ${weekDays} workouts this week` } : null,
+      weekDays >= weeklyGoal ? { kind: 'weekly', title: 'Weekly Goal Achieved!', sub: `Completed ${weekDays} workouts this week` } : null,
       topRecord ? { kind: 'record', title: 'Personal Best!', exerciseName: topRecord.exerciseName, weight: topRecord.weight } : null,
     ].filter(Boolean),
     consistency: [

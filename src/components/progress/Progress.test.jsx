@@ -15,6 +15,10 @@ vi.mock('../../contexts/UnitsContext', () => ({
     useUnits: () => ({ weightUnit: 'lbs' }),
 }));
 
+vi.mock('../../hooks/useWorkoutPreferences', () => ({
+    useWorkoutPreferences: () => ({ weeklyGoal: 4, keepScreenAwake: true, restTimerAlerts: false }),
+}));
+
 vi.mock('./hooks/useProgressData', () => ({
     useProgressData: () => ({
         exercises: [],

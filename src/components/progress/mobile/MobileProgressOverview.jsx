@@ -14,7 +14,7 @@ const ACHIEVEMENT_STYLE = {
 };
 
 export default function MobileProgressOverview({ overview, weightUnit }) {
-  const { weekVolume, volumeChange, weekDays, activeMinutes, streak, weeklyChart, achievements, consistency } = overview;
+  const { weekVolume, volumeChange, weekDays, weeklyGoal, activeMinutes, streak, weeklyChart, achievements, consistency } = overview;
   const volume = weekVolume >= 1000 ? `${(weekVolume / 1000).toFixed(1)}k` : weekVolume.toFixed(0);
 
   return (
@@ -26,7 +26,7 @@ export default function MobileProgressOverview({ overview, weightUnit }) {
           delta={volumeChange ? `${volumeChange > 0 ? '+' : ''}${volumeChange}%` : undefined}
           caption="Volume lifted, week to date"
           stats={[
-            { value: `${weekDays}/5`, label: 'weekly goal' },
+            { value: `${weekDays}/${weeklyGoal}`, label: 'weekly goal' },
             { value: activeMinutes, label: 'active minutes' },
             { value: streak, label: 'day streak' },
           ]}
@@ -88,6 +88,7 @@ MobileProgressOverview.propTypes = {
     weekVolume: PropTypes.number.isRequired,
     volumeChange: PropTypes.number.isRequired,
     weekDays: PropTypes.number.isRequired,
+    weeklyGoal: PropTypes.number.isRequired,
     activeMinutes: PropTypes.number.isRequired,
     streak: PropTypes.number.isRequired,
     weeklyChart: PropTypes.array.isRequired,

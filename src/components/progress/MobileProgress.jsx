@@ -21,8 +21,8 @@ const TABS = [
 // Dashboard are the mobile-specific layouts.
 export default function MobileProgress({ data, state, actions }) {
   const [tab, setTab] = useState('overview');
-  const { exercises, personalRecords, weightUnit } = data;
-  const overview = useMemo(() => buildOverview(exercises, personalRecords), [exercises, personalRecords]);
+  const { exercises, personalRecords, weightUnit, weeklyGoal } = data;
+  const overview = useMemo(() => buildOverview(exercises, personalRecords, new Date(), weeklyGoal), [exercises, personalRecords, weeklyGoal]);
 
   return (
     <MobileScreen title="Progress & Goals" subtitle="Track your fitness journey, achievements, and goals">
@@ -100,6 +100,7 @@ MobileProgress.propTypes = {
     exercises: PropTypes.array.isRequired,
     personalRecords: PropTypes.array.isRequired,
     weightUnit: PropTypes.string.isRequired,
+    weeklyGoal: PropTypes.number,
     goals: PropTypes.array,
     availableExercises: PropTypes.array,
     progressionAnalyses: PropTypes.array,
