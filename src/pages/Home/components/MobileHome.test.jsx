@@ -17,7 +17,6 @@ const weeklyStats = {
 };
 
 const actions = {
-  onOpenProfile: vi.fn(),
   onRetry: vi.fn(),
   onQuickWorkout: vi.fn(),
   onLogActivity: vi.fn(),

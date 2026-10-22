@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Button, ButtonBase, Card, IconButton, InputAdornment, TextField, Typography } from '@mui/material';
+import { useHideProfileButton } from '../../../components/mobile';
 import { ArrowLeft, Minus, Plus, Search, Trash2, X } from 'lucide-react';
 import { useSupabase } from '../../../hooks/useSupabase';
 import { useCustomExercises } from '../../../hooks/useCustomExercises';
@@ -73,6 +74,7 @@ function ExercisePicker({ existing, onClose, onAdd }) {
 }
 
 export default function MobileDayEditor({ program, day, onBack, onDeleted }) {
+  useHideProfileButton();
   const { updateTemplate, updateProgram, deleteTemplate } = useWorkoutMutations();
   const [localDay, setLocalDay] = useState(day);
   const [pickerOpen, setPickerOpen] = useState(false);

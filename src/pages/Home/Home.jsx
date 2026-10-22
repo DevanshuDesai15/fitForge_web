@@ -520,7 +520,6 @@ export default function Home() {
                 <MobileHome
                     data={{
                         displayName,
-                        avatarUrl: profile?.avatar_url || currentUser?.photoURL,
                         greeting: greeting.text,
                         weeklyStats: safeWeeklyStats,
                         achievements: recentAchievements || [],
@@ -531,7 +530,6 @@ export default function Home() {
                     }}
                     state={{ loading: isLoading, error: statsError, aiLoading, aiError }}
                     actions={{
-                        onOpenProfile: () => navigate('/profile'),
                         onRetry: refetchStats,
                         onQuickWorkout: () => navigate('/workout/start'),
                         onLogActivity: () => setQuickAddModalOpen(true),

@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import Home from './Home';
 
@@ -266,8 +266,8 @@ describe('Home', () => {
         expect(screen.getByText('12,480')).toBeInTheDocument();
         expect(screen.getByText('New Bench Press PR')).toBeInTheDocument();
 
-        fireEvent.click(screen.getByRole('button', { name: /open profile/i }));
-        expect(navigateMock).toHaveBeenCalledWith('/profile');
+        // The profile avatar is shared chrome now (MobileProfileButton in Layout), not part of Home.
+        expect(screen.queryByRole('button', { name: /open profile/i })).not.toBeInTheDocument();
     });
 
     it('keeps the target structure visible for a brand-new mobile user', () => {

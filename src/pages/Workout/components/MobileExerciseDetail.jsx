@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useWorkoutReader } from '../../../hooks/useWorkouts';
-import { MobileState, MobileTabs } from '../../../components/mobile';
+import { MobileState, MobileTabs, useHideProfileButton } from '../../../components/mobile';
 
 function useExerciseSessions(exerciseName) {
   const { currentUser } = useAuth();
@@ -112,6 +112,7 @@ function NoteList({ items, tone, Icon }) {
 }
 
 export default function MobileExerciseDetail({ exercise, onBack }) {
+  useHideProfileButton();
   const [tab, setTab] = useState('overview');
 
   const name = exercise.title || exercise.name || 'Exercise';

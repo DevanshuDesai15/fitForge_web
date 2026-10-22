@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Box, Button, ButtonBase, Card, Chip, IconButton, InputAdornment, TextField, Typography } from '@mui/material';
+import { useHideProfileButton } from '../../../components/mobile';
 import { ArrowLeft, CalendarDays, Check, ChevronRight, Dumbbell, Layers3, Pencil, Play, Plus, Repeat2, Search, Timer, Trash2 } from 'lucide-react';
 
 const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -47,6 +48,7 @@ function ProgramMeta({ program }) {
 ProgramMeta.propTypes = { program: programShape.isRequired };
 
 export function MobileProgramDetail({ program, onBack, onStart, onEdit, onOpenDay, onAddDay, onDelete }) {
+  useHideProfileButton();
   const days = program.days || [];
   const nextDay = getNextDay(program);
   const exerciseCount = getExerciseCount(program);

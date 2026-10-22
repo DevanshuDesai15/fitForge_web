@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import { Box, useTheme, useMediaQuery } from '@mui/material';
 import Navigation from './Navigation';
 import ModernSidebar from './ModernSidebar';
+import { MobileProfileButton, ProfileButtonProvider } from '../mobile';
 
 export default function Layout({ children }) {
     const theme = useTheme();
@@ -9,6 +10,7 @@ export default function Layout({ children }) {
     const sidebarWidth = 280;
 
     return (
+        <ProfileButtonProvider>
         <Box sx={{ display: 'flex', minHeight: '100vh' }}>
             {/* Desktop Sidebar */}
             {isDesktop && <ModernSidebar />}
@@ -17,6 +19,7 @@ export default function Layout({ children }) {
             {!isDesktop && (
                 <>
                     <Navigation />
+                    <MobileProfileButton />
                 </>
             )}
 
@@ -43,6 +46,7 @@ export default function Layout({ children }) {
                 {children}
             </Box>
         </Box>
+        </ProfileButtonProvider>
     );
 }
 

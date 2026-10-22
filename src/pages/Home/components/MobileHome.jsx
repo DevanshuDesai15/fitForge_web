@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import { Activity, Brain, Clock, Target, TrendingUp, Zap } from 'lucide-react';
-import { Avatar, Box, ButtonBase, Card, CardContent, Chip, Typography } from '@mui/material';
+import { Box, ButtonBase, Card, CardContent, Chip, Typography } from '@mui/material';
 import { MobileHeroStat, MobileScreen, MobileSection, MobileState } from '../../../components/mobile';
 import AIUnlockProgress from './AIUnlockProgress';
 import WeeklyTargetsGrid from './WeeklyTargetsGrid';
@@ -21,7 +21,6 @@ const recommendationIcons = {
 export default function MobileHome({ data, state, actions }) {
   const {
     displayName,
-    avatarUrl,
     greeting,
     weeklyStats,
     achievements,
@@ -33,22 +32,13 @@ export default function MobileHome({ data, state, actions }) {
 
   return (
     <MobileScreen>
-      <Box component="header" sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 4 }}>
+      <Box component="header" sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 4, pr: 6 }}>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography sx={{ color: 'text.secondary', fontSize: '1rem', lineHeight: 1.3 }}>{greeting}</Typography>
           <Typography component="h1" sx={{ mt: 0.5, fontSize: { xs: '2.25rem', sm: '2.6rem' }, fontWeight: 800, lineHeight: 1, letterSpacing: '-0.025em' }}>
             {displayName}
           </Typography>
         </Box>
-        <ButtonBase
-          aria-label="Open profile"
-          onClick={actions.onOpenProfile}
-          sx={{ width: 48, height: 48, borderRadius: '50%', border: '1px solid', borderColor: 'border.strong', backgroundColor: 'background.paper' }}
-        >
-          <Avatar src={avatarUrl || undefined} alt="" sx={{ width: 46, height: 46, bgcolor: 'background.paper', color: 'text.primary', fontWeight: 800 }}>
-            {displayName.charAt(0).toUpperCase()}
-          </Avatar>
-        </ButtonBase>
       </Box>
 
       {state.error ? (
@@ -183,7 +173,6 @@ export default function MobileHome({ data, state, actions }) {
 MobileHome.propTypes = {
   data: PropTypes.shape({
     displayName: PropTypes.string.isRequired,
-    avatarUrl: PropTypes.string,
     greeting: PropTypes.string.isRequired,
     weeklyStats: PropTypes.object.isRequired,
     achievements: PropTypes.array,
@@ -193,5 +182,5 @@ MobileHome.propTypes = {
     isAiUnlocked: PropTypes.bool.isRequired,
   }).isRequired,
   state: PropTypes.shape({ loading: PropTypes.bool, error: PropTypes.any, aiLoading: PropTypes.bool, aiError: PropTypes.string }).isRequired,
-  actions: PropTypes.shape({ onOpenProfile: PropTypes.func.isRequired, onRetry: PropTypes.func.isRequired, onQuickWorkout: PropTypes.func.isRequired, onLogActivity: PropTypes.func.isRequired, onSetGoal: PropTypes.func.isRequired }).isRequired,
+  actions: PropTypes.shape({ onRetry: PropTypes.func.isRequired, onQuickWorkout: PropTypes.func.isRequired, onLogActivity: PropTypes.func.isRequired, onSetGoal: PropTypes.func.isRequired }).isRequired,
 };
