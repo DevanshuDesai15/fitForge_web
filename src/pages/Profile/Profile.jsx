@@ -1,3 +1,4 @@
+import { readOngoingWorkout } from '../Workout/utils/ongoingWorkout';
 import { useState, useEffect } from 'react';
 import {
     Alert,
@@ -274,7 +275,7 @@ export default function Profile() {
         return (
             <>
                 <MobileProfile
-                    data={{ userData, stats: mobileStats, preferences, notifications }}
+                    data={{ userData, stats: mobileStats, preferences, notifications, hasUnfinishedSession: Boolean(readOngoingWorkout(currentUser?.uid)) }}
                     state={{ error, success, statsLoading }}
                     actions={{
                         onEdit: handleEditProfile,

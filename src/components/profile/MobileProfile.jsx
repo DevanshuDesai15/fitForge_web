@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Edit3, LogOut, Settings, Shield, User } from 'lucide-react';
-import { Alert, Avatar, Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Select, Typography } from '@mui/material';
-import { MobileHeroStat, MobileScreen, MobileState, MobileTabs } from '../mobile';
+import { Alert, Avatar, Box, Button, Select, Typography } from '@mui/material';
+import { MobileHeroStat, MobileScreen, MobileSignOutDialog, MobileState, MobileTabs } from '../mobile';
 import FitForgeSwitch from '../common/FitForgeSwitch';
 import { convertWeight, formatHeight, formatWeight } from '../../utils/unitConversions';
 
@@ -137,7 +137,7 @@ function PreferencesSection({ preferences, actions }) {
 
 PreferencesSection.propTypes = { preferences: PropTypes.object, actions: PropTypes.object.isRequired };
 
-function AccountSection({ userData, actions }) {
+function AccountSection({ userData, actions, hasUnfinishedSession }) {
   const { onSignOut } = actions;
   const [confirming, setConfirming] = useState(false);
   return (
@@ -160,19 +160,17 @@ function AccountSection({ userData, actions }) {
       <Button fullWidth color="error" variant="outlined" disabled>Delete account</Button>
       <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem', textAlign: 'center' }}>Account deletion isn&apos;t available in the app yet.</Typography>
 
-      <Dialog open={confirming} onClose={() => setConfirming(false)}>
-        <DialogTitle>Sign out?</DialogTitle>
-        <DialogContent><DialogContentText>Every logged set is already saved to your account. You&apos;ll need your password — or a code — to log anything new.</DialogContentText></DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirming(false)}>Cancel</Button>
-          <Button color="error" onClick={() => { setConfirming(false); onSignOut(); }}>Sign out</Button>
-        </DialogActions>
-      </Dialog>
+      <MobileSignOutDialog
+        open={confirming}
+        hasUnfinishedSession={hasUnfinishedSession}
+        onCancel={() => setConfirming(false)}
+        onConfirm={() => { setConfirming(false); onSignOut(); }}
+      />
     </Box>
   );
 }
 
-AccountSection.propTypes = { userData: PropTypes.object.isRequired, actions: PropTypes.object.isRequired };
+AccountSection.propTypes = { userData: PropTypes.object.isRequired, actions: PropTypes.object.isRequired, hasUnfinishedSession: PropTypes.bool };
 
 // Mobile Kit Profile: title with an Edit button, underline tabs, then one of three sections.
 export default function MobileProfile({ data, state, actions }) {
@@ -201,7 +199,7 @@ export default function MobileProfile({ data, state, actions }) {
 
       {tab === 'profile' ? <ProfileSection userData={data.userData} stats={data.stats} statsLoading={state.statsLoading} preferences={data.preferences} />
         : tab === 'preferences' ? <PreferencesSection preferences={data.preferences} actions={actions} />
-          : <AccountSection userData={data.userData} actions={actions} />}
+          : <AccountSection userData={data.userData} actions={actions} hasUnfinishedSession={data.hasUnfinishedSession} />}
     </MobileScreen>
   );
 }
@@ -212,6 +210,7 @@ MobileProfile.propTypes = {
     stats: PropTypes.shape({ totalWorkouts: PropTypes.number, currentStreak: PropTypes.number, thisWeek: PropTypes.number, caloriesBurned: PropTypes.number }).isRequired,
     preferences: PropTypes.object,
     notifications: PropTypes.object,
+    hasUnfinishedSession: PropTypes.bool,
   }).isRequired,
   state: PropTypes.shape({ error: PropTypes.string, success: PropTypes.string, statsLoading: PropTypes.bool }).isRequired,
   actions: PropTypes.shape({
