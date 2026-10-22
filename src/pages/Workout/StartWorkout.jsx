@@ -186,7 +186,9 @@ const StartWorkout = () => {
                         if (templateId) {
                             setCurrentTemplate({
                                 id: templateId,
-                                name: passedWorkout.programName || passedWorkout.name?.split(' - ')[0] || 'Program'
+                                name: passedWorkout.programName || passedWorkout.name?.split(' - ')[0] || 'Program',
+                                // Lets the finish screen name the program day that follows this one.
+                                template_ids: location.state?.programTemplateIds,
                             });
                         }
 

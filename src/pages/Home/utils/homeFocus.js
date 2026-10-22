@@ -24,6 +24,7 @@ export function buildFocusStartState(mode, workout) {
   return {
     templateId: workout.programId,
     dayId: workout.id,
+    programTemplateIds: workout.programTemplateIds,
     workout: {
       name: `${workout.programName} - ${workout.name}`,
       programName: workout.programName,
