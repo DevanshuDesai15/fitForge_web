@@ -154,3 +154,55 @@ export function buildActivity(workouts, displayUnit, now = new Date()) {
     ...getWeekStreaks(toArray(workouts), now),
   };
 }
+
+const exerciseName = (exercise) => exercise?.name || exercise?.exerciseName;
+
+export function getWorkoutVolumeKg(exercises, fallbackUnit) {
+  return Math.round(sumVolume(toArray(exercises), fallbackUnit, 'kg') * 10) / 10;
+}
+
+// Returns a new exercises array with one set replaced (`patch`), or removed (`patch` null).
+// Edited values are entered in the display unit, so the set is re-stamped with it.
+export function editSet(exercises, exerciseIndex, setIndex, patch, displayUnit) {
+  return exercises.map((exercise, ei) => {
+    if (ei !== exerciseIndex) return exercise;
+    const sets = toArray(exercise.sets);
+    if (patch === null) return { ...exercise, sets: sets.filter((_, si) => si !== setIndex) };
+    const { weight, reps } = patch;
+    return {
+      ...exercise,
+      sets: sets.map((set, si) => (si !== setIndex ? set : {
+        ...set,
+        reps,
+        ...(set.weightType === 'bodyweight' ? {} : { weight, weightUnit: displayUnit }),
+      })),
+    };
+  });
+}
+
+function bestWeight(workouts, name, displayUnit) {
+  let best = 0;
+  for (const workout of toArray(workouts)) {
+    const fallback = getWorkoutFallbackUnit(workout);
+    for (const exercise of toArray(workout?.exercises)) {
+      if (exerciseName(exercise) !== name) continue;
+      for (const set of completedSets(exercise)) best = Math.max(best, getSetWeight(set, fallback, displayUnit) || 0);
+    }
+  }
+  return best;
+}
+
+// Did replacing this workout's exercises knock down the heaviest weight ever logged for a lift?
+// Returns { exercise, from, to } (the record that fell and what stands now) or null.
+export function findFallenRecord(workouts, workoutId, nextExercises, displayUnit) {
+  const current = toArray(workouts).find((w) => w.id === workoutId);
+  if (!current) return null;
+  const after = toArray(workouts).map((w) => (w.id === workoutId ? { ...w, exercises: nextExercises } : w));
+  for (const exercise of toArray(current.exercises)) {
+    const name = exerciseName(exercise);
+    const from = bestWeight(workouts, name, displayUnit);
+    const to = bestWeight(after, name, displayUnit);
+    if (to < from) return { exercise: name, from, to };
+  }
+  return null;
+}
