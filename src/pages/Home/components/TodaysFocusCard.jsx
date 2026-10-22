@@ -3,6 +3,7 @@ import { Card, CardContent, Typography, Box, Button } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { Clock, Target, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { buildFocusStartState } from '../utils/homeFocus';
 
 const FeaturedWorkoutCard = styled(Card)(() => ({
     background: 'linear-gradient(135deg, rgba(221, 237, 0, 0.12) 0%, rgba(221, 237, 0, 0.06) 100%)',
@@ -15,14 +16,6 @@ const FeaturedWorkoutCard = styled(Card)(() => ({
 const DEFAULT_REPEAT_DESCRIPTION = 'Repeat your most recent workout and keep your momentum going.';
 
 const getExerciseCount = (focusWorkout) => focusWorkout?.exercises?.length || 0;
-
-const getRepeatWorkoutState = (focusWorkout) => ({
-    workout: {
-        name: focusWorkout.name || 'Workout',
-        dayName: focusWorkout.day_name || focusWorkout.dayName || focusWorkout.name || 'Workout',
-        exercises: Array.isArray(focusWorkout.exercises) ? focusWorkout.exercises : []
-    }
-});
 
 export default function TodaysFocusCard({ mode = 'program', focusWorkout, isTomorrowFocus }) {
     const navigate = useNavigate();
@@ -140,28 +133,7 @@ export default function TodaysFocusCard({ mode = 'program', focusWorkout, isTomo
                                         backgroundColor: 'var(--primary-a10)',
                                     }
                                 }}
-                                onClick={() => {
-                                    if (isRepeatLast && focusWorkout) {
-                                        navigate('/workout/start', {
-                                            state: getRepeatWorkoutState(focusWorkout)
-                                        });
-                                    } else if (focusWorkout) {
-                                        navigate('/workout/start', {
-                                            state: {
-                                                templateId: focusWorkout.programId,
-                                                dayId: focusWorkout.id,
-                                                workout: {
-                                                    name: `${focusWorkout.programName} - ${focusWorkout.name}`,
-                                                    programName: focusWorkout.programName,
-                                                    dayName: focusWorkout.name,
-                                                    exercises: focusWorkout.exercises || []
-                                                }
-                                            }
-                                        });
-                                    } else {
-                                        navigate('/workout/start');
-                                    }
-                                }}
+                                onClick={() => navigate('/workout/start', focusWorkout ? { state: buildFocusStartState(mode, focusWorkout) } : undefined)}
                             >
                                 Start Workout
                             </Button>

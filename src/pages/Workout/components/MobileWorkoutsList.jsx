@@ -8,9 +8,7 @@ import { useWorkoutState } from '../hooks/useWorkoutState';
 import { MobileState } from '../../../components/mobile';
 import {
   buildWorkoutStartState,
-  estimateTemplateDuration,
-  getPersistedTemplateId,
-  getTotalExercises,
+  flattenTemplatesToDayWorkouts,
 } from './workoutRecommendationEngine';
 
 const outlineChipSx = {
@@ -20,42 +18,6 @@ const outlineChipSx = {
   fontWeight: 700,
   '& .MuiChip-icon': { color: 'text.secondary' },
 };
-
-function flattenTemplatesToDayWorkouts(templates) {
-  return templates.flatMap((template) => {
-    if (template.workoutDays && template.workoutDays.length > 0) {
-      return template.workoutDays.map((day, dayIndex) => ({
-        id: `${template.id}-${day.id || dayIndex}`,
-        title: `${template.name} - ${day.name}`,
-        category: day.category || template.category || 'Strength Training',
-        difficulty: day.difficulty || template.difficulty || 'Intermediate',
-        durationMinutes: Math.ceil((day.exercises?.length || 0) * 8),
-        exerciseCount: day.exercises?.length || 0,
-        templateId: getPersistedTemplateId(day, template.id),
-        program: { id: template.id, name: template.name },
-        day: {
-          id: day.templateId || day.id || getPersistedTemplateId(day, template.id) || `day-${dayIndex}`,
-          templateId: day.templateId,
-          name: day.name,
-          exercises: day.exercises || [],
-        },
-      }));
-    }
-
-    return [{
-      id: template.id,
-      title: template.name,
-      category: 'Single Day',
-      difficulty: 'Intermediate',
-      durationMinutes: null,
-      durationLabel: estimateTemplateDuration(template),
-      exerciseCount: getTotalExercises(template),
-      templateId: template.id,
-      program: { id: template.id, name: template.name },
-      day: { id: template.id, name: template.name, exercises: template.exercises || [] },
-    }];
-  });
-}
 
 export default function MobileWorkoutsList() {
   const navigate = useNavigate();

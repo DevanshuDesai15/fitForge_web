@@ -34,7 +34,7 @@ const renderProgress = (overrides = {}, state = {}) => render(
         ...overrides,
       }}
       state={state}
-      actions={{ onRetry: vi.fn(), onGoalsUpdate: vi.fn(), setError: vi.fn() }}
+      actions={{ onRetry: vi.fn(), onGoalsUpdate: vi.fn(), setError: vi.fn(), onInterventionApply: vi.fn(), onAlertDismiss: vi.fn(), setSelectedExercise: vi.fn(), setTimeRange: vi.fn() }}
     />
   </ThemeProvider>
 );

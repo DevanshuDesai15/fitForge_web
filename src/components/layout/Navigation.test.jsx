@@ -22,6 +22,8 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
+vi.mock('./StartWorkoutSheet', () => ({ default: () => <div role="dialog" aria-label="Start a workout" /> }));
+
 describe('Navigation', () => {
   beforeEach(() => {
     navigateMock.mockReset();
@@ -43,15 +45,17 @@ describe('Navigation', () => {
     expect(screen.getByRole('button', { name: /start workout/i })).toBeInTheDocument();
   });
 
-  it('navigates to the active workout when the centered action is pressed', () => {
+  it('opens the start sheet instead of jumping into a session when the centered action is pressed', () => {
     render(
       <MemoryRouter initialEntries={['/progress']}>
         <Navigation />
       </MemoryRouter>
     );
 
+    expect(screen.queryByRole('dialog', { name: /start a workout/i })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /start workout/i }));
 
-    expect(navigateMock).toHaveBeenCalledWith('/workout/start');
+    expect(screen.getByRole('dialog', { name: /start a workout/i })).toBeInTheDocument();
+    expect(navigateMock).not.toHaveBeenCalled();
   });
 });
