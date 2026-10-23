@@ -60,7 +60,7 @@ function useSubmit() {
 // map) so the carousel shows the real thing rather than artwork. Completed sets use the kit's success
 // green, not the lime accent — lime is reserved for actions and emphasis.
 const SUCCESS = '#4caf50';
-const cardSx = { p: 2, borderRadius: '18px', border: '1px solid', borderColor: 'border.main', backgroundColor: 'surface.card' };
+const cardSx = { p: 1.75, borderRadius: '18px', border: '1px solid', borderColor: 'border.main', backgroundColor: 'surface.card' };
 
 function Pill({ children, tone = 'neutral', icon: Icon }) {
   const tones = {
@@ -78,7 +78,7 @@ function Pill({ children, tone = 'neutral', icon: Icon }) {
 Pill.propTypes = { children: PropTypes.node, tone: PropTypes.string, icon: PropTypes.elementType };
 
 const Num = ({ children, done }) => (
-  <Box component="span" sx={{ ...mono, fontSize: '1.5rem', fontWeight: 700, color: done ? SUCCESS : 'text.primary' }}>{children}</Box>
+  <Box component="span" sx={{ ...mono, fontSize: '1.3rem', fontWeight: 700, color: done ? SUCCESS : 'text.primary' }}>{children}</Box>
 );
 Num.propTypes = { children: PropTypes.node, done: PropTypes.bool };
 
@@ -88,20 +88,20 @@ Suffix.propTypes = { children: PropTypes.node };
 function SetLine({ index, weight, reps, done }) {
   const field = (value, suffix) => (
     <Box sx={{ flex: 1, display: 'flex', alignItems: 'center' }}>
-      <Box sx={{ flex: 1, py: 1.25, px: 1, textAlign: 'center', borderRadius: '8px', border: '1px solid', borderColor: done ? 'transparent' : 'border.main', bgcolor: done ? 'transparent' : '#1c1c1c' }}>
+      <Box sx={{ flex: 1, py: 0.75, px: 1, textAlign: 'center', borderRadius: '8px', border: '1px solid', borderColor: done ? 'transparent' : 'border.main', bgcolor: done ? 'transparent' : '#1c1c1c' }}>
         <Num done={done}>{value}</Num>
       </Box>
       <Suffix>{suffix}</Suffix>
     </Box>
   );
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1.5, borderRadius: '12px', border: '1px solid', borderColor: done ? 'rgba(76,175,80,0.30)' : 'border.main', bgcolor: done ? 'rgba(76,175,80,0.15)' : 'transparent' }}>
-      <Typography sx={{ width: 28, flexShrink: 0, textAlign: 'center', ...mono, fontWeight: 700, color: 'text.secondary' }}>{index}</Typography>
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, p: 1, borderRadius: '12px', border: '1px solid', borderColor: done ? 'rgba(76,175,80,0.30)' : 'border.main', bgcolor: done ? 'rgba(76,175,80,0.15)' : 'transparent' }}>
+      <Typography sx={{ width: 24, flexShrink: 0, textAlign: 'center', ...mono, fontWeight: 700, color: 'text.secondary' }}>{index}</Typography>
       {field(weight, 'kg')}
       {field(reps, 'reps')}
       {done
-        ? <Box sx={{ width: 44, display: 'grid', placeItems: 'center', color: SUCCESS }}><CheckCircle2 size={22} aria-hidden="true" /></Box>
-        : <Box sx={{ width: 44, height: 44, display: 'grid', placeItems: 'center', borderRadius: '10px', bgcolor: 'rgba(221,237,0,0.15)', color: 'primary.main' }}><Check size={20} aria-hidden="true" /></Box>}
+        ? <Box sx={{ width: 40, display: 'grid', placeItems: 'center', color: SUCCESS }}><CheckCircle2 size={22} aria-hidden="true" /></Box>
+        : <Box sx={{ width: 40, height: 40, display: 'grid', placeItems: 'center', borderRadius: '10px', bgcolor: 'rgba(221,237,0,0.15)', color: 'primary.main' }}><Check size={20} aria-hidden="true" /></Box>}
     </Box>
   );
 }
@@ -109,7 +109,7 @@ SetLine.propTypes = { index: PropTypes.number.isRequired, weight: PropTypes.numb
 
 function SuggestionCard({ icon: Icon, title, priority, body, confidence }) {
   return (
-    <Box sx={{ p: 2.5, borderRadius: '12px', bgcolor: 'rgba(255,255,255,0.02)', display: 'flex', gap: 2 }}>
+    <Box sx={{ p: 2, borderRadius: '12px', bgcolor: 'rgba(255,255,255,0.02)', display: 'flex', gap: 2 }}>
       <Box sx={{ color: 'primary.main', mt: '2px', flexShrink: 0 }}><Icon size={20} aria-hidden="true" /></Box>
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1.5, mb: 1 }}>
@@ -133,10 +133,10 @@ function WelcomeVisual({ index }) {
     return (
       <Box sx={cardSx}>
         <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 1.25, mb: 0.5 }}>
-          <Typography sx={{ fontSize: '1.5rem', fontWeight: 700 }}>Bench Press</Typography>
+          <Typography sx={{ fontSize: '1.35rem', fontWeight: 700 }}>Bench Press</Typography>
           <Typography sx={{ ...mono, color: 'text.secondary', fontSize: '0.875rem' }}>SET 3 / 4</Typography>
         </Box>
-        <Box sx={{ display: 'flex', gap: 1, mb: 1.75 }}>
+        <Box sx={{ display: 'flex', gap: 1, mb: 1.5 }}>
           <Pill>Chest</Pill>
           <Pill tone="accent" icon={History}>80 kg last time</Pill>
         </Box>
@@ -177,38 +177,42 @@ export function WelcomeCarousel({ onSignUp, onSignIn }) {
   const s = SLIDES[i];
 
   return (
-    <Box
-      onPointerDown={(e) => { down.current = e.clientX; }}
-      onPointerUp={(e) => {
-        if (down.current === null) return;
-        const dx = e.clientX - down.current;
-        if (Math.abs(dx) > 44) go(i + (dx < 0 ? 1 : -1));
-        down.current = null;
-      }}
-      sx={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', maxWidth: 520, mx: 'auto', px: 2.5, pt: 2.25, pb: 3, touchAction: 'pan-y' }}
-    >
-      <Box sx={{ display: 'flex', alignItems: 'center', minHeight: 40, mb: 1 }}>
-        <Box component="img" src={logo} alt="FitForge" sx={{ height: 26 }} />
-        <ButtonBase onClick={onSignIn} sx={{ ml: 'auto', minHeight: 44, px: 0.5, py: 1.25, color: 'text.secondary', fontWeight: 600, fontSize: '1rem' }}>Skip</ButtonBase>
-      </Box>
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-        <WelcomeVisual index={i} />
-        <Box sx={{ mt: 3.5 }}>
-          <Typography sx={{ color: 'primary.main', ...mono, fontSize: '0.75rem', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 700 }}>
-            0{i + 1} / 0{SLIDES.length} · {s.eyebrow}
-          </Typography>
-          <Typography component="h1" sx={{ fontSize: '2.2rem', fontWeight: 800, lineHeight: 1.02, letterSpacing: '-0.025em', my: 1.5 }}>{s.title}</Typography>
-          <Typography sx={{ color: 'text.secondary', fontSize: '1.15rem', lineHeight: 1.45 }}>{s.body}</Typography>
+    // Pinned to the visible viewport (not the page, whose 100vh includes the phone's address bar), so the
+    // screen itself never scrolls; it only scrolls internally on a screen too short to fit it.
+    <Box sx={{ position: 'fixed', inset: 0, overflowY: 'auto', overscrollBehavior: 'contain', bgcolor: 'background.default' }}>
+      <Box
+        onPointerDown={(e) => { down.current = e.clientX; }}
+        onPointerUp={(e) => {
+          if (down.current === null) return;
+          const dx = e.clientX - down.current;
+          if (Math.abs(dx) > 44) go(i + (dx < 0 ? 1 : -1));
+          down.current = null;
+        }}
+        sx={{ minHeight: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', maxWidth: 520, mx: 'auto', px: 2.5, pt: 1.5, pb: 2.5, touchAction: 'pan-y' }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', minHeight: 40, mb: 1 }}>
+          <Box component="img" src={logo} alt="FitForge" sx={{ height: 26 }} />
+          <ButtonBase onClick={onSignIn} sx={{ ml: 'auto', minHeight: 44, px: 0.5, py: 1.25, color: 'text.secondary', fontWeight: 600, fontSize: '1rem' }}>Skip</ButtonBase>
         </Box>
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <WelcomeVisual index={i} />
+          <Box sx={{ mt: 2.5 }}>
+            <Typography sx={{ color: 'primary.main', ...mono, fontSize: '0.75rem', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 700 }}>
+              0{i + 1} / 0{SLIDES.length} · {s.eyebrow}
+            </Typography>
+            <Typography component="h1" sx={{ fontSize: 'clamp(1.7rem, 4.4dvh, 2.2rem)', fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.025em', my: 1 }}>{s.title}</Typography>
+            <Typography sx={{ color: 'text.secondary', fontSize: 'clamp(0.95rem, 2.3dvh, 1.1rem)', lineHeight: 1.4 }}>{s.body}</Typography>
+          </Box>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 0.875, justifyContent: 'center', my: 2 }}>
+          {SLIDES.map((_, n) => (
+            <Box key={n} component="button" type="button" aria-label={`Card ${n + 1}`} onClick={() => go(n)}
+              sx={{ width: n === i ? 26 : 7, height: 7, borderRadius: 1, border: 0, p: 0, cursor: 'pointer', bgcolor: n === i ? 'primary.main' : 'border.main', transition: 'width 150ms ease' }} />
+          ))}
+        </Box>
+        <Primary onClick={onSignUp}>Create your account</Primary>
+        <LinkButton onClick={onSignIn}>Already training here? Sign in</LinkButton>
       </Box>
-      <Box sx={{ display: 'flex', gap: 0.875, justifyContent: 'center', my: 3 }}>
-        {SLIDES.map((_, n) => (
-          <Box key={n} component="button" type="button" aria-label={`Card ${n + 1}`} onClick={() => go(n)}
-            sx={{ width: n === i ? 26 : 7, height: 7, borderRadius: 1, border: 0, p: 0, cursor: 'pointer', bgcolor: n === i ? 'primary.main' : 'border.main', transition: 'width 150ms ease' }} />
-        ))}
-      </Box>
-      <Primary onClick={onSignUp}>Create your account</Primary>
-      <LinkButton onClick={onSignIn}>Already training here? Sign in</LinkButton>
     </Box>
   );
 }
